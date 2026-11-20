@@ -39,7 +39,7 @@ def _catalogue(spark_session, workspace_id="dev"):
             {
                 "asset_type": "TABLE",
                 "table_id": build_table_id("warehouse", "warehouse", "sales", "orders"),
-                "workspace_id": workspace_id,
+                "asset_workspace_id": workspace_id,
                 "store_type": "Warehouse",
                 "item_id": "warehouse-item",
                 "layer": "Gold",
@@ -50,7 +50,7 @@ def _catalogue(spark_session, workspace_id="dev"):
             {
                 "asset_type": "TABLE",
                 "table_id": build_table_id("warehouse", "warehouse", "sales", "customers"),
-                "workspace_id": workspace_id,
+                "asset_workspace_id": workspace_id,
                 "store_type": "Warehouse",
                 "item_id": "warehouse-item",
                 "layer": "Gold",
@@ -61,7 +61,7 @@ def _catalogue(spark_session, workspace_id="dev"):
             {
                 "asset_type": "TABLE",
                 "table_id": build_table_id("warehouse", "warehouse", "archive", "orders_archive"),
-                "workspace_id": workspace_id,
+                "asset_workspace_id": workspace_id,
                 "store_type": "Warehouse",
                 "item_id": "warehouse-item",
                 "layer": "Gold",
@@ -72,7 +72,7 @@ def _catalogue(spark_session, workspace_id="dev"):
             {
                 "asset_type": "TABLE",
                 "table_id": build_table_id("lakehouse", "curated_lakehouse", "sales", "orders"),
-                "workspace_id": workspace_id,
+                "asset_workspace_id": workspace_id,
                 "store_type": "Lakehouse",
                 "item_id": "lakehouse-item",
                 "layer": "Silver",
@@ -233,7 +233,7 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     assert principal_types["fabricops-application"] == "EXTERNAL_LOGIN"
 
     assert {row["access_snapshot_id"] for row in access_rows} == {"snapshot-1"}
-    assert {row["workspace_id"] for row in access_rows} == {"remote"}
+    assert {row["asset_workspace_id"] for row in access_rows} == {"remote"}
     assert {row["_workspace_id"] for row in access_rows} == {AUDIT_FIELDS["_workspace_id"]}
     assert {row["asset_type"] for row in access_rows} == {"TABLE"}
     assert all(row["access_id"] for row in access_rows)

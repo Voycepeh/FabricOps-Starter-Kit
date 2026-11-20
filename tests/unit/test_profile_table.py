@@ -513,7 +513,7 @@ def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
             return self
 
         def first(self):
-            return {"workspace_id": "dev", "table_id": "target-id"}
+            return {"asset_workspace_id": "dev", "table_id": "target-id"}
 
         def alias(self, _name):
             return self
@@ -532,7 +532,7 @@ def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
     spark = Mock()
     spark.createDataFrame.return_value = Catalogue()
     module.merge_catalogue_asset(
-        {"workspace_id": "dev", "table_id": "target-id", "asset_type": "TABLE",
+        {"asset_workspace_id": "dev", "table_id": "target-id", "asset_type": "TABLE",
          "columns_json": [], "last_observed_at": None}, context={"config": {}}, spark_session=spark,
     )
     assert "load_strategy" not in updates[0]
@@ -582,7 +582,7 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(
     updates = []
     catalogue = spark_session.createDataFrame(
         [("dev", "table-1", "activity-1")],
-        ["workspace_id", "table_id", "_activity_id"],
+        ["asset_workspace_id", "table_id", "_activity_id"],
     )
 
     class Merge:
@@ -608,7 +608,7 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
 
     is_retry = module._stage_catalogue_profile_retry(
-        catalogue_asset={"workspace_id": "dev", "table_id": "table-1", "item_id": "item", "_activity_id": "activity-1"},
+        catalogue_asset={"asset_workspace_id": "dev", "table_id": "table-1", "item_id": "item", "_activity_id": "activity-1"},
         context={"config": {}}, spark_session=spark_session,
     )
 
@@ -622,7 +622,7 @@ def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypa
     module = importlib.import_module("fabricops_kit.pipeline.shared")
     catalogue = spark_session.createDataFrame(
         [("dev", "table-1", "activity-1")] if parent_exists else [],
-        "workspace_id string, table_id string, _activity_id string",
+        "asset_workspace_id string, table_id string, _activity_id string",
     )
 
     class Merge:
@@ -646,7 +646,7 @@ def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypa
     register = Mock()
     monkeypatch.setattr(module, "merge_catalogue_asset", register)
     is_retry = module._stage_catalogue_profile_retry(
-        catalogue_asset={"workspace_id": "dev", "table_id": "table-1", "item_id": "item", "_activity_id": "activity-2"},
+        catalogue_asset={"asset_workspace_id": "dev", "table_id": "table-1", "item_id": "item", "_activity_id": "activity-2"},
         context={"config": {}}, spark_session=spark_session,
     )
 

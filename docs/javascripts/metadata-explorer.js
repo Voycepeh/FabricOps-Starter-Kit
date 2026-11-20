@@ -7,12 +7,12 @@
     ["DATA_STEWARD", "governance", ["steward_id"], [], "metadata_data_steward/"],
     ["DATA_AGREEMENT", "governance", ["agreement_id", "agreement_version"], ["provider_steward_id", "recipient_steward_id"], "metadata_data_agreement/"],
     ["DATA_CONTRACT", "governance", ["contract_id", "contract_version"], [], "metadata_data_contract/"],
-    ["DATA_CONTRACT_ACTIVATION", "governance", ["workspace_id", "table_id", "revision"], ["contract_id/version", "agreement_id/version"], "metadata_data_contract_activation/"],
+    ["DATA_CONTRACT_ACTIVATION", "governance", ["activation_id"], ["contract_id/version", "agreement_id/version"], "metadata_data_contract_activation/"],
     ["PIPELINE_ACTIVATION", "governance", ["approval_id"], [], "metadata_pipeline_activation/"],
     ["PIPELINE_REGISTRY", "engineering", ["execution_workspace_id", "pipeline_id", "pipeline_version"], ["approval_id"], "metadata_pipeline_registry/"],
     ["PIPELINE_RUN", "engineering", ["run_id"], ["promotion_id", "operations[].contract_id/version"], "metadata_pipeline_run/"],
     ["GUARDRAIL_RESULTS", "engineering", ["guardrail_result_id"], ["run_id", "contract_id", "contract_version"], "metadata_guardrail_results/"],
-    ["DATA_CATALOGUE", "engineering", ["workspace_id", "table_id", "asset_type"], [], "metadata_data_catalogue/"],
+    ["DATA_CATALOGUE", "engineering", ["asset_workspace_id", "table_id", "asset_type"], [], "metadata_data_catalogue/"],
     ["DATA_PROFILED", "engineering", ["profile_id"], [], "metadata_data_profiled/"],
     ["DATA_PROFILED_FREQUENCY", "engineering", ["frequency_id"], ["profile_id"], "metadata_data_profiled_frequency/"],
     ["DATA_ACCESS", "engineering", ["access_id"], [], "metadata_data_access/"]
@@ -29,7 +29,7 @@
     ["DATA_CONTRACT_ACTIVATION", "DATA_CONTRACT", "N-1", "Independent exact frozen Contract activation"],
     ["PIPELINE_RUN", "DATA_CONTRACT", "N-N", "Exact operation contracts"],
     ["DATA_CATALOGUE", "PIPELINE_RUN", "N-N", "Asset participation via operations and physical workspace and asset identity"],
-    ["DATA_CATALOGUE", "DATA_CONTRACT", "N-N", "Contracts for a table"],
+    ["DATA_CATALOGUE", "DATA_CONTRACT", "0..1-N", "Catalogue asset used to draft a Contract version"],
     ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1-N", "Captured immutable Pipeline Promotion; Fabric validation pending"],
     ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1-N", "Run evaluations"],
     ["DATA_CATALOGUE", "DATA_PROFILED", "1-N", "Profile snapshots"],
@@ -157,7 +157,6 @@
     const approvedDiagram = new URL("../../assets/fabricops-metadata-approved.svg", document.baseURI);
     graph.style.width = "100%";
     graph.style.minWidth = "860px";
-    graph.style.aspectRatio = "1540 / 980";
     fetch(approvedDiagram).then(response => {
       if (!response.ok) throw new Error("Approved diagram returned " + response.status);
       return response.text();
@@ -168,7 +167,7 @@
       svg.classList.add("metadata-explorer-approved-svg");
       svg.setAttribute("aria-label", "FabricOps metadata ERD. Select a table to inspect its details.");
       svg.querySelectorAll("a").forEach(link => {
-        const nativeTitle = link.querySelector("title");
+        const nativeTitle = link.querySelector(":scope > title");
         const caption = nativeTitle?.textContent || "";
         const name = caption.split("Open metadata documentation: ").pop().trim();
         if (!byName.has(name)) return;
@@ -199,11 +198,12 @@
       graph.replaceChildren(svg);
       select("DATA_AGREEMENT");
     }).catch(() => {
+      graph.style.minWidth = "0";
       graph.innerHTML = '<p class="metadata-explorer-loading">Unable to load the diagram. Open a metadata table directly:</p>' +
-        '<nav aria-label="Metadata table references">' +
+        '<nav class="metadata-explorer-fallback" aria-label="Metadata table references">' +
         definitions.filter(row => row[4])
           .map(row => '<a href="' + escapeHtml(row[4]) + '">METADATA_' + escapeHtml(row[0]) + '</a>')
-          .join(" · ") + '</nav>';
+          .join("") + '</nav>';
       select("DATA_AGREEMENT");
     });
 
@@ -233,9 +233,16 @@
       }
       if (rows.length) return rows;
       const assetTable = from === "DATA_CATALOGUE" ? to : to === "DATA_CATALOGUE" ? from : null;
+      if (assetTable === "DATA_CONTRACT") {
+        return [
+          "DATA_CONTRACT.evidence_workspace_id → DATA_CATALOGUE.asset_workspace_id",
+          "DATA_CONTRACT.table_id → DATA_CATALOGUE.table_id for TABLE",
+          "DATA_CONTRACT.source_id → DATA_CATALOGUE.table_id for FILE",
+        ];
+      }
       if (assetTable === "PIPELINE_RUN") {
         return [
-          "operations[].destination.workspace_id → DATA_CATALOGUE.workspace_id",
+          "operations[].destination.workspace_id → DATA_CATALOGUE.asset_workspace_id",
           "operations[].table_id or source_id → DATA_CATALOGUE.table_id",
           "operations[].source_type → DATA_CATALOGUE.asset_type (TABLE or FILE)",
         ];
@@ -261,7 +268,9 @@
           const joinLines = keyJoinRows(edge[0], edge[1]);
           const referenceOnly = !edge[2];
           const logicalAssetReference = edge[0] === "DATA_CATALOGUE" && !modelFor(edge[1]).catalogue_reference_fields?.length;
-          const relationshipKind = logicalAssetReference ? "Logical asset reference" : "Application-enforced identity reference";
+          const relationshipKind = edge[0] === "DATA_CATALOGUE" && edge[1] === "DATA_CONTRACT"
+            ? "Authoring reference checked at draft creation"
+            : logicalAssetReference ? "Logical asset reference" : "Application-enforced identity reference";
           return '<div class="metadata-explorer-related-row">' +
             '<span class="metadata-explorer-cardinality-text' +
             (referenceOnly ? ' metadata-explorer-reference-label' : '') +

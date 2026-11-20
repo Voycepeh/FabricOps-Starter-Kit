@@ -220,22 +220,21 @@ METADATA_FIELD_DESCRIPTIONS = {
 
 PHYSICAL_ASSET_WORKSPACE_ID = "ID of the Fabric workspace that contains the physical asset."
 
-WORKSPACE_ID_DESCRIPTIONS = {
+ASSET_WORKSPACE_DESCRIPTIONS = {
     "METADATA_DATA_CATALOGUE": PHYSICAL_ASSET_WORKSPACE_ID,
     **dict.fromkeys(
         ("METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_ACCESS"),
-        PHYSICAL_ASSET_WORKSPACE_ID + " For new rows, this is part of the Catalogue reference. Historical rows may carry the earlier workspace scope.",
+        PHYSICAL_ASSET_WORKSPACE_ID + " For new rows, this is part of the Catalogue reference.",
     ),
     "METADATA_DATA_CONTRACT_ACTIVATION": PHYSICAL_ASSET_WORKSPACE_ID + " The activation applies the selected frozen Contract to the asset in this workspace.",
-    "METADATA_PIPELINE_RUN": "ID of the execution workspace whose configuration selects the Run’s stores. Each operation records its physical asset workspace in operations[].destination.workspace_id.",
-    "METADATA_GUARDRAIL_RESULTS": "ID of the physical asset workspace for planned asset checks with a resolved binding. Pipeline-wide results and results without a binding record the execution workspace scope.",
+    "METADATA_GUARDRAIL_RESULTS": "ID of the physical asset workspace for planned asset checks with a resolved binding.",
 }
 
 PIPELINE_EXECUTION_WORKSPACE_ID = "ID of the destination workspace whose store configuration is reviewed for pipeline execution."
 
 CATALOGUE_FIELD_DESCRIPTIONS = {
     "asset_type": "Part of the current asset key. TABLE identifies a table and FILE identifies a file selector.",
-    "workspace_name": "Display name of the Fabric workspace that contains the physical asset.",
+    "asset_workspace_name": "Display name of the Fabric workspace that contains the physical asset.",
     "writer_workspace_id": "ID of the notebook workspace captured with the table’s last recorded pipeline write. Subsequent Catalogue observations have their own audit fields.",
     "item_id": "Physical Lakehouse or Warehouse item that contains the asset.",
     "columns_json": "Latest observed column definitions. SQL NULL is unobserved and [] is an observed empty schema.",
@@ -1054,16 +1053,6 @@ def parse_usage_note_metadata() -> tuple[dict[str, str], dict[str, str]]:
         {str(key): str(value).strip() for key, value in path_notes.items()},
         {str(key): str(value).strip() for key, value in function_notes.items()},
     )
-
-
-def parse_metadata_reference_overview() -> list[str]:
-    """Parse the concise Metadata Table Overview content."""
-    namespace = runpy.run_path(str(DOCS_METADATA_PATH))
-    intro = str(namespace.get("METADATA_REFERENCE_OVERVIEW_INTRO", "")).strip()
-    caption = str(namespace.get("METADATA_REFERENCE_MODEL_DIAGRAM_CAPTION", "")).strip()
-    if not intro or not caption:
-        raise RuntimeError("Metadata reference overview content must include intro and caption")
-    return [intro, "", caption]
 
 
 def parse_metadata_reference_contract() -> tuple[dict[str, str], dict[str, dict[str, list[Any]]]]:
@@ -4397,8 +4386,14 @@ def _metadata_field_description(table_name: str, column_name: str) -> str:
     """Return generated metadata column guidance."""
     if column_name in AUDIT_FIELD_DESCRIPTIONS:
         return AUDIT_FIELD_DESCRIPTIONS[column_name]
-    if column_name == "workspace_id" and table_name in WORKSPACE_ID_DESCRIPTIONS:
-        return WORKSPACE_ID_DESCRIPTIONS[table_name]
+    if column_name == "asset_workspace_id" and table_name in ASSET_WORKSPACE_DESCRIPTIONS:
+        return ASSET_WORKSPACE_DESCRIPTIONS[table_name]
+    if column_name == "legacy_workspace_id":
+        return "Original workspace value retained from an older record whose physical asset workspace was not established by the stored fields."
+    if table_name == "METADATA_PIPELINE_RUN" and column_name == "workspace_id":
+        return "ID of the execution workspace whose configuration selects the Run’s stores. Each operation records its physical asset workspace in operations[].destination.workspace_id."
+    if table_name == "METADATA_GUARDRAIL_RESULTS" and column_name == "execution_workspace_id":
+        return "ID of the execution workspace for pipeline-wide results and results without a resolved physical binding."
     if table_name == "METADATA_PIPELINE_ACTIVATION" and column_name == "execution_workspace_id":
         return PIPELINE_EXECUTION_WORKSPACE_ID
     if table_name == "METADATA_DATA_CATALOGUE" and column_name in CATALOGUE_FIELD_DESCRIPTIONS:
@@ -4563,7 +4558,7 @@ def _metadata_relationships(
         }
 
     if include_inbound:
-        reverse_cardinality = {"1:N": "N:1", "1:1": "1:1", "N:1": "1:N", "N:M": "N:M"}
+        reverse_cardinality = {"1:N": "N:1", "1:1": "1:1", "N:1": "1:N", "N:M": "N:M", "N:0..1": "0..1:N"}
         for other_table in table_models:
             if other_table == table_name:
                 continue
@@ -4620,8 +4615,14 @@ def render_metadata_reference_index(
             "grain": table_models[name]["grain"],
             "primary_key": table_models[name]["primary_key"],
             "catalogue_reference_fields": _catalogue_reference_fields(table_models[name]),
+            "catalogue_authoring_fields": next((
+                relation["fields"] for relation in table_models[name].get("relationships", [])
+                if relation.get("related_table") == "METADATA_DATA_CATALOGUE"
+                and relation.get("cardinality") == "N:0..1"
+            ), []),
             "asset_identity_fields": [
-                field for field in ("table_id", "source_id", "operations[].table_id", "operations[].source_id")
+                field for field in ("asset_workspace_id", "table_id", "source_id",
+                    "operations[].destination.workspace_id", "operations[].table_id", "operations[].source_id")
                 if field in field_names_by_table[name]
             ],
             "foreign_keys": [
@@ -4641,8 +4642,6 @@ def render_metadata_reference_index(
     )
     lines = [
         "# List of Metadata Tables",
-        "",
-        *parse_metadata_reference_overview(),
         "",
         "## Metadata relationships",
         "",
@@ -4760,10 +4759,13 @@ def generate_metadata_reference_pages() -> None:
         for relationship in _metadata_relationships(
             table_name, table_models, include_inbound=False
         ):
+            reference = _model_key_text(relationship["fields"])
+            if table_name == "METADATA_DATA_CONTRACT" and relationship["table"] == "METADATA_DATA_CATALOGUE":
+                reference = "`evidence_workspace_id` + (`table_id` for TABLE or `source_id` for FILE)"
             rendered.extend([
                 f"`{relationship['table']}` "
                 f"**({_metadata_cardinality_display(relationship['cardinality'])})**",
-                f"via {_model_key_text(relationship['fields'])}",
+                f"via {reference}",
                 "",
             ])
         for relationship in table_models[table_name].get("relationships", []):
@@ -4813,7 +4815,7 @@ def generate_metadata_reference_pages() -> None:
     if len(reference_order) != len(canonical_tables) or set(reference_order) != set(canonical_tables):
         raise RuntimeError("METADATA_REFERENCE_ORDER must contain every canonical metadata table exactly once")
 
-    valid_cardinalities = {"1:1", "1:N", "N:1", "N:M"}
+    valid_cardinalities = {"1:1", "1:N", "N:1", "N:M", "N:0..1", "0..1:N"}
     def schema_paths(schema, prefix=""):
         paths = set()
         for field in getattr(schema, "fields", []):

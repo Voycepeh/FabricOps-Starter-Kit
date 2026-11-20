@@ -26,6 +26,12 @@
 .metadata-dot.governance { background: #9333ea; }
 .metadata-dot.engineering { background: #0284c7; margin-left: .5rem; }
 .metadata-explorer-hint { color: var(--md-default-fg-color--light); }
+.metadata-explorer-fallback {
+  display: grid;
+  gap: .5rem;
+  padding: 1rem;
+  overflow-wrap: anywhere;
+}
 .metadata-explorer-layout{display:block;min-width:0}
 .metadata-explorer-viewport{max-width:100%;width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-gutter:stable}
 .metadata-explorer-viewport:focus-visible{outline:2px solid #0284c7;outline-offset:-2px}

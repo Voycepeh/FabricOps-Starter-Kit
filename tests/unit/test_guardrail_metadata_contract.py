@@ -46,7 +46,9 @@ _RESULT_COLUMNS = [
     "contract_version",
     "execution_type",
     "run_id",
-    "workspace_id",
+    "asset_workspace_id",
+    "execution_workspace_id",
+    "legacy_workspace_id",
     "status",
     "can_continue",
     "severity",
@@ -270,7 +272,9 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch, fak
     assert row["run_id"] == "run-1"
     assert row["execution_type"] == "governed"
     assert row["table_id"] == "table-a"
-    assert row["workspace_id"] == "remote"
+    assert row["asset_workspace_id"] == "remote"
+    assert row["execution_workspace_id"] is None
+    assert row["legacy_workspace_id"] is None
     assert row["_workspace_id"] != "remote"
     assert row["table_name"] == "orders"
     assert row["guardrail_type"] == "schema"

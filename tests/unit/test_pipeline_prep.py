@@ -671,7 +671,7 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
         context={"workspace_name": "Workspace"},
     )
 
-    assert rows[0]["asset_type"] == "TABLE" and rows[0]["workspace_id"] == "physical"
+    assert rows[0]["asset_type"] == "TABLE" and rows[0]["asset_workspace_id"] == "physical"
     assert rows[0]["load_strategy"] == "scd2"
     assert rows[0]["_workspace_name"] == "Workspace"
     assert rows[0]["_metadata_lakehouse_name"] == "Metadata"

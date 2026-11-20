@@ -27,8 +27,8 @@ def test_file_selector_identity_and_active_catalogue_grain():
     assert source["source_id"] == identity(relative_path="a/b.csv", file_format="json")["source_id"]
     assert len({source["source_id"], identity(workspace_id="other")["source_id"], identity(item_id="other")["source_id"]}) == 3
     rows = [dict(asset_type="FILE", table_id=identity(relative_path=path)["source_id"],
-                 workspace_id="w", is_active=True) for path in ("a.csv", "b.csv")]
-    rows += [dict(asset_type="TABLE", workspace_id="w", table_id="legacy", is_active=True)]
+                 asset_workspace_id="w", is_active=True) for path in ("a.csv", "b.csv")]
+    rows += [dict(asset_type="TABLE", asset_workspace_id="w", table_id="legacy", is_active=True)]
     assert len(current_catalogue_observations(rows)) == 3
     rows[0]["is_active"] = False
     assert len(current_catalogue_observations(rows)) == 2
@@ -65,7 +65,7 @@ def test_file_catalogue_preserves_first_observation_and_extension_fields(writer)
     row = writer.spark.createDataFrame.call_args.args[0][0]
     assert row["columns_json"] is None
     assert row["table_id"] == writer.identity["source_id"]
-    assert row["workspace_id"] == "physical" and row["item_id"] == "lakehouse"
+    assert row["asset_workspace_id"] == "physical" and row["item_id"] == "lakehouse"
     assert row["first_observed_at"] == row["last_observed_at"]
     updates = writer.merge.whenMatchedUpdate.call_args.kwargs["set"]
     assert updates["first_observed_at"] == "coalesce(target.first_observed_at, source.first_observed_at)"
@@ -152,9 +152,9 @@ def test_profile_consumers_load_file_columns_and_activity_participation(monkeypa
     from fabricops_kit.config.shared import build_column_id
     column_id = build_column_id(source_id, 'id')
     profile = {'column_name': 'id', 'table_id': source_id, 'column_id': column_id,
-        'workspace_id': 'physical', 'profile_id': 'profile', 'profile_snapshot_id': 'snapshot',
+        'asset_workspace_id': 'physical', 'profile_id': 'profile', 'profile_snapshot_id': 'snapshot',
         'row_count': 2, '_committed_at': datetime(2026, 1, 1)}
-    frequency = {'table_id': source_id, 'column_id': column_id, 'column_name': 'id', 'workspace_id': 'physical',
+    frequency = {'table_id': source_id, 'column_id': column_id, 'column_name': 'id', 'asset_workspace_id': 'physical',
         'profile_id': 'profile', 'profile_snapshot_id': 'snapshot', 'frequency_rank': 1,
         'value': '1', 'frequency_count': 1, 'frequency_percent': 50.0}
     metadata = {'METADATA_DATA_PROFILED': [profile, {**profile, 'table_id': 'file:other'}],

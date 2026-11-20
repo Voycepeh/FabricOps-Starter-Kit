@@ -51,6 +51,17 @@ UNIFIED_ASSET_TABLES = ("METADATA_DATA_CATALOGUE",
 for _asset_table in UNIFIED_ASSET_TABLES:
     RETIRED_METADATA_COLUMNS[_asset_table]["source_id"] = "table_id"
 
+# Top-level stored workspace columns with a single physical meaning can be
+# renamed directly. Mixed historical values keep their original provenance.
+PHYSICAL_WORKSPACE_COLUMNS = {
+    "METADATA_DATA_CATALOGUE": {"workspace_id": "asset_workspace_id", "workspace_name": "asset_workspace_name"},
+    "METADATA_DATA_CONTRACT_ACTIVATION": {"workspace_id": "asset_workspace_id"},
+}
+LEGACY_WORKSPACE_TABLES = frozenset({
+    "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_ACCESS",
+    "METADATA_GUARDRAIL_RESULTS",
+})
+
 # Intentional lifecycle declarations, independent of physical schema ownership.
 # Historical release manifests validate this registry in test_metadata_retirements.py.
 # Retained historical tables are neither canonical nor automatically deleted.
@@ -147,7 +158,7 @@ def _require_catalogue_assets(references, *, context, table_name):
 
     from fabricops_kit.io.read_lakehouse_table import read_lakehouse_table
 
-    fields = ["workspace_id", "table_id", "asset_type"]
+    fields = ["asset_workspace_id", "table_id", "asset_type"]
     keys = references.select(*fields).distinct()
     if keys.isEmpty():
         return
@@ -367,8 +378,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("first_observed_at", "timestamp"),
                 ("last_observed_at", "timestamp"),
                 ("table_id", "string"),
-                ("workspace_id", "string"),
-                ("workspace_name", "string"),
+                ("asset_workspace_id", "string"),
+                ("asset_workspace_name", "string"),
                 ("columns_json", CATALOGUE_NESTED_FIELDS["columns_json"]),
                 ("store_type", "string"),
                 ("layer", "string"),
@@ -396,7 +407,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("profile_snapshot_id", "string"),
                 ("table_id", "string"),
                 ("column_id", "string"),
-                ("workspace_id", "string"),
+                ("asset_workspace_id", "string"),
+                ("legacy_workspace_id", "string"),
                 ("data_type", "string"),
                 ("table_name", "string"),
                 ("column_name", "string"),
@@ -431,7 +443,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("table_name", "string"),
                 ("column_name", "string"),
                 ("data_type", "string"),
-                ("workspace_id", "string"),
+                ("asset_workspace_id", "string"),
+                ("legacy_workspace_id", "string"),
                 ("value", "string"),
                 ("frequency_count", "long"),
                 ("frequency_percent", "double"),
@@ -450,7 +463,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("user_principal", "string", False),
                 ("table_id", "string", False),
                 ("table_name", "string"),
-                ("workspace_id", "string", False),
+                ("asset_workspace_id", "string"),
+                ("legacy_workspace_id", "string"),
                 ("asset_type", "string"),
                 ("access_level", "string", False),
                 ("access_value", "string", False),
@@ -468,7 +482,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
         ),
         "METADATA_DATA_CONTRACT_ACTIVATION": build_metadata_schema(
             "METADATA_DATA_CONTRACT_ACTIVATION",
-            [("workspace_id", "string", False), ("table_id", "string"), ("source_id", "string"),
+            [("asset_workspace_id", "string", False), ("table_id", "string"), ("source_id", "string"),
              ("contract_id", "string", False), ("contract_version", "integer", False),
              ("payload_sha256", "string", False), ("activation_id", "string", False),
              ("revision", "integer", False), ("status", "string", False),
@@ -554,7 +568,9 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("contract_version", "integer", False),
                 ("execution_type", "string", False),
                 ("run_id", "string", False),
-                ("workspace_id", "string", False),
+                ("asset_workspace_id", "string"),
+                ("execution_workspace_id", "string"),
+                ("legacy_workspace_id", "string"),
                 ("status", "string", False),
                 ("can_continue", "boolean", False),
                 ("severity", "string", False),

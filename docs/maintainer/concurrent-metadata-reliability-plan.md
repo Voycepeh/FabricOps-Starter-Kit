@@ -236,7 +236,7 @@ catalogue = read_lakehouse_table(
 usage = participants.join(
     catalogue,
     (F.col("p.table_id") == F.col("c.table_id"))
-    & (F.col("p.catalogue_workspace_id") == F.col("c.workspace_id"))
+    & (F.col("p.asset_workspace_id") == F.col("c.asset_workspace_id"))
     & (F.col("p.asset_type") == F.col("c.asset_type")),
     "left",
 )

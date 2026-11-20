@@ -121,7 +121,7 @@ def test_frozen_widget_rule_materializes_for_internal_schema_stage(spark_session
             "rule_type": "required_columns", "rule_parameters_json": '{"required_columns":["email-id"]}', "action": "Block"}
     payload, _warnings = contracts.assemble_contract_payload(
         draft=draft, workspace_id="dev", catalogue_rows=[
-                {"table_id": "target-id", "asset_type": "TABLE", "workspace_id": "dev",
+                {"table_id": "target-id", "asset_type": "TABLE", "asset_workspace_id": "dev",
                  "columns_json": [{"column_id": "email-id", "column_name": "email", "data_type": "string"}]},
             ], enrichment_rows=[], guardrail_rows=[rule],
     )

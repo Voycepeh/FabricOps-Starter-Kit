@@ -122,7 +122,11 @@ def contract_activation_delta(authority_delta, monkeypatch):
     from tests.unit.test_activated_pipeline import operation
     r = authority_delta
     r.ensure(service.ACTIVATION_TABLE)
-    payload = json.dumps({"table": {"table_id": "orders", "processing": {"load_strategy": "overwrite"}}})
+    payload = json.dumps({
+        "table": {"table_id": "orders", "processing": {"load_strategy": "overwrite"}},
+        "enrichment": {"table": [], "columns": []},
+        "guardrails": [],
+    })
     contract = {"table_id": "orders", "contract_id": "contract", "contract_version": 1,
         "status": "frozen", "contract_payload_json": payload}
     original = service.metadata_records
@@ -149,7 +153,7 @@ def test_exact_contract_activation_is_per_physical_workspace_and_stale_safe(cont
     with pytest.raises(ValueError, match="Stale"):
         activate("DEV", "stale", "dev-first")
     rows = service.read_activations(context=r.context, spark_session=r.spark)
-    assert {(row["workspace_id"], row["activation_id"]) for row in rows} == {("DEV", "dev-next"), ("PROD", "prod-first")}
+    assert {(row["asset_workspace_id"], row["activation_id"]) for row in rows} == {("DEV", "dev-next"), ("PROD", "prod-first")}
     assert service.read_registry(context=r.context, spark_session=r.spark) == []
 
 

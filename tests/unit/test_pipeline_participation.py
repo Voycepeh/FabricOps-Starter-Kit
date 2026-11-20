@@ -44,12 +44,12 @@ def test_three_reads_two_writes_and_catalogue_join(runtime, spark_session):
         assert next(r for r in records if r.table_id == 'table3').publication_status == 'committed'
         catalogue = spark_session.createDataFrame(
             [('workspace', 'table0', 'TABLE'), ('workspace', 'table0', 'FILE'),
-             ('canary', 'table0', 'TABLE')], ['workspace_id', 'table_id', 'asset_type'])
+             ('canary', 'table0', 'TABLE')], ['asset_workspace_id', 'table_id', 'asset_type'])
         from pyspark.sql import functions as F
         joined = participants.alias('p').join(catalogue.alias('c'),
             (F.col('p.table_id') == F.col('c.table_id'))
             & (F.col('p.asset_type') == F.col('c.asset_type'))
-            & (F.col('p.catalogue_workspace_id') == F.col('c.workspace_id')))
+            & (F.col('p.asset_workspace_id') == F.col('c.asset_workspace_id')))
         assert joined.count() == 1
         assert all(r.participant_workspace_id == 'workspace' for r in records)
     finally:
@@ -97,15 +97,15 @@ def test_files_and_legacy_run_hashes(runtime, spark_session):
     before = shared.canonical_pipeline_json(row)
     result = shared.pipeline_participation(_frame(spark_session, [row])).first()
     assert result.source_id == result.table_id == 'file:example' and result.asset_type == 'FILE'
-    assert result.catalogue_workspace_id == result.participant_workspace_id == 'workspace'
+    assert result.asset_workspace_id == result.participant_workspace_id == 'workspace'
     catalogue = spark_session.createDataFrame(
         [('workspace', 'file:example', 'FILE'), ('canary', 'file:example', 'FILE')],
-        ['workspace_id', 'table_id', 'asset_type'])
+        ['asset_workspace_id', 'table_id', 'asset_type'])
     from pyspark.sql import functions as F
     projected = shared.pipeline_participation(_frame(spark_session, [row])).alias('p')
     assert projected.join(catalogue.alias('c'),
         (F.col('p.table_id') == F.col('c.table_id'))
-        & (F.col('p.catalogue_workspace_id') == F.col('c.workspace_id'))
+        & (F.col('p.asset_workspace_id') == F.col('c.asset_workspace_id'))
         & (F.col('p.asset_type') == F.col('c.asset_type'))).count() == 1
     assert shared.canonical_pipeline_json(row) == before
     assert 'publication_status' not in shared.validate_pipeline_run(shared.pipeline_run_row(plan, status='incomplete'))['operations'][0]

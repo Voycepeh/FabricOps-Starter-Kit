@@ -65,7 +65,7 @@ def test_no_argument_widget_selects_physical_table_and_frozen_version(monkeypatc
     monkeypatch.setattr(module, 'get_spark_session', lambda **kw: object())
     monkeypatch.setattr(module, 'read_activation_history', lambda **kw: [])
     data = {
-        'METADATA_DATA_CATALOGUE': [dict(table_id='orders', workspace_id='DEV', asset_type='TABLE', is_active=True)],
+        'METADATA_DATA_CATALOGUE': [dict(table_id='orders', asset_workspace_id='DEV', asset_type='TABLE', is_active=True)],
         'METADATA_DATA_CONTRACT': [dict(table_id='orders', contract_id='contract', contract_version=2, status='frozen', contract_payload_json='{}')],
         'METADATA_DATA_AGREEMENT': [],
     }
@@ -102,7 +102,7 @@ def test_named_file_activation_never_uses_a_table_id(monkeypatch):
     monkeypatch.setattr(module, 'get_spark_session', lambda **kw: object())
     monkeypatch.setattr(module, 'metadata_records', lambda table, **kw: [frozen] if table == 'METADATA_DATA_CONTRACT' else [])
     monkeypatch.setattr(module, 'read_activation_history', lambda **kw: [])
-    monkeypatch.setattr(contracts, 'contract_file_datasets', lambda *a, **kw: [{**source, 'store': 'Bronze', 'configuration_workspace_id': 'engineering-route'}])
+    monkeypatch.setattr(contracts, 'contract_file_datasets', lambda *a, **kw: [{**source, 'asset_workspace_id': source['workspace_id'], 'store': 'Bronze', 'configuration_workspace_id': 'engineering-route'}])
     action = Mock(return_value={'status': 'active', 'source_id': source['source_id'], 'table_id': None})
     monkeypatch.setattr(module, 'set_table_contract_activation', action)
     ui = module.widget_activate_data_contract()

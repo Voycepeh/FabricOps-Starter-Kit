@@ -20,15 +20,16 @@ No starter template or solution is traced for the public writer functions.
 
 **Grain:** One current asset per physical workspace ID, Table ID and asset type.
 
-**Primary key:** composite (`workspace_id` + `table_id` + `asset_type`)
+**Primary key:** composite (`asset_workspace_id` + `table_id` + `asset_type`)
 
 The three columns are stored separately and identify the physical asset together.
 
 **Relationships:**
 
-No immediate table relationship is defined in the current implementation.
+`METADATA_DATA_CONTRACT` **(0..1 → N)**
+via `asset_workspace_id` + `table_id` + `asset_type`
 
-**Implementation details:** workspace_id and workspace_name identify the physical Fabric workspace. Underscore-prefixed workspace fields audit the executing notebook. TABLE retains its logical Table ID and FILE retains its existing selector identity in table_id. columns_json is a validated JSON string containing an ordered array of column_id, column_name and data_type definitions. SQL NULL means schema unobserved and [] means an observed empty schema. Full schema observations replace the current active columns even when profiling is disabled. Returning columns use the established deterministic ID. Historical profiles and frozen Contracts retain their captured definitions. Processing parameters, Scheduled Refresh and key discovery retain their existing JSON fields.
+**Implementation details:** asset_workspace_id and asset_workspace_name identify the physical Fabric workspace. Underscore-prefixed workspace fields audit the executing notebook. TABLE retains its logical Table ID and FILE retains its existing selector identity in table_id. columns_json is a validated JSON string containing an ordered array of column_id, column_name and data_type definitions. SQL NULL means schema unobserved and [] means an observed empty schema. Full schema observations replace the current active columns even when profiling is disabled. Returning columns use the established deterministic ID. Historical profiles and frozen Contracts retain their captured definitions. Processing parameters, Scheduled Refresh and key discovery retain their existing JSON fields.
 
 ## Column summary
 
@@ -52,8 +53,8 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>first_observed_at</code></td><td><code>timestamp</code></td><td>First recorded asset observation, retained on subsequent registrations.</td></tr>
 <tr class="metadata-column--engineering"><td><code>last_observed_at</code></td><td><code>timestamp</code></td><td>Most recent recorded asset observation.</td></tr>
 <tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Common operational asset key for TABLE or FILE assets across workspace, dataset, and table context.</td></tr>
-<tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>ID of the Fabric workspace that contains the physical asset.</td></tr>
-<tr class="metadata-column--engineering"><td><code>workspace_name</code></td><td><code>string</code></td><td>Display name of the Fabric workspace that contains the physical asset.</td></tr>
+<tr class="metadata-column--engineering"><td><code>asset_workspace_id</code></td><td><code>string</code></td><td>ID of the Fabric workspace that contains the physical asset.</td></tr>
+<tr class="metadata-column--engineering"><td><code>asset_workspace_name</code></td><td><code>string</code></td><td>Display name of the Fabric workspace that contains the physical asset.</td></tr>
 <tr class="metadata-column--engineering"><td><code>columns_json</code></td><td><code>string</code><details class="metadata-structured-type"><summary>Logical JSON schema: <code>Array</code></summary><table class="metadata-nested-type" aria-label="Fields in columns_json"><thead><tr><th scope="col">Field</th><th scope="col">Type</th></tr></thead><tbody><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>column_id</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>column_name</code></td><td><code>string</code></td></tr><tr><td class="metadata-nested-field metadata-nested-field--depth-0"><code>data_type</code></td><td><code>string</code></td></tr></tbody></table><p>Representative JSON value (optional fields omitted):</p><pre><code class="language-json">[
   {
     &quot;column_id&quot;: &quot;example-column-id&quot;,

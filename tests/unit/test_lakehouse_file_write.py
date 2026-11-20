@@ -428,7 +428,7 @@ def test_ungoverned_file_protection_ignores_format_and_options(monkeypatch, prot
     protected = file_source_identity(workspace_id='workspace', item_id='item', relative_path=protected_path,
         file_format='json', reader_options={'multiLine': True})
     destination = file_source_identity(workspace_id='workspace', item_id='item', relative_path='nested/orders.csv', file_format='csv')
-    monkeypatch.setattr(activation, 'read_activations', lambda **kw: [{'workspace_id': 'workspace',
+    monkeypatch.setattr(activation, 'read_activations', lambda **kw: [{'asset_workspace_id': 'workspace',
         'table_id': None, 'destination_json': json.dumps(protected)}])
     with pytest.raises(ValueError, match='protected file'):
         activation.guard_ungoverned_write(SimpleNamespace(runtime_context={}), destination['source_id'], destination)

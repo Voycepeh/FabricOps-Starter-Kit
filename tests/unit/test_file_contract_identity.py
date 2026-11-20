@@ -46,7 +46,7 @@ def test_confined_file_folder_and_wildcard_selectors_remain_supported(path):
 def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_table(monkeypatch):
     """Shared contract semantics use file source identity with no Catalogue table row."""
     descriptor = source()
-    row = {"asset_type": "FILE", "table_id": descriptor["source_id"], "workspace_id": descriptor["workspace_id"],
+    row = {"asset_type": "FILE", "table_id": descriptor["source_id"], "asset_workspace_id": descriptor["workspace_id"],
            "table_name": descriptor["relative_path"], "columns_json": json.dumps([
                {"column_id": "id", "column_name": "id", "data_type": "long"}])}
     monkeypatch.setattr(contracts, "read_lakehouse_table",
@@ -56,9 +56,11 @@ def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_tabl
     monkeypatch.setattr(contracts, "coerce_metadata_row_types", lambda table, row: row)
     spark = type("Spark", (), {"createDataFrame": lambda self, rows, schema=None: rows})()
     draft = contracts.create_contract_draft(file_source=descriptor,
-        config={}, active_workspace_id=descriptor["workspace_id"], spark_session=spark)
+        config={}, active_workspace_id="authoring-workspace", spark_session=spark)
+    assert draft["evidence_workspace_id"] == descriptor["workspace_id"]
     assert draft["table_id"] is None and draft["source_id"] == descriptor["source_id"]
     payload = json.loads(draft["contract_payload_json"])
+    assert payload["table"]["evidence_workspace_id"] == descriptor["workspace_id"]
     assert "table_id" not in payload["table"] and "processing" not in payload["table"]
     payload["guardrails"] = [{"guardrail_rule_id": "grain", "guardrail_type": "grain", "rule_type": "uniqueness",
         "rule_parameters": {"columns": ["id"]}, "action": "Block", "is_active": True},
@@ -126,7 +128,7 @@ def test_file_activation_resolves_configured_physical_source(monkeypatch):
         activation_id="file-activation", governance_confirmed=True, file_source=descriptor, file_store="Bronze", context=context,
         file_configuration_workspace_id="configuration-route")
     assert file_scopes == ["configuration-route"]
-    assert result["workspace_id"] == "workspace"
+    assert result["asset_workspace_id"] == "workspace"
     assert result["table_id"] is None and result["source_id"] == descriptor["source_id"]
     assert json.loads(result["destination_json"]) == descriptor
     store.item_id = "other-item"

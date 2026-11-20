@@ -28,7 +28,7 @@ def catalogue_row(table_id: str, table_name: str, *, active=True, level="table")
     return {
         "asset_type": "TABLE" if level == "table" else "FILE",
         "table_id": table_id,
-        "workspace_id": "dev",
+        "asset_workspace_id": "dev",
         "store_type": "lakehouse",
         "layer": "Silver",
         "schema_name": "sales",

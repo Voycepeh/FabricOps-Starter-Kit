@@ -1776,7 +1776,7 @@ def widget_data_contract(
     )
 
     def configured_item_name(row: Mapping[str, Any]) -> str:
-        workspace_id = str(row.get("configuration_workspace_id") or row.get("workspace_id") or "")
+        workspace_id = str(row.get("configuration_workspace_id") or row.get("asset_workspace_id") or "")
         store_key = str(row.get("store") or row.get("layer") or "")
         configured = paths.get(workspace_id, {}).get(store_key)
         if isinstance(configured, Mapping):
@@ -1787,9 +1787,9 @@ def widget_data_contract(
         )
 
     workspace_names = {
-        str(row["workspace_id"]): str(row["workspace_name"])
+        str(row["asset_workspace_id"]): str(row["asset_workspace_name"])
         for row in [*table_rows, *file_rows]
-        if row.get("workspace_id") and row.get("workspace_name")
+        if row.get("asset_workspace_id") and row.get("asset_workspace_name")
     }
     runtime_metadata = resolved.get("runtime_metadata") or resolved
     if runtime_metadata.get("workspace_id") and runtime_metadata.get("workspace_name"):
@@ -1807,7 +1807,7 @@ def widget_data_contract(
             name = str(row["relative_path"])
             kind = "Folder" if name.endswith("/") else "File selector" if any(char in name for char in "*?[") else "File"
         item = configured_item_name(row)
-        workspace_id = str(row.get("workspace_id") or "")
+        workspace_id = str(row.get("asset_workspace_id") or "")
         workspace = workspace_names.get(workspace_id) or workspace_id
         return f"{item} · {name} — {kind} · {workspace}"
 
@@ -2529,8 +2529,8 @@ def widget_data_contract(
                     ), "") or "Unknown workspace"
                 pipeline_name = str(profile.get("pipeline_name") or "Unknown pipeline")
                 selected_workspace_name = str(
-                    workspace_names.get(str(table.get("workspace_id") or ""))
-                    or table.get("workspace_id") or "Workspace unavailable"
+                    workspace_names.get(str(table.get("asset_workspace_id") or ""))
+                    or table.get("asset_workspace_id") or "Workspace unavailable"
                 ).strip()
                 profile_origin = (
                     pipeline_name
@@ -2942,7 +2942,7 @@ def widget_data_contract(
                 f"{html.escape(str(table.get('schema_name') or ''))}</div>"
                 f"<div style='color:#667085;font-size:12px;margin-top:5px;'>v{row['contract_version']} · "
                 f"{html.escape(str(row.get('status') or '').upper())}</div>"
-                + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(workspace_names.get(str(table.get('workspace_id') or '')) or table.get('workspace_id') or 'Workspace unavailable'))}</div>"
+                + f"<div style='color:#667085;font-size:12px;'>{html.escape(str(workspace_names.get(str(table.get('asset_workspace_id') or '')) or table.get('asset_workspace_id') or 'Workspace unavailable'))}</div>"
             )
             table_context_content.value = table_identity_html() + runtime_summary_html
             if state.get("workspace_id"):
@@ -7282,7 +7282,7 @@ def widget_data_contract(
             if str(row.get("table_id") or "") in options["tables"]
             and (
                 not state.get("workspace_id")
-                or str(row.get("workspace_id") or "") == str(state["workspace_id"])
+                or str(row.get("asset_workspace_id") or "") == str(state["workspace_id"])
             )
         ]
         rows_by_table_id: dict[str, dict[str, Any]] = {}

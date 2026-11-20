@@ -226,8 +226,9 @@ def test_legacy_file_identity_consolidates_atomically_with_history_preserved(cat
     setup = importlib.import_module('fabricops_kit.config.setup_metadata_tables')
     r = catalogue_delta
     expected = metadata_table_schema_registry()[table]
-    legacy = StructType([f for f in expected if f.name != 'asset_type'] +
-                        [StructField('source_id', StringType()), StructField('extension', StringType())])
+    legacy = StructType([f for f in expected if f.name not in
+                         {'asset_type', 'asset_workspace_id', 'legacy_workspace_id', 'execution_workspace_id'}] +
+                        [StructField(name, StringType()) for name in ('workspace_id', 'source_id', 'extension')])
     row = {f.name: datetime(2026, 1, 1) if f.name == '_committed_at' else
            True if f.name == 'can_continue' else 1 if f.name in {'contract_version', 'guardrail_version'} else 'original'
            for f in legacy if not f.nullable}
@@ -247,10 +248,13 @@ def test_legacy_file_identity_consolidates_atomically_with_history_preserved(cat
     after = upgraded.first().asDict()
     assert 'source_id' not in after and after['table_id'] == 'file:retained' and after['asset_type'] == 'FILE'
     for name, value in before.items():
-        if name not in {'source_id', 'table_id', 'column_id'}:
+        if name not in {'source_id', 'table_id', 'column_id', 'workspace_id'}:
             assert after[name] == value
     if table in {'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY'}:
         assert after['column_id'] == build_column_id('file:retained', 'id')
+        assert after['asset_workspace_id'] == 'physical'
+    else:
+        assert after['legacy_workspace_id'] == 'physical'
     version = DeltaTable.forPath(r.spark, path).history(1).first()['version']
     assert upgrade()[1] is None
     assert DeltaTable.forPath(r.spark, path).history(1).first()['version'] == version

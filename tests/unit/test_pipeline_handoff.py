@@ -273,7 +273,7 @@ def test_full_deployment_readback_retry_and_distinct_identities(authority, monke
 
 def test_agreement_association_not_engineering_registry_is_authority(monkeypatch):
     """Cross-workspace operations fail closed without the active Contract's exact Agreement."""
-    activation = {"workspace_id": "OTHER"}
+    activation = {"asset_workspace_id": "OTHER"}
     with pytest.raises(ValueError, match="Agreement"):
         service.check_contract_agreement(activation, execution_workspace_id="DEV", context={})
     today = datetime.now(UTC).date()
@@ -520,3 +520,52 @@ def test_real_setup_parameters_survive_export_and_reject_runtime_overrides(autho
     plan.evidence['pipeline_parameters']['profiling_max_rows'] = 100
     with pytest.raises(ValueError, match='parameter overrides'):
         service.export_pipeline_submission(session, destination_workspace_id='DEV', context=authority.eng)
+
+
+def test_file_authorization_survives_export_and_independent_policy_review(authority, deployment_io, monkeypatch):
+    """Resolve exported and reviewed file authority by the stored physical workspace key."""
+    from fabricops_kit.data_contract.shared import file_source_identity
+    from fabricops_kit.io import shared as io
+    from fabricops_kit.pipeline.shared import PipelineSession
+    from tests.unit.test_activated_pipeline import contract_candidate
+
+    candidate = package_candidate()
+    candidate['dry_run']['workspace_id'] = 'dev'
+    for op in candidate['dry_run']['operations']:
+        op['destination']['workspace_id'] = 'dev'
+    for op in candidate['manifest']['tested_operations']:
+        op['destination']['workspace_id'] = 'dev'
+    source = file_source_identity(workspace_id='dev', item_id='files', relative_path='orders.csv', file_format='csv')
+    payload = canonical_pipeline_json({'source': source, 'table': {'columns': []},
+        'enrichment': {'table': [], 'columns': []}, 'guardrails': []})
+    contract = dict(contract_id='files', contract_version=1, source_id=source['source_id'],
+        table_id=None, status='frozen', contract_payload_json=payload)
+    authorization = dict(source=source, store='Bronze', contract_id='files', contract_version=1,
+        payload_sha256=service.hashlib.sha256(payload.encode()).hexdigest())
+    file_activation = {**contract_candidate('dev'), **{key: authorization[key] for key in
+        ('contract_id', 'contract_version', 'payload_sha256')}, 'activation_id': 'file-activation',
+        'table_id': None, 'source_id': source['source_id'], 'destination_json': canonical_pipeline_json(source)}
+    authority.tables[service.ACTIVATION_TABLE] = [contract_candidate('dev'), file_activation]
+    authority.tables['METADATA_DATA_CONTRACT'] = [contract]
+    monkeypatch.setattr(service, 'reviewed_contracts', lambda *a, **kw: {'orders': {'contract_id': 'contract'}})
+    monkeypatch.setattr(io, 'resolve_configured_file_path', lambda *a, **kw:
+        (SimpleNamespace(workspace_id='dev', item_id='files'), 'orders.csv', 'unused'))
+    plan = SimpleNamespace(plan_id='dry-run', pipeline_id=PIPELINE_ID, workspace_id='dev', notebook_id=PIPELINE_ID,
+        execution_mode='dry_run', runtime_context=authority.eng, contracts_json='{}', evidence={
+            'notebook_snapshot': base64.b64decode(candidate['executed_notebook_base64']),
+            'pipeline_parameters': candidate['manifest']['parameters'],
+            'final_result': candidate['dry_run'], 'sealed': True,
+            'operations': {op['operation_key']: op for op in candidate['manifest']['tested_operations']}})
+    session = object.__new__(PipelineSession)
+    session.plan = plan
+    deployment_io.saved[PIPELINE_ID] = plan.evidence['notebook_snapshot']
+
+    exported = service.export_pipeline_submission(session, destination_workspace_id='dev',
+        file_authorizations=[authorization], context=authority.eng)
+    assert exported['contracts'][source['source_id']]['contract_payload_json'] == payload
+    policy = POLICY_REVIEW(exported, context=authority.gov)
+    assert policy[source['source_id']]['activation_id'] == 'file-activation'
+    changed = deepcopy(exported)
+    changed['manifest']['file_authorizations'][0]['contract_version'] = 2
+    with pytest.raises(ValueError, match='exact frozen file Contract'):
+        POLICY_REVIEW(resign(changed), context=authority.gov)

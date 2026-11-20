@@ -232,4 +232,4 @@ def test_standard_template_saved_constants_are_frozen_in_cloned_setup():
 def test_cross_workspace_data_access_requires_an_effective_agreement():
     """An omitted Agreement cannot authorize physical data access in another workspace."""
     with pytest.raises(ValueError, match="effective Agreement"):
-        service.check_contract_agreement({"workspace_id": "REMOTE"}, execution_workspace_id="PROD", context={})
+        service.check_contract_agreement({"asset_workspace_id": "REMOTE"}, execution_workspace_id="PROD", context={})

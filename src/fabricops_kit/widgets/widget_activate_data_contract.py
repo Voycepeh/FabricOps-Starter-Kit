@@ -78,7 +78,7 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
     datasets = [*tables, *files]
     frozen = [row for row in contracts if row.get("status") == "frozen"]
     widgets = shared.require_ipywidgets()
-    workspaces = sorted({row["workspace_id"] for row in datasets} | ({selected_workspace} if selected_workspace else set()))
+    workspaces = sorted({row["asset_workspace_id"] for row in datasets} | ({selected_workspace} if selected_workspace else set()))
     workspace = widgets.Dropdown(options=[("Select physical workspace", None)] + [(value, value) for value in workspaces],
         value=selected_workspace, layout=widgets.Layout(width="100%"))
     table = widgets.Dropdown(options=[], layout=widgets.Layout(width="100%"))
@@ -115,7 +115,7 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
     def table_choices(_event=None):
         state["changing"] = True
         try:
-            values = {participant_id(row) for row in datasets if row["workspace_id"] == workspace.value}
+            values = {participant_id(row) for row in datasets if row["asset_workspace_id"] == workspace.value}
             if table_id is not None and workspace.value == selected_workspace:
                 values.add(table_id)
             labels = {participant_id(row): dataset_display_name(row) for row in datasets}
@@ -129,7 +129,7 @@ def widget_activate_data_contract(table_id: str | None = None, contract_id: str 
         state["history"] = read_activation_history(context=routed() if workspace.value else base, spark_session=spark)
         return render_history()
     def render_history():
-        scoped = [row for row in state["history"] if (not workspace.value or row["workspace_id"] == workspace.value)
+        scoped = [row for row in state["history"] if (not workspace.value or row["asset_workspace_id"] == workspace.value)
             and (not table.value or (row.get("source_id") or row.get("table_id")) == table.value)]
         history.value = "<details><summary>Contract Activation history and current state</summary><pre style='white-space:pre-wrap'>" + html.escape(json.dumps(scoped, indent=2, default=str)) + "</pre></details>"
         return scoped

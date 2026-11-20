@@ -91,7 +91,7 @@ def normalized_destination(destination):
 
 def operation_activation_identity(operation):
     """Select Contract Activation by its typed physical participant identity."""
-    return {"workspace_id": operation["destination"]["workspace_id"],
+    return {"asset_workspace_id": operation["destination"]["workspace_id"],
             **({"source_id": operation["source_id"]} if operation.get("source_type") == "file" else {"table_id": operation["table_id"]})}
 
 
@@ -247,7 +247,7 @@ def validate_activations(rows):
     """Enforce one frozen Contract per physical workspace/Table ID, including aliases."""
     identities, bindings, ids, revisions = set(), set(), set(), set()
     for row in rows:
-        identity = row.get("workspace_id"), row.get("table_id") or row.get("source_id")
+        identity = row.get("asset_workspace_id"), row.get("table_id") or row.get("source_id")
         destination = parse_metadata_json(row.get("destination_json"), field="destination_json")
         physical = normalized_destination(destination)
         if destination.get("source_type") == "file":
@@ -417,7 +417,7 @@ def guard_ungoverned_write(plan, table_id, destination, *, spark_session=None):
             overlap = not left or not right or left == right or left.startswith(right + "/") or right.startswith(left + "/")
             if same_item and overlap:
                 raise ValueError("Ungoverned cannot write a protected file destination or overlapping folder.")
-        if ((row["workspace_id"].casefold() == destination["workspace_id"].casefold() and row.get("table_id") == table_id)
+        if ((row["asset_workspace_id"].casefold() == destination["workspace_id"].casefold() and row.get("table_id") == table_id)
                 or normalized_destination(protected) == normalized_destination(destination)):
             raise ValueError("Ungoverned cannot write a protected Table ID or physical destination alias.")
 
@@ -466,7 +466,7 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
     if expected_payload_sha256 is not None and payload_sha256 != expected_payload_sha256:
         raise ValueError("Frozen Contract payload changed after review; activation rejected.")
     audit = build_runtime_audit_fields(config=config, active_workspace_id=workspace, runtime_context=runtime)
-    record = dict(workspace_id=workspace, table_id=table_id, source_id=file_source["source_id"] if file_source else None, contract_id=contract_id, contract_version=contract_version,
+    record = dict(asset_workspace_id=workspace, table_id=table_id, source_id=file_source["source_id"] if file_source else None, contract_id=contract_id, contract_version=contract_version,
         payload_sha256=payload_sha256, activation_id=activation_id,
         status="active", destination_json=canonical_pipeline_json(destination),         activated_at=datetime.now(UTC).replace(tzinfo=None), **audit)
     record.update(agreement_id=agreement_id, agreement_version=agreement_version, agreement_sha256=None)
@@ -479,11 +479,11 @@ def set_table_contract_activation(table_id, contract_id, contract_version, *, ex
             raise ValueError("Agreement changed after Contract review; refresh before activation.")
     check_contract_agreement(record, execution_workspace_id=workspace, context=context, spark_session=spark_session)
     def mutate(rows):
-        matches = [row for row in rows if (row["workspace_id"], row.get("table_id"), row.get("source_id")) == (workspace, table_id, record["source_id"]) and row["status"] == "active"]
+        matches = [row for row in rows if (row["asset_workspace_id"], row.get("table_id"), row.get("source_id")) == (workspace, table_id, record["source_id"]) and row["status"] == "active"]
         current = matches[0] if matches else None
         replay = [row for row in rows if row["activation_id"] == activation_id]
         if replay:
-            if any(replay[0].get(key) != record.get(key) for key in ("workspace_id", "table_id", "source_id", "contract_id", "contract_version", "payload_sha256", "destination_json", "agreement_id", "agreement_version", "agreement_sha256")):
+            if any(replay[0].get(key) != record.get(key) for key in ("asset_workspace_id", "table_id", "source_id", "contract_id", "contract_version", "payload_sha256", "destination_json", "agreement_id", "agreement_version", "agreement_sha256")):
                 raise ValueError("Activation operation ID was reused with different content.")
             return rows, replay[0]
         if (current["activation_id"] if current else None) != expected_activation_id:
@@ -790,7 +790,7 @@ def reviewed_contracts(operations, *, context, spark_session=None):
             raise ValueError("Contract physical binding differs from the reviewed operation.")
         contract = resolve_activation_contract(active, context=context, spark_session=spark_session)
         validate_contract_definitions(contract["contract_payload"])
-        contract_guardrail_rows(contract, workspace_id=active["workspace_id"], table_id=participant_id(op))
+        contract_guardrail_rows(contract, workspace_id=active["asset_workspace_id"], table_id=participant_id(op))
         _, execution_workspace, _ = resolve_fabric_context(context=context)
         check_contract_agreement(active, execution_workspace_id=execution_workspace, context=context, spark_session=spark_session)
         contracts[participant_id(op)] = contract
@@ -1023,7 +1023,7 @@ def export_pipeline_submission(dry_run, *, destination_workspace_id, file_author
     for authorization in manifest["file_authorizations"]:
         source = authorization["source"]
         activation = exact_record(read_activations(context=routed, spark_session=spark_session),
-            workspace_id=source["workspace_id"], source_id=source["source_id"])
+            asset_workspace_id=source["workspace_id"], source_id=source["source_id"])
         package["contracts"][source["source_id"]] = resolve_activation_contract(activation, context=routed, spark_session=spark_session)
     package["submission_sha256"] = manifest_digest(package)
     package = validate_submission(canonical_pipeline_json(package))
@@ -1195,7 +1195,7 @@ def review_submission_policy(package, *, context, spark_session=None):
         if (configured.workspace_id.lower(), configured.item_id.lower(), relative_path) != (source["workspace_id"], source["item_id"], source["relative_path"]):
             raise ValueError("File physical authorization changed after submission.")
         activation = exact_record(read_activations(context=routed, spark_session=spark_session),
-            workspace_id=source["workspace_id"], source_id=source["source_id"])
+            asset_workspace_id=source["workspace_id"], source_id=source["source_id"])
         if any(activation.get(key) != authorization[key] for key in ("contract_id", "contract_version", "payload_sha256")):
             raise ValueError("File Contract selection changed after submission.")
         if normalized_destination(parse_metadata_json(activation["destination_json"], field="destination_json")) != normalized_destination(source):
@@ -1372,7 +1372,7 @@ def check_contract_agreement(activation, *, execution_workspace_id, context, spa
     """Enforce Governance's Agreement association for the exact active physical Contract."""
     refs = [activation.get(key) for key in ("agreement_id", "agreement_version", "agreement_sha256")]
     if not any(refs):
-        if activation["workspace_id"] != execution_workspace_id:
+        if activation["asset_workspace_id"] != execution_workspace_id:
             raise ValueError("Cross-workspace operations require an effective Agreement associated with the active Contract.")
         return
     if not all(refs):
@@ -1568,7 +1568,7 @@ def resolve_active_consumer_contract(config, active_workspace_id, table_id, *, s
         destination = pipeline_physical_bindings({table_id: identity}, config=config, workspace_id=active_workspace_id)[table_id]
     physical = normalized_destination(destination)
     activation = exact_record(read_activations(context=context, spark_session=spark_session),
-        workspace_id=destination["workspace_id"], table_id=table_id)
+        asset_workspace_id=destination["workspace_id"], table_id=table_id)
     if normalized_destination(parse_metadata_json(activation["destination_json"], field="destination_json")) != physical:
         raise ValueError("Consumer physical binding differs from the activated Contract; review the configured table before provisioning.")
     contract = resolve_activation_contract(activation, context=context, spark_session=spark_session)

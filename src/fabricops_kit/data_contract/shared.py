@@ -101,7 +101,7 @@ def current_catalogue_observations(rows):
     """Return active table/file assets and their current registered columns."""
     active = {}
     for row in row_dicts(rows):
-        key = (row.get("workspace_id"), row.get("table_id"), row.get("asset_type"))
+        key = (row.get("asset_workspace_id"), row.get("table_id"), row.get("asset_type"))
         if key in active:
             raise ValueError(f"Duplicate Catalogue asset identity {key!r}.")
         active[key] = row
@@ -113,8 +113,8 @@ def observation_selector_options(rows, *, table_id=None, workspace_id=None):
               if row.get("asset_type") == "TABLE"]
     return {
         "tables": sorted({str(row["table_id"]) for row in tables
-                          if not workspace_id or str(row["workspace_id"]) == workspace_id}),
-        "workspaces": sorted({str(row["workspace_id"]) for row in tables
+                          if not workspace_id or str(row["asset_workspace_id"]) == workspace_id}),
+        "workspaces": sorted({str(row["asset_workspace_id"]) for row in tables
                               if not table_id or str(row["table_id"]) == table_id}),
     }
 
@@ -143,7 +143,7 @@ def contract_file_datasets(rows, *, config, workspace_id):
         if not stores:
             continue
         route, store_key = sorted(stores, key=lambda item: (item[0] != workspace_id, *item))[0]
-        datasets[source["source_id"]] = {**source, "store": store_key, "configuration_workspace_id": route,
+        datasets[source["source_id"]] = {**source, "asset_workspace_id": source["workspace_id"], "store": store_key, "configuration_workspace_id": route,
             "columns": payload.get("table", {}).get("columns", [])}
     return list(datasets.values())
 
@@ -175,7 +175,7 @@ def catalogue_file_datasets(rows, *, config, workspace_id, pipeline_runs=()):
             continue
         _, raw_options = reader_settings.get((row["table_id"], row["file_format"]), ("", None))
         source = file_source_identity(
-            workspace_id=row["workspace_id"], item_id=row["item_id"],
+            workspace_id=row["asset_workspace_id"], item_id=row["item_id"],
             relative_path=row["relative_path"], file_format=row["file_format"],
             reader_options=_json_value(raw_options, field="reader_options_json", default={}),
         )
@@ -189,8 +189,8 @@ def catalogue_file_datasets(rows, *, config, workspace_id, pipeline_runs=()):
                     stores.append((route, key))
         if stores:
             route, key = min(stores, key=lambda match: (match[0] != workspace_id, match[1] != row["layer"], *match))
-            datasets.append({**source, "store": key, "configuration_workspace_id": route,
-                             "workspace_name": row["workspace_name"], "columns": columns})
+            datasets.append({**source, "asset_workspace_id": source["workspace_id"], "store": key, "configuration_workspace_id": route,
+                             "asset_workspace_name": row["asset_workspace_name"], "columns": columns})
     return sorted(datasets, key=lambda row: row["relative_path"])
 
 
@@ -208,10 +208,10 @@ def dataset_display_name(dataset):
     if dataset.get("source_type") == "file":
         path = dataset["relative_path"]
         kind = "Folder" if path.endswith("/") else "File selector" if any(char in path for char in "*?[") else "File"
-        return f"{path} — {dataset.get('store', '')} — {kind} · {dataset.get('workspace_name') or dataset['workspace_id']} / {dataset['item_id']}"
+        return f"{path} — {dataset.get('store', '')} — {kind} · {dataset.get('asset_workspace_name') or dataset['workspace_id']} / {dataset['item_id']}"
     name = dataset.get("table_name") or dataset.get("table_id") or ""
     location = " / ".join(str(value) for value in (dataset.get("layer") or dataset.get("store"), dataset.get("schema_name") or dataset.get("schema")) if value)
-    return f"{name} — {location} — Table · {dataset.get('workspace_name') or dataset.get('workspace_id', '')} / {dataset.get('item_id') or dataset.get('store_name', '')}"
+    return f"{name} — {location} — Table · {dataset.get('asset_workspace_name') or dataset.get('asset_workspace_id', '')} / {dataset.get('item_id') or dataset.get('store_name', '')}"
 
 
 def contract_lifecycle_id(table_id: str) -> str:
@@ -255,7 +255,7 @@ def create_contract_draft(
         else ("TABLE", str(table_id).strip(), active_workspace_id)
     )
     table = next((row for row in current_catalogue_observations(catalogue_rows)
-                  if (row.get("asset_type"), row.get("table_id"), row.get("workspace_id")) == (kind, identity, workspace)), None)
+                  if (row.get("asset_type"), row.get("table_id"), row.get("asset_workspace_id")) == (kind, identity, workspace)), None)
     if table is None:
         raise ValueError(f"No active Catalogue {kind} {identity!r} in physical workspace {workspace!r}.")
     observed_columns = decode_metadata_row("METADATA_DATA_CATALOGUE", {"columns_json": table.get("columns_json")})["columns_json"]
@@ -330,7 +330,7 @@ def create_contract_draft(
         "table": {
             **dict(seed.get("table") or {}),
             **_fields(table, ("table_id", "store_type", "layer", "schema_name", "table_name")),
-            "evidence_workspace_id": active_workspace_id,
+            "evidence_workspace_id": workspace,
             "columns": columns,
             "writer": {
                 "notebook_id": str(table.get("writer_notebook_id") or table.get("_notebook_id") or "").strip(),
@@ -367,7 +367,7 @@ def create_contract_draft(
         "table_id": str(table_id).strip() if table_id else None,
         "source_id": file_source["source_id"] if file_source is not None else None,
         "table_name": payload_table_name,
-        "evidence_workspace_id": active_workspace_id,
+        "evidence_workspace_id": workspace,
         "contract_payload_json": json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
         "status": "draft",
         **audit,
@@ -976,7 +976,7 @@ def get_contract_authoring_state(
     catalogue_rows = _scoped_rows(
         catalogue_frame,
         f"table_id = {_sql_literal(catalogue_id)}",
-        f"workspace_id = {_sql_literal(active_workspace_id)}",
+        f"asset_workspace_id = {_sql_literal(active_workspace_id)}",
         f"asset_type = {_sql_literal(asset_type)}",
     )
     payload = _json_value(
@@ -999,7 +999,7 @@ def get_contract_authoring_state(
         "workspace_id": active_workspace_id,
         "catalogue_rows": [
             row for row in row_dicts(catalogue_rows)
-            if row.get("workspace_id") == active_workspace_id
+            if row.get("asset_workspace_id") == active_workspace_id
             and row.get("table_id") == catalogue_id and row.get("asset_type") == asset_type
         ],
         "enrichment": canonical_enrichment_state(enrichment_rows),
@@ -1136,12 +1136,19 @@ def _asset_history_reader(config, routing_workspace_id, spark_session, table_id,
             load_runs()
 
         def matches(row):
+            if physical := row.get("asset_workspace_id"):
+                return physical.casefold() == workspace
             proven = profile_locations.get(row.get("profile_snapshot_id"))
-            return proven == {workspace} if proven else str(row.get("workspace_id") or "").casefold() == workspace
+            return proven == {workspace} if proven else str(row.get("legacy_workspace_id") or "").casefold() == workspace
 
         return [row for row in rows if matches(row)]
 
     return asset_rows
+
+
+def _profile_workspace(row):
+    """Match profile siblings inside the same stored workspace provenance."""
+    return row.get("asset_workspace_id"), row.get("legacy_workspace_id")
 
 
 def get_asset_pipeline_participation(*, config, routing_workspace_id, spark_session, table_id, physical_workspace_id=None):
@@ -1155,7 +1162,7 @@ def get_asset_pipeline_participation(*, config, routing_workspace_id, spark_sess
         schema=metadata_table_physical_schema(config, "METADATA_PIPELINE_RUN"), context=context)
     participants = pipeline_participation(runs).filter(F.col("table_id") == table_id)
     if physical_workspace_id is not None:
-        participants = participants.filter(F.col("catalogue_workspace_id") == physical_workspace_id.lower())
+        participants = participants.filter(F.col("asset_workspace_id") == physical_workspace_id.lower())
     latest = Window.partitionBy("execution_workspace_id", "pipeline_id", "pipeline_role").orderBy(
         # Released naive operation timestamps are UTC, independently of Spark's session zone.
         F.coalesce(*[F.from_json(F.to_json(F.struct(F.col(name).alias("at"))),
@@ -1207,7 +1214,7 @@ def get_asset_runtime_context(
         latest_profile = {
             **{key: latest_profile_row[key] for key in ("profile_scope", "profiling_max_rows") if latest_profile_row.get(key) is not None},
             "profile_snapshot_id": str(latest_profile_row.get("profile_snapshot_id") or ""),
-            "workspace_id": str(latest_profile_row.get("workspace_id") or ""),
+            "workspace_id": str(latest_profile_row.get("asset_workspace_id") or latest_profile_row.get("legacy_workspace_id") or ""),
             "workspace_name": str(latest_profile_row.get("_workspace_name") or ""),
             "pipeline_name": str(
                 latest_profile_row.get("_notebook_name")
@@ -1228,8 +1235,7 @@ def get_asset_runtime_context(
         else:
             latest_profile_rows = [
                 row for row in profiled
-                if str(row.get("workspace_id") or "")
-                == str(latest_profile_row.get("workspace_id") or "")
+                if _profile_workspace(row) == _profile_workspace(latest_profile_row)
                 and metadata_timestamp_sort_key(row.get("_committed_at"))
                 == metadata_timestamp_sort_key(latest_profile_row.get("_committed_at"))
                 and str(row.get("_activity_id") or "")
@@ -1266,12 +1272,12 @@ def get_asset_runtime_context(
             if str(row.get("profile_id") or "") and str(row.get("column_id") or "")
         }
         frequency_rows = table_rows("METADATA_DATA_PROFILED_FREQUENCY", frequency_predicate)
-        profile_workspaces = {row.get("profile_id"): row.get("workspace_id") for row in latest_profile_rows}
+        profile_workspaces = {row.get("profile_id"): _profile_workspace(row) for row in latest_profile_rows}
         summary_frequency_rows = [
             row for row in frequency_rows
             if str(row.get("profile_snapshot_id") or "") == latest_snapshot_id
             and str(row.get("profile_id") or "") in profile_columns
-            and row.get("workspace_id") == profile_workspaces.get(row.get("profile_id"))
+            and _profile_workspace(row) == profile_workspaces.get(row.get("profile_id"))
         ]
         summary_frequency_rows.sort(
             key=lambda row: (
@@ -1299,7 +1305,7 @@ def get_asset_runtime_context(
         snapshot = profile.get("profile_id") or profile.get("profile_snapshot_id")
         values = [
             row for row in frequency_by_column.get(column_id, [])
-            if row.get("workspace_id") == profile.get("workspace_id")
+            if _profile_workspace(row) == _profile_workspace(profile)
             and (snapshot is None or row.get("profile_id") == snapshot or row.get("profile_snapshot_id") == snapshot)
         ]
         values.sort(key=lambda row: (
@@ -1400,7 +1406,7 @@ def get_column_profile_context(
     )
     values = [
         row for row in table_rows("METADATA_DATA_PROFILED_FREQUENCY", column_filter, frequency_filter)
-        if row.get("column_id") == column_id and row.get("workspace_id") == latest.get("workspace_id")
+        if row.get("column_id") == column_id and _profile_workspace(row) == _profile_workspace(latest)
         and (snapshot is None or row.get("profile_id") == snapshot or row.get("profile_snapshot_id") == snapshot)
     ]
     values.sort(
@@ -1575,7 +1581,7 @@ def assemble_contract_payload(
     captured_table = draft_payload.get("table") or {}
     table = next((row for row in current_catalogue_observations(catalogue_rows)
                   if row.get("asset_type") == "TABLE" and row.get("table_id") == table_id
-                  and row.get("workspace_id") == workspace_id), None)
+                  and row.get("asset_workspace_id") == workspace_id), None)
     if table is None and "columns" not in captured_table:
         raise ValueError("Select one valid active METADATA_DATA_CATALOGUE table_id.")
     table = table if table is not None else captured_table

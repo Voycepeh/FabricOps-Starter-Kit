@@ -10,7 +10,7 @@ from scripts import generate_individual_function_reference_pages as generator
 from scripts.reference_docs_metadata import METADATA_REFERENCE_ORDER, METADATA_TABLE_MODELS
 
 
-VALID_CARDINALITIES = {"1:1", "1:N", "N:1", "N:M"}
+VALID_CARDINALITIES = {"1:1", "1:N", "N:1", "N:M", "N:0..1", "0..1:N"}
 
 
 def _schema_fields() -> dict[str, set[str]]:
@@ -75,9 +75,10 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert '<div class="metadata-table-grid">' not in first_landing
     assert 'data-metadata-explorer' in first_landing
     assert '<nav class="metadata-explorer-fallback"' in first_landing
-    assert "## Workspace columns" in first_landing
-    assert "Contract authoring evidence" in first_landing
-    assert "Notebook audit" in first_landing
+    assert first_landing.startswith("# List of Metadata Tables\n\n## Metadata relationships\n")
+    assert "## Workspace columns" not in first_landing
+    assert "Look up the physical workspace display name" not in first_landing
+    assert "profiling is configured by setup_pipeline" not in first_landing
     assert "## Metadata relationships" in first_landing
     assert "View full schema" not in first_landing
     assert "## Data Agreement versus Data Contract" not in first_landing
@@ -99,15 +100,15 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
         assert "**Grain:**" in page
         assert "**Primary key:**" in page
         if table_name == "METADATA_DATA_CATALOGUE":
-            assert "**Primary key:** composite (`workspace_id` + `table_id` + `asset_type`)" in page
+            assert "**Primary key:** composite (`asset_workspace_id` + `table_id` + `asset_type`)" in page
         elif table_name in {
             "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY",
             "METADATA_DATA_ACCESS",
         }:
             assert ("**Composite foreign key (checked by FabricOps):** "
-                    "(`workspace_id` + `table_id` + `asset_type`) "
+                    "(`asset_workspace_id` + `table_id` + `asset_type`) "
                     "→ [METADATA_DATA_CATALOGUE](metadata_data_catalogue.md) "
-                    "(`workspace_id` + `table_id` + `asset_type`).") in page
+                    "(`asset_workspace_id` + `table_id` + `asset_type`).") in page
         assert "**Relationships:**" in page
         assert "## Column summary" in page
         assert '<div class="metadata-column-kpis" aria-label="Column counts by responsibility">' in page
@@ -139,7 +140,7 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert '<tr class="metadata-column--audit"><td><code>_committed_by</code>' in activated_page
     assert "Serializable" in activated_page
     activation_page = first_pages["metadata_data_contract_activation.md"]
-    for column in ("workspace_id", "table_id", "contract_version", "revision", "activation_id"):
+    for column in ("asset_workspace_id", "table_id", "contract_version", "revision", "activation_id"):
         assert f'<tr class="metadata-column--governance"><td><code>{column}</code>' in activation_page
     assert '<div class="metadata-schema-table">' in activated_page
     assert "markdown=\"1\"" not in activated_page
@@ -148,9 +149,9 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "<code>operations_json</code>" in activated_page
     assert "`array<struct<" not in activated_page
     assert "via `approval_id`" in activated_page
-    assert "`METADATA_DATA_CATALOGUE` **(N → M)**" in contract_page
-    assert "not a unique physical Catalogue foreign key" in contract_page
-    assert "via `table_id`" in contract_page
+    assert "`METADATA_DATA_CATALOGUE` **(N → 0..1)**" in contract_page
+    assert "Draft creation matches Catalogue asset_workspace_id to evidence_workspace_id" in contract_page
+    assert "via `evidence_workspace_id` + (`table_id` for TABLE or `source_id` for FILE)" in contract_page
     assert "METADATA_DATA_AGREEMENT.agreement_id" not in contract_page
     assert "monotonically increasing" not in contract_page
 
@@ -169,12 +170,12 @@ def test_workspace_id_descriptions_follow_the_persisted_roles() -> None:
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 
     registry = metadata_table_schema_registry()
-    assert set(generator.WORKSPACE_ID_DESCRIPTIONS) == {
-        name for name, schema in registry.items() if "workspace_id" in schema.fieldNames()
+    assert set(generator.ASSET_WORKSPACE_DESCRIPTIONS) == {
+        name for name, schema in registry.items() if "asset_workspace_id" in schema.fieldNames()
     }
     describe = generator._metadata_field_description
     assert "authoring evidence" in describe("METADATA_DATA_CONTRACT", "evidence_workspace_id")
-    assert "physical asset" in describe("METADATA_DATA_CONTRACT_ACTIVATION", "workspace_id")
+    assert "physical asset" in describe("METADATA_DATA_CONTRACT_ACTIVATION", "asset_workspace_id")
     assert "operations[].destination.workspace_id" in describe("METADATA_PIPELINE_RUN", "workspace_id")
     assert "executing notebook" in describe("METADATA_DATA_CATALOGUE", "_workspace_name")
 
@@ -233,6 +234,10 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 12
     assert "metadata-explorer-approved-svg" in js
     assert "fabricops-metadata-approved.svg" in js
+    table_titles = [link.find("{http://www.w3.org/2000/svg}title").text for link in links]
+    assert {title.removeprefix("Open metadata documentation: ") for title in table_titles} == {
+        name.removeprefix("METADATA_") for name in CANONICAL_METADATA_TABLES
+    }
     assert ".metadata-explorer-approved-svg a.selected > rect" in css
     assert "const layoutOrder" not in js
     assert 'class: "metadata-explorer-cardinality"' not in js
@@ -287,11 +292,16 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
         ]
     assert payload["DATA_CONTRACT"]["asset_identity_fields"] == ["table_id", "source_id"]
     assert payload["DATA_CONTRACT"]["foreign_keys"] == []
-    assert payload["DATA_PROFILED"]["asset_identity_fields"] == ["table_id"]
+    assert payload["DATA_CONTRACT"]["catalogue_authoring_fields"] == [
+        "evidence_workspace_id", "table_id", "source_id"
+    ]
+    assert payload["DATA_PROFILED"]["asset_identity_fields"] == ["asset_workspace_id", "table_id"]
     for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"):
-        assert payload[table]["catalogue_reference_fields"] == ["workspace_id", "table_id", "asset_type"]
+        assert payload[table]["catalogue_reference_fields"] == ["asset_workspace_id", "table_id", "asset_type"]
     assert payload["DATA_CONTRACT"]["catalogue_reference_fields"] == []
-    assert payload["PIPELINE_RUN"]["asset_identity_fields"] == ["operations[].table_id", "operations[].source_id"]
+    assert payload["PIPELINE_RUN"]["asset_identity_fields"] == [
+        "operations[].destination.workspace_id", "operations[].table_id", "operations[].source_id"
+    ]
     agreement_fk = payload["DATA_AGREEMENT"]["foreign_keys"]
     assert [fk["local_field"] for fk in agreement_fk] == [
         "provider_steward_id", "recipient_steward_id"
@@ -444,12 +454,12 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         for name in CANONICAL_METADATA_TABLES
     }
 
-    for name in ("DATA_CONTRACT", "DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS", "GUARDRAIL_RESULTS"):
+    for name in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS", "GUARDRAIL_RESULTS"):
         box = next(node for node in svg_tree.findall(f".//{namespace}a")
                    if node.find(f"{namespace}title").text == f"Open metadata documentation: {name}")
         assert "table_id" in {node.text for node in box.findall(f"{namespace}text")}
 
-    expected_key = "workspace_id,table_id,asset_type"
+    expected_key = "asset_workspace_id,table_id,asset_type"
     for name, role in (("DATA_CATALOGUE", "PK"), ("DATA_PROFILED", "FK"),
                        ("DATA_PROFILED_FREQUENCY", "FK"),
                        ("DATA_ACCESS", "FK")):
@@ -458,6 +468,13 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         key = box.find(f"{namespace}g[@data-key-role='{role}']")
         assert key is not None and key.get("data-key-fields") == expected_key
         assert key.find(f"{namespace}path") is not None
+
+    contract = next(node for node in svg_tree.findall(f".//{namespace}a")
+                    if node.find(f"{namespace}title").text == "Open metadata documentation: DATA_CONTRACT")
+    assert {"table_id (TABLE)", "source_id (FILE)"} <= {node.text for node in contract.findall(f"{namespace}text")}
+    for role, fields in (("PK", "contract_id,contract_version"), ("REF", "evidence_workspace_id,table_id,source_id")):
+        assert contract.find(f"{namespace}g[@data-key-role='{role}']").get("data-key-fields") == fields
+    assert contract.find(f"{namespace}g[@data-key-role='FK']") is None
 
     connectors = svg_tree.findall(
         f".//{namespace}g[@id='metadata-er-relationships']/{namespace}g"
@@ -469,12 +486,14 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     }
     assert len(actual) == len(connectors)
     assert all(source != target for source, target in actual)
-    assert all(edge.get("data-cardinality") in {"1-N", "N-1", "N-N"} for edge in connectors)
+    assert all(edge.get("data-cardinality") in {"1-N", "N-1", "N-N", "0..1-N"} for edge in connectors)
     assert all(edge.find(f"{namespace}path") is not None for edge in connectors)
     assert ("PIPELINE_REGISTRY", "PIPELINE_RUN") in actual
     assert ("PIPELINE_RUN", "DATA_CONTRACT") in actual
     assert actual[("PIPELINE_REGISTRY", "PIPELINE_RUN")].get("data-kind") == "logical"
     assert actual[("DATA_CATALOGUE", "PIPELINE_RUN")].get("data-kind") == "logical"
+    authoring = actual[("DATA_CATALOGUE", "DATA_CONTRACT")]
+    assert authoring.get("data-cardinality") == "0..1-N" and authoring.get("data-kind") == "logical"
     for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"):
         edge = actual[("DATA_CATALOGUE", table)]
         assert edge.get("data-kind") == "physical"
@@ -581,7 +600,7 @@ def test_metadata_explorer_navigation_matches_canonical_svg() -> None:
     assert len(names) == len(set(names)) == len(CANONICAL_METADATA_TABLES)
     assert set(names) == {name.removeprefix("METADATA_") for name in CANONICAL_METADATA_TABLES}
     links = js.split("const links = [", 1)[1].split("\n  ];", 1)[0]
-    relationships = set(re.findall(r'^    \["([A-Z_]+)", "([A-Z_]+)", "([1N-]+)"', links, re.MULTILINE))
+    relationships = set(re.findall(r'^    \["([A-Z_]+)", "([A-Z_]+)", "([01N.-]+)"', links, re.MULTILINE))
     svg = ET.parse(root / "docs/assets/fabricops-metadata-approved.svg")
     edges = svg.findall(".//{http://www.w3.org/2000/svg}g[@class='metadata-er-relationship']")
     assert relationships == {(edge.get("data-from"), edge.get("data-to"), edge.get("data-cardinality")) for edge in edges}

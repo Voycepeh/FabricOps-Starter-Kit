@@ -218,7 +218,8 @@ def _access_rows(
             F.col("user_name").alias("user_principal"),
             F.col("_catalogue_table_id").alias("table_id"),
             F.col("_catalogue_table_name").alias("table_name"),
-            F.col("_catalogue_workspace_id").alias("workspace_id"),
+            F.col("_catalogue_workspace_id").alias("asset_workspace_id"),
+            F.lit(None).cast("string").alias("legacy_workspace_id"),
             F.lit("TABLE").alias("asset_type"),
             F.col("class_desc").alias("access_level"),
             F.col("permission_name").alias("access_value"),
@@ -310,9 +311,9 @@ def scan_sql_access(
         ``00_env_config`` whose SQL endpoints expose the supported catalogue
         views.
     workspace_id : str, optional
-        FabricOps configuration workspace_id used for target resolution,
-        catalogue filtering, and workspace_id-labelled access rows. Defaults to
-        the active FabricOps workspace_id. Fabric authentication and execution
+        FabricOps configuration workspace used to resolve target stores. Access rows
+        record the physical target workspace as asset_workspace_id. Defaults to
+        the active FabricOps workspace. Fabric authentication and execution
         identity continue to come from the active runtime.
     access_snapshot_id : str, optional
         Identifier shared by all rows in this scan. A UUID is generated when

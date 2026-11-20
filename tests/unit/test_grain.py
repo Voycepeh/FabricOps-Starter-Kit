@@ -51,7 +51,7 @@ def test_assembled_frozen_runtime_round_trip(active):
     """Inactive keys and descriptions survive assembly and freezing without active rules."""
     draft = {"contract_id": "c", "contract_version": 2, "table_id": "t", "workspace_id": "dev", "status": "draft", "contract_payload_json": json.dumps({"table": {"processing": {"load_strategy": "append_all"}}})}
     rule = {**_rule(active=active), "contract_id": "c", "contract_version": 2, "workspace_id": "dev"}
-    payload, _warnings = contracts.assemble_contract_payload(draft=draft, workspace_id="dev", catalogue_rows=[{"table_id": "t", "workspace_id": "dev", "asset_type": "TABLE", "table_name": "orders",
+    payload, _warnings = contracts.assemble_contract_payload(draft=draft, workspace_id="dev", catalogue_rows=[{"table_id": "t", "asset_workspace_id": "dev", "asset_type": "TABLE", "table_name": "orders",
             "columns_json": [{"column_id": name, "column_name": name, "data_type": "bigint"} for name in ("id", "version")]}], enrichment_rows=[{"enrichment_id": "description", "contract_id": "c", "contract_version": 2, "workspace_id": "dev", "enrichment_level": "table", "enrichment_type": "Grain", "value": "One row per version"}], guardrail_rows=[rule])
     frozen = contracts.freeze_contract_record(draft={**draft, "contract_payload_json": json.dumps(payload)}, audit={})
     frozen_payload = json.loads(frozen["contract_payload_json"])
@@ -72,7 +72,7 @@ def test_incomplete_grain_preview_cannot_be_saved_frozen_or_enforced():
              "contract_payload_json": json.dumps({"table": {"processing": {"load_strategy": "overwrite"}}})}
     tables = {
         "METADATA_DATA_CATALOGUE": [
-            {"table_id": "t", "workspace_id": "dev", "asset_type": "TABLE", "table_name": "orders",
+            {"table_id": "t", "asset_workspace_id": "dev", "asset_type": "TABLE", "table_name": "orders",
              "columns_json": [{"column_id": "id", "column_name": "id", "data_type": "bigint"}]},
         ],
         "enrichment": [],
