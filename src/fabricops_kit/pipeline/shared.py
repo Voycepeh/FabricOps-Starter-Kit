@@ -6731,8 +6731,7 @@ def column_lineage_rows(run):
     """
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, decode_metadata_row
 
-    decoded = decode_metadata_row("METADATA_PIPELINE_RUN", run)
-    digest = _metadata_hash(_column_lineage_snapshot(run))
+    decoded = decode_metadata_row("METADATA_PIPELINE_RUN", validate_pipeline_run(run))
     rows = []
     audit = {name: run.get(name) for name, *_ in AUDIT_SCHEMA_FIELDS}
     for operation in decoded.get("operations", []):
@@ -6742,15 +6741,11 @@ def column_lineage_rows(run):
         if graph["version"] != 1:
             raise ValueError("Unsupported Run column-lineage version.")
         nodes = {node["node_id"]: node for node in graph["nodes"]}
-        base = {"lineage_version": 1, "run_id": run["run_id"], "pipeline_id": run.get("pipeline_id"),
-            "execution_workspace_id": run.get("workspace_id"), "operation_key": operation["operation_key"],
+        base = {"lineage_version": 1, "run_id": run["run_id"], "operation_key": operation["operation_key"],
             "target_asset_workspace_id": operation["asset_workspace_id"], "target_table_id": operation["table_id"],
-            "target_asset_type": operation["asset_type"], "run_status": run.get("status"),
-            "operation_status": operation["status"], "publication_status": operation.get("publication_status"),
-            "write_mode": graph["write_mode"], "detector": graph["detector"], "scope": graph["scope"],
-            "source_run_sha256": digest, **audit}
+            "target_asset_type": operation["asset_type"],
+            "publication_status": operation.get("publication_status"), **audit}
         for output in graph["outputs"]:
-            transformations = [nodes[key]["operation"] for key in output["transformation_node_ids"]]
             for source in output["sources"] or [{"node_id": None, "dependency_types": []}]:
                 root = nodes.get(source["node_id"], {})
                 for dependency in source["dependency_types"] or [None]:
@@ -6761,17 +6756,13 @@ def column_lineage_rows(run):
                         "source_asset_workspace_id": root.get("asset_workspace_id"), "source_table_id": root.get("table_id"),
                         "source_asset_type": root.get("asset_type"), "source_column_id": root.get("column_id"),
                         "source_column_name": root.get("name"), "dependency_type": dependency,
-                        "coverage": output["status"], "gap_codes": ";".join(output["gaps"]),
-                        "transformation_operations": ";".join(sorted(set(transformations))),
-                        "transformation_count": len(output["transformation_node_ids"]),
-                        "output_node_id": output["node_id"], "source_node_id": source["node_id"], "omitted_output_count": 0}
+                        "coverage": output["status"]}
                     row["lineage_id"] = _metadata_hash([run["run_id"], operation["operation_key"], output["column_id"],
                                                         source["node_id"], dependency])
                     rows.append(row)
         if graph["gaps"] or graph["omitted_output_count"]:
             rows.append({**base, "lineage_id": _metadata_hash([run["run_id"], operation["operation_key"], "capture_gap"]),
-                "record_type": "CAPTURE_GAP", "coverage": "unknown", "gap_codes": ";".join(graph["gaps"]),
-                "omitted_output_count": graph["omitted_output_count"]})
+                "record_type": "CAPTURE_GAP", "coverage": "unknown"})
     return rows
 
 
@@ -6828,7 +6819,7 @@ def publish_column_lineage(run, *, context, spark_session=None):
             raise
     if not confirmed():
         raise RuntimeError("Column lineage projection was not confirmed; inspect the Run and projection before retrying.")
-    return {"status": "published", "row_count": len(physical), "source_run_sha256": rows[0]["source_run_sha256"]}
+    return {"status": "published", "row_count": len(physical), "source_run_sha256": _metadata_hash(_column_lineage_snapshot(run))}
 
 
 def sync_pipeline_lineage(plan, *, spark_session=None):

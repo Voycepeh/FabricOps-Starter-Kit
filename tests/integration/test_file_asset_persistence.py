@@ -59,56 +59,6 @@ def test_file_profile_and_frequency_use_common_ids_and_commit_only_after_success
     assert len(r.plan.evidence["profiling"]) == 3
 
 
-def test_populated_legacy_catalogue_adds_asset_fields_without_losing_processing(catalogue_delta):
-    from fabricops_kit.config.shared import build_table_id
-
-    r = catalogue_delta
-    row = r.row(table_id=build_table_id("lakehouse", "Silver", "sales", "orders"),
-                asset_type=None, metadata_level="table", store_type="lakehouse",
-                layer="Silver", schema_name="sales", extension="keep", item_id=r.config.path_config.paths["dev"]["Silver"].item_id)
-    r.seed([row], legacy=True)
-    before = r.read().first().asDict(recursive=True)
-    result = r.run()
-    assert result["status"] == "ready", result["table_results"]["METADATA_DATA_CATALOGUE"]
-    current = r.read().first().asDict(recursive=True)
-    assert all(current[key] == value for key, value in before.items()
-               if key not in {"asset_type", "item_id"} and key in current)
-    assert current["asset_type"] == "TABLE" and current["columns_json"] is None
-    version = r.version()
-    assert r.run()["status"] == "ready"
-    assert r.version() == version
-
-
-@pytest.mark.parametrize('table,added', [
-    ('METADATA_DATA_PROFILED', {'asset_type', 'run_id', 'pipeline_role'}),
-    ('METADATA_DATA_PROFILED_FREQUENCY', {'asset_type', 'run_id', 'pipeline_role'}),
-])
-def test_additive_file_schema_upgrade_preserves_populated_rows_and_extensions(catalogue_delta, monkeypatch, table, added):
-    from pyspark.sql.types import StructType, StructField, StringType
-    r = catalogue_delta
-    setup = importlib.import_module('fabricops_kit.config.setup_metadata_tables')
-    expected = metadata_table_schema_registry()[table]
-    legacy = StructType([field for field in expected if field.name not in added] + [StructField('extension', StringType())])
-    row = {field.name: datetime(2026, 1, 1) if field.name == '_committed_at' else 'original-' + field.name
-           for field in legacy if not field.nullable}
-    row.update(table_id='retained', extension='keep', lineage_id='released-lineage' if table.endswith('LINEAGE') else None)
-    path = r.path + '-legacy-' + table
-    r.spark.createDataFrame([row], legacy).write.format('delta').save(path)
-    def read():
-        return r.spark.read.format('delta').load(path)
-    before = read().first().asDict(recursive=True)
-    monkeypatch.setattr(setup, 'write_lakehouse_table', lambda frame, *a, **kw:
-        frame.write.format('delta').mode('append').options(**kw['options']).save(path))
-    missing = setup._validate_existing_metadata_schema(table, read().schema, expected, allow_missing=True)
-    assert set(missing) == added
-    setup._add_missing_metadata_columns(spark=r.spark, table_name=table, metadata_schema='engineering',
-        expected_schema=expected, missing_columns=missing, context={})
-    after = read().first().asDict(recursive=True)
-    assert all(after[key] == value for key, value in before.items())
-    assert all(after[key] is None for key in added)
-    assert setup._validate_existing_metadata_schema(table, read().schema, expected, allow_missing=True) == []
-
-
 def test_real_delta_file_catalogue_merges_are_idempotent(catalogue_delta, monkeypatch):
     from delta.tables import DeltaTable
     from pyspark.sql.types import StructType, StructField, StringType
@@ -215,69 +165,6 @@ def test_real_delta_file_profiles_and_frequencies_commit_idempotently(catalogue_
                and row.column_id is not None for row in [*profiles, *frequency])
     assert {row.profile_id for row in frequency} <= {row.profile_id for row in profiles}
     assert result['results_persisted'] is True
-
-
-@pytest.mark.parametrize('table', [
-    'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY', 'METADATA_GUARDRAIL_RESULTS'])
-def test_legacy_file_identity_consolidates_atomically_with_history_preserved(catalogue_delta, monkeypatch, table):
-    from pyspark.sql.types import StructType, StructField, StringType
-    from delta.tables import DeltaTable
-    from fabricops_kit.config.shared import build_column_id
-    setup = importlib.import_module('fabricops_kit.config.setup_metadata_tables')
-    r = catalogue_delta
-    expected = metadata_table_schema_registry()[table]
-    legacy = StructType([f for f in expected if f.name not in
-                         {'asset_type', 'asset_workspace_id', 'legacy_workspace_id', 'execution_workspace_id'}] +
-                        [StructField(name, StringType()) for name in ('workspace_id', 'source_id', 'extension')])
-    row = {f.name: datetime(2026, 1, 1) if f.name == '_committed_at' else
-           True if f.name == 'can_continue' else 1 if f.name in {'contract_version', 'guardrail_version'} else 'original'
-           for f in legacy if not f.nullable}
-    row.update(table_id=None, source_id='file:retained', extension='keep', column_name='id',
-               metadata_level='file', lineage_id='released-lineage', profile_id='released-profile',
-               profile_snapshot_id='released-snapshot', frequency_id='released-frequency', workspace_id='physical')
-    path = r.path + '-identity-' + table
-    r.spark.createDataFrame([row], legacy).write.format('delta').save(path)
-    before = r.spark.read.format('delta').load(path).first().asDict()
-    monkeypatch.setattr(importlib.import_module('fabricops_kit.io.shared'), 'resolve_configured_lakehouse_table',
-        lambda *a, **kw: (None, table, 'engineering', path))
-    def upgrade():
-        return setup._upgrade_metadata_table(spark=r.spark, table=r.spark.read.format('delta').load(path),
-            table_name=table, expected_schema=expected, metadata_schema='engineering', context={})
-    upgraded, result = upgrade()
-    assert result and 'source_id' in result['removed_columns']
-    after = upgraded.first().asDict()
-    assert 'source_id' not in after and after['table_id'] == 'file:retained' and after['asset_type'] == 'FILE'
-    for name, value in before.items():
-        if name not in {'source_id', 'table_id', 'column_id', 'workspace_id'}:
-            assert after[name] == value
-    if table in {'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY'}:
-        assert after['column_id'] == build_column_id('file:retained', 'id')
-        assert after['asset_workspace_id'] == 'physical'
-    else:
-        assert after['legacy_workspace_id'] == 'physical'
-    version = DeltaTable.forPath(r.spark, path).history(1).first()['version']
-    assert upgrade()[1] is None
-    assert DeltaTable.forPath(r.spark, path).history(1).first()['version'] == version
-
-
-@pytest.mark.parametrize('table_id,source_id', [('existing', 'file:other'), (None, ''), (None, '   ')])
-def test_conflicting_legacy_asset_identities_block_migration_without_changes(catalogue_delta, monkeypatch, table_id, source_id):
-    from pyspark.sql.types import StructType, StructField, StringType
-    from delta.tables import DeltaTable
-    setup = importlib.import_module('fabricops_kit.config.setup_metadata_tables')
-    r = catalogue_delta
-    table = 'METADATA_DATA_CATALOGUE'
-    schema = StructType([*r.schema, StructField('source_id', StringType())])
-    path = r.path + '-conflict'
-    r.spark.createDataFrame([r.row(table_id=table_id, source_id=source_id)], schema).write.format('delta').save(path)
-    monkeypatch.setattr(importlib.import_module('fabricops_kit.io.shared'), 'resolve_configured_lakehouse_table',
-        lambda *a, **kw: (None, table, 'engineering', path))
-    version = DeltaTable.forPath(r.spark, path).history(1).first()['version']
-    with pytest.raises(ValueError, match='conflicting asset|incomplete physical asset identity|not provably redundant'):
-        setup._upgrade_metadata_table(spark=r.spark, table=r.spark.read.format('delta').load(path),
-            table_name=table, expected_schema=r.schema, metadata_schema='engineering', context={})
-    assert DeltaTable.forPath(r.spark, path).history(1).first()['version'] == version
-    assert r.spark.read.format('delta').load(path).first()['table_id'] == table_id
 
 
 def test_file_columns_keep_ids_across_schema_changes_and_reappearance(catalogue_delta, monkeypatch):

@@ -1615,7 +1615,7 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
     registry = metadata_table_schema_registry()
     names = list(registry)
-    failed_name = "METADATA_DATA_PROFILED"
+    failed_name = "METADATA_GUARDRAIL_RESULTS"
     read_order = []
 
     class Table:
@@ -1634,7 +1634,7 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
     def read_table(table_name, **_kwargs):
         read_order.append(table_name)
         if table_name == failed_name:
-            return Table([*registry[table_name].fieldNames(), "frequency_json"])
+            return Table([*registry[table_name].fieldNames(), "source_id"])
         return Table(registry[table_name].fieldNames())
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
@@ -1652,7 +1652,7 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
     assert f"Successful: {len(names) - 1}/{len(names)}" in output
     assert f"Failed: 1/{len(names)}" in output
     assert f"- {failed_name}:" in output
-    assert "cannot verify retired column(s): frequency_json" in output
+    assert "cannot verify retired column(s): source_id" in output
 
 
 def test_setup_metadata_tables_raise_on_failure_waits_until_all_tables_attempted(monkeypatch):

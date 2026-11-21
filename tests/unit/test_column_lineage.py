@@ -319,7 +319,7 @@ def test_source_registry_limit_cannot_erase_a_conflicting_identity(tracked):
 
 
 def test_physical_fact_grain_is_scalar_and_json_rebuild_is_stable(runtime, spark_session):
-    """Each role gets a distinct scalar fact; raw Run JSON produces identical identities/hashes."""
+    """Each role gets a distinct scalar fact; raw Run JSON produces identical fact identities."""
     from fabricops_kit.config.metadata_schemas import encode_metadata_row
     make, operation, _, _, _ = runtime
     plan = make(mode='ungoverned', roles=('source', 'target'))
@@ -332,6 +332,11 @@ def test_physical_fact_grain_is_scalar_and_json_rebuild_is_stable(runtime, spark
     plan.evidence['boundary_completed'] = True
     run = lineage.finalize_pipeline_run(plan, spark_session=spark_session)
     facts = lineage.column_lineage_rows(run)
+    from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+    fields = metadata_table_schema_registry()['METADATA_DATA_LINEAGE'].fieldNames()
+    assert len(fields) == 26
+    assert all(set(row) <= set(fields) for row in facts)
+    assert run['operations'][1]['lineage']['nodes']  # Detailed graph is retained.
     links = [row for row in facts if row['source_column_name'] == 'amount']
     assert {row['dependency_type'] for row in links} >= {'VALUE', 'FILTER'}
     assert len({row['lineage_id'] for row in facts}) == len(facts)

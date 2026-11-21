@@ -13,7 +13,7 @@ from types import SimpleNamespace
 import pytest
 
 from fabricops_kit.config.metadata_schemas import CATALOGUE_NESTED_FIELDS, metadata_table_schema_registry, decode_metadata_row, encode_metadata_row
-from tests.helpers import framework_config
+from tests.helpers import metadata_schema_050, framework_config
 from fabricops_kit.config import shared as config_shared
 from fabricops_kit.data_contract.shared import file_source_identity
 
@@ -59,7 +59,8 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
         if name == TABLE:
             return spark_session.read.format('delta').load(path)
         if name == 'METADATA_PROCESSING_STATE':
-            return SimpleNamespace(schema=registry[name])
+            from fabricops_kit.pipeline.shared import processing_state_schema
+            return SimpleNamespace(schema=processing_state_schema())
         return spark_session.createDataFrame([], registry[name])
     def write(frame, name, **kwargs):
         assert name == TABLE and kwargs['schema'] == 'custom_engineering'
@@ -76,19 +77,18 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
         return {'asset_type': 'TABLE', 'table_id': 'table', 'asset_workspace_id': 'dev', 'asset_workspace_name': 'Development',
                 'table_name': 'orders', 'load_strategy': 'overwrite', 'is_active': True,
                 **audit, **values}
-    def seed(rows, native=(), extra=True, retired=False, legacy=False, old_workspace=False):
+    def seed(rows, native=(), extra=True, extension_key=False, legacy=False):
         physical = StructType([StructField(f.name, logical_schema[f.name].dataType if f.name in native else f.dataType, True, {'comment': 'original ' + f.name})
             for f in schema.fields] + ([StructField('extension', StringType(), True, {'comment': 'keep'})] if extra else []))
-        if legacy or old_workspace:
-            aliases = {"asset_workspace_id": "workspace_id", "asset_workspace_name": "workspace_name"}
-            physical = StructType([StructField(aliases.get(field.name, field.name), field.dataType, field.nullable, field.metadata)
-                                   for field in physical if not legacy or field.name not in {"columns_json", "asset_workspace_name"}])
-            rows = [{**{old: row.get(new) for new, old in aliases.items()}, **row} for row in rows]
         if legacy:
-            for name in ("metadata_level", "column_id", "column_name", "data_type"):
-                physical.add(StructField(name, StringType(), True))
-        if retired:
+            physical = StructType([*metadata_schema_050(TABLE).fields,
+                StructField('extension', StringType(), True, {'comment': 'keep'}),
+                StructField('item_id', StringType(), True)])
+            rows = [{**row, 'workspace_id': row.get('workspace_id', row.get('asset_workspace_id'))} for row in rows]
+        if extension_key:
             physical.add(StructField('metadata_key', StringType(), True))
+        rows = [{name: json.dumps(value) if name in CATALOGUE_NESTED_FIELDS and name not in native
+                 and isinstance(value, (dict, list)) else value for name, value in row.items()} for row in rows]
         spark_session.createDataFrame(rows, physical).write.format('delta').save(path)
         spark_session.sql(f"ALTER TABLE delta.`{path}` SET TBLPROPERTIES ('owner_note'='retain this')")
     def run():
@@ -104,131 +104,30 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
                            read=lambda: spark_session.read.format('delta').load(path))
 
 
-def test_setup_migrates_existing_physical_workspace_columns(catalogue_delta, monkeypatch):
-    """Upgrade the existing physical Catalogue and mixed history without guessing."""
-    from delta.tables import DeltaTable
-    from fabricops_kit.io import shared as io
-    from pyspark.sql.types import StructField, StructType
-
-    rt = catalogue_delta
-    original_catalogue = rt.row(columns_json='[{"column_id":"stored-id","column_name":"id","data_type":"int"}]')
-    rt.seed([original_catalogue], old_workspace=True)
-    original_version = rt.version()
-    paths = {}
-    registry = metadata_table_schema_registry()
-    audit = {key: value for key, value in original_catalogue.items() if key.startswith("_")}
-    sources = {
-        "METADATA_DATA_PROFILED": [
-            {"asset_type": "TABLE", "table_id": "table", "profile_id": "table-profile", "workspace_id": "executor"},
-            {"asset_type": "FILE", "table_id": "file:old", "profile_id": "file-profile", "workspace_id": "physical-file"}],
-        "METADATA_DATA_ACCESS": [
-            {"table_id": "table", "access_id": "legacy-access", "workspace_id": "executor"},
-            {"asset_type": "TABLE", "table_id": "table", "access_id": "new-access", "workspace_id": "dev"}],
-        "METADATA_DATA_CONTRACT_ACTIVATION": [
-            {"table_id": "table", "activation_id": "activation", "workspace_id": "dev",
-             "destination_json": '{"workspace_id":"dev"}'}],
-    }
-    for name, rows in sources.items():
-        paths[name] = rt.path + "-" + name
-        schema = StructType([StructField("workspace_id" if field.name == "asset_workspace_id" else field.name,
-                                         field.dataType, True)
-                             for field in registry[name] if field.name != "legacy_workspace_id"])
-        rt.spark.createDataFrame([{**audit, **row} for row in rows], schema).write.format("delta").save(paths[name])
-
-    read = setup.read_lakehouse_table
-    resolve = io.resolve_configured_lakehouse_table
-    monkeypatch.setattr(setup, "read_lakehouse_table",
-        lambda name, **kwargs: rt.spark.read.format("delta").load(paths[name]) if name in paths else read(name, **kwargs))
-    monkeypatch.setattr(io, "resolve_configured_lakehouse_table",
-        lambda store, name, schema, **kwargs: (None, name, schema, paths[name]) if name in paths
-        else resolve(store, name, schema, **kwargs))
-
-    result = rt.run()
-    assert result["status"] == "ready", result["failed_tables"]
-    assert result["table_results"][TABLE]["pre_upgrade_version"] == original_version
-    assert {key: rt.read().first()[key] for key in original_catalogue} == original_catalogue
-    for name, original in sources.items():
-        upgrade = result["table_results"][name]
-        assert upgrade["pre_upgrade_version"] == 0
-        assert "VERSION AS OF 0" in upgrade["recovery_guidance"]
-        records = rt.spark.read.format("delta").load(paths[name]).collect()
-        assert all({key: row[key] for key in audit} == audit for row in records)
-        assert sorted(row["workspace_id"] for row in rt.spark.read.format("delta").option("versionAsOf", 0).load(paths[name]).collect()) == sorted(row["workspace_id"] for row in original)
-        if name == "METADATA_DATA_CONTRACT_ACTIVATION":
-            assert records[0]["asset_workspace_id"] == "dev"
-            assert records[0]["destination_json"] == original[0]["destination_json"]
-        else:
-            assert {row["asset_workspace_id"] for row in records} == {None, original[1]["workspace_id"]}
-            assert {row["legacy_workspace_id"] for row in records} == {None, original[0]["workspace_id"]}
-
-    assert rt.run()["status"] == "ready"
-    assert rt.version() == original_version + 1
-    assert all(DeltaTable.forPath(rt.spark, path).history(1).first()["version"] == 1 for path in paths.values())
-
-
-@pytest.mark.parametrize('table_name', ['METADATA_DATA_ACCESS', 'METADATA_GUARDRAIL_RESULTS'])
-def test_workspace_upgrade_relaxes_only_legacy_workspace_nullability(catalogue_delta, monkeypatch, table_name):
-    """Migrate NOT NULL workspace columns, retain audit constraints and accept new rows."""
-    from delta.tables import DeltaTable
-    from fabricops_kit.io import shared as io
-    from pyspark.sql.types import StructField, StructType
-
-    rt = catalogue_delta
-    expected = metadata_table_schema_registry()[table_name]
-    path = rt.path + '-' + table_name
-    fields = [StructField('workspace_id' if field.name == 'asset_workspace_id' else field.name,
-        field.dataType, field.name not in {'asset_workspace_id', '_committed_at'}, field.metadata)
-        for field in expected if field.name not in {'legacy_workspace_id', 'execution_workspace_id'}]
-    old_schema = StructType(fields)
-    columns = ', '.join(f'`{field.name}` {field.dataType.simpleString()}'
-        + ('' if field.nullable else ' NOT NULL') for field in fields)
-    rt.spark.sql(f'CREATE TABLE delta.`{path}` ({columns}) USING DELTA')
-    original = {'workspace_id': 'dev', 'table_id': 'orders', 'asset_type': 'TABLE',
-        '_committed_at': datetime(2020, 2, 3, 4, 5, 6, 123456)}
-    if table_name == 'METADATA_GUARDRAIL_RESULTS':
-        original['result_payload_json'] = '{}'
-    rt.spark.createDataFrame([original], old_schema).write.format('delta').mode('append').save(path)
-    monkeypatch.setattr(io, 'resolve_configured_lakehouse_table', lambda *a, **kw: (None, table_name, 'engineering', path))
-
-    def upgrade():
-        return setup._upgrade_metadata_table(spark=rt.spark, table=rt.spark.read.format('delta').load(path),
-            table_name=table_name, expected_schema=expected, metadata_schema='engineering', context={})
-
-    frame, result = upgrade()
-    assert result['pre_upgrade_version'] == 1
-    assert frame.schema['legacy_workspace_id'].nullable
-    assert not frame.schema['_committed_at'].nullable
-    migrated = frame.first().asDict()
-    physical_access = table_name == 'METADATA_DATA_ACCESS'
-    assert migrated['asset_workspace_id'] == ('dev' if physical_access else None)
-    assert migrated['legacy_workspace_id'] == (None if physical_access else 'dev')
-    assert migrated['_committed_at'] == original['_committed_at']
-    # Match the current writer: it emits no legacy workspace value.
-    current = {**migrated, 'asset_workspace_id': 'dev', 'legacy_workspace_id': None}
-    rt.spark.createDataFrame([current], frame.schema).write.format('delta').mode('append').save(path)
-    version = DeltaTable.forPath(rt.spark, path).history(1).first()['version']
-    assert upgrade()[1] is None
-    assert DeltaTable.forPath(rt.spark, path).history(1).first()['version'] == version
+def released_parent(rt, **values):
+    """Return a v0.5.0 Catalogue parent with independently verifiable coordinates."""
+    name = values.pop('table_name', 'orders')
+    return rt.row(metadata_level='table', table_name=name, workspace_id='dev',
+        table_id=config_shared.build_table_id('lakehouse', 'Silver', 'sales', name),
+        layer='Silver', store_type='lakehouse', schema_name='sales',
+        item_id=rt.config.path_config.paths['dev']['Silver'].item_id,
+        load_strategy_parameters_json='{}', **values)
 
 
 def test_migrate_catalogue_to_one_row_per_physical_asset(catalogue_delta):
-    """Migrate TABLE and FILE assets with exact IDs, scoped schemas and intact audit."""
+    """Migrate v0.5.0 TABLE parents and columns with exact IDs and intact audit."""
     rt = catalogue_delta
     table_id = config_shared.build_table_id("lakehouse", "Silver", "sales", "orders")
-    file = file_source_identity(asset_workspace_id="files", item_id="item", relative_path="orders.csv", file_format="csv")
     dev = rt.row(table_id=table_id, asset_type=None, metadata_level="table", layer="Silver", store_type="lakehouse",
                  schema_name="sales", item_id=rt.config.path_config.paths["dev"]["Silver"].item_id, writer_workspace_id="writing-notebook-workspace", extension="keep",
                  load_strategy_parameters_json='{"key_columns":["id"]}')
     prod = {**dev, "workspace_id": "prod"}
-    file_row = rt.row(table_id=file["table_id"], asset_type="FILE", metadata_level="file", workspace_id="FILES",
-                      item_id="item", relative_path="orders.csv", file_format="csv")
     def child(parent, id_, name, dtype, **values):
         return {**parent, "metadata_level": "column", "column_id": id_, "column_name": name, "data_type": dtype, **values}
-    rt.seed([dev, prod, file_row,
+    rt.seed([dev, prod,
              child(dev, "exact-table-column-id", "id", "int"),
              child(dev, "historical-id", "retired", "long", is_active=False),
-             child(prod, "exact-other-workspace-id", "name", "string"),
-             child(file_row, "exact-file-column-id", "id", "double")], legacy=True)
+             child(prod, "exact-other-workspace-id", "name", "string")], legacy=True)
     version = rt.version()
     result = rt.run()
     upgrade = result["table_results"][TABLE]
@@ -237,21 +136,19 @@ def test_migrate_catalogue_to_one_row_per_physical_asset(catalogue_delta):
     assert f"VERSION AS OF {version}" in upgrade["recovery_guidance"]
     assert {"metadata_level", "column_id", "column_name", "data_type"}.isdisjoint(rt.read().columns)
     rows = {row["asset_workspace_id"]: row.asDict() for row in rt.read().collect()}
-    assert len(rows) == 3
+    assert len(rows) == 2
     assert rows["dev"]["table_id"] == rows["prod-physical"]["table_id"] == table_id
     assert rows["prod-physical"]["asset_workspace_name"] == "Production"
     assert rows["prod-physical"]["_workspace_name"] == dev["_workspace_name"]
     assert rows["prod-physical"]["writer_workspace_id"] == dev["writer_workspace_id"]
     assert rows["prod-physical"]["load_strategy_parameters_json"] == dev["load_strategy_parameters_json"]
     assert rows["prod-physical"]["extension"] == "keep"
-    assert rows["files"]["relative_path"] == "orders.csv"
     for workspace, column_id, name, dtype in (
             ("dev", "exact-table-column-id", "id", "int"),
-            ("prod-physical", "exact-other-workspace-id", "name", "string"),
-            ("files", "exact-file-column-id", "id", "double")):
+            ("prod-physical", "exact-other-workspace-id", "name", "string")):
         assert json.loads(rows[workspace]["columns_json"]) == [
             {"column_id": column_id, "column_name": name, "data_type": dtype}]
-    assert rt.spark.read.format("delta").option("versionAsOf", version).load(rt.path).count() == 7
+    assert rt.spark.read.format("delta").option("versionAsOf", version).load(rt.path).count() == 5
     assert rt.run()["status"] == "ready"
     assert rt.version() == version + 1
 
@@ -291,7 +188,6 @@ def test_legacy_catalogue_migration_fails_closed(catalogue_delta, problem, diagn
     assert rt.version() == version
 
 
-
 def test_catalogue_upgrade_keeps_history_versions_unchanged(catalogue_delta, monkeypatch):
     """Existing frozen Contracts, profiling, Lineage and Guardrail records stay intact."""
     from delta.tables import DeltaTable
@@ -323,8 +219,9 @@ def test_catalogue_upgrade_keeps_history_versions_unchanged(catalogue_delta, mon
     registry = metadata_table_schema_registry()
     from pyspark.sql.types import StringType, StructField, StructType
     legacy_lineage = StructType([
-        *[StructField(name, StringType()) for name in ("workspace_id", "table_id", "lineage_id", "pipeline_role")],
-        *[field for field in registry[TABLE] if field.name in audit],
+        *registry['METADATA_DATA_LINEAGE'].fields,
+        *[field for field in metadata_schema_050('METADATA_DATA_LINEAGE')
+          if field.name not in registry['METADATA_DATA_LINEAGE'].fieldNames()],
     ])
     for name, values in history.items():
         paths[name] = rt.path + "-" + name
@@ -337,7 +234,7 @@ def test_catalogue_upgrade_keeps_history_versions_unchanged(catalogue_delta, mon
         lambda name, **kwargs: rt.spark.read.format("delta").load(paths[name]) if name in paths else read(name, **kwargs))
 
     result = rt.run()
-    assert result["status"] == "ready", result["table_results"]
+    assert result["status"] == "ready", {k: v for k, v in result["table_results"].items() if v["status"] == "failed"}
     assert rt.read().first()["columns_json"] == "[]"
     for name, path in paths.items():
         assert DeltaTable.forPath(rt.spark, path).history(1).first()["version"] == 0
@@ -355,7 +252,7 @@ def test_legacy_catalogue_validates_retained_run_binding(catalogue_delta, monkey
     version = rt.version()
     read = setup.read_lakehouse_table
     store = rt.config.path_config.paths["prod"]["Silver"]
-    operations = json.dumps([{"table_id": table_id, "status": "succeeded",
+    operations = json.dumps([{"operation_key": "target:orders", "table_id": table_id, "status": "succeeded",
         "destination": {
             "workspace_id": "original-physical" if conflicting else store.workspace_id,
             "item_id": "original-item" if conflicting else store.item_id,
@@ -391,8 +288,8 @@ def test_fresh_setup_uses_json_and_repeated_setup_is_noop(catalogue_delta):
     assert rt.version() == version
 
 
-def test_populated_v025_setup_preserves_all_rows_fields_order_and_properties(catalogue_delta):
-    """Historical producer fields retain exact values, including inactive assets."""
+def test_current_setup_preserves_all_rows_fields_order_and_properties(catalogue_delta):
+    """Current producer fields retain exact values, including inactive assets."""
     rt = catalogue_delta
     processing = [({}, 'overwrite'), ({'watermark_column': 'modified'}, 'append'),
                   ({'key_columns': ['tenant', 'id']}, 'scd1'),
@@ -445,28 +342,6 @@ def test_populated_v025_setup_preserves_all_rows_fields_order_and_properties(cat
             assert validated_processing(authored) == authored
 
 
-def test_mixed_types_null_blank_empty_and_historical_lists(catalogue_delta):
-    """Missing discovery metadata stays unknown; empty collections keep ordering."""
-    rt = catalogue_delta
-    values = [None, '', ' \n ', 'null', '{}', '[]', json.dumps([CANDIDATE]),
-              json.dumps({'status': 'not_evaluated', 'max_combination_width': 0, 'candidates': []}),
-              json.dumps({'status': 'unresolved', 'max_combination_width': 3, 'candidates': []})]
-    rt.seed([rt.row(table_id=str(i), load_strategy_parameters_json={'key_columns': []},
-        scheduled_refresh_json='{}' if i == 4 else json.dumps({'status': '', 'schedules': []}),
-        profile_key_candidates_json=value) for i, value in enumerate(values)], native={'load_strategy_parameters_json'})
-    frame, info = rt.upgrade()
-    rows = {r['table_id']: decode_metadata_row(TABLE, r.asDict(recursive=True)) for r in frame.collect()}
-    for i in range(4):
-        assert rows[str(i)]['profile_key_candidates_json'] is None
-    assert rows['4']['profile_key_candidates_json'] == {'status': None, 'profile_scope': None, 'profiling_max_rows': None, 'max_combination_width': None, 'candidates': None}
-    assert rows['5']['profile_key_candidates_json'] == {'status': None, 'profile_scope': None, 'profiling_max_rows': None, 'max_combination_width': None, 'candidates': []}
-    assert rows['6']['profile_key_candidates_json'] == {'status': None, 'profile_scope': None, 'profiling_max_rows': None, 'max_combination_width': None, 'candidates': [CANDIDATE]}
-    assert rows['7']['profile_key_candidates_json']['status'] == 'not_evaluated'
-    assert rows['8']['profile_key_candidates_json']['status'] == 'unresolved'
-    assert all(r['load_strategy_parameters_json']['key_columns'] == [] for r in rows.values())
-    assert info['converted_columns'] == ['load_strategy_parameters_json', 'profile_key_candidates_json']
-
-
 @pytest.mark.parametrize(('field', 'value'), [
     ('columns_json', '{broken'),
     ('columns_json', '[{"column_id":"c","column_name":"","data_type":"int"}]'),
@@ -493,50 +368,32 @@ def test_invalid_values_abort_without_catalogue_mutation(catalogue_delta, field,
     assert rt.version() == version and rt.read().schema == schema and rt.read().collect() == rows
 
 
-def test_native_values_migrate_once_and_json_is_strictly_validated(catalogue_delta):
-    """Already native data gets the same strict validation, including null elements."""
-    rt = catalogue_delta
-    rt.seed([rt.row(load_strategy_parameters_json={'key_columns': ['id']})], native=set(CATALOGUE_NESTED_FIELDS))
-    version = rt.version()
-    assert rt.run()['status'] == 'ready' and rt.version() == version + 1
-    assert rt.run()['status'] == 'ready' and rt.version() == version + 1
-    from delta.tables import DeltaTable
-    DeltaTable.forPath(rt.spark, rt.path).update(set={'load_strategy_parameters_json': "'" + json.dumps({'key_columns': ['id', None]}) + "'"})
-    version = rt.version()
-    assert TABLE in rt.run()['failed_tables'] and rt.version() == version
-
-
-@pytest.mark.parametrize('retired', [False, True])
 @pytest.mark.parametrize('failure', ['interrupted', 'lost_ack'])
-def test_interruption_and_lost_commit_acknowledgement_recover(catalogue_delta, monkeypatch, failure, retired):
+def test_interruption_and_lost_commit_acknowledgement_recover(catalogue_delta, monkeypatch, failure):
     """Rerunning setup follows physical Delta state and never converts twice."""
     from py4j.java_gateway import JavaMember
     from pyspark.sql.readwriter import DataFrameWriter
     rt = catalogue_delta
-    rt.seed([rt.row(load_strategy_parameters_json={'key_columns':['id']}, extension='preserved')], native={'load_strategy_parameters_json'}, retired=retired)
+    rt.seed([released_parent(rt, extension='preserved')], legacy=True)
     version = rt.version()
-    if failure == 'interrupted':
-        original = DataFrameWriter.parquet
-        def interrupt(writer, path, *args, **kwargs):
-            original(writer, path, *args, **kwargs)
-            if '_metadata_upgrade_staging/' in path:
-                raise RuntimeError('interrupted after durable staging')
-        monkeypatch.setattr(DataFrameWriter, 'parquet', interrupt)
-    else:
-        original = JavaMember.__call__
-        def lose_ack(member, *args):
-            result = original(member, *args)
-            if member.name == 'commit':
-                raise RuntimeError('lost commit acknowledgement')
-            return result
-        monkeypatch.setattr(JavaMember, '__call__', lose_ack)
-    assert TABLE in rt.run()['failed_tables']
-    assert rt.version() == version + (failure == 'lost_ack')
-    monkeypatch.undo()
-    # Restore fixture routing after undoing just the failure injection.
-    # Direct helper uses the already captured fixture read, but needs path routing.
-    from fabricops_kit.io import shared as io
-    monkeypatch.setattr(io, 'resolve_configured_lakehouse_table', lambda *a, **kw: (None, TABLE, 'custom_engineering', rt.path))
+    with monkeypatch.context() as fault:
+        if failure == 'interrupted':
+            original = DataFrameWriter.parquet
+            def interrupt(writer, path, *args, **kwargs):
+                original(writer, path, *args, **kwargs)
+                if '_metadata_upgrade_staging/' in path:
+                    raise RuntimeError('interrupted after durable staging')
+            fault.setattr(DataFrameWriter, 'parquet', interrupt)
+        else:
+            original = JavaMember.__call__
+            def lose_ack(member, *args):
+                result = original(member, *args)
+                if member.name == 'commit':
+                    raise RuntimeError('lost commit acknowledgement')
+                return result
+            fault.setattr(JavaMember, '__call__', lose_ack)
+        assert TABLE in rt.run()['failed_tables']
+        assert rt.version() == version + (failure == 'lost_ack')
     expected_extension = 'preserved'
     expected_version = version + 1
     if failure == 'lost_ack':
@@ -550,14 +407,13 @@ def test_interruption_and_lost_commit_acknowledgement_recover(catalogue_delta, m
     assert rt.version() == expected_version
 
 
-@pytest.mark.parametrize('retired', [False, True])
 @pytest.mark.parametrize('conflict', ['append', 'update', 'setup'])
-def test_concurrent_writer_or_setup_cannot_be_overwritten(catalogue_delta, monkeypatch, conflict, retired):
+def test_concurrent_writer_or_setup_cannot_be_overwritten(catalogue_delta, monkeypatch, conflict):
     """Race after staging, while the pinned whole-table transaction is open."""
     from pyspark.sql.readwriter import DataFrameWriter
     from delta.tables import DeltaTable
     rt = catalogue_delta
-    rt.seed([rt.row(load_strategy_parameters_json={}, extension='original')], native={'load_strategy_parameters_json'}, retired=retired)
+    rt.seed([released_parent(rt, extension='original')], legacy=True)
     original = DataFrameWriter.parquet
     barrier = Barrier(2)
     def stage(writer, path, *args, **kwargs):
@@ -566,7 +422,7 @@ def test_concurrent_writer_or_setup_cannot_be_overwritten(catalogue_delta, monke
             if conflict == 'setup':
                 barrier.wait(timeout=60)
             elif conflict == 'append':
-                rt.spark.createDataFrame([rt.row(table_id='newer', extension='new')], rt.read().schema).write.format('delta').mode('append').save(rt.path)
+                rt.spark.createDataFrame([released_parent(rt, table_name='newer', extension='new')], rt.read().schema).write.format('delta').mode('append').save(rt.path)
             else:
                 DeltaTable.forPath(rt.spark, rt.path).update(set={'extension': "'newer'"})
         return result
@@ -585,19 +441,20 @@ def test_concurrent_writer_or_setup_cannot_be_overwritten(catalogue_delta, monke
         with pytest.raises(Exception, match='concurrent|Concurrent'):
             rt.upgrade()
         rows = {r['table_id']: r['extension'] for r in rt.read().collect()}
-        assert rows == ({'table': 'original', 'newer': 'new'} if conflict == 'append' else {'table': 'newer'})
-        assert rt.read().schema['load_strategy_parameters_json'].dataType.simpleString().startswith('struct<')
+        assert len(rows) == (2 if conflict == 'append' else 1)
+        assert sorted(rows.values()) == (['new', 'original'] if conflict == 'append' else ['newer'])
+        assert 'metadata_level' in rt.read().columns
 
 
-def test_native_writers_preserve_processing_keys_for_source_snapshots_after_upgrade(catalogue_delta, monkeypatch):
-    """Production writers and processing resolution use persisted structs directly."""
+def test_writers_preserve_processing_keys_for_source_snapshots(catalogue_delta, monkeypatch):
+    """Production writers retain JSON processing definitions and source snapshot keys."""
     from fabricops_kit.pipeline import shared
     write = importlib.import_module('fabricops_kit.pipeline.pipeline_write')
     rt = catalogue_delta
     original_row = rt.row(load_strategy_parameters_json='{}', extension='keep')
-    rt.seed([original_row], retired=True)
+    rt.seed([original_row], extension_key=True)
     rt.upgrade()
-    assert 'metadata_key' not in rt.read().columns
+    assert 'metadata_key' in rt.read().columns
     config = replace(framework_config(), engineering_metadata_schema='custom_engineering')
     context = {'config': config, 'scope_workspace_id': 'dev'}
     def resolve(*args, **kwargs):
@@ -690,46 +547,18 @@ def test_fresh_setup_race_cannot_reset_a_newly_populated_catalogue(catalogue_del
     original = setup.write_lakehouse_table
     def race(frame, name, **kwargs):
         if name == TABLE:
-            rt.seed([rt.row(table_id='newly-written', load_strategy_parameters_json={'key_columns': ['id']})],
-                    native=set(CATALOGUE_NESTED_FIELDS))
+            rt.seed([rt.row(table_id='newly-written', load_strategy_parameters_json={'key_columns': ['id']})])
         return original(frame, name, **kwargs)
     with monkeypatch.context() as fault:
         fault.setattr(setup, 'write_lakehouse_table', race)
         assert TABLE in rt.run()['failed_tables']
     version = rt.version()
     assert rt.read().first()['table_id'] == 'newly-written'
-    assert rt.run()['status'] == 'ready' and rt.version() == version + 1
+    assert rt.run()['status'] == 'ready' and rt.version() == version
 
 
-def test_delta_column_mapping_identity_is_retained(catalogue_delta):
-    """Use raw Delta metadata because Spark deliberately hides column mapping IDs."""
-    rt = catalogue_delta
-    rt.seed([rt.row(load_strategy_parameters_json={}, extension='preserve')], native={'load_strategy_parameters_json'})
-    rt.spark.sql(f"ALTER TABLE delta.`{rt.path}` SET TBLPROPERTIES "
-                 "('delta.columnMapping.mode'='name', 'delta.minReaderVersion'='2', 'delta.minWriterVersion'='5')")
-    log = rt.spark._jvm.org.apache.spark.sql.delta.DeltaLog.forTable(rt.spark._jsparkSession, rt.path)
-    def metadata():
-        return json.loads(log.startTransaction().metadata().json())['metaData']
-    original = metadata()
-    original_fields = json.loads(original['schemaString'])['fields']
-    rt.upgrade()
-    current = metadata()
-    current_fields = json.loads(current['schemaString'])['fields']
-    for before, after in zip(original_fields, current_fields):
-        assert before['name'] == after['name'] and before['metadata'] == after['metadata']
-    # Delta advances its internal allocator for newly introduced nested members;
-    # existing user properties, mapping mode, protocol and physical IDs persist.
-    for key, value in original['configuration'].items():
-        if key != 'delta.columnMapping.maxColumnId':
-            assert current['configuration'][key] == value
-    assert current['id'] == original['id']
-    assert rt.read().first()['extension'] == 'preserve'
-    version = rt.version()
-    assert rt.upgrade()[1] is None and rt.version() == version
-
-
-def test_post_migration_reader_draft_and_all_catalogue_insert_paths(catalogue_delta, monkeypatch, tmp_path):
-    """Exercise real identity/draft readers and both producer insert paths after upgrade."""
+def test_current_catalogue_reader_draft_and_all_insert_paths(catalogue_delta, monkeypatch, tmp_path):
+    """Exercise current identity/draft readers and both producer insert paths."""
     from fabricops_kit.pipeline import shared
     from fabricops_kit.data_contract import shared as contracts
     writer = importlib.import_module('fabricops_kit.pipeline.pipeline_write')
@@ -829,45 +658,38 @@ def test_same_asset_key_cannot_rebind_to_another_item(catalogue_delta, monkeypat
     assert (row["item_id"], row["load_strategy"]) == ("original-item", "scd1")
 
 
-@pytest.mark.parametrize('table_name', ['METADATA_DATA_CONTRACT', 'METADATA_DATA_CONTRACT_ACTIVATION'])
-def test_asset_identity_upgrade_preserves_frozen_json_and_exact_ids(catalogue_delta, monkeypatch, table_name):
-    """Migrate current asset indices while leaving frozen version/destination bytes intact."""
-    from delta.tables import DeltaTable
-    from fabricops_kit.io import shared as io
-    from pyspark.sql.types import StructField, StructType, StringType
-
+def test_unreleased_native_collection_layout_is_rejected(catalogue_delta):
+    """A PR-only ARRAY/STRUCT layout must never acquire an automatic migration."""
     rt = catalogue_delta
-    expected = metadata_table_schema_registry()[table_name]
-    path = rt.path + '-identity-' + table_name
-    source = file_source_identity(asset_workspace_id='dev', item_id='files', relative_path='orders.csv', file_format='csv')
-    asset_id = source['table_id']
-    old_source = {key: value for key, value in source.items() if key not in {'table_id', 'asset_type'}}
-    old_source.update(source_id=asset_id, source_type='file')
-    old_source['workspace_id'] = old_source.pop('asset_workspace_id')
-    payload = json.dumps({'source': old_source, 'table': {'columns': []}}, indent=3)
-    destination = json.dumps(old_source, indent=2)
-    fields = [StructField(field.name, field.dataType, True) for field in expected if field.name != 'asset_type']
-    fields.append(StructField('source_id', StringType(), True))
-    audit = {key: value for key, value in rt.row().items() if key.startswith('_')}
-    row = {**audit, 'table_id': None, 'source_id': asset_id, 'asset_workspace_id': 'dev',
-        'contract_id': 'files', 'contract_version': 1, 'status': 'frozen', 'contract_payload_json': payload,
-        'destination_json': destination, 'activation_id': 'activation', 'revision': 1}
-    rt.spark.createDataFrame([row], StructType(fields)).write.format('delta').save(path)
-    monkeypatch.setattr(io, 'resolve_configured_lakehouse_table', lambda *a, **kw: (None, table_name, 'metadata', path))
+    rt.seed([rt.row(load_strategy_parameters_json={'key_columns': ['id']})], native={'load_strategy_parameters_json'})
+    before, version = rt.read().collect(), rt.version()
+    with pytest.raises(ValueError, match='Type mismatches'):
+        rt.upgrade()
+    assert rt.version() == version and rt.read().collect() == before
 
-    def upgrade():
-        return setup._upgrade_metadata_table(spark=rt.spark, table=rt.spark.read.format('delta').load(path),
-            table_name=table_name, expected_schema=expected, metadata_schema='metadata', context={})
 
-    frame, change = upgrade()
-    assert change['pre_upgrade_version'] == 0
-    assert 'source_id' not in frame.columns
-    migrated = frame.first().asDict()
-    assert migrated['table_id'] == asset_id and migrated['asset_type'] == 'FILE'
-    frozen_field = 'contract_payload_json' if table_name == 'METADATA_DATA_CONTRACT' else 'destination_json'
-    assert migrated[frozen_field] == row[frozen_field]
-    assert {key: migrated[key] for key in audit} == audit
-    assert rt.spark.read.format('delta').option('versionAsOf', 0).load(path).first()['source_id'] == asset_id
-    version = DeltaTable.forPath(rt.spark, path).history(1).first()['version']
-    assert upgrade()[1] is None
-    assert DeltaTable.forPath(rt.spark, path).history(1).first()['version'] == version
+def test_exact_050_catalogue_uses_retained_run_coordinates(catalogue_delta, monkeypatch):
+    """Upgrade the exact frozen schema, without relying on a PR-only item_id field."""
+    from pyspark.sql.types import StructType, StructField, StringType
+    rt = catalogue_delta
+    parent = released_parent(rt)
+    columns = [{**parent, 'metadata_level': 'column', 'column_id': 'released-column',
+                'column_name': 'id', 'data_type': 'long'}]
+    rt.spark.createDataFrame([parent, *columns], metadata_schema_050(TABLE)).write.format('delta').save(rt.path)
+    operations = json.dumps([{'operation_key': 'target:orders', 'table_id': parent['table_id'],
+        'pipeline_role': 'target', 'status': 'succeeded', 'destination': {
+            'kind': 'lakehouse', 'workspace_id': 'dev',
+            'item_id': rt.config.path_config.paths['dev']['Silver'].item_id}}])
+    runs = rt.spark.createDataFrame([('dev', operations)], StructType([
+        StructField('workspace_id', StringType()), StructField('operations', StringType())]))
+    read = setup.read_lakehouse_table
+    monkeypatch.setattr(setup, 'read_lakehouse_table',
+        lambda name, **kw: runs if name == 'METADATA_PIPELINE_RUN' else read(name, **kw))
+    frame, info = rt.upgrade()
+    row = frame.first().asDict()
+    assert info['pre_upgrade_version'] == 0 and info['upgrade_version'] == 1
+    assert row['asset_type'] == 'TABLE' and row['asset_workspace_id'] == 'dev'
+    assert row['item_id'] == rt.config.path_config.paths['dev']['Silver'].item_id
+    assert json.loads(row['columns_json']) == [{'column_id': 'released-column', 'column_name': 'id', 'data_type': 'long'}]
+    assert row['load_strategy_parameters_json'] == parent['load_strategy_parameters_json']
+    assert rt.upgrade()[1] is None

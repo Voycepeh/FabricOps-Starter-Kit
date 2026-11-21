@@ -115,8 +115,8 @@ RuntimeError
 <div class="reference-docstring-notes" markdown="1">
 
 Missing tables are created empty with error-if-exists semantics. Registry
-and Contract Activation use Serializable isolation; Processing State is
-created or upgraded to Serializable for atomic Source Drift acceptance.
+and Contract Activation use Serializable isolation. Processing State is
+managed separately by setup_processing_state.
 Setup never manufactures
 approvals, populates business metadata or replaces business targets. Governance definitions and activation are independent workflows.
 
@@ -125,11 +125,11 @@ declared for retirement are removed, following their table-specific validation. 
 columns are preserved where the table's identity contract permits them.
 Operational file source_id values are copied into the common table_id and
 validated before source_id is retired. Conflicting identities block migration.
-File profile columns gain deterministic Column IDs without changing retained
-profile IDs. Stop pipelines for this schema migration; recovery
+v0.5.0 profile rows are TABLE observations; their workspace remains explicitly
+historical when physical scope cannot be established. Stop pipelines for this schema migration; recovery
 restores the returned pre-upgrade Delta version together with the prior code.
 Unproven populated retirements fail with data preserved. Cleanup and supported
-JSON conversions commit atomically, with the pre-upgrade Delta version
+identity changes commit atomically, with the pre-upgrade Delta version
 returned for recovery before VACUUM or further writes. Setup never vacuums.
 For legacy Catalogue rows, setup validates parent and column identities,
 resolves physical workspaces, preserves stored column IDs in columns_json,
@@ -138,11 +138,13 @@ Setup standardizes physical asset workspace columns when their scope is known.
 Historical workspace values without sufficient proof remain in legacy_workspace_id.
 Contract activation destinations and notebook audit fields retain their original values.
 The per-table result returns the pre-upgrade version and recovery command.
-Catalogue and Pipeline Run collection fields are stored as validated JSON strings; supported native
-collections are converted atomically with tracked Delta reads and exact
+Migration starts at released v0.5.0 and ends at the current canonical schema.
+Older and intermediate PR schemas have no conversion paths. Catalogue and
+Pipeline Run collection fields remain validated JSON strings; native physical
+collections are rejected. Identity changes use tracked Delta reads and exact
 schema/data readback. Existing rows, audit values, extension fields, table
 identity/properties and Delta transaction identities are preserved. Run
-provenance additions are nullable and preserve retained content hashes.
+provenance fields and retained content hashes are preserved.
 Repeated setup validates compliant tables without rewriting them.
 
 Processing State observations, checkpoints, accepted baselines and publication
@@ -150,7 +152,8 @@ receipts remain intact. Missing progress is never inferred for populated
 targets. Incompatible identity layouts, incorrect types, malformed JSON and
 duplicate Run identities fail explicitly with the existing data preserved.
 A failure in one table does not prevent validation of the remaining tables.
-Physical nullability and field order are not rewritten.
+Unchanged fields retain their physical nullability and order. Renamed
+legacy_workspace_id fields are nullable so new physical observations can omit them.
 
 Governed admission remains blocked pending signed-in Fabric acceptance.
 Retirement presence diagnostics are advisory; unsupported tables are never
@@ -170,9 +173,9 @@ remains in METADATA_PIPELINE_RUN.operations.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:660`
+`fabricops_kit/config/setup_metadata_tables.py:586`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L660-L964">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L586-L893">View on GitHub</a>
 </div>
 
 
@@ -188,7 +191,7 @@ remains in METADATA_PIPELINE_RUN.operations.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 59 |
+| Live-critical dependencies | 57 |
 
 ### Release history
 
@@ -227,7 +230,6 @@ remains in METADATA_PIPELINE_RUN.operations.
 <li><code>fabricops_kit.config.setup_metadata_tables._add_missing_metadata_columns</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._historical_table_warnings</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._migrate_catalogue_rows</code></li>
-<li><code>fabricops_kit.config.setup_metadata_tables._parse_catalogue_value</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._print_setup_summary</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._result</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._retired_preview_warnings</code></li>
@@ -240,7 +242,6 @@ remains in METADATA_PIPELINE_RUN.operations.
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
 <li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
 <li><code>fabricops_kit.config.shared._validate_audit_timezone</code></li>
-<li><code>fabricops_kit.config.shared.build_column_id</code></li>
 <li><code>fabricops_kit.config.shared.build_table_id</code></li>
 <li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.get_store</code></li>

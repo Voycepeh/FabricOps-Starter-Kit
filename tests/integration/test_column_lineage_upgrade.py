@@ -1,4 +1,4 @@
-"""Additive re-use of the historical activity table preserves real Delta history."""
+"""Upgrade the released v0.5.0 participation layout without losing Delta history."""
 from datetime import datetime
 from importlib import import_module
 
@@ -17,6 +17,7 @@ def test_lineage_additive_upgrade_preserves_legacy_rows_and_extensions(spark_ses
     from pyspark.sql.types import StructType, StructField, StringType, TimestampType
     setup = import_module('fabricops_kit.config.setup_metadata_tables')
     path = str(tmp_path / 'lineage')
+    # Frozen v0.5.0 schema, plus a consumer-owned extension.
     fields = ['lineage_id', 'table_id', 'table_name', 'workspace_id', 'pipeline_role', 'consumer_extension']
     legacy = StructType([StructField(name, StringType(), True) for name in fields] +
         [StructField(name, TimestampType() if kind == 'timestamp' else StringType(), False)

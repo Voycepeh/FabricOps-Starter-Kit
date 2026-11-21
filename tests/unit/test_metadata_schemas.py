@@ -398,10 +398,9 @@ def test_nested_pipeline_run_schema_documentation_matches_without_pyspark():
 def test_incomplete_pipeline_identity_schema_is_rejected(table):
     """Incomplete required identity fields are unsafe to infer for existing pipeline metadata."""
     from importlib import import_module
-    from pyspark.sql.types import StructType
     setup = import_module('fabricops_kit.config.setup_metadata_tables')
     expected = metadata_table_schema_registry()[table]
-    for existing in (StructType([]), StructType(expected.fields[:-1])):
+    for existing in (expected.__class__([]), expected.__class__(expected.fields[:-1])):
         with pytest.raises(ValueError, match='Existing data has been preserved'):
             setup._validate_existing_metadata_schema(table, existing, expected, allow_missing=True)
 
@@ -435,3 +434,31 @@ def test_setup_rejects_unsafe_retirement_declarations(monkeypatch, table, column
     with pytest.raises(ValueError, match='Unsafe column retirement declaration'):
         setup._upgrade_metadata_table(spark=None, table=SimpleNamespace(schema=schema),
             table_name=table, expected_schema=schema, metadata_schema='engineering', context={})
+
+
+def test_migration_declarations_start_at_frozen_050():
+    """Retirements and workspace renames must name columns actually shipped in v0.5.0."""
+    from tests.helpers import metadata_schema_050
+    from fabricops_kit.config.metadata_schemas import RETIRED_METADATA_COLUMNS, PHYSICAL_WORKSPACE_COLUMNS, LEGACY_WORKSPACE_TABLES
+
+    for table, columns in RETIRED_METADATA_COLUMNS.items():
+        assert set(columns) <= set(metadata_schema_050(table).fieldNames())
+    for table, aliases in PHYSICAL_WORKSPACE_COLUMNS.items():
+        assert set(aliases) <= set(metadata_schema_050(table).fieldNames())
+    for table in LEGACY_WORKSPACE_TABLES:
+        assert 'workspace_id' in metadata_schema_050(table).fieldNames()
+    from importlib import import_module
+    setup = import_module('fabricops_kit.config.setup_metadata_tables')
+    assert setup._LEGACY_CATALOGUE_FIELDS <= set(metadata_schema_050('METADATA_DATA_CATALOGUE').fieldNames())
+
+
+def test_setup_does_not_upgrade_pre_050_run_provenance_layout():
+    """v0.5.0 already shipped provenance fields; missing ones are not an additive upgrade."""
+    import importlib
+    from tests.helpers import metadata_schema_050
+    setup = importlib.import_module('fabricops_kit.config.setup_metadata_tables')
+    released = metadata_schema_050('METADATA_PIPELINE_RUN')
+    partial = released.__class__([field for field in released if field.name != 'promotion_id'])
+    with pytest.raises(ValueError, match='Incompatible METADATA_PIPELINE_RUN'):
+        setup._validate_existing_metadata_schema('METADATA_PIPELINE_RUN', partial,
+            metadata_table_schema_registry()['METADATA_PIPELINE_RUN'], allow_missing=True)

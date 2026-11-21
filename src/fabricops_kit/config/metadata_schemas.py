@@ -29,21 +29,15 @@ CANONICAL_METADATA_TABLES = [
 RETIRED_METADATA_COLUMNS = {
     table: {} for table in CANONICAL_METADATA_TABLES
 }
+# v0.5.0 shipped source_id only on these three tables. Older retirements
+# and unreleased Catalogue/profile layouts are not supported upgrade baselines.
 RETIRED_METADATA_COLUMNS.update({
-    "METADATA_DATA_CATALOGUE": {
-        "metadata_id": None, "metadata_key": None,
-        "metadata_table_key": None, "metadata_column_key": None,
-    },
-    "METADATA_DATA_PROFILED": {
-        "frequency_json": None, "profiled_at": "_committed_at",
-        "metadata_table_key": None, "metadata_column_key": None,
-        "store_type": None, "layer": None, "schema_name": None,
-        "schema_fingerprint": None,
-    },
-    "METADATA_DATA_PROFILED_FREQUENCY": {
-        "metadata_column_key": None, "profiled_at": "_committed_at",
-    },
+    table: {"source_id": "table_id"} for table in (
+        "METADATA_DATA_CONTRACT", "METADATA_DATA_CONTRACT_ACTIVATION",
+        "METADATA_GUARDRAIL_RESULTS",
+    )
 })
+
 
 def has_retained_asset_workspaces(value, *, physical=False):
     """Detect historical physical workspace keys without inspecting authored options."""
@@ -138,18 +132,10 @@ def operation_physical_binding(operation):
     return binding
 
 
-# Approved identity consolidation: migration copies and validates the file identity
-# before retiring the redundant operational source_id column.
-UNIFIED_ASSET_TABLES = ("METADATA_DATA_CATALOGUE",
-    "METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_GUARDRAIL_RESULTS",
-    "METADATA_DATA_CONTRACT", "METADATA_DATA_CONTRACT_ACTIVATION")
-for _asset_table in UNIFIED_ASSET_TABLES:
-    RETIRED_METADATA_COLUMNS[_asset_table]["source_id"] = "table_id"
-
 # Top-level stored workspace columns with a single physical meaning can be
 # renamed directly. Mixed historical values keep their original provenance.
 PHYSICAL_WORKSPACE_COLUMNS = {
-    "METADATA_DATA_CATALOGUE": {"workspace_id": "asset_workspace_id", "workspace_name": "asset_workspace_name"},
+    "METADATA_DATA_CATALOGUE": {"workspace_id": "asset_workspace_id"},
     "METADATA_DATA_CONTRACT_ACTIVATION": {"workspace_id": "asset_workspace_id"},
 }
 LEGACY_WORKSPACE_TABLES = frozenset({
@@ -667,15 +653,8 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
              ('lineage_version', 'integer'),
              ('record_type', 'string'),
              ('run_id', 'string'),
-             ('pipeline_id', 'string'),
-             ('execution_workspace_id', 'string'),
              ('operation_key', 'string'),
-             ('run_status', 'string'),
-             ('operation_status', 'string'),
              ('publication_status', 'string'),
-             ('write_mode', 'string'),
-             ('detector', 'string'),
-             ('scope', 'string'),
              ('coverage', 'string'),
              ('target_asset_workspace_id', 'string'),
              ('target_table_id', 'string'),
@@ -688,13 +667,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
              ('source_column_id', 'string'),
              ('source_column_name', 'string'),
              ('dependency_type', 'string'),
-             ('gap_codes', 'string'),
-             ('transformation_operations', 'string'),
-             ('transformation_count', 'integer'),
-             ('output_node_id', 'string'),
-             ('source_node_id', 'string'),
-             ('omitted_output_count', 'integer'),
-             ('source_run_sha256', 'string'), *audit],
+             *audit],
         ),
         "METADATA_GUARDRAIL_RESULTS": build_metadata_schema(
             "METADATA_GUARDRAIL_RESULTS",
