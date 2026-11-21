@@ -190,6 +190,16 @@ Raises ValueError for unsafe names, invalid write modes, or non-lakehouse target
 
 <div class="reference-docstring-notes" markdown="1">
 
+Canonical metadata keys
+    Writes through the Metadata store enforce the diagram primary key as a
+    non-null, non-blank unique row identity. Duplicate inserts fail atomically.
+    Existing tables require setup_metadata_tables() before using this protocol.
+    For existing canonical metadata, options are limited to txnAppId,
+    txnVersion and userMetadata; schema or partition changes require setup
+    or an explicit metadata migration. Ordinary business table writes retain
+    their writer options. External writers must follow the same protocol
+    to preserve uniqueness.
+
 Parallel processing and write concurrency
     Spark writes DataFrame partitions concurrently across available
     executors. ``write_lakehouse_table`` can repartition the input
@@ -327,9 +337,9 @@ make one write faster.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/io/write_lakehouse_table.py:18`
+`fabricops_kit/io/write_lakehouse_table.py:19`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L18-L329">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/io/write_lakehouse_table.py#L19-L346">View on GitHub</a>
 </div>
 
 
@@ -345,7 +355,7 @@ make one write faster.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 23 |
+| Live-critical dependencies | 25 |
 
 ### Release history
 
@@ -385,7 +395,9 @@ make one write faster.
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
 <li><code>fabricops_kit.io.shared.validate_dataframe_writer</code></li>
+<li><code>fabricops_kit.io.shared.validate_metadata_primary_key</code></li>
 <li><code>fabricops_kit.io.shared.write_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.write_metadata_frame</code></li>
 </ul>
 
 

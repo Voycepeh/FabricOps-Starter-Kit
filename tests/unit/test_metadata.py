@@ -116,6 +116,8 @@ def test_data_steward_widget_save_preserves_configured_timezone(monkeypatch, fak
         writes.append((table, df.rows, kwargs))
 
     monkeypatch.setattr(agreement, "write_lakehouse_table", write_table)
+    monkeypatch.setattr(agreement, "write_metadata_frame", lambda df, path, table, **kw: write_table(
+        df, table, store="Metadata", context={"config": framework_config(), "scope_workspace_id": "dev"}, **kw))
 
     row = steward_widget._create_or_update_data_steward(
         spark=FakeSpark(),
@@ -182,6 +184,8 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
         return []
 
     monkeypatch.setattr(agreement, "write_lakehouse_table", write_table)
+    monkeypatch.setattr(agreement, "write_metadata_frame", lambda df, path, table, **kw: write_table(
+        df, table, store="Metadata", context={"config": framework_config(), "scope_workspace_id": "dev"}, **kw))
     monkeypatch.setattr(agreement, "read_lakehouse_table", read_table)
 
     steward = steward_widget._create_or_update_data_steward(

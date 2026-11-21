@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import NotRequired, TypedDict
 
+from fabricops_kit.config.metadata_schemas import METADATA_PRIMARY_KEYS
+
 
 # Preserve current lifecycle badges after an authorized public rename. Historical
 # manifests keep the released names; these entries do not claim releases of the
@@ -126,7 +128,7 @@ METADATA_TABLE_MODELS = {
         "purpose": "Selects one exact globally frozen Contract for each physical table or file source.",
         "grain": "One retained activation revision per physical workspace, table_id and asset_type; one current active selection.",
         "implementation_notes": "asset_workspace_id identifies the physical asset workspace covered by this activation. The same frozen Contract version can be selected in multiple physical workspaces. Governance-owned activation is independent of Pipeline Promotion. activation_id is a replay-safe operation ID. destination_json is the exact reviewed physical table binding or file selector, format and reader configuration. Tables and files both use table_id and asset_type. No extra metadata table is required. Protected aliases reject Ungoverned writes. Actual tenant storage permissions authorize writes; UI confirmation is not authentication.",
-        "primary_key": ["activation_id"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_DATA_CONTRACT_ACTIVATION"]),
         "foreign_keys": [
             {"local_field": "agreement_id", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_id", "cardinality": "N:1", "statement": "Optional exact Agreement governing this physical frozen Contract selection."},
             {"local_field": "agreement_version", "referenced_table": "METADATA_DATA_AGREEMENT", "referenced_field": "agreement_version", "cardinality": "N:1", "statement": "Exact Agreement version and digest; cross-workspace usage requires effective terms."},
@@ -139,7 +141,7 @@ METADATA_TABLE_MODELS = {
         "purpose": "Retains immutable accepted submission packages and independent Governance decision history.",
         "grain": "One append-only import or decision event; revision is monotonic per execution workspace/Pipeline ID.",
         "implementation_notes": "Governance selects saved Engineering packages directly from configured Metadata Files; Review saves an immutable copy under its own identity. Digests establish content identity, not truth of engineer-provided testing claims. Conditional decisions bind the exact snapshot, read/write parameters, repartitioning, physical bindings, file authorizations and independently reviewed policy. Approval never deploys a notebook. Engineering has read-only access; runtime independently verifies this authority. Governance owns all metadata in its workspace, including Engineering records.",
-        "primary_key": ["approval_id"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_PIPELINE_ACTIVATION"]),
         "foreign_keys": [],
         "relationships": [],
     },
@@ -147,7 +149,7 @@ METADATA_TABLE_MODELS = {
         "purpose": "Records Engineering deployment of exact independently approved notebook snapshots.",
         "grain": "One immutable version per execution workspace/Pipeline ID/version; at most one active version.",
         "implementation_notes": "Registry is deployment evidence, not policy authority. Serializable conditional mutation preserves at most one active monotonic version. Engineering reads exact Governance approval before staging and conditionally committing a version. Runtime verifies approval and the complete saved notebook independently. Governance owns all metadata; Engineering writes only its allowed schema and Files paths. Source and promoted snapshots are write-once. Imported dependencies are not frozen. Signed-in Fabric acceptance remains required.",
-        "primary_key": ["execution_workspace_id", "pipeline_id", "pipeline_version"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_PIPELINE_REGISTRY"]),
         "foreign_keys": [{"local_field": "approval_id", "referenced_table": "METADATA_PIPELINE_ACTIVATION", "referenced_field": "approval_id", "cardinality": "N:1", "statement": "Exact authoritative Governance decision; application-enforced reference, not a database constraint."}],
         "relationships": [
             {"related_table": "METADATA_PIPELINE_ACTIVATION", "fields": ["approval_id"], "cardinality": "N:1", "statement": "Exact independent Governance approval."},
@@ -158,7 +160,7 @@ METADATA_TABLE_MODELS = {
         "purpose": "Stores scalar Run/output/source column dependencies for Power BI and impact queries.",
         "grain": "One finalized Run/Write/output/source/dependency type, with explicit constant, row-set and gap facts.",
         "implementation_notes": "Finalization derives immutable lineage_version=1 facts from the exact committed Run graph. Source/target physical Catalogue identities and column IDs, dependency_type, coverage and publication status are scalar columns; no JSON expansion is required for reporting. The projection has 18 dependency fields plus eight standard audit fields. Run/Pipeline attributes, transformation structure, graph node IDs and gap diagnostics remain available from the Run. Publication snapshot hashes are computed for retry tracking rather than repeated on each edge. Detailed graphs remain in Run operations for drill-through and rebuilding. Append transaction identities and exact read-back make retries idempotent without business-write replay. Setup additively upgrades the released participation layout, retaining its rows, audit fields and extension columns. Unreleased intermediate PR schemas do not receive migrations. Historical rows have null lineage_version and must be excluded from dependency reports. Rows describe Write input, not retained target history. Run and projection are separate Delta commits; projection failure is explicit and independently retryable.",
-        "primary_key": ["lineage_id"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_DATA_LINEAGE"]),
         "foreign_keys": [{"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Exact committed finalized Run owns the detailed graph; run_id and operation_key support drill-through."}],
         "relationships": [{"related_table": "METADATA_PIPELINE_RUN", "fields": ["run_id"], "cardinality": "N:1", "statement": "Finalized Run owns the source graph and publication outcome."},
                           {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["source_asset_workspace_id", "source_table_id", "source_asset_type", "target_asset_workspace_id", "target_table_id", "target_asset_type"], "cardinality": "N:M", "statement": "Join each physical source/target role separately to Catalogue asset_workspace_id + table_id + asset_type, then column_id in columns_json. Null sources represent constants or gaps."}],
@@ -167,7 +169,7 @@ METADATA_TABLE_MODELS = {
         "purpose": "Records Run participation, execution outcomes and exact per-operation Contract versions.",
         "grain": "One authoritative execution with validated JSON operations, profiling, failures and versioned provenance.",
         "implementation_notes": "Fresh runs use schema version 4 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash and are the authoritative source/target participation record. Flatten operations with pipeline_participation(); exclude not_started declarations and retain operation status independently of Run status. Table publication_status is retained when known; missing historical publication status means unknown. Join projected operations to the Catalogue using operations[].asset_workspace_id, common table_id and asset_type. Operations use table_id and asset_type for every asset, with one typed source_assets array for inputs. Released Run JSON remains unchanged and is interpreted when read. Participation does not prove transformation dependencies. Prepared Writes additionally retain an optional bounded versioned Catalyst graph in operations[].lineage, describing source columns, transformations, dependency roles and complete/partial/unknown coverage for the Write input. Graphs are captured before framework checkpoints and retained with publication status; finalized graphs are projected automatically to scalar METADATA_DATA_LINEAGE facts; historical Runs remain absent rather than backfilled. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.",
-        "primary_key": ["run_id"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_PIPELINE_RUN"]),
         "foreign_keys": [
             {"local_field": "promotion_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "promotion_id", "cardinality": "N:1", "statement": "Exact captured immutable Pipeline Promotion; superseded versions remain resolvable."},
             {"local_field": "operations[].contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Composite exact per-operation Contract identity with version and payload SHA."},
@@ -180,7 +182,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_DATA_STEWARD": {
         "purpose": "Identifies the people responsible for governing data.",
         "grain": "One registered Data Steward.",
-        "primary_key": ["steward_id"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_DATA_STEWARD"]),
         "foreign_keys": [],
         "relationships": [
             {"cardinality": "1:N", "statement": "One Data Steward can appear as the provider steward on many Data Agreement versions."},
@@ -190,7 +192,7 @@ METADATA_TABLE_MODELS = {
     "METADATA_DATA_AGREEMENT": {
         "purpose": "Records who is sharing data, with whom, why it is shared, and the conditions of that sharing.",
         "grain": "One version of a Data Agreement.",
-        "primary_key": ["agreement_id", "agreement_version"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_DATA_AGREEMENT"]),
         "foreign_keys": [
             {"local_field": "provider_steward_id", "referenced_table": "METADATA_DATA_STEWARD", "referenced_field": "steward_id", "cardinality": "N:1", "statement": "Each Data Agreement version has one provider steward; one steward can provide many agreement versions."},
             {"local_field": "recipient_steward_id", "referenced_table": "METADATA_DATA_STEWARD", "referenced_field": "steward_id", "cardinality": "N:1", "statement": "Each Data Agreement version has one recipient steward; one steward can receive many agreement versions."},
@@ -203,7 +205,7 @@ METADATA_TABLE_MODELS = {
         "purpose": "Defines one immutable table or file dataset contract history. Workspace observations supply authoring evidence; physical activation selects exact frozen versions.",
         "grain": "One Draft or Frozen version of a Data Contract for a table or file-backed dataset.",
         "implementation_notes": "Reusable immutable frozen dataset definition with Enrichment and executable Guardrails. evidence_workspace_id records the physical workspace of the Catalogue asset selected at draft creation. The Catalogue supplies asset_workspace_name. Draft creation matches Catalogue asset_workspace_id to evidence_workspace_id and Catalogue table_id and asset_type to the same Contract fields. New drafts require one active Catalogue asset with an observed schema. Frozen versions retain their captured schema and remain usable independently of the current Catalogue row. Contract Activation records where the frozen version applies. Engineering owns processing and profiling through the pipeline. Files retain their stable selector identity in table_id with asset_type FILE. New payloads use format_version 2; frozen historical payload bytes and hashes remain unchanged. Their exact selector, format and reader options are frozen in the payload. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.",
-        "primary_key": ["contract_id", "contract_version"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_DATA_CONTRACT"]),
         "foreign_keys": [],
         "relationships": [{
             "cardinality": "N:0..1", "related_table": "METADATA_DATA_CATALOGUE",
@@ -215,7 +217,7 @@ METADATA_TABLE_MODELS = {
         "purpose": "Registers current table and file assets with their physical workspace, location and latest observed schema.",
         "grain": "One current asset per physical workspace ID, Table ID and asset type.",
         "implementation_notes": "asset_workspace_id and asset_workspace_name identify the physical Fabric workspace. Underscore-prefixed workspace fields audit the executing notebook. TABLE retains its logical Table ID and FILE retains its existing selector identity in table_id. columns_json is a validated JSON string containing an ordered array of column_id, column_name and data_type definitions. SQL NULL means schema unobserved and [] means an observed empty schema. Full schema observations replace the current active columns even when profiling is disabled. Returning columns use the established deterministic ID. Historical profiles and frozen Contracts retain their captured definitions. Processing parameters, Scheduled Refresh and key discovery retain their existing JSON fields.",
-        "primary_key": ["asset_workspace_id", "table_id", "asset_type"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_DATA_CATALOGUE"]),
         "foreign_keys": [],
         "relationships": [
             {
@@ -230,7 +232,7 @@ METADATA_TABLE_MODELS = {
         "purpose": "Stores column statistics for table or file profiling snapshots, with an explicit asset type and canonical identity.",
         "grain": "One column's statistics from one profiling snapshot.",
         "implementation_notes": "New snapshots require one active physical Catalogue asset. Table and file snapshots share table_id and column_id, with asset_type distinguishing TABLE and FILE. File snapshots also retain run_id and pipeline_role. profile_scope and profiling_max_rows describe the supplied or bounded selection, not necessarily all physical file contents. Table profile IDs and column IDs retain their released meaning. See column-level profile metrics for a dataset snapshot. table_name and column_name record the names observed when written and do not follow later Catalogue renames.",
-        "primary_key": ["profile_id"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_DATA_PROFILED"]),
         "foreign_keys": [],
         "relationships": [
             {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["asset_workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "Before saving new column statistics, FabricOps requires one active physical Catalogue asset. Retained workspace values may describe legacy execution scope."},
@@ -241,7 +243,7 @@ METADATA_TABLE_MODELS = {
         "purpose": "Shows which values appear most often in a column and how frequently they occur.",
         "grain": "One recorded value and its frequency for a column in a profiling snapshot.",
         "implementation_notes": "New frequency snapshots require one active physical Catalogue asset. Frequency distributions retain asset_type, the common table_id and column_id, workspace, column name and datatype. File rows also retain Run ID and role. Independently scheduled Frequency Profiling owns its activity snapshot and leaves profile_id null; combined standalone profiling may link a statistical Profile. Captured names do not follow later renames.",
-        "primary_key": ["frequency_id"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_DATA_PROFILED_FREQUENCY"]),
         "foreign_keys": [
             {"local_field": "profile_id", "referenced_table": "METADATA_DATA_PROFILED", "referenced_field": "profile_id", "cardinality": "N:1", "statement": "Combined standalone profiling links Frequency rows to their parent statistical Profile through profile_id. Independently scheduled Frequency Profiling leaves profile_id null and retains Table ID, Column ID and its own activity snapshot."},
         ],
@@ -254,7 +256,7 @@ METADATA_TABLE_MODELS = {
         "purpose": "Records permissions observed for governed tables across Workspace, OneLake and SQL access. It does not determine a person's effective access.",
         "grain": "One observed permission for a principal or access selector on a table during one scan.",
         "implementation_notes": "Before saving access observations, FabricOps verifies one active physical Catalogue asset. See observable Workspace, OneLake Security, and SQL access for registered governed physical tables across configured Fabric data items; table_name records the Catalogue name matched at scan time. This is not an effective-access resolver.",
-        "primary_key": ["access_id"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_DATA_ACCESS"]),
         "foreign_keys": [],
         "relationships": [{"related_table": "METADATA_DATA_CATALOGUE", "fields": ["asset_workspace_id", "table_id", "asset_type"], "cardinality": "N:1", "statement": "Before saving new scan rows, FabricOps checks for an active physical Catalogue TABLE matched by workspace and Table ID. The scan also matches the Fabric item. Legacy rows may retain observation scope and an empty asset_type."}],
     },
@@ -262,7 +264,7 @@ METADATA_TABLE_MODELS = {
         "purpose": "Summarizes Guardrail checks from finalized Test runs and Live runs, including whether execution could continue. It does not store failed business rows.",
         "grain": "One saved Guardrail outcome for an exact Data Contract version; Test outcomes are committed at explicit finalization.",
         "implementation_notes": "Store aggregate Guardrail summaries for exact participating contract versions, common table_id, explicit asset_type, captured source name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. New planned asset results use the resolved physical workspace. Pipeline-wide outcomes and results without a resolved binding retain execution scope. Catalogue registration is checked when creating the Contract draft. Results reference the exact Contract and Run without a separate Catalogue parent check. Captured context remains as observed at evaluation.",
-        "primary_key": ["guardrail_result_id"],
+        "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_GUARDRAIL_RESULTS"]),
         "foreign_keys": [
             {"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Planned execution results belong to one logical pipeline run; standalone historical results may have no run record."},
             {"local_field": "contract_id", "referenced_table": "METADATA_DATA_CONTRACT", "referenced_field": "contract_id", "cardinality": "N:1", "statement": "Together with contract_version, identifies the immutable payload containing the evaluated guardrail_rule_id and guardrail_version."},

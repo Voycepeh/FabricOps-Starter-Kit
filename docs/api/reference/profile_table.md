@@ -246,7 +246,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 144 |
+| Live-critical dependencies | 146 |
 
 ### Release history
 
@@ -349,6 +349,8 @@ distinct snapshot identity.
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
+<li><code>fabricops_kit.io.shared.validate_metadata_merge</code></li>
+<li><code>fabricops_kit.io.shared.validate_metadata_primary_key</code></li>
 <li><code>fabricops_kit.pipeline.shared._audit_literal_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._automatic_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._canonical_profiled_dataframe</code></li>

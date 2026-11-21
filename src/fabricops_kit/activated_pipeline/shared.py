@@ -368,6 +368,8 @@ def mutate_metadata(table, mutation, *, context, spark_session=None, operation_i
     spark = get_spark_session(spark_session, context=context)
     path = metadata_path(table, context=context)
     schema = metadata_table_schema_registry()[table]
+    from fabricops_kit.io.shared import validate_metadata_primary_key
+
     def attempt():
         log = spark._jvm.org.apache.spark.sql.delta.DeltaLog.forTable(spark._jsparkSession, path)
         txn = log.startTransaction()
@@ -376,11 +378,13 @@ def mutate_metadata(table, mutation, *, context, spark_session=None, operation_i
         if json.loads(txn.metadata().json())["metaData"]["configuration"].get("delta.isolationLevel") != "Serializable":
             raise ValueError("Governance mutations require Serializable Delta isolation; run fresh setup.")
         previous = [row.asDict(recursive=True) for row in spark.read.format("delta").option("versionAsOf", int(txn.readVersion())).load(path).collect()]
+        validate_metadata_primary_key(table, previous)
         if table == REGISTRY_TABLE:
             validate_registry(previous)
         elif table == ACTIVATION_TABLE:
             validate_activations(previous)
         proposed, result = mutation(deepcopy(previous))
+        validate_metadata_primary_key(table, proposed)
         if table == REGISTRY_TABLE:
             validate_registry(proposed)
         elif table == ACTIVATION_TABLE:
@@ -388,6 +392,7 @@ def mutate_metadata(table, mutation, *, context, spark_session=None, operation_i
         if proposed == previous:
             return result
         rows = [coerce_metadata_row_types(table, row) for row in proposed] if table else proposed
+        validate_metadata_primary_key(table, rows)
         replace_metadata_transaction(txn, files, rows, schema=schema, spark_session=spark, path=path,
             marker={"fabricops_operation_id": operation_id or str(uuid4()), "content_sha256": manifest_digest(rows)})
         return result

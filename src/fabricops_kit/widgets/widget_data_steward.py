@@ -37,7 +37,7 @@ from fabricops_kit.widgets.shared import (
 
 
 def widget_data_steward(*, context: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Render append-only data steward create/update maintenance.
+    """Render current data steward create/update maintenance.
 
     Spark is resolved automatically from the existing execution session.
     No session is created; Spark-dependent work raises

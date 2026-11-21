@@ -64,8 +64,8 @@ def test_agreement_metadata_schemas_and_widget_fields_keep_only_supported_busine
     assert "effective_to" not in steward_fields
 
 
-def test_steward_and_agreement_create_update_write_append_only_metadata(monkeypatch):
-    """Verify steward and agreement create update write append only metadata."""
+def test_steward_and_agreement_create_update_write_canonical_metadata(monkeypatch):
+    """Verify steward and agreement authoring delegates canonical metadata records."""
     monkeypatch.setattr(agreement_widget, "list_all_data_agreement_rows", lambda *a, **kw: [])
     audit_columns = agreement.STANDARD_RUNTIME_AUDIT_COLUMNS
     writes = []
@@ -476,6 +476,8 @@ def test_widget_metadata_write_uses_canonical_explicit_steward_schema(monkeypatc
             return "frame"
 
     monkeypatch.setattr(agreement, "write_lakehouse_table", lambda *args, **kwargs: created.update(table=args[1]))
+    monkeypatch.setattr(agreement, "write_metadata_frame", lambda frame, path, table, **kw: created.update(
+        table=path.rsplit("/", 1)[-1], canonical_table=table, mode=kw["mode"]))
     config = agreement_config(metadata_tables={"data_steward": "CUSTOM_STEWARD", "data_agreement": "CUSTOM_AGREEMENT"})
 
     agreement.write_widget_metadata_row(
@@ -487,6 +489,8 @@ def test_widget_metadata_write_uses_canonical_explicit_steward_schema(monkeypatc
         "custom_fields_json", *agreement.STANDARD_RUNTIME_AUDIT_COLUMNS,
     ]
     assert created["table"] == "CUSTOM_STEWARD"
+    assert created["canonical_table"] == "METADATA_DATA_STEWARD"
+    assert created["mode"] == "upsert"
 
 
 def test_agreement_widget_always_renders_mandatory_stewards(monkeypatch):

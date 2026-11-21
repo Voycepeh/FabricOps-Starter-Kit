@@ -13,6 +13,16 @@ from tests.helpers import framework_config
 pytestmark = pytest.mark.integration
 
 
+@pytest.fixture(autouse=True)
+def key_enforcement_calls(monkeypatch):
+    """Isolate routing/schema tests from the separately tested Delta key protocol."""
+    from importlib import import_module
+    calls = []
+    monkeypatch.setattr(import_module("fabricops_kit.config.setup_metadata_tables"), "_enforce_metadata_primary_key",
+        lambda **kw: calls.append(kw["table_name"]))
+    return calls
+
+
 class Table:
     """Minimal table fake exposing columns and active steward count."""
 
@@ -30,7 +40,7 @@ class Table:
         return self._count
 
 
-def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
+def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch, key_enforcement_calls):
     """Verify central metadata setup preserves existing valid tables."""
     registry = metadata_table_schema_registry()
     reads = []
@@ -57,6 +67,7 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
 
     result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
 
+    assert key_enforcement_calls == CANONICAL_METADATA_TABLES
     assert result["status"] == "ready"
     assert result["tables"] == CANONICAL_METADATA_TABLES
     assert result["created_tables"] == []

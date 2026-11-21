@@ -34,6 +34,18 @@ from tests.helpers import framework_config, store
 pytestmark = pytest.mark.unit
 
 
+@pytest.fixture(autouse=True)
+def metadata_transaction_boundary(monkeypatch):
+    """Isolate setup decisions from the real-Delta primary-key protocol tests."""
+    from importlib import import_module
+
+    setup = import_module("fabricops_kit.config.setup_metadata_tables")
+    monkeypatch.setattr(setup, "_enforce_metadata_primary_key", lambda **kwargs: None)
+    # Existing setup doubles record physical appends through their table writer.
+    monkeypatch.setattr(setup, "write_delta_path", lambda frame, path, **kwargs:
+        setup.write_lakehouse_table(frame, path.rsplit("/", 1)[-1], store="Metadata", **kwargs))
+
+
 def _canonical_metadata_reader(reader):
     """Keep generic setup fixtures explicit about absent noncanonical tables."""
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
@@ -454,7 +466,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
         assert mode == "errorifexists"
-        assert options == ({"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"} else None)
+        assert options == {"delta.isolationLevel": "Serializable"}
         assert verbose is False
         spark.created_tables.append(table_name)
         spark.tables[table_name] = spark.pending_columns

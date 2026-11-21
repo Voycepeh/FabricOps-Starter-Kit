@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fabricops_kit.config.metadata_schemas import migrate_asset_references, has_retained_asset_workspaces, operation_physical_binding
 
-from fabricops_kit.io.shared import retry_delta_metadata
+from fabricops_kit.io.shared import retry_delta_metadata, validate_metadata_merge, write_metadata_frame
 
 import hashlib
 import json
@@ -6812,8 +6812,7 @@ def publish_column_lineage(run, *, context, spark_session=None):
 
     frame = spark.createDataFrame(physical, schema)
     try:
-        retry_delta_metadata(lambda: frame.write.format("delta").mode("append")
-            .option("txnAppId", "fabricops-column-lineage:" + run["run_id"]).option("txnVersion", 1).save(path))
+        write_metadata_frame(frame, path, table, options={"txnAppId": "fabricops-column-lineage:" + run["run_id"], "txnVersion": 1})
     except Exception:
         if not confirmed():
             raise
@@ -6918,11 +6917,11 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
         properties = DeltaTable.forPath(spark, path).detail().select("properties").first()["properties"]
         if "delta.setTransactionRetentionDuration" in properties:
             raise RuntimeError("Pipeline Run requires unbounded Delta transaction identity retention.")
-        retry_delta_metadata(lambda: frame.drop("_expected").write.format("delta").mode("append")
-         .option("txnAppId", "fabricops-pipeline-run:" + plan.plan_id).option("txnVersion", 0).save(path))
+        write_metadata_frame(frame.drop("_expected"), path, table, options={"txnAppId": "fabricops-pipeline-run:" + plan.plan_id, "txnVersion": 0})
     else:
         # Compare the complete previous row inside the transaction. No physical
         # token column or per-update table metadata mutation is needed.
+        validate_metadata_merge(table, frame.drop("_expected"), path)
         previous = "struct(" + ",".join("target.`" + name + "`" for name in schema.fieldNames()) + ")"
         changes = {name: "source.`" + name + "`" for name in schema.fieldNames()}
         changes["run_id"] = ("CASE WHEN target.completed_at IS NULL AND "
@@ -8868,6 +8867,7 @@ def _replace_snapshot_rows(
         "Metadata", table_name, metadata_table_physical_schema(config, table_name),
         context={"config": config, "scope_workspace_id": active_workspace_id},
     )
+    validate_metadata_merge(table_name, dataframe, path)
     snapshot = dataframe.select("profile_snapshot_id").dropDuplicates().first()
     if snapshot is None:
         return
@@ -9013,6 +9013,7 @@ def merge_catalogue_asset(row, *, context, spark_session):
     _, _, _, path = resolve_configured_lakehouse_table(
         "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE), context=context,
     )
+    validate_metadata_merge(CATALOGUE_TABLE, source, path)
     updates = {name: f"source.{name}" for name in row
                if name not in {"asset_workspace_id", "table_id", "asset_type", "first_observed_at", "first_profiled_at"}}
     if row.get("item_id"):

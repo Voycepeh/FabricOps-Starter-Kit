@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fabricops_kit.io.shared import get_spark_session
+from fabricops_kit.io.shared import get_spark_session, resolve_configured_lakehouse_table, write_delta_path, validate_metadata_primary_key, retry_delta_metadata
 
 from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
 
@@ -10,6 +10,7 @@ from typing import Any
 
 from .metadata_schemas import (
     CANONICAL_METADATA_TABLES,
+    METADATA_PRIMARY_KEYS,
     metadata_json_schema,
     decode_metadata_row,
     encode_metadata_row,
@@ -168,16 +169,33 @@ def _add_missing_metadata_columns(
     expected = _schema_fields_by_name(expected_schema)
     additive_schema = expected_schema.__class__([expected[name] for name in missing_columns])
     empty_frame = spark.createDataFrame([], schema=additive_schema)
-    write_lakehouse_table(
-        empty_frame,
-        table_name,
-        store="Metadata",
-        schema=metadata_schema,
-        mode="append",
-        options={"mergeSchema": "true"},
-        verbose=False,
-        context=context,
-    )
+    _, _, _, path = resolve_configured_lakehouse_table("Metadata", table_name, metadata_schema, context=context)
+    retry_delta_metadata(lambda: write_delta_path(empty_frame, path, mode="append", options={"mergeSchema": "true"}))
+
+
+def _enforce_metadata_primary_key(*, spark, table, table_name, metadata_schema, context):
+    """Validate retained rows, then add required-key checks and Serializable isolation."""
+    from delta.tables import DeltaTable
+
+    validate_metadata_primary_key(table_name, table)
+    _, _, _, path = resolve_configured_lakehouse_table("Metadata", table_name, metadata_schema, context=context)
+    target = "delta.`" + path.replace("`", "``") + "`"
+    properties = DeltaTable.forPath(spark, path).detail().select("properties").first()["properties"]
+    if properties.get("delta.isolationLevel") != "Serializable":
+        spark.sql(f"ALTER TABLE {target} SET TBLPROPERTIES ('delta.isolationLevel' = 'Serializable')")
+    constraint = "fabricops_primary_key_required"
+    check = " AND ".join(f"`{key}` IS NOT NULL AND length(trim(CAST(`{key}` AS STRING))) > 0"
+                         for key in METADATA_PRIMARY_KEYS[table_name])
+    existing = properties.get("delta.constraints." + constraint)
+    if existing is None:
+        spark.sql(f"ALTER TABLE {target} ADD CONSTRAINT {constraint} CHECK ({check})")
+    else:
+        parser = spark._jsparkSession.sessionState().sqlParser()
+        if parser.parseExpression(existing).canonicalized().sql() != parser.parseExpression(check).canonicalized().sql():
+            # Delta renders stored expressions with normalized parentheses/case.
+            # Never silently replace a genuinely different existing constraint.
+            raise ValueError(f"{table_name}: existing primary key constraint differs from the canonical key.")
+
 
 
 _LEGACY_CATALOGUE_FIELDS = {"metadata_level", "column_id", "column_name", "data_type"}
@@ -673,6 +691,12 @@ def setup_metadata_tables(
     rewriting historical rows; lineage_version=1 identifies new facts. Participation
     remains in METADATA_PIPELINE_RUN.operations.
 
+    Primary keys shown in the metadata diagram are validated for every table.
+    Setup rejects existing null, blank or duplicate keys without deleting rows,
+    enables Serializable isolation and installs required-key Delta constraints.
+    Uniqueness is enforced by FabricOps transactional writers; external writers
+    must use the same protocol. Re-run setup before using upgraded writers.
+
     Examples
     --------
     >>> result = setup_metadata_tables(config=CONFIG, workspace_id=WORKSPACE_ID)
@@ -726,7 +750,7 @@ def setup_metadata_tables(
                     mode="errorifexists",
                     verbose=False,
                     context=context,
-                    options={"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION"} else None,
+                    options={"delta.isolationLevel": "Serializable"},
                 )
                 created = True
                 table = read_lakehouse_table(
@@ -772,6 +796,8 @@ def setup_metadata_tables(
                 missing = [field for field in metadata_table_field_names(schema) if field not in columns]
                 if missing:
                     raise ValueError(f"{table_name} is missing required column(s): {', '.join(missing)}.")
+            _enforce_metadata_primary_key(spark=spark, table=table, table_name=table_name,
+                metadata_schema=resolved_metadata_schema, context=context)
             if table_name == "METADATA_DATA_STEWARD":
                 steward_table = table
             if created:

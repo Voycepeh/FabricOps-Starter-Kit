@@ -85,28 +85,19 @@ def test_metadata_retry_is_bounded(monkeypatch):
     assert all(0.1 <= delay <= 8 for delay in delays)
 
 
-@pytest.mark.parametrize('table,store,retried', [(table, 'Metadata', True) for table in CANONICAL_METADATA_TABLES] + [('orders', 'Silver', False),
+@pytest.mark.parametrize('table,store,guarded', [(table, 'Metadata', True) for table in CANONICAL_METADATA_TABLES] + [('orders', 'Silver', False),
     ('METADATA_GUARDRAIL_RESULTS', 'Silver', False)])
-def test_metadata_append_retries_without_replaying_business_writes(monkeypatch, table, store, retried):
-    """Canonical table and configured Metadata store must both match before retrying."""
+def test_metadata_writes_delegate_to_key_transaction_only_for_metadata(monkeypatch, table, store, guarded):
+    """Business writes retain their ordinary physical path and single attempt."""
     module = importlib.import_module('fabricops_kit.io.write_lakehouse_table')
-    monkeypatch.setattr('fabricops_kit.io.shared.sleep', lambda _: None)
     monkeypatch.setattr(module, 'validate_dataframe_writer', lambda _: None)
     monkeypatch.setattr(module, 'resolve_configured_lakehouse_table', lambda *a, **kw: (None, table, 'engineering', 'path'))
     monkeypatch.setattr(module, 'repartition_dataframe_for_write', lambda df, _: df)
     calls = []
-    def write(*args, **kwargs):
-        calls.append(kwargs)
-        if len(calls) == 1:
-            raise type('ConcurrentAppendException', (Exception,), {})()
-    monkeypatch.setattr(module, 'write_delta_path', write)
-    if retried:
-        module.write_lakehouse_table(object(), table, store=store, mode='append', verbose=False)
-        assert len(calls) == 2
-    else:
-        with pytest.raises(Exception):
-            module.write_lakehouse_table(object(), table, store=store, mode='append', verbose=False)
-        assert len(calls) == 1
+    monkeypatch.setattr(module, 'write_metadata_frame', lambda *a, **kw: calls.append('metadata'))
+    monkeypatch.setattr(module, 'write_delta_path', lambda *a, **kw: calls.append('ordinary'))
+    module.write_lakehouse_table(object(), table, store=store, mode='append', verbose=False)
+    assert calls == ['metadata' if guarded else 'ordinary']
 
 
 def test_publication_coordination_is_removed():
@@ -170,6 +161,15 @@ def test_metadata_authoring_destinations_share_one_bounded_retry_budget(monkeypa
         frames.append(frame)
         return frame
 
+    # The authoring boundary delegates retry ownership to the key transaction.
+    # Real Delta collision/retry behavior is covered by the primary-key tests.
+    def keyed_write(frame, path, table, *, mode="append", options=None, **kwargs):
+        return retry_delta_metadata(lambda: write(frame, path, mode=mode, options=options))
+    for module in (writer, contracts, widgets):
+        monkeypatch.setattr(module, "write_metadata_frame", keyed_write)
+    for module in (contracts, widgets):
+        monkeypatch.setattr(module, "resolve_configured_lakehouse_table",
+            lambda store, table, schema, **kw: (None, table, schema, "configured-path"))
     monkeypatch.setattr(writer, "write_delta_path", write)
     spark = SimpleNamespace(createDataFrame=create_frame)
     if "contract" in destination:
@@ -207,7 +207,7 @@ def test_metadata_authoring_destinations_share_one_bounded_retry_budget(monkeypa
         assert len(calls) == (32 if failure == "exhausted" else 1)
         assert len(delays) == (31 if failure == "exhausted" else 0)
     assert len(frames) == 1
-    assert all(frame is frames[0] and path == "configured-path" and options["mode"] == "append"
+    assert all(frame is frames[0] and path == "configured-path" and options["mode"] == ("upsert" if "steward" in destination else "append")
                for frame, path, options in calls)
     if "contract" in destination:
         assert len(reads) == 2 and len(audits) == 1

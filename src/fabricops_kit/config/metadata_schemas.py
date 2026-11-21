@@ -5,6 +5,24 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from typing import Any
 
+
+# Row identity is shared by runtime writers and the generated metadata diagram.
+METADATA_PRIMARY_KEYS = {
+    "METADATA_DATA_CONTRACT_ACTIVATION": ('activation_id',),
+    "METADATA_PIPELINE_ACTIVATION": ('approval_id',),
+    "METADATA_PIPELINE_REGISTRY": ('execution_workspace_id', 'pipeline_id', 'pipeline_version'),
+    "METADATA_DATA_LINEAGE": ('lineage_id',),
+    "METADATA_PIPELINE_RUN": ('run_id',),
+    "METADATA_DATA_STEWARD": ('steward_id',),
+    "METADATA_DATA_AGREEMENT": ('agreement_id', 'agreement_version'),
+    "METADATA_DATA_CONTRACT": ('contract_id', 'contract_version'),
+    "METADATA_DATA_CATALOGUE": ('asset_workspace_id', 'table_id', 'asset_type'),
+    "METADATA_DATA_PROFILED": ('profile_id',),
+    "METADATA_DATA_PROFILED_FREQUENCY": ('frequency_id',),
+    "METADATA_DATA_ACCESS": ('access_id',),
+    "METADATA_GUARDRAIL_RESULTS": ('guardrail_result_id',),
+}
+
 CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_STEWARD",
     "METADATA_DATA_AGREEMENT",

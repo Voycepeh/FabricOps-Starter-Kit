@@ -163,6 +163,12 @@ additively adds the new nullable fields to retained activity layouts without
 rewriting historical rows; lineage_version=1 identifies new facts. Participation
 remains in METADATA_PIPELINE_RUN.operations.
 
+Primary keys shown in the metadata diagram are validated for every table.
+Setup rejects existing null, blank or duplicate keys without deleting rows,
+enables Serializable isolation and installs required-key Delta constraints.
+Uniqueness is enforced by FabricOps transactional writers; external writers
+must use the same protocol. Re-run setup before using upgraded writers.
+
 </div>
 
 ## See also
@@ -173,9 +179,9 @@ remains in METADATA_PIPELINE_RUN.operations.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:586`
+`fabricops_kit/config/setup_metadata_tables.py:604`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L586-L893">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L604-L919">View on GitHub</a>
 </div>
 
 
@@ -191,7 +197,7 @@ remains in METADATA_PIPELINE_RUN.operations.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 57 |
+| Live-critical dependencies | 61 |
 
 ### Release history
 
@@ -228,6 +234,7 @@ remains in METADATA_PIPELINE_RUN.operations.
 <li><code>fabricops_kit.config.metadata_schemas.validate_metadata_value</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._active_steward_presence</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._add_missing_metadata_columns</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._enforce_metadata_primary_key</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._historical_table_warnings</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._migrate_catalogue_rows</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._print_setup_summary</code></li>
@@ -263,6 +270,9 @@ remains in METADATA_PIPELINE_RUN.operations.
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
+<li><code>fabricops_kit.io.shared.validate_metadata_primary_key</code></li>
+<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
 <li><code>fabricops_kit.pipeline.shared.file_binding_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
