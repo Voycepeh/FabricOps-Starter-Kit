@@ -211,7 +211,7 @@ def test_catalogue_upgrade_keeps_history_versions_unchanged(catalogue_delta, mon
     frozen_payload = '{"table":{"columns":[{"column_id":"retired-id","column_name":"retired","data_type":"int"}]}}'
     history = {
         "METADATA_DATA_CONTRACT": {"contract_id": "orders", "contract_version": 2, "status": "frozen",
-                                   "evidence_workspace_id": "dev", "contract_payload_json": frozen_payload},
+                                   "asset_workspace_id": "dev", "contract_payload_json": frozen_payload},
         "METADATA_DATA_PROFILED": {"profile_id": "profile", "column_id": "retired-id", "row_count": 20, "legacy_workspace_id": "dev"},
         "METADATA_DATA_PROFILED_FREQUENCY": {"frequency_id": "frequency", "profile_id": "profile",
                                              "column_id": "retired-id", "legacy_workspace_id": "dev"},

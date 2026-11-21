@@ -151,9 +151,9 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert "<code>operations_json</code>" in activated_page
     assert "`array<struct<" not in activated_page
     assert "via `approval_id`" in activated_page
-    assert "`METADATA_DATA_CATALOGUE` **(N → 0..1)**" in contract_page
-    assert "Draft creation matches Catalogue asset_workspace_id to evidence_workspace_id" in contract_page
-    assert "via `evidence_workspace_id` + `table_id` + `asset_type`" in contract_page
+    assert "`METADATA_DATA_CATALOGUE` **(N → 1)**" in contract_page
+    assert "asset_workspace_id, table_id and asset_type reference exactly one Catalogue asset" in contract_page
+    assert "via `asset_workspace_id` + `table_id` + `asset_type`" in contract_page
     assert "METADATA_DATA_AGREEMENT.agreement_id" not in contract_page
     assert "monotonically increasing" not in contract_page
 
@@ -168,7 +168,7 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
 
 
 def test_workspace_id_descriptions_follow_the_persisted_roles() -> None:
-    """Identify every top-level workspace ID and keep Contract evidence distinct."""
+    """Identify every top-level workspace ID and use the same physical asset identity for Contracts."""
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
 
     registry = metadata_table_schema_registry()
@@ -176,7 +176,7 @@ def test_workspace_id_descriptions_follow_the_persisted_roles() -> None:
         name for name, schema in registry.items() if "asset_workspace_id" in schema.fieldNames()
     }
     describe = generator._metadata_field_description
-    assert "authoring evidence" in describe("METADATA_DATA_CONTRACT", "evidence_workspace_id")
+    assert "required Catalogue reference" in describe("METADATA_DATA_CONTRACT", "asset_workspace_id")
     assert "physical asset" in describe("METADATA_DATA_CONTRACT_ACTIVATION", "asset_workspace_id")
     assert "operations[].asset_workspace_id" in describe("METADATA_PIPELINE_RUN", "workspace_id")
     assert "executing notebook" in describe("METADATA_DATA_CATALOGUE", "_workspace_name")
@@ -292,16 +292,15 @@ def test_metadata_explorer_payload_matches_canonical_model(tmp_path, monkeypatch
             (fk["local_field"], fk["referenced_table"], fk["referenced_field"])
             for fk in model["foreign_keys"]
         ]
-    assert payload["DATA_CONTRACT"]["asset_identity_fields"] == ["table_id", "asset_type"]
+    assert payload["DATA_CONTRACT"]["asset_identity_fields"] == ["asset_workspace_id", "table_id", "asset_type"]
     assert payload["DATA_CONTRACT"]["foreign_keys"] == []
-    assert payload["DATA_CONTRACT"]["catalogue_authoring_fields"] == [
-        "evidence_workspace_id", "table_id", "asset_type"
+    assert payload["DATA_CONTRACT"]["catalogue_reference_fields"] == [
+        "asset_workspace_id", "table_id", "asset_type"
     ]
     assert payload["DATA_PROFILED"]["asset_identity_fields"] == ["asset_workspace_id", "table_id", "asset_type"]
     for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"):
         assert payload[table]["catalogue_reference_fields"] == ["asset_workspace_id", "table_id", "asset_type"]
-    assert payload["DATA_CONTRACT"]["catalogue_reference_fields"] == []
-    assert payload["GUARDRAIL_RESULTS"]["catalogue_authoring_fields"] == []
+    assert "catalogue_authoring_fields" not in payload["DATA_CONTRACT"]
     assert "catalogue_optional_fields" not in payload["GUARDRAIL_RESULTS"]
     assert payload["PIPELINE_RUN"]["asset_identity_fields"] == [
         "operations[].asset_workspace_id", "operations[].table_id", "operations[].asset_type"
@@ -485,9 +484,9 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     contract = next(node for node in svg_tree.findall(f".//{namespace}a")
                     if node.find(f"{namespace}title").text == "Open metadata documentation: DATA_CONTRACT")
     assert {"table_id", "asset_type"} <= {node.text for node in contract.findall(f"{namespace}text")}
-    for role, fields in (("PK", "contract_id,contract_version"), ("REF", "evidence_workspace_id,table_id,asset_type")):
+    for role, fields in (("PK", "contract_id,contract_version"), ("FK", "asset_workspace_id,table_id,asset_type")):
         assert contract.find(f"{namespace}g[@data-key-role='{role}']").get("data-key-fields") == fields
-    assert contract.find(f"{namespace}g[@data-key-role='FK']") is None
+    assert contract.find(f"{namespace}g[@data-key-role='REF']") is None
 
     connectors = svg_tree.findall(
         f".//{namespace}g[@id='metadata-er-relationships']/{namespace}g"
@@ -504,9 +503,9 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     for omitted in (("PIPELINE_REGISTRY", "PIPELINE_RUN"), ("PIPELINE_RUN", "DATA_CONTRACT"),
                     ("PIPELINE_REGISTRY", "DATA_CONTRACT_ACTIVATION")):
         assert omitted not in actual
-    assert actual[("DATA_CATALOGUE", "DATA_CONTRACT")].get("data-kind") == "logical"
-    assert actual[("DATA_CATALOGUE", "DATA_CONTRACT")].get("data-cardinality") == "0..1-N"
-    assert "checked at draft creation" in actual[("DATA_CATALOGUE", "DATA_CONTRACT")].find(f"{namespace}title").text
+    assert actual[("DATA_CATALOGUE", "DATA_CONTRACT")].get("data-kind") == "physical"
+    assert actual[("DATA_CATALOGUE", "DATA_CONTRACT")].get("data-cardinality") == "1-N"
+    assert "must exist before draft creation" in actual[("DATA_CATALOGUE", "DATA_CONTRACT")].find(f"{namespace}title").text
     assert actual[("DATA_CATALOGUE", "PIPELINE_RUN")].get("data-kind") == "nested"
     assert actual[("DATA_CATALOGUE", "PIPELINE_RUN")].get("data-cardinality") == "N-N"
     assert ("DATA_CATALOGUE", "GUARDRAIL_RESULTS") not in actual

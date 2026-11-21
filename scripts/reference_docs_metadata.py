@@ -202,16 +202,16 @@ METADATA_TABLE_MODELS = {
         ],
     },
     "METADATA_DATA_CONTRACT": {
-        "purpose": "Defines one immutable table or file dataset contract history. Workspace observations supply authoring evidence; physical activation selects exact frozen versions.",
+        "purpose": "Defines versioned Schema, Enrichment and executable Guardrails for a registered table or file dataset.",
         "grain": "One Draft or Frozen version of a Data Contract for a table or file-backed dataset.",
-        "implementation_notes": "Reusable immutable frozen dataset definition with Enrichment and executable Guardrails. evidence_workspace_id records the physical workspace of the Catalogue asset selected at draft creation. The Catalogue supplies asset_workspace_name. Draft creation matches Catalogue asset_workspace_id to evidence_workspace_id and Catalogue table_id and asset_type to the same Contract fields. New drafts require one active Catalogue asset with an observed schema. Frozen versions retain their captured schema and remain usable independently of the current Catalogue row. Contract Activation records where the frozen version applies. Engineering owns processing and profiling through the pipeline. Files retain their stable selector identity in table_id with asset_type FILE. New payloads use format_version 2; frozen historical payload bytes and hashes remain unchanged. Their exact selector, format and reader options are frozen in the payload. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.",
+        "implementation_notes": "asset_workspace_id, table_id and asset_type reference exactly one Catalogue asset using the same field names on both tables. New drafts require an active Catalogue asset with an observed schema. Each Contract version captures its schema; later Catalogue observations do not rewrite it. Contract Activation records where the frozen version applies. Engineering owns processing and profiling through the pipeline. Files use their stable selector identity in table_id with asset_type FILE. Payloads use format_version 2 and freeze the exact selector, format and reader options. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.",
         "primary_key": list(METADATA_PRIMARY_KEYS["METADATA_DATA_CONTRACT"]),
         "foreign_keys": [],
         "relationships": [{
-            "cardinality": "N:0..1", "related_table": "METADATA_DATA_CATALOGUE",
-            "fields": ["evidence_workspace_id", "table_id", "asset_type"],
-            "statement": "The authoring reference maps evidence_workspace_id to asset_workspace_id. For both TABLE and FILE, join table_id and asset_type to the same Catalogue fields. FabricOps checks this reference when creating a draft. Retained versions may have no matching current Catalogue asset.",
-        }, {"cardinality": "N:M", "related_table": "METADATA_PIPELINE_RUN", "statement": "Many approvals may reuse this exact frozen table contract through the operations of their retained Test runs."}],
+            "cardinality": "N:1", "related_table": "METADATA_DATA_CATALOGUE",
+            "fields": ["asset_workspace_id", "table_id", "asset_type"],
+            "statement": "Each Contract version references exactly one Catalogue asset by asset_workspace_id, table_id and asset_type. The Catalogue asset must exist with an observed schema before draft creation.",
+        }, {"cardinality": "N:M", "related_table": "METADATA_PIPELINE_RUN", "statement": "Many approvals may reuse this exact frozen table contract through the operations of their Test runs."}],
     },
     "METADATA_DATA_CATALOGUE": {
         "purpose": "Registers current table and file assets with their physical workspace, location and latest observed schema.",
@@ -221,9 +221,9 @@ METADATA_TABLE_MODELS = {
         "foreign_keys": [],
         "relationships": [
             {
-                "cardinality": "0..1:N", "related_table": "METADATA_DATA_CONTRACT",
+                "cardinality": "1:N", "related_table": "METADATA_DATA_CONTRACT",
                 "fields": ["asset_workspace_id", "table_id", "asset_type"],
-                "statement": "One Catalogue asset can supply the schema for many Data Contract versions at authoring. Retained versions can outlive the Catalogue observation.",
+                "statement": "One Catalogue asset can have many Data Contract versions, each referencing its complete physical asset key.",
             },
             {"cardinality": "1:N", "statement": "FabricOps requires an active Catalogue parent for new Profile, Frequency and Access records using the full physical key. Retained observations may carry legacy execution scope. Use exact retained Run evidence to resolve historical Profile references across workspaces."},
         ],

@@ -90,7 +90,6 @@ METADATA_FIELD_DESCRIPTIONS = {
         "asset, and column context."
     ),
     "schema_fingerprint": "Deterministic fingerprint for the observed or governed schema snapshot.",
-    "evidence_workspace_id": "ID of the workspace whose Catalogue observation supplied the authoring evidence for this Contract version. The Contract version is identified by contract_id and contract_version.",
     "store_type": "Configured Fabric store type recorded for the profiled dataset.",
     "layer": "The configured medallion layer where the table is stored.",
     "schema_name": "Lakehouse or warehouse schema name recorded for the dataset when available.",
@@ -222,6 +221,7 @@ PHYSICAL_ASSET_WORKSPACE_ID = "ID of the Fabric workspace that contains the phys
 
 ASSET_WORKSPACE_DESCRIPTIONS = {
     "METADATA_DATA_CATALOGUE": PHYSICAL_ASSET_WORKSPACE_ID,
+    "METADATA_DATA_CONTRACT": PHYSICAL_ASSET_WORKSPACE_ID + " Part of the required Catalogue reference for this Contract version.",
     **dict.fromkeys(
         ("METADATA_DATA_PROFILED", "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_ACCESS"),
         PHYSICAL_ASSET_WORKSPACE_ID + " For new rows, this is part of the Catalogue reference.",
@@ -4615,12 +4615,6 @@ def render_metadata_reference_index(
             "grain": table_models[name]["grain"],
             "primary_key": table_models[name]["primary_key"],
             "catalogue_reference_fields": _catalogue_reference_fields(table_models[name]),
-            "catalogue_authoring_fields": next((
-                relation["fields"] for relation in table_models[name].get("relationships", [])
-                if name == "METADATA_DATA_CONTRACT"
-                and relation.get("related_table") == "METADATA_DATA_CATALOGUE"
-                and relation.get("cardinality") == "N:0..1"
-            ), []),
             "asset_identity_fields": [
                 field for field in ("asset_workspace_id", "table_id", "asset_type",
                     "operations[].asset_workspace_id", "operations[].table_id", "operations[].asset_type",
@@ -4769,8 +4763,6 @@ def generate_metadata_reference_pages() -> None:
             table_name, table_models, include_inbound=False
         ):
             reference = _model_key_text(relationship["fields"])
-            if table_name == "METADATA_DATA_CONTRACT" and relationship["table"] == "METADATA_DATA_CATALOGUE":
-                reference = "`evidence_workspace_id` + `table_id` + `asset_type`"
             rendered.extend([
                 f"`{relationship['table']}` "
                 f"**({_metadata_cardinality_display(relationship['cardinality'])})**",

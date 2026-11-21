@@ -169,7 +169,7 @@ def _ai_usage_schema() -> Any:
             ("completed_at", "timestamp", False),
             ("duration_ms", "long", False),
             ("workspace_id", "string", False),
-            ("evidence_workspace_id", "string"),
+            ("asset_workspace_id", "string"),
             ("table_id", "string"),
             ("column_id", "string"),
             ("contract_id", "string"),
@@ -210,7 +210,7 @@ def _persist_ai_usage(record: dict[str, Any], *, spark: Any, runtime_context: di
     row.update(audit)
     row["workspace_id"] = audit["_workspace_id"]
     metadata = resolved.get("ai_usage_metadata") or {}
-    for name in ("evidence_workspace_id", "table_id", "column_id", "contract_id", "contract_version"):
+    for name in ("asset_workspace_id", "table_id", "column_id", "contract_id", "contract_version"):
         row[name] = metadata.get(name)
     stats = record.get("statistics") or []
     for name in ("input_tokens", "output_tokens", "cached_tokens", "reasoning_tokens",

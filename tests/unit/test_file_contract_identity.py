@@ -43,8 +43,8 @@ def test_confined_file_folder_and_wildcard_selectors_remain_supported(path):
     assert source(path)["relative_path"] == path
 
 
-def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_table(monkeypatch):
-    """Shared contract semantics use file source identity with no Catalogue table row."""
+def test_file_draft_uses_registered_catalogue_file_for_schema_grain_dq_and_freshness(monkeypatch):
+    """A file Contract references its registered Catalogue FILE asset."""
     descriptor = source()
     row = {"asset_type": "FILE", "table_id": descriptor["table_id"], "asset_workspace_id": descriptor["asset_workspace_id"],
            "table_name": descriptor["relative_path"], "columns_json": json.dumps([
@@ -57,10 +57,10 @@ def test_file_draft_freezes_schema_grain_dq_and_freshness_without_catalogue_tabl
     spark = type("Spark", (), {"createDataFrame": lambda self, rows, schema=None: rows})()
     draft = contracts.create_contract_draft(file_source=descriptor,
         config={}, active_workspace_id="authoring-workspace", spark_session=spark)
-    assert draft["evidence_workspace_id"] == descriptor["asset_workspace_id"]
+    assert draft["asset_workspace_id"] == descriptor["asset_workspace_id"]
     assert draft["asset_type"] == "FILE" and draft["table_id"] == descriptor["table_id"]
     payload = json.loads(draft["contract_payload_json"])
-    assert payload["table"]["evidence_workspace_id"] == descriptor["asset_workspace_id"]
+    assert payload["table"]["asset_workspace_id"] == descriptor["asset_workspace_id"]
     assert payload["table"]["table_id"] == descriptor["table_id"] and "processing" not in payload["table"]
     payload["guardrails"] = [{"guardrail_rule_id": "grain", "guardrail_type": "grain", "rule_type": "uniqueness",
         "rule_parameters": {"columns": ["id"]}, "action": "Block", "is_active": True},

@@ -222,13 +222,6 @@
       }
       if (rows.length) return rows;
       const assetTable = from === "DATA_CATALOGUE" ? to : to === "DATA_CATALOGUE" ? from : null;
-      if (assetTable === "DATA_CONTRACT") {
-        return [
-          "DATA_CONTRACT.evidence_workspace_id → DATA_CATALOGUE.asset_workspace_id",
-          "DATA_CONTRACT.table_id → DATA_CATALOGUE.table_id",
-          "DATA_CONTRACT.asset_type → DATA_CATALOGUE.asset_type",
-        ];
-      }
       if (assetTable === "PIPELINE_RUN") {
         return [
           "operations[].asset_workspace_id → DATA_CATALOGUE.asset_workspace_id",

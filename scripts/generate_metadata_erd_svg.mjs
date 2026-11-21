@@ -5,12 +5,12 @@ import fs from "node:fs";
 import path from "node:path";
 const root = path.resolve(import.meta.dirname, "..");
 function renderMetadataSvg(layout, models) {
-  // Show direct keys, Catalogue authoring references and nested Run participation.
+  // Show direct keys, Catalogue asset references and nested Run participation.
   // Guardrail Results link through their exact Contract and Run.
   const directKey = (name, field) => !field.local_field.includes("[]") && !field.referenced_field.includes("[]") &&
     !(name === "PIPELINE_RUN" && field.local_field === "promotion_id" && field.referenced_table === "METADATA_PIPELINE_REGISTRY");
   const routes = [
-    ["DATA_CATALOGUE","DATA_CONTRACT","0..1-N","logical","M425 475H193Q185 475 185 467V253",[425,475],[185,253],"Optional Contract authoring reference: evidence_workspace_id + table_id + asset_type maps to Catalogue asset_workspace_id + table_id + asset_type; checked at draft creation, not a frozen-runtime dependency"],
+    ["DATA_CATALOGUE","DATA_CONTRACT","1-N","physical","M425 475H193Q185 475 185 467V253",[425,475],[185,253],"Required Contract Catalogue reference: asset_workspace_id + table_id + asset_type; the Catalogue asset must exist before draft creation"],
     ["DATA_STEWARD","DATA_AGREEMENT","1-N","physical","M1205 170H1115",[1205,170],[1115,170],"One steward may participate in many agreements"],
     ["DATA_AGREEMENT","DATA_CONTRACT_ACTIVATION","1-N","physical","M815 170H725",[815,170],[725,170],"One exact Agreement version may govern many physical frozen Contract selections"],
     ["PIPELINE_ACTIVATION","PIPELINE_REGISTRY","1-N","physical","M1745 253V423",[1745,253],[1745,423],"Exact independently approved package authorizes Engineering deployment; approval does not deploy"],
@@ -54,22 +54,20 @@ function renderMetadataSvg(layout, models) {
     const catalogueReference = model.catalogue_reference_fields || [];
     const cataloguePrimary = name === "DATA_CATALOGUE";
     const operationReference = name === "PIPELINE_RUN" ? model.asset_identity_fields : [];
-    const authoringReference = model.catalogue_authoring_fields || [];
     const resultReference = name === "GUARDRAIL_RESULTS" ? model.asset_identity_fields : [];
     const lineageReferences = name === "DATA_LINEAGE"
       ? ["source_", "target_"].map(prefix => model.asset_identity_fields.filter(field => field.startsWith(prefix))) : [];
     const groupedAssetFields = [...resultReference, ...lineageReferences.flat()];
-    const groupedPrimary = cataloguePrimary || authoringReference.length > 0;
+    const groupedPrimary = cataloguePrimary || name === "DATA_CONTRACT";
     const primaryRows = groupedPrimary ? pk.map(([, field]) => ["", field])
       : catalogueReference.length && pk.length > 1 ? [["PK", model.primary_key.join(" + ")]]
       : pk;
     const keys = [...primaryRows, ...nestedKeys, ...groupedFk];
     const identityFields = model.asset_identity_fields.filter(field =>
-      !model.primary_key.includes(field) && !catalogueReference.includes(field) && !operationReference.includes(field) && !authoringReference.includes(field) && !groupedAssetFields.includes(field) && !fk.some(([, value]) => value === field));
+      !model.primary_key.includes(field) && !catalogueReference.includes(field) && !operationReference.includes(field) && !groupedAssetFields.includes(field) && !fk.some(([, value]) => value === field));
     const fields = [
       ...catalogueReference,
       ...operationReference,
-      ...authoringReference,
       ...groupedAssetFields,
       ...identityFields,
     ].map(value => ["", value]);
@@ -90,7 +88,6 @@ function renderMetadataSvg(layout, models) {
       ["PK", groupedPrimary ? model.primary_key : [], 0, "Composite primary key"],
       ["FK", catalogueReference, keys.length, "Composite foreign key to DATA_CATALOGUE, checked by FabricOps"],
       ["FK", operationReference, keys.length, "Catalogue asset key within each operations[] entry; application-level reference, not a Delta constraint"],
-      ["REF", authoringReference, keys.length, "Catalogue authoring reference checked at draft creation"],
       ["FK", resultReference, keys.length, "Optional physical Catalogue asset reference when resolved; results do not require a separate Catalogue parent check"],
       ...lineageReferences.map((fields, index) => ["FK", fields, keys.length + index * 3,
         `${index === 0 ? "Source" : "Target"} physical Catalogue asset key; join workspace, table and asset type together`]),
@@ -101,7 +98,7 @@ function renderMetadataSvg(layout, models) {
       const firstBaseline = y + 57 + firstRow * rowSpacing;
       const lastBaseline = firstBaseline + (groupFields.length - 1) * rowSpacing;
       const mid = (firstBaseline + lastBaseline) / 2;
-      lines += `\n<g data-key-role="${kind}" data-key-fields="${esc(groupFields.join(","))}"><title>${title}</title><path d="M${x+45} ${firstBaseline-10}H${x+39}V${lastBaseline+4}H${x+45}" fill="none" stroke="${color}"/><text x="${x+13}" y="${mid}" fill="${color}" font-weight="700" font-size="${kind === "REF" ? 12 : 14}" font-family="Segoe UI, Arial, sans-serif">${kind}</text></g>`;
+      lines += `\n<g data-key-role="${kind}" data-key-fields="${esc(groupFields.join(","))}"><title>${title}</title><path d="M${x+45} ${firstBaseline-10}H${x+39}V${lastBaseline+4}H${x+45}" fill="none" stroke="${color}"/><text x="${x+13}" y="${mid}" fill="${color}" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">${kind}</text></g>`;
     }
     block=block.replace(/^<text (?![^>\n]*fill="white")[^\n]*\n/gm,"");
     if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#2563EB" font-size="12" font-family="Segoe UI, Arial, sans-serif">Engineering deployment evidence</text>`;
@@ -171,7 +168,7 @@ function renderMetadataSvg(layout, models) {
     const relationshipLabel = from === "DATA_CATALOGUE" && to === "PIPELINE_RUN"
       ? '<text x="770" y="482" text-anchor="middle" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">via</text><text x="770" y="497" text-anchor="middle" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">operations</text>'
       : from === "DATA_CATALOGUE" && to === "DATA_CONTRACT"
-      ? '<text x="203" y="337" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">Draft lookup</text>'
+      ? '<text x="203" y="337" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">Catalogue asset</text>'
       : "";
     return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label + referenceLabel)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "nested asset participation; join by identity" : kind === "logical" ? "logical identity reference" : kind === "optional" ? "optional physical asset reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${["logical", "nested", "optional"].includes(kind)?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}${relationshipLabel}\n</g>`;
   }).join("\n");

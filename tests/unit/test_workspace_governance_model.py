@@ -77,7 +77,7 @@ def test_draft_is_global_captures_current_workspace_and_keeps_observed_types(mon
     draft = contracts.create_contract_draft(table_id=table, config={}, active_workspace_id="A", spark_session=spark)
     columns = json.loads(draft["contract_payload_json"])["table"]["columns"]
     assert [(c["column_name"], c["data_type"], c["presence"]) for c in columns] == [("A", "bigint", "required"), ("new", "string", "required")]
-    assert draft["contract_version"] == 4 and draft["evidence_workspace_id"] == "A"
+    assert draft["contract_version"] == 4 and draft["asset_workspace_id"] == "A"
     assert contracts.create_contract_draft(table_id=table, config={}, active_workspace_id="B", spark_session=spark) == draft
 
 
@@ -88,7 +88,7 @@ def test_later_observation_cannot_change_captured_draft_columns(workspace, has_o
                 "processing": {"load_strategy": "overwrite"}, "processing_source": "default",
                 "writer": {"notebook_id": "original-writer", "notebook_name": "Original"}}
     draft = {"contract_id": "global-customer", "contract_version": 4, "table_id": "customer", "status": "draft",
-             "evidence_workspace_id": "A", "contract_payload_json": json.dumps({"table": captured})}
+             "asset_workspace_id": "A", "contract_payload_json": json.dumps({"table": captured})}
     original = deepcopy(draft)
     rows = observation("A", "customer", [("A", "string"), ("later", "int")]) if has_observation else []
     payload, _ = contracts.assemble_contract_payload(draft=draft, catalogue_rows=rows,
@@ -96,3 +96,37 @@ def test_later_observation_cannot_change_captured_draft_columns(workspace, has_o
     assert payload["table"]["columns"] == captured["columns"]
     assert payload["table"]["writer"] == captured["writer"]
     assert draft == original
+
+
+@pytest.mark.parametrize("asset_type", ["TABLE", "FILE"])
+@pytest.mark.parametrize("problem", ["missing", "inactive", "wrong_workspace", "wrong_type", "unobserved_schema", "duplicate"])
+def test_draft_requires_exactly_one_registered_catalogue_asset(monkeypatch, asset_type, problem):
+    """Contracts cannot be created without their exact observed physical Catalogue parent."""
+    descriptor = contracts.file_source_identity(
+        asset_workspace_id="A", item_id="item", relative_path="incoming/*.csv", file_format="csv",
+    ) if asset_type == "FILE" else None
+    identity = descriptor["table_id"] if descriptor else "customer"
+    row = {"asset_workspace_id": "A", "table_id": identity, "asset_type": asset_type,
+           "is_active": True, "columns_json": [{"column_id": "id", "column_name": "id", "data_type": "int"}]}
+    rows = [row]
+    if problem == "missing":
+        rows = []
+    elif problem == "inactive":
+        row["is_active"] = False
+    elif problem == "wrong_workspace":
+        row["asset_workspace_id"] = "B"
+    elif problem == "wrong_type":
+        row["asset_type"] = "TABLE" if asset_type == "FILE" else "FILE"
+    elif problem == "unobserved_schema":
+        row["columns_json"] = None
+    elif problem == "duplicate":
+        rows.append(dict(row))
+    monkeypatch.setattr(contracts, "read_lakehouse_table", lambda *args, **kwargs: rows)
+    def unexpected_write(*args, **kwargs):
+        pytest.fail("Invalid Catalogue parent must be rejected before writing a Contract")
+    monkeypatch.setattr(contracts, "write_lakehouse_table", unexpected_write)
+    with pytest.raises(ValueError, match="No active Catalogue|needs an observed schema|Duplicate Catalogue|Asset identity conflicts"):
+        contracts.create_contract_draft(
+            table_id=identity if descriptor is None else None, file_source=descriptor,
+            config={}, active_workspace_id="A", spark_session=object(),
+        )

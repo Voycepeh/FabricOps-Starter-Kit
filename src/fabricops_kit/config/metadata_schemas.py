@@ -471,7 +471,7 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("table_id", "string"),
                 ("asset_type", "string"),
                 ("table_name", "string"),
-                ("evidence_workspace_id", "string", False),
+                ("asset_workspace_id", "string", False),
                 ("contract_payload_json", "string"),
                 ("status", "string", False),
                 *audit,
