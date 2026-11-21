@@ -144,26 +144,18 @@ def test_historical_reconciliation_is_read_only_and_never_guesses(runtime, spark
     assert legacy.collect() == before
 
 
-def test_historical_setup_probe_never_evaluates_rows(monkeypatch):
-    """Repeated setup diagnostics preserve historical rows and table layout."""
+def test_lineage_is_not_probed_as_a_retired_archive(monkeypatch):
+    """The dependency table is canonical; the historical warning path must not inspect it."""
     from importlib import import_module
+    from unittest.mock import Mock
+    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
     setup = import_module('fabricops_kit.config.setup_metadata_tables')
-    calls = []
-
-    class Historical:
-        def collect(self):
-            raise AssertionError('Historical rows must not be evaluated during setup')
-
-    def read(name, **kwargs):
-        calls.append((name, kwargs['schema']))
-        return Historical()
-
+    read = Mock(side_effect=AssertionError('Canonical lineage is not an archive probe'))
     monkeypatch.setattr(setup, 'read_lakehouse_table', read)
+    assert 'METADATA_DATA_LINEAGE' in CANONICAL_METADATA_TABLES
     args = dict(config=SimpleNamespace(engineering_metadata_schema='engineering'), spark=object(), context={})
-    for _ in range(2):
-        warnings = setup._historical_table_warnings(**args)
-        assert len(warnings) == 1 and 'never creates, updates or deletes' in warnings[0]
-    assert calls == [('METADATA_DATA_LINEAGE', 'engineering')] * 2
+    assert setup._historical_table_warnings(**args) == []
+    read.assert_not_called()
 
 
 def test_asset_usage_bounds_history_and_falls_back_to_run_time(runtime, spark_session, monkeypatch):
