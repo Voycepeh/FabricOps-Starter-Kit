@@ -6,7 +6,7 @@ import path from "node:path";
 const root = path.resolve(import.meta.dirname, "..");
 function renderMetadataSvg(layout, models) {
   // Show direct keys, Catalogue asset references and nested Run participation.
-  // Guardrail Results link through their exact Contract and Run.
+  // Dotted links expose physical asset references separately from record keys.
   const directKey = (name, field) => !field.local_field.includes("[]") && !field.referenced_field.includes("[]") &&
     !(name === "PIPELINE_RUN" && field.local_field === "promotion_id" && field.referenced_table === "METADATA_PIPELINE_REGISTRY");
   const routes = [
@@ -17,7 +17,9 @@ function renderMetadataSvg(layout, models) {
     ["DATA_CONTRACT_ACTIVATION","DATA_CONTRACT","N-1","physical","M425 170H335",[425,170],[335,170],"Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M1115 515H1205",[1115,515],[1205,515],"Pipeline run to recorded guardrail outcomes"],
     ["DATA_CATALOGUE","DATA_PROFILED","1-N","physical","M475 598V642Q475 650 467 650H193Q185 650 185 658V735",[475,598],[185,735],"Catalogue asset to column statistics"],
-    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","physical","M575 598V735",[575,598],[575,735],"Catalogue asset to frequency observations"],
+    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","reference","M575 598V735",[575,598],[575,735],"Catalogue asset to frequency observations"],
+    ["DATA_CATALOGUE","GUARDRAIL_RESULTS","","reference","M650 423V398Q650 390 658 390H1272Q1280 390 1280 398V423",[650,423],[1280,423],"Guardrail asset reference when resolved: asset_workspace_id + table_id + asset_type; not a separate Catalogue parent check"],
+    ["DATA_CATALOGUE","DATA_LINEAGE","","reference","M625 598V702Q625 710 633 710H767Q775 710 775 718V967Q775 975 783 975H1422Q1430 975 1430 967V959",[625,598],[1430,959],"Source and target asset references: join source_asset_workspace_id + source_table_id + source_asset_type and target_asset_workspace_id + target_table_id + target_asset_type separately to the Catalogue asset key; null sources represent constants or gaps"],
     ["DATA_CATALOGUE","DATA_ACCESS","1-N","physical","M675 598V642Q675 650 683 650H957Q965 650 965 658V735",[675,598],[965,735],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1-N","physical","M335 821H425",[335,821],[425,821],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1-N","physical","M335 194H395V352Q395 360 403 360H1347Q1355 360 1355 368V423",[335,194],[1355,423],"Contract versions to their Guardrail results"],
@@ -129,9 +131,11 @@ function renderMetadataSvg(layout, models) {
     if (!edgeSet.has([name, "DATA_CATALOGUE"].sort().join("|")))
       throw Error("Missing Catalogue parent connector: " + name);
   }
-  // Keep the Run link grounded in the canonical operation asset fields.
+  // Ground every asset-reference connector in the canonical field groups.
   for (const [name, fields] of [
     ["PIPELINE_RUN", ["operations[].asset_workspace_id", "operations[].table_id", "operations[].asset_type"]],
+    ["GUARDRAIL_RESULTS", ["asset_workspace_id", "table_id", "asset_type"]],
+    ["DATA_LINEAGE", ["source_asset_workspace_id", "source_table_id", "source_asset_type", "target_asset_workspace_id", "target_table_id", "target_asset_type"]],
   ]) {
     if (JSON.stringify(models[name].asset_identity_fields) !== JSON.stringify(fields))
       throw Error("Catalogue asset reference changed; review connector: " + name);
@@ -170,7 +174,7 @@ function renderMetadataSvg(layout, models) {
       : from === "DATA_CATALOGUE" && to === "DATA_CONTRACT"
       ? '<text x="203" y="337" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">Catalogue asset</text>'
       : "";
-    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label + referenceLabel)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "nested asset participation; join by identity" : kind === "logical" ? "logical identity reference" : kind === "optional" ? "optional physical asset reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${["logical", "nested", "optional"].includes(kind)?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}${relationshipLabel}\n</g>`;
+    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label + referenceLabel)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "nested asset participation; join by identity" : kind === "logical" ? "logical identity reference" : kind === "reference" ? "asset reference; join by physical identity" : kind === "optional" ? "optional physical asset reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${kind === "reference" ? 'stroke-dasharray="1 6"' : ["logical", "nested", "optional"].includes(kind)?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}${relationshipLabel}\n</g>`;
   }).join("\n");
   return prefix+`<g id="metadata-er-relationships" aria-label="Metadata table relationships">\n${rendered}\n</g>\n`+body;
 }

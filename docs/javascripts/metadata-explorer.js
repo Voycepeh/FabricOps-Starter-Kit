@@ -181,7 +181,7 @@
         const from = group.getAttribute("data-from");
         const to = group.getAttribute("data-to");
         if (!byName.has(from) || !byName.has(to)) throw new Error("Unknown ERD relationship");
-        return [from, to, group.getAttribute("data-cardinality"), group.querySelector("title")?.textContent || ""];
+        return [from, to, group.getAttribute("data-cardinality"), group.querySelector("title")?.textContent || "", group.getAttribute("data-kind")];
       });
       if (Object.keys(buttons).length !== definitions.length) throw new Error("Unexpected approved diagram table count");
       graph.replaceChildren(svg);
@@ -229,6 +229,14 @@
           "operations[].asset_type → DATA_CATALOGUE.asset_type",
         ];
       }
+      if (assetTable === "DATA_LINEAGE") {
+        return ["source_", "target_"].map(prefix =>
+          "DATA_LINEAGE.(" + ["asset_workspace_id", "table_id", "asset_type"].map(field => prefix + field).join(" + ") +
+          ") → DATA_CATALOGUE.(asset_workspace_id + table_id + asset_type)");
+      }
+      if (assetTable === "GUARDRAIL_RESULTS") {
+        return ["GUARDRAIL_RESULTS.(asset_workspace_id + table_id + asset_type) → DATA_CATALOGUE.(asset_workspace_id + table_id + asset_type) (when resolved)"];
+      }
       if (assetTable) {
         const model = modelFor(assetTable);
         const physicalFields = model.catalogue_reference_fields || [];
@@ -251,8 +259,9 @@
           const referenceOnly = !edge[2];
           const logicalAssetReference = edge[0] === "DATA_CATALOGUE" && !modelFor(edge[1]).catalogue_reference_fields?.length;
           const relationshipKind = edge[0] === "DATA_CATALOGUE" && edge[1] === "DATA_CONTRACT"
-            ? "Authoring reference checked at draft creation"
+            ? "Required Catalogue reference checked at draft creation"
             : edge[0] === "DATA_CATALOGUE" && edge[1] === "PIPELINE_RUN" ? "Asset participation via operations"
+            : edge[4] === "reference" ? "Asset reference by physical identity"
             : logicalAssetReference ? "Logical asset reference" : "Application-enforced identity reference";
           return '<div class="metadata-explorer-related-row">' +
             '<span class="metadata-explorer-cardinality-text' +
