@@ -68,8 +68,8 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
     assert all(row["_metadata_lakehouse_name"] == "Metadata" for row in historical.values())
 
 
-def test_central_metadata_setup_rejects_known_legacy_schema(monkeypatch):
-    """Verify central metadata setup still rejects known incompatible legacy schemas."""
+def test_central_metadata_setup_preserves_nonreleased_extension_columns(monkeypatch):
+    """A pre-0.5/PR-only column is an extension, not a declared release retirement."""
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
 
     class Spark:
@@ -86,6 +86,6 @@ def test_central_metadata_setup_rejects_known_legacy_schema(monkeypatch):
     monkeypatch.setattr(setup_module, "read_lakehouse_table", read_table)
 
     result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev", verbose=False)
-    assert result["status"] == "partial_failure"
-    assert result["failed_tables"] == ["METADATA_DATA_PROFILED"]
-    assert "frequency_json" in result["table_results"]["METADATA_DATA_PROFILED"]["message"]
+    assert result["status"] == "ready"
+    assert result["failed_tables"] == []
+    assert result["table_results"]["METADATA_DATA_PROFILED"]["status"] == "validated"

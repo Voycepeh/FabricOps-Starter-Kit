@@ -108,6 +108,8 @@ When breaking cleanup is authorized, do not add compatibility layers unless requ
 
 ## Supported Live metadata upgrades
 
+Metadata setup currently supports the direct `v0.5.0`-to-`main` upgrade. Do not chain migrations through earlier releases or intermediate PR layouts. Migration support is release-to-release. Verify the starting schema against a published release manifest or frozen release source before adding migration code. Unreleased PR schemas are implementation details and must not acquire migrations, compatibility branches or migration tests. Consolidate unreleased changes into the next release schema; retain only upgrades needed by supported released versions.
+
 Preserve supported Live metadata tables and their existing rows. Compatible additive columns may be applied automatically without replacing data. An approved Live column removal, rename or type change must ship with an explicit, tested automatic migration that preserves required data, validates results, supports safe repeated execution and defines a rollback boundary. Do not require users to drop/rebuild supported Live tables or guess conversions. No hypothetical conversions should be implemented ahead of an approved change.
 
 ## Function architecture

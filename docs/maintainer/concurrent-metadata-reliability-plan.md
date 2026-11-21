@@ -79,7 +79,7 @@ budget, without a second nested retry loop.
 
 The runtime retry policy does not make every possible write to a Metadata
 Lakehouse safe to replay. Empty table creation uses error-if-exists semantics;
-JSON schema migration pins and tracks the whole-table read and commits schema
+The v0.5.0 identity/Catalogue upgrade pins and tracks the whole-table read and commits schema
 and replacement files atomically, rejecting concurrent changes rather than
 overwriting them. Schema/protocol conflicts are not retryable runtime errors.
 Run setup and upgrades before starting pipelines. Arbitrary direct overwrites
@@ -137,22 +137,13 @@ outstanding.
 
 ## Automatic metadata column cleanup
 
-After upgrading, run `setup_metadata_tables()` under the Metadata owner's identity,
-before starting pipelines. No table rebuild is required. The canonical
-`RETIRED_METADATA_COLUMNS` registry in `config/metadata_schemas.py` declares the
-only columns eligible for removal; a missing field in a new schema never grants
-permission to delete a physical column. Current writers already omit these fields.
+`setup_metadata_tables()` upgrades the frozen `v0.5.0` layout directly to the current schema. Migration code does not retain earlier-release or intermediate PR states. The release schema fixture in `tests/fixtures/metadata_schema_0_5_0.json` records the source tag and commit used by upgrade tests.
 
-A retired value must be SQL NULL or exactly equal to its declared replacement.
-For example, `profiled_at` can be removed only when its populated timestamps equal
-`_committed_at`. A populated `frequency_json` is not assumed to have been copied
-into `METADATA_DATA_PROFILED_FREQUENCY`: setup fails for that table and preserves
-the original data. Resolve retained information through a separately reviewed
-migration, then rerun setup. Review `table_results` and `failed_tables`; setup
-continues checking the remaining tables. Each table commits independently.
+Only three released tables consolidate `source_id` into `table_id`: `METADATA_DATA_CONTRACT`, `METADATA_DATA_CONTRACT_ACTIVATION` and `METADATA_GUARDRAIL_RESULTS`. Conflicting identities fail without modifying the table. Catalogue upgrades consolidate the released TABLE/COLUMN layout and preserve exact column IDs. Released profile and access workspace observations remain explicitly historical when physical scope cannot be established. Other columns absent from the new canonical schema are preserved as extensions unless a release-backed migration explicitly owns them.
 
-Cleanup uses one pinned Delta transaction with whole-table read tracking. Supported
-JSON conversions and compatible missing columns are included in that commit.
+The release already stored collection fields as JSON STRING. Setup validates these bytes and preserves them; it does not convert native ARRAY/STRUCT columns, blank strings or older list-only discovery layouts. Review `table_results` and `failed_tables`; each table commits independently and setup continues after a per-table failure.
+
+Cleanup uses one pinned Delta transaction with whole-table read tracking. Compatible missing columns are included in that commit; JSON STRING fields retain their bytes.
 Exact retained rows (including duplicates), extension fields, audit values, table
 identity and properties are verified on readback. Concurrent changes cause a
 conflict rather than being overwritten. Partitioned retired columns, column
@@ -160,7 +151,7 @@ mapping and constraint-bearing cleanup layouts fail before mutation. Repeated
 setup does not rewrite an already compliant table.
 
 An evolved table result includes `removed_columns`, `added_columns`,
-`converted_columns`, `pre_upgrade_version` and `upgrade_version`. Delta commit
+`converted_columns` (empty for this upgrade), `pre_upgrade_version` and `upgrade_version`. Delta commit
 user metadata also records the pre-upgrade version and removed columns, so an
 interrupted acknowledgement can be investigated in Delta history. Rerun setup to
 inspect the committed state; do not blindly replay a write. If readback fails

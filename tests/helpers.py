@@ -195,3 +195,14 @@ def call_with_spark(session, function, *args, **kwargs):
 
     with patch.object(shared, "import_module", import_module):
         return function(*args, **kwargs)
+
+
+def metadata_schema_050(table_name: str):
+    """Return a physical schema captured from the frozen v0.5.0 source tag."""
+    import json
+    from pathlib import Path
+    from fabricops_kit.config.metadata_schemas import build_metadata_schema
+
+    snapshot = json.loads((Path(__file__).parent / 'fixtures' / 'metadata_schema_0_5_0.json').read_text())
+    return build_metadata_schema(table_name, [(name, {'bigint': 'long', 'int': 'integer'}.get(kind, kind), nullable)
+        for name, kind, nullable in snapshot['tables'][table_name]])

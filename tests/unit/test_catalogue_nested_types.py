@@ -1,5 +1,4 @@
 """Strict Catalogue values and identical schema references with optional Spark."""
-import importlib
 import json
 import os
 import subprocess
@@ -9,11 +8,8 @@ import pytest
 
 from fabricops_kit.config.metadata_schemas import (
     CATALOGUE_NESTED_FIELDS, coerce_metadata_row_types, metadata_table_schema_registry,
-    metadata_table_schema_rows,
+    metadata_table_schema_rows, decode_metadata_row,
 )
-
-migration = importlib.import_module('fabricops_kit.config.setup_metadata_tables')
-
 
 def test_schema_and_type_documentation_are_identical_without_pyspark():
     """Fallback schemas describe every nested field with the same stable labels."""
@@ -54,17 +50,15 @@ print(json.dumps(metadata_table_schema_rows(metadata_table_schema_registry()['ME
     ('profile_key_candidates_json', '{"candidates":[{"uniqueness_percent":1e999}]}'),
     ('profile_key_candidates_json', '{"candidates":[{"unknown":1}]}'),
 ])
-def test_strict_historical_parser_rejects_lossy_values(field, value):
-    """Spark's permissive string/numeric/null coercions are never migration rules."""
-    schema = metadata_table_schema_registry(logical=True)['METADATA_DATA_CATALOGUE']
-    kind = next(item.dataType for item in schema.fields if item.name == field)
+def test_catalogue_json_decoder_rejects_lossy_values(field, value):
+    """The decoder used by setup rejects lossy string/numeric/null coercions."""
     with pytest.raises(ValueError):
-        migration._parse_catalogue_value(value, kind, field=field, historical=True)
+        decode_metadata_row('METADATA_DATA_CATALOGUE', {field: value})
 
 
 @pytest.mark.parametrize('field', set(CATALOGUE_NESTED_FIELDS) - {'columns_json'})
 def test_runtime_coercion_requires_native_structs_and_rejects_unknown_fields(field):
-    """Historical JSON compatibility is confined to setup migration."""
+    """Runtime logical fields require typed values before JSON STRING encoding."""
     for value in ('{}', {'unknown': 1}, []):
         with pytest.raises(ValueError):
             coerce_metadata_row_types('METADATA_DATA_CATALOGUE', {field: value})

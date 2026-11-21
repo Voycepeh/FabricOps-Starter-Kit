@@ -188,7 +188,7 @@ def test_02a_fixture_content_with_the_actual_notebook_transform(demo_csv):
 
 
 def test_unmigrated_native_catalogue_schema_is_rejected_without_changes(demo_delta, monkeypatch):
-    """The supported native-to-JSON migration belongs to metadata setup, before demo cleanup."""
+    """Unsupported native physical collections are rejected before demo cleanup."""
     run, state = demo_delta, _environment(monkeypatch).state
     table = 'METADATA_DATA_CATALOGUE'
     expected = metadata_table_schema_registry()[table]

@@ -9,16 +9,27 @@ FabricOps captures source-to-output dependencies for each prepared Write in `MET
 | Consumer | Storage |
 | --- | --- |
 | Power BI and cross-run impact queries | `METADATA_DATA_LINEAGE`, filtered to `lineage_version = 1`; no JSON expansion required |
-| Detailed expression/operator drill-through | The owning Run's `operations[].lineage` graph, linked by operation/output/source node IDs |
+| Detailed expression/operator drill-through | The owning Run's `operations[].lineage` graph, linked by run_id + operation_key, then target/source column IDs |
 | Run participation | Existing operations and `source_assets`, independently of detected dependencies |
 
-The physical facts include Run/Pipeline/execution workspace, source and target physical Catalogue keys and column IDs/names, one `dependency_type`, coverage, gap codes, Run/operation/publication status and transformation summaries. `transformation_operations` lists distinct operator classes for display, not their execution order; the graph records actual paths. `source_run_sha256` pins the normalized committed snapshot. Facts are derived from the retained graph and can be rebuilt without executing business code.
+The physical projection contains **18 dependency fields and eight standard audit fields**:
+
+| Fields | Purpose |
+| --- | --- |
+| `lineage_id`, `lineage_version`, `record_type` | Stable fact identity, reporting-version filter and dependency/constant/gap distinction |
+| `run_id`, `operation_key` | Link to the finalized Run and owning Write |
+| `publication_status`, `coverage` | Distinguish published input and incomplete capture |
+| Source and target `asset_workspace_id`, `table_id`, `asset_type` | Separate physical Catalogue identities, including cross-workspace and file assets |
+| Source and target `column_id`, `column_name` | Graph nodes and readable labels |
+| `dependency_type` | Distinguish value dependencies from filters, joins and other influences |
+
+Pipeline identity, execution workspace, Run/operation status, write mode, detector/scope, gap diagnostics, omitted counts, transformation summaries, graph node IDs and the snapshot hash are not repeated on dependency rows. Obtain Run attributes through `run_id`; use `operation_key` and column IDs to drill into the detailed graph. The publication result still returns a snapshot hash for retry tracking, without storing it on every fact. Facts can be rebuilt from the retained Run without executing business code.
 
 ### Power BI model
 
 Import the physical table through the Lakehouse SQL endpoint or supported Delta connection, filter `lineage_version = 1`, and keep `record_type` in the model. Relate `run_id` to `METADATA_PIPELINE_RUN`. Use separate source and target Catalogue dimensions; join each role on physical `asset_workspace_id + table_id + asset_type` (create a composite model key when required). Column IDs/names already exist in the fact table. If current Catalogue columns are needed as dimensions, flatten its `columns_json` once; lineage reports themselves need no JSON parsing.
 
-Use distinct output-column counts when counting impacted columns: multiple source columns and dependency types intentionally create multiple facts. Filter `publication_status = published` when reporting confirmed publication, and retain coverage/gap filters. A published Write can belong to a later failed Run. Row-set dependencies have no source column ID; OUTPUT/GAP/CAPTURE_GAP rows do not assert source-column dependencies.
+Use distinct output-column counts when counting impacted columns: multiple source columns and dependency types intentionally create multiple facts. Filter `publication_status = published` when reporting confirmed publication, and retain coverage and record-type filters. A published Write can belong to a later failed Run. Row-set dependencies have no source column ID; OUTPUT/GAP/CAPTURE_GAP rows do not assert source-column dependencies.
 
 ### Publication and recovery
 
@@ -30,7 +41,9 @@ Retry `finalize_pipeline(pipeline)` with the retained session to retry projectio
 
 `setup_metadata_tables` creates the new canonical table for fresh installations. For an existing historical activity layout, it adds the nullable fact columns without rewriting rows or dropping original/extension columns. Repeat setup is safe. Historical activity rows keep `lineage_version`, `run_id` and `record_type` null; no Run or column dependencies are inferred from participation. Dependency reports must filter `lineage_version = 1`. Old Runs without graphs are not backfilled with invented dependencies.
 
-An older runtime can continue to see the retained historical columns; reverting package code does not remove new columns or facts. Legacy reports must select null `lineage_version` before treating rows as activity. Keep the evolved data intact when rolling back; do not drop/rebuild the table. The explicitly requested demo reset clears version 1 facts while retaining historical activity rows.
+Migration support follows released versions. Release `0.5.0` shipped the 13-column participation layout; the intermediate 40-column projection was unreleased and has no migration path. Fresh installations use the 26-column schema, and released participation layouts receive the additive upgrade described above.
+
+Legacy reports must select null `lineage_version` before treating rows as activity. Keep the evolved data intact when rolling back; do not drop/rebuild a supported released table. The explicitly requested demo reset clears version 1 facts while retaining historical activity rows.
 
 ## Automatic capture
 
@@ -84,7 +97,7 @@ value_links = [row for row in rows
                and row["dependency_type"] == "VALUE"]
 ```
 
-Each projected row includes Run/operation, physical target/source identities, column IDs, one dependency type, coverage, scalar gap codes, transformation summaries and operation/publication status. Constants and unknown outputs produce rows with null source fields. Retained Runs without captured lineage return no projected rows; absence is not proof of no dependencies. The helper is an internal maintainer interface, not a supported public export. Power BI consumers use the physical scalar table. Maintainers exploring detailed graphs can obtain the operations type from `metadata_json_schema("METADATA_PIPELINE_RUN")["operations"]` and resolve node IDs within the owning Write graph.
+Each projected row includes Run/operation references, physical target/source identities, column IDs/names, one dependency type, coverage and publication status. Diagnostic details remain in the Run graph. Constants and unknown outputs produce rows with null source fields. Retained Runs without captured lineage return no projected rows; absence is not proof of no dependencies. The helper is an internal maintainer interface, not a supported public export. Power BI consumers use the physical scalar table. Maintainers exploring detailed graphs can obtain the operations type from `metadata_json_schema("METADATA_PIPELINE_RUN")["operations"]` and resolve node IDs within the owning Write graph.
 
 ## Research and detector choice
 
@@ -94,6 +107,6 @@ FabricOps follows the plan/expression approach while capturing at its existing R
 
 ## Verification and Fabric acceptance
 
-`tests/unit/test_column_lineage.py` uses real Spark plans for multi-Read/multi-Write transformations, self-joins, union-by-name with different orders, windows, CASE, casts, SQL views, explode, cache, checkpoints, opaque UDFs, an actual pandas round trip, generated constants, bounds and inaccessible plans. It independently asserts expected source columns and roles, excludes unused Reads, and checks Run finalization/projection after failure. `tests/integration/test_write_publication_input.py` verifies capture before actual writer checkpointing, including hash/audit columns, for persistent and Dry Run modes. `tests/unit/test_file_asset_metadata.py` verifies real Spark FILE-to-FILE lineage through orchestration and finalization. Those detector/orchestration tests simulate Fabric transport. Delta-enabled integration cases in `test_pipeline_run_delta.py` verify physical fact publication, rebuilding from physical Run JSON, idempotent retries, a denied projection after Run commit and lost append acknowledgements. `test_column_lineage_upgrade.py` verifies additive upgrade/repeat setup with retained legacy bytes and extension columns.
+`tests/unit/test_column_lineage.py` uses real Spark plans for multi-Read/multi-Write transformations, self-joins, union-by-name with different orders, windows, CASE, casts, SQL views, explode, cache, checkpoints, opaque UDFs, an actual pandas round trip, generated constants, bounds and inaccessible plans. It independently asserts expected source columns and roles, excludes unused Reads, and checks Run finalization/projection after failure. `tests/integration/test_write_publication_input.py` verifies capture before actual writer checkpointing, including hash/audit columns, for persistent and Dry Run modes. `tests/unit/test_file_asset_metadata.py` verifies real Spark FILE-to-FILE lineage through orchestration and finalization. Those detector/orchestration tests simulate Fabric transport. Delta-enabled integration cases in `test_pipeline_run_delta.py` verify physical fact publication, rebuilding from physical Run JSON, idempotent retries, a denied projection after Run commit and lost append acknowledgements. `test_column_lineage_upgrade.py` verifies additive upgrade from the released participation layout and repeat setup with retained legacy bytes and extension columns.
 
 Local Spark tests do not establish signed-in Microsoft Fabric acceptance. Before claiming a runtime is validated, run table and file cases in an isolated Fabric workspace using its intended Spark version, including Lakehouse/Delta and Warehouse connector plans, an opaque Warehouse query, cross-workspace Catalogue joins, SCD/append scope, a later notebook failure, and a pandas boundary. Inspect persisted operations and publication status after reopening the Run. No runtime compatibility claim should be inferred from a green local Spark suite.
