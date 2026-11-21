@@ -25,7 +25,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="data-contract">
 <summary><strong>Data Contract</strong> — A versioned set of governed expectations for one table or file-backed dataset.</summary>
-<p>A Data Contract freezes Schema, descriptive Enrichment and executable Guardrails in METADATA_DATA_CONTRACT.contract_payload_json. Physical tables preserve canonical Table IDs; file-backed datasets use a stable file source identity. Draft becomes Frozen and stays immutable. METADATA_DATA_CONTRACT_ACTIVATION retains exact physical selections. Pipeline Activation separately approves Engineering read/write processing parameters and source authorizations; processing is not authored in a Data Contract.</p>
+<p>A Data Contract references exactly one registered Catalogue asset through asset_workspace_id, table_id and asset_type, and freezes Schema, descriptive Enrichment and executable Guardrails in METADATA_DATA_CONTRACT.contract_payload_json. Physical tables preserve canonical Table IDs; file-backed datasets use a stable file source identity. Draft becomes Frozen and stays immutable. METADATA_DATA_CONTRACT_ACTIVATION retains exact physical selections. Pipeline Activation separately approves Engineering read/write processing parameters and source authorizations; processing is not authored in a Data Contract.</p>
 <p><strong>Also known as:</strong> data contracts</p>
 </details>
 
