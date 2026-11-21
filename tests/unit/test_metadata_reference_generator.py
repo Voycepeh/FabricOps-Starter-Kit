@@ -75,7 +75,9 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert '<div class="metadata-table-grid">' not in first_landing
     assert 'data-metadata-explorer' in first_landing
     assert '<nav class="metadata-explorer-fallback"' in first_landing
-    assert first_landing.startswith("# List of Metadata Tables\n\n## Metadata relationships\n")
+    assert first_landing.startswith("# List of Metadata Tables\n\n")
+    assert "Composite keys apply to the complete combination" in first_landing
+    assert "without deleting rows" in first_landing
     assert "## Workspace columns" not in first_landing
     assert "Look up the physical workspace display name" not in first_landing
     assert "profiling is configured by setup_pipeline" not in first_landing

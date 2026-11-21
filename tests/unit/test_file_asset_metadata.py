@@ -37,6 +37,7 @@ def test_file_selector_identity_and_active_catalogue_grain():
 @pytest.fixture
 def writer(monkeypatch):
     audit = {"_workspace_id": "notebook-workspace", "_activity_id": "fabric-activity", "_committed_at": datetime(2026, 1, 1)}
+    monkeypatch.setattr(shared, "validate_metadata_merge", Mock())
     spark, merge = Mock(), Mock()
     merge.alias.return_value = merge
     merge.merge.return_value = merge

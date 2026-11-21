@@ -287,21 +287,20 @@ def test_lineage_finalization_publishes_scalar_facts_and_retry_is_idempotent(run
 
 def test_lineage_failure_retries_projection_after_run_commit(runs_delta, monkeypatch):
     """Projection permission failure leaves a finalized Run and can recover without business IO."""
-    from pyspark.sql.readwriter import DataFrameWriter
     r = runs_delta
     plan = _lineage_plan(r)
-    save = DataFrameWriter.save
-    def deny(writer, path=None, *args, **kwargs):
+    write = shared.write_metadata_frame
+    def deny(frame, path, table, **kwargs):
         if path == r.paths['METADATA_DATA_LINEAGE']:
             raise PermissionError('test denial')
-        return save(writer, path, *args, **kwargs)
-    monkeypatch.setattr(DataFrameWriter, 'save', deny)
+        return write(frame, path, table, **kwargs)
+    monkeypatch.setattr(shared, 'write_metadata_frame', deny)
     with pytest.raises(RuntimeError, match='Run .* is committed.*lineage projection failed') as caught:
         shared.finalize_pipeline_run(plan, spark_session=r.spark)
     assert caught.value.published is True and plan.evidence['sealed'] is True
     assert r.rows()[0]['status'] == 'ungoverned_completed'
     assert r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).count() == 0
-    monkeypatch.setattr(DataFrameWriter, 'save', save)
+    monkeypatch.setattr(shared, 'write_metadata_frame', write)
     shared.finalize_pipeline_run(plan, spark_session=r.spark)
     assert plan.evidence['lineage_projection']['status'] == 'published'
     assert r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).count() > 0
@@ -309,19 +308,18 @@ def test_lineage_failure_retries_projection_after_run_commit(runs_delta, monkeyp
 
 def test_lineage_lost_append_acknowledgement_is_confirmed(runs_delta, monkeypatch):
     """An acknowledged-by-read-back append never duplicates facts on retry."""
-    from pyspark.sql.readwriter import DataFrameWriter
     r = runs_delta
     plan = _lineage_plan(r)
-    save = DataFrameWriter.save
-    def lost_ack(writer, path=None, *args, **kwargs):
-        result = save(writer, path, *args, **kwargs)
+    write = shared.write_metadata_frame
+    def lost_ack(frame, path, table, **kwargs):
+        result = write(frame, path, table, **kwargs)
         if path == r.paths['METADATA_DATA_LINEAGE']:
             raise OSError('test lost acknowledgement')
         return result
-    monkeypatch.setattr(DataFrameWriter, 'save', lost_ack)
+    monkeypatch.setattr(shared, 'write_metadata_frame', lost_ack)
     shared.finalize_pipeline_run(plan, spark_session=r.spark)
     assert plan.evidence['lineage_projection']['status'] == 'published'
-    monkeypatch.setattr(DataFrameWriter, 'save', save)
+    monkeypatch.setattr(shared, 'write_metadata_frame', write)
     shared.publish_column_lineage(r.rows()[0], context=r.context, spark_session=r.spark)
     rows = r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).collect()
     assert len(rows) == len({row.lineage_id for row in rows})

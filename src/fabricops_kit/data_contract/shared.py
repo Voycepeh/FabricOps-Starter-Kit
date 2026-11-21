@@ -10,7 +10,7 @@ from fabricops_kit.config.metadata_schemas import migrate_asset_references
 
 from time import perf_counter
 
-from fabricops_kit.io.shared import retry_delta_metadata
+from fabricops_kit.io.shared import retry_delta_metadata, validate_metadata_merge, write_metadata_frame, resolve_configured_lakehouse_table
 
 
 from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
@@ -385,7 +385,8 @@ def create_contract_draft(
     else:
         # Alternate authoring stores still contain metadata. Retry the fixed
         # append, never draft discovery/version selection or the whole workflow.
-        retry_delta_metadata(lambda: write_lakehouse_table(frame, DATA_CONTRACT_TABLE, **write_options))
+        _, _, _, path = resolve_configured_lakehouse_table(store, DATA_CONTRACT_TABLE, schema, context=runtime_context)
+        write_metadata_frame(frame, path, DATA_CONTRACT_TABLE)
     return row
 
 def _sql_literal(value: Any) -> str:
@@ -696,6 +697,7 @@ def save_contract_draft(
         if store == "Metadata" else schema or configured_lakehouse_schema(config, active_workspace_id, store),
         context=runtime_context,
     )
+    validate_metadata_merge(DATA_CONTRACT_TABLE, frame, path)
     # Keep the revision check in the MERGE itself so concurrent writers
     # cannot win a race between preflight and publication.
     prior_payload_digest = hashlib.sha256(str(draft.get("contract_payload_json") or "").encode("utf-8")).hexdigest()
@@ -1749,6 +1751,7 @@ def freeze_contract(
         ),
         context=runtime_context,
     )
+    validate_metadata_merge(DATA_CONTRACT_TABLE, frame, path)
     (
         retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path)
         .alias("target")

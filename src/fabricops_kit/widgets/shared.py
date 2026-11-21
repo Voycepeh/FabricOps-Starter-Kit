@@ -21,6 +21,7 @@ from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
     resolve_configured_lakehouse_table,
     retry_delta_metadata,
+    write_metadata_frame,
 )
 from fabricops_kit.config.audit import _audit_timestamp_value, _resolve_action_by, build_runtime_audit_fields
 from fabricops_kit.config.metadata_keys import _build_dq_rule_key
@@ -970,7 +971,7 @@ def active_steward(row: dict[str, Any], config: Any = None) -> bool:
 
 
 def list_data_stewards(config: Any, active_workspace_id: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
-    """List latest append-only steward rows from the metadata lakehouse."""
+    """List current steward rows from the metadata lakehouse."""
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
         rows = read_lakehouse_table(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), store="Metadata", schema=metadata_schema, context={"config": config, "scope_workspace_id": active_workspace_id, "_spark_session": spark_session})
@@ -982,7 +983,7 @@ def list_data_stewards(config: Any, active_workspace_id: str, *, spark_session: 
     return [row for row in latest if active_steward(row, config)] if active_only else latest
 
 def write_widget_metadata_row(*, spark: Any, config: Any, active_workspace_id: str, table: str, row: dict[str, Any]) -> None:
-    """Append one widget metadata row to the configured metadata target."""
+    """Update one current Steward or insert one unique Agreement version."""
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     canonical_table = {
         str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)): DATA_STEWARD_TABLE,
@@ -993,13 +994,11 @@ def write_widget_metadata_row(*, spark: Any, config: Any, active_workspace_id: s
     frame = spark.createDataFrame([typed_row], schema=canonical_schema)
     write_options = {"store": "Metadata", "schema": metadata_table_physical_schema(config, canonical_table),
                      "context": {"config": config, "scope_workspace_id": active_workspace_id}, "mode": "append"}
-    if table.strip() in CANONICAL_METADATA_TABLES:
-        # Foundational I/O already retries canonical appends; keep one budget.
-        write_lakehouse_table(frame, table, **write_options)
+    if canonical_table == DATA_STEWARD_TABLE:
+        _, _, _, path = resolve_configured_lakehouse_table("Metadata", table, write_options["schema"], context=write_options["context"])
+        write_metadata_frame(frame, path, canonical_table, mode="upsert")
     else:
-        # Configured Steward/Agreement aliases are known metadata even though
-        # their physical names cannot be recognized by the generic writer.
-        retry_delta_metadata(lambda: write_lakehouse_table(frame, table, **write_options))
+        write_lakehouse_table(frame, table, **write_options)
 
 def parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> date | None:
     """Return a date object or raise a clear intake validation error."""

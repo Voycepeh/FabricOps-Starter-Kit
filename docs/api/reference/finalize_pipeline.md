@@ -161,7 +161,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 132 |
+| Live-critical dependencies | 135 |
 
 ### Release history
 
@@ -279,6 +279,9 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
+<li><code>fabricops_kit.io.shared.validate_metadata_primary_key</code></li>
+<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.write_metadata_frame</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._elapsed_seconds</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._format_duration</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._operation_summary_rows</code></li>

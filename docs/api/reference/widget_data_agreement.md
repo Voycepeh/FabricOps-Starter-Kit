@@ -118,7 +118,7 @@ appends one complete agreement row only after final validation.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 75 |
+| Live-critical dependencies | 88 |
 
 ### Release history
 
@@ -162,8 +162,21 @@ appends one complete agreement row only after final validation.
 <li><code>fabricops_kit.config.shared.normalize_audit_datetime</code></li>
 <li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
 <li><code>fabricops_kit.config.shared.resolve_runtime_context</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
+<li><code>fabricops_kit.io.shared.validate_metadata_primary_key</code></li>
+<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.write_metadata_frame</code></li>
 <li><code>fabricops_kit.widgets.shared._audit_date</code></li>
 <li><code>fabricops_kit.widgets.shared._coerce_row_dicts</code></li>
 <li><code>fabricops_kit.widgets.shared._html_escape</code></li>

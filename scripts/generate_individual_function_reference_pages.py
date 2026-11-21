@@ -97,7 +97,7 @@ METADATA_FIELD_DESCRIPTIONS = {
     "table_name": "Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.",
     "column_name": "Column name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.",
     "data_type": "Stable data type label recorded for the column.",
-    "contract_id": "Stable identifier for the contract row.",
+    "contract_id": "Stable identifier for the Contract lifecycle; combine with contract_version to identify one row.",
     "contract_version": "Version recorded for the contract row.",
     "contract_status": "Lifecycle status recorded for the contract row.",
     "contract_payload_json": "JSON definition for the exact Contract version, including schema, Enrichment, and Guardrails. A draft is editable and a frozen payload is immutable. File Contracts retain the physical file selector in source.",
@@ -4645,6 +4645,12 @@ def render_metadata_reference_index(
     )
     lines = [
         "# List of Metadata Tables",
+        "",
+        "Every primary key shown below is a non-null, non-blank unique row identity enforced by FabricOps writers. Composite keys apply to the complete combination of fields; individual fields can repeat.",
+        "",
+        "Run `setup_metadata_tables()` before using upgraded writers. Setup validates retained keys without deleting rows, enables Serializable Delta isolation and installs required-key constraints. Existing duplicate or missing keys must be reviewed before the table can be used. Uniqueness depends on the FabricOps transaction protocol; direct Spark or SQL writes must use an equivalent protocol.",
+        "",
+        "`METADATA_DATA_CONTRACT` retains one row per `contract_id` + `contract_version`. Steward edits update the current `steward_id` row; Agreement versions and activation history retain distinct keys.",
         "",
         "## Metadata relationships",
         "",
