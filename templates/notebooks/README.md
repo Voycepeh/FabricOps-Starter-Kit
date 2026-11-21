@@ -55,7 +55,14 @@ finalize_pipeline()
 
 FabricOps derives the logical Pipeline ID from the current Fabric Notebook ID. The Pipeline Registry preserves that identity when a notebook is promoted and maps each promoted physical Notebook ID to the same logical pipeline. Engineers do not declare or manage Pipeline IDs in notebook source. Neither setup function requires a workspace argument.
 
-At deployment, run the Governance config notebook directly with `INITIALIZE_METADATA = True` once to bootstrap the shared Lakehouse. Configuration loads from `setup_notebook()` skip bootstrap.
+`00_env_config` separates required shared runtime configuration from optional Governance customization and owner-only Lakehouse bootstrap:
+
+- **Both roles:** keep sections 1, 3 and 5 for workspace/store mappings, complete configuration assembly and the JSON return consumed by `setup_notebook()`.
+- **Engineering:** skip or delete all of section 2 (Governance customization). Required defaults keep the configuration complete. Keep deployment-specific runtime policy settings, including any Sensitive Data token-mapping store, in section 1.
+- **Governance:** use section 2 to customize authoring forms, classifications and AI suggestions. Rerun section 3 after editing these settings.
+- **Metadata Lakehouse owner:** run section 4 directly with `INITIALIZE_METADATA = True` during installation or upgrades, then restore `False`. This initializes canonical metadata tables and `misc.PROCESSING_STATE`. Bootstrap is disabled by default and can be skipped or deleted from Engineering copies.
+
+Configuration loads from `setup_notebook()` skip bootstrap. Pipelines still require the configured shared tables and Processing State; omitting authoring customization does not disable Contract enforcement. A shared configuration notebook used by Governance should retain the organization's authoring settings.
 
 ## Logical aliases and physical Fabric names
 
