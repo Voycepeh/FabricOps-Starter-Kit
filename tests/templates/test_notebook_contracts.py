@@ -116,6 +116,61 @@ def test_lakehouse_bootstrap_initializes_processing_state_only_on_direct_runs(
     assert calls == expected
 
 
+@pytest.mark.parametrize("engineering_copy", [False, True])
+def test_env_config_returns_complete_configuration_without_optional_sections(engineering_copy):
+    """Engineering may delete customization and bootstrap without breaking the caller response."""
+    import json
+    from dataclasses import asdict
+    from types import SimpleNamespace
+
+    from fabricops_kit import DataAgreementConfig, FabricStore, FrameworkConfig, GovernanceConfig, PathConfig
+
+    notebook = _load_notebook(NOTEBOOK_DIR / "00_env_config.ipynb")
+    responses = []
+
+    def unexpected_bootstrap(**kwargs):
+        pytest.fail("Ordinary configuration must not initialize shared storage")
+
+    namespace = {
+        "__version__": "test",
+        "DataAgreementConfig": DataAgreementConfig,
+        "FabricStore": FabricStore,
+        "FrameworkConfig": FrameworkConfig,
+        "GovernanceConfig": GovernanceConfig,
+        "PathConfig": PathConfig,
+        "setup_metadata_tables": unexpected_bootstrap,
+        "setup_processing_state": unexpected_bootstrap,
+        "json": json,
+        "asdict": asdict,
+        "notebookutils": SimpleNamespace(
+            runtime=SimpleNamespace(context={"currentWorkspaceId": "engineering-workspace"}),
+            notebook=SimpleNamespace(exit=responses.append),
+        ),
+    }
+    optional = False
+    for cell in notebook.cells:
+        if cell.id == "optional-governance-customization":
+            optional = True
+        elif cell.id == "e79a0d59":
+            optional = False
+        if cell.cell_type != "code" or cell.id == "865e3906":
+            continue
+        if engineering_copy and (optional or cell.id == "f56e6cc7-6ef8-4562-b6e6-99a50996d735"):
+            continue
+        source = re.sub(r"<([A-Z_]+)>", lambda match: match[1].lower().replace("_", "-"), cell.source)
+        source = source.replace("engineering-workspace-id", "engineering-workspace")
+        exec(compile(source, f"00_env_config:{cell.id}", "exec"), namespace)
+
+    assert len(responses) == 1
+    response = json.loads(responses[0])
+    assert response["workspace_id"] == "engineering-workspace"
+    config = response["config"]
+    assert "Metadata" in config["path_config"]["paths"][response["workspace_id"]]
+    assert config["governance_config"]["classification_levels"]
+    fields = config["data_agreement_config"]["data_steward_widget"]["custom_fields"]
+    assert bool(fields) is (not engineering_copy)
+
+
 @pytest.mark.parametrize("notebook_path", NOTEBOOKS, ids=lambda path: path.name)
 def test_template_notebooks_are_valid_and_code_cells_compile(notebook_path: Path):
     """Validate committed template notebooks and portable Python syntax."""
