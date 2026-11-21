@@ -44,7 +44,7 @@ result = orchestrate_write(
 finalize_pipeline(pipeline)
 ```
 
-One execution can register multiple reads and publish multiple targets. FabricOps records pipeline participation, not invented column-level lineage; your transformation code remains visible between the boundaries.
+One execution can register multiple reads and publish multiple targets. FabricOps records pipeline participation and automatically traces supported Spark column dependencies for each prepared Write. The Run retains transformation steps and explicit gaps when an origin cannot be traced. See [Run column lineage](maintainer/run-column-lineage.md) for storage, querying and runtime limits.
 
 ??? info "Under the Hood — execution ownership"
 

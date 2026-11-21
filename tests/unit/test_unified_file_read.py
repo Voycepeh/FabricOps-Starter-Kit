@@ -248,8 +248,11 @@ def test_governed_operation_matches_approved_source_before_read(files, monkeypat
     # The production release gate remains closed; no fixture changes its value.
     verifier = Mock()
     monkeypatch.setattr(activation, 'verify_governed_plan', verifier)
-    monkeypatch.setattr(shared, 'persist_pipeline_run', lambda *a, **kw: None)
+    monkeypatch.setattr(shared, 'persist_pipeline_run', lambda plan, **kw: shared.pipeline_run_row(
+        plan, status=kw.get('status', 'incomplete'), completed_at=kw.get('completed_at')))
     session.plan = replace(session.plan, execution_mode='governed', promotion_id='reviewed-promotion',
+        pipeline_version=1, governed_notebook_id=session.plan.notebook_id,
+        runtime_context={**session.plan.runtime_context, 'user_id': 'test-executor'},
         activated_operations_json=json.dumps([approved]), evidence={})
     session.plan.evidence['session'] = session
     files.readers['csv'].reset_mock()

@@ -4623,7 +4623,9 @@ def render_metadata_reference_index(
             ), []),
             "asset_identity_fields": [
                 field for field in ("asset_workspace_id", "table_id", "asset_type",
-                    "operations[].asset_workspace_id", "operations[].table_id", "operations[].asset_type")
+                    "operations[].asset_workspace_id", "operations[].table_id", "operations[].asset_type",
+                    "source_asset_workspace_id", "source_table_id", "source_asset_type",
+                    "target_asset_workspace_id", "target_table_id", "target_asset_type")
                 if field in field_names_by_table[name]
             ],
             "foreign_keys": [

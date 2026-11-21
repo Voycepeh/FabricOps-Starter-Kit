@@ -167,7 +167,12 @@ A successful file Write leaves the pipeline open for finalize_pipeline().
 All reads registered in this execution are associated with this target as
 pipeline participants, not proven transformation dependencies. File participation
 is returned in source_assets as typed table_id/asset_type references and retained
-in the same form in Run operations with the execution Run ID. These records describe participation rather than transformation edges. Dry Run evaluates
+in the same form in Run operations with the execution Run ID. Each prepared Write
+also captures a bounded Catalyst dependency graph in operations[].lineage, with
+source-column identities, expression/operator steps and per-output coverage.
+This graph describes the Write input; retained append/SCD target rows are outside
+its scope. Opaque Python/pandas boundaries and unsupported plans are explicit
+gaps. Introspection failure never blocks publication. Dry Run evaluates
 processing and applicable Guardrails without publishing or committing metadata.
 Ungoverned writes without contract checks but cannot target an already governed
 table. Governed requires activated contracts, ownership and a pinned revision.
@@ -203,7 +208,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:32`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L32-L354">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L32-L359">View on GitHub</a>
 </div>
 
 
@@ -219,7 +224,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 288 |
+| Live-critical dependencies | 292 |
 
 ### Release history
 
@@ -394,6 +399,9 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._is_active_guardrail_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared._key_candidate_evidence</code></li>
 <li><code>fabricops_kit.pipeline.shared._key_candidate_payload</code></li>
+<li><code>fabricops_kit.pipeline.shared._lineage_ancestors</code></li>
+<li><code>fabricops_kit.pipeline.shared._lineage_graph</code></li>
+<li><code>fabricops_kit.pipeline.shared._lineage_tracker</code></li>
 <li><code>fabricops_kit.pipeline.shared._load_active_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._mask_column</code></li>
 <li><code>fabricops_kit.pipeline.shared._merge_pipeline_run_row</code></li>
@@ -452,6 +460,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.capture_profile_presentation</code></li>
+<li><code>fabricops_kit.pipeline.shared.capture_write_lineage</code></li>
 <li><code>fabricops_kit.pipeline.shared.catalogue_authored_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.check_dq_runtime</code></li>
 <li><code>fabricops_kit.pipeline.shared.check_sensitive_data_rules</code></li>

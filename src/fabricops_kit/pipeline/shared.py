@@ -46,6 +46,7 @@ class PipelineExecutionPlan:
     evidence: dict = dataclass_field(default_factory=dict, repr=False, compare=False)
     results: list = dataclass_field(default_factory=list, repr=False, compare=False)
     simulations: list = dataclass_field(default_factory=list, repr=False, compare=False)
+    lineage: dict = dataclass_field(default_factory=dict, repr=False, compare=False)
 
     def __post_init__(self):
         """Reject unsupported execution authority at construction."""
@@ -1731,7 +1732,10 @@ class PublicationBatch:
 
     def materialize_caller_snapshot(self, dataframe):
         """Detach the exact writer input and retain it until caller hand-off."""
+        fragment = capture_write_lineage(dataframe, context=self.context,
+            table_id=self.identity["table_id"], write_mode=self.processing["load_strategy"])
         snapshot = dataframe.localCheckpoint(eager=True)
+        bridge_write_snapshot(snapshot, fragment, context=self.context)
         checkpoint_rdd = snapshot._jdf.logicalPlan().rdd()
         dataframe_unpersist = snapshot.unpersist
 
@@ -6315,6 +6319,539 @@ def reconcile_pipeline_participation(legacy, runs):
     ).withColumn("run_id", F.when(F.col("candidate_run_count") == 1, F.col("candidate_run_id"))).drop("candidate_run_id")
 
 
+# Run-scoped Catalyst dependency graphs describe Write input, not retained target rows.
+_LINEAGE_MAX_NODES = 10000
+_LINEAGE_MAX_EDGES = 30000
+_LINEAGE_MAX_BYTES = 1000000
+_LINEAGE_MAX_OUTPUTS = 1000
+_LINEAGE_PASSTHROUGH = {"SubqueryAlias", "View", "Filter", "Sort", "GlobalLimit", "LocalLimit",
+    "Distinct", "Deduplicate", "Repartition", "RepartitionByExpression", "ResolvedHint", "CollectMetrics"}
+_LINEAGE_KNOWN_EXPRESSIONS = set("""Alias AttributeReference Literal Cast Add Subtract Multiply Divide IntegralDivide
+Remainder UnaryMinus UnaryPositive Abs Round BRound Ceil Floor Pmod Pow Sqrt Exp Log Greatest Least
+EqualTo EqualNullSafe LessThan LessThanOrEqual GreaterThan GreaterThanOrEqual And Or Not IsNull
+IsNotNull In InSet Coalesce CaseWhen If Upper Lower Concat ConcatWs Substring StringTrim
+StringTrimLeft StringTrimRight Length StringLength RegExpReplace RegExpExtract StringReplace
+Contains StartsWith EndsWith Like RLike StringLocate StringTranslate StringLPad StringRPad
+AggregateExpression Sum Count Average Min Max First Last CollectList CollectSet
+ApproxCountDistinct HyperLogLogPlusPlus VariancePop VarianceSamp StddevPop StddevSamp
+SortOrder WindowExpression RowNumber Rank DenseRank PercentRank CumeDist NTile Lead Lag
+GetStructField GetArrayItem GetMapValue CreateNamedStruct CreateArray CreateMap ArrayJoin
+ArrayDistinct ArraySort SortArray ArrayContains Size ElementAt GetArrayStructFields
+ToJson StructsToJson JsonToStructs FromJson Sha2 Md5 XxHash64 Murmur3Hash Crc32
+Year Month DayOfMonth DayOfWeek Hour Minute Second DateAdd DateSub DateDiff AddMonths
+TruncDate TruncTimestamp ParseToDate ParseToTimestamp UnixTimestamp FromUnixTime
+DateFormatClass CurrentDate CurrentTimestamp Uuid Rand Randn KnownNotNull PromotePrecision
+CheckOverflow NormalizeNaNAndZero IsNaN NaNvl IfNull NullIf NullIfZero TryEval TryCast
+Explode PosExplode Inline Stack UnresolvedSeed""".split())
+
+
+def _lineage_seq(value):
+    return [value.apply(i) for i in range(value.size())]
+
+
+def _lineage_option(value):
+    return value.get() if value.isDefined() else None
+
+
+def _lineage_key(attribute):
+    expr = attribute.exprId()
+    return f"{expr.jvmId()}:{expr.id()}"
+
+
+def _lineage_plan(dataframe):
+    return dataframe._jdf.queryExecution().analyzed()
+
+
+def _lineage_digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+@dataclass
+class LineageTracker:
+    """Session-owned trusted boundaries; JVM references never enter persisted Runs."""
+
+    reads: list = dataclass_field(default_factory=list)
+    bridges: list = dataclass_field(default_factory=list)
+    serial: int = 0
+    source_limit_reached: bool = False
+
+    def register(self, dataframe, asset, *, opaque=False):
+        """Bind physical Read leaves, or retain an explicit opaque query boundary."""
+        root = _lineage_plan(dataframe)
+        pending = [root]
+        leaves, visited = [], 0
+        while pending:
+            visited += 1
+            if visited > _LINEAGE_MAX_NODES:
+                self.source_limit_reached = True
+                raise ValueError("lineage_limit")
+            node = pending.pop()
+            children = _lineage_seq(node.children())
+            if children:
+                pending.extend(children)
+            else:
+                leaves.append(node)
+            if len(leaves) + len(pending) > 128:
+                self.source_limit_reached = True
+                raise ValueError("Read plan exceeds the bounded source registry.")
+        if len(self.reads) + len(leaves) > 128:
+            # Eviction could hide a conflicting identity for an equivalent plan.
+            self.source_limit_reached = True
+            raise ValueError("lineage_limit")
+        for node in leaves:
+            self.reads.append((node, dict(asset), opaque))
+
+    def analyse(self, dataframe):
+        """Build a bounded expression graph without evaluating business rows."""
+        if self.source_limit_reached:
+            raise ValueError("lineage_limit")
+        return _ColumnLineageBuilder(self).analyse(_lineage_plan(dataframe))
+
+    def bridge(self, dataframe, fragment):
+        """Retain a proven FabricOps-owned snapshot boundary, never a user conversion."""
+        self.bridges.append((_lineage_plan(dataframe), fragment))
+        self.bridges[:] = self.bridges[-32:]
+
+
+class _ColumnLineageBuilder:
+    def __init__(self, tracker):
+        self.tracker = tracker
+        self.nodes = {}
+        self.edges = set()
+        self.depth = 0
+
+    def node(self, kind, operation, *, stable=None, **fields):
+        if len(self.nodes) >= _LINEAGE_MAX_NODES:
+            raise ValueError("lineage_limit")
+        self.tracker.serial += 1
+        key = f"source:{_lineage_digest(stable)}" if stable is not None else f"n{self.tracker.serial}"
+        self.nodes[key] = {"node_id": key, "node_type": kind, "operation": operation, **fields}
+        return key
+
+    def edge(self, source, target, role="VALUE"):
+        if len(self.edges) >= _LINEAGE_MAX_EDGES:
+            raise ValueError("lineage_limit")
+        if source != target:
+            self.edges.add((source, target, role))
+
+    def unknown(self, operation, code):
+        return self.node("UNKNOWN", operation, gap_code=code)
+
+    def expression(self, expr, inputs):
+        kind = expr.getClass().getSimpleName()
+        if kind == "AttributeReference":
+            return inputs.get(_lineage_key(expr)) or self.unknown(kind, "unresolved_attribute")
+        fields = {}
+        if kind == "Alias":
+            fields["name"] = str(expr.name())
+        try:
+            fields["data_type"] = str(expr.dataType().simpleString())
+        except Exception:
+            pass
+        # Never persist expr.sql(), treeString(), Python code or literal values.
+        token = self.node("LITERAL" if kind == "Literal" else "EXPRESSION", kind, **fields)
+        if kind not in _LINEAGE_KNOWN_EXPRESSIONS:
+            self.nodes[token]["gap_code"] = "opaque_udf" if "UDF" in kind else "unsupported_expression"
+        if kind == "AggregateExpression":
+            self.nodes[token]["name"] = "DISTINCT" if expr.isDistinct() else "ALL"
+            self.edge(self.expression(expr.aggregateFunction(), inputs), token)
+            condition = _lineage_option(expr.filter())
+            if condition is not None:
+                self.edge(self.expression(condition, inputs), token, "FILTER")
+        elif kind == "WindowExpression":
+            self.edge(self.expression(expr.windowFunction(), inputs), token)
+            spec = expr.windowSpec()
+            for value in _lineage_seq(spec.partitionSpec()):
+                self.edge(self.expression(value, inputs), token, "GROUP")
+            for value in _lineage_seq(spec.orderSpec()):
+                self.edge(self.expression(value, inputs), token, "ORDER")
+        elif kind == "CaseWhen":
+            for branch in _lineage_seq(expr.branches()):
+                self.edge(self.expression(branch._1(), inputs), token, "CONDITION")
+                self.edge(self.expression(branch._2(), inputs), token)
+            otherwise = _lineage_option(expr.elseValue())
+            if otherwise is not None:
+                self.edge(self.expression(otherwise, inputs), token)
+        else:
+            for index, child in enumerate(_lineage_seq(expr.children())):
+                self.edge(self.expression(child, inputs), token, "CONDITION" if kind == "If" and index == 0 else "VALUE")
+        return token
+
+    def visit(self, plan):
+        self.depth += 1
+        if self.depth > 160:
+            raise ValueError("lineage_limit")
+        try:
+            return self.plan_node(plan)
+        finally:
+            self.depth -= 1
+
+    def plan_node(self, plan):
+        kind = str(plan.nodeName())
+        attributes = _lineage_seq(plan.output())
+        # Only framework-owned checkpoints can bridge a severed logical plan.
+        for boundary, fragment in reversed(self.tracker.bridges):
+            if plan.sameResult(boundary):
+                if len(attributes) != len(fragment["output_ids"]):
+                    break
+                self.nodes.update(fragment["nodes"])
+                self.edges.update(fragment["edges"])
+                return dict(zip((_lineage_key(a) for a in attributes), fragment["output_ids"])), fragment["rowset"]
+        children = _lineage_seq(plan.children())
+        if not children:
+            matches = [(asset, opaque) for root, asset, opaque in self.tracker.reads if plan.sameResult(root)]
+            identities = {}
+            for asset, opaque in matches:
+                key = _lineage_digest(asset)
+                identities[key] = (asset, opaque or identities.get(key, ({}, False))[1])
+            if len(identities) == 1:
+                asset, opaque = next(iter(identities.values()))
+                if not opaque:
+                    rowset = self.node("SOURCE_ASSET", "Read", stable=[asset, "rows"], **asset)
+                    outputs = {}
+                    for attribute in attributes:
+                        name = str(attribute.name())
+                        column = {**asset, "column_id": build_column_id(asset["table_id"], name), "name": name,
+                                  "data_type": str(attribute.dataType().simpleString())}
+                        outputs[_lineage_key(attribute)] = self.node("SOURCE_COLUMN", "Read", stable=column, **column)
+                    return outputs, rowset
+            if kind in {"Range", "OneRowRelation"} and not matches:
+                rowset = self.node("GENERATED", kind)
+                return {_lineage_key(a): self.node("GENERATED", kind, name=str(a.name())) for a in attributes}, rowset
+            reason = "ambiguous_read" if len(identities) > 1 else "opaque_query" if matches else "unregistered_or_severed_read"
+            rowset = self.unknown(kind, reason)
+            return {_lineage_key(a): rowset for a in attributes}, rowset
+        supported = kind in _LINEAGE_PASSTHROUGH | {"Project", "Aggregate", "Join", "Union", "Window", "Generate"}
+        if not supported:
+            rowset = self.unknown(kind, "unsupported_plan")
+            return {_lineage_key(a): rowset for a in attributes}, rowset
+        results = [self.visit(child) for child in children]
+        inputs = {}
+        for columns, _rowset in results:
+            for key, value in columns.items():
+                if key in inputs and inputs[key] != value:
+                    inputs[key] = self.unknown(kind, "ambiguous_attribute")
+                else:
+                    inputs[key] = value
+        labels = {}
+        if kind == "SubqueryAlias":
+            labels["name"] = str(plan.identifier().name())
+        stage = self.node("OPERATOR", kind, **labels)
+        for _columns, rowset in results:
+            self.edge(rowset, stage, "ROW_SET")
+        influence = []
+        if kind == "Filter":
+            influence = [(plan.condition(), "FILTER")]
+        elif kind == "Join":
+            condition = _lineage_option(plan.condition())
+            influence = [(condition, "JOIN")] if condition is not None else []
+            self.nodes[stage]["name"] = str(plan.joinType().sql())
+        elif kind == "Aggregate":
+            influence = [(e, "GROUP") for e in _lineage_seq(plan.groupingExpressions())]
+        elif kind == "Sort":
+            influence = [(e, "ORDER") for e in _lineage_seq(plan.order())]
+        elif kind == "Deduplicate":
+            influence = [(e, "GROUP") for e in _lineage_seq(plan.keys())]
+        elif kind == "Distinct":
+            influence = [(a, "GROUP") for a in _lineage_seq(children[0].output())]
+        elif kind == "RepartitionByExpression":
+            influence = [(e, "PARTITION") for e in _lineage_seq(plan.partitionExpressions())]
+        for expr, role in influence:
+            self.edge(self.expression(expr, inputs), stage, role)
+        named = {}
+        if kind in {"Project", "Aggregate", "Window"}:
+            expressions = _lineage_seq(getattr(plan, {"Project": "projectList", "Aggregate": "aggregateExpressions", "Window": "windowExpressions"}[kind])())
+            named = {_lineage_key(expr): expr for expr in expressions}
+        generator = self.expression(plan.generator(), inputs) if kind == "Generate" else None
+        generated = {_lineage_key(a) for a in _lineage_seq(plan.generatorOutput())} if generator else set()
+        if generator:
+            self.edge(generator, stage, "ROW_SET")
+        outputs = {}
+        for index, attribute in enumerate(attributes):
+            key = _lineage_key(attribute)
+            column = self.node("COLUMN", kind, name=str(attribute.name()), data_type=str(attribute.dataType().simpleString()))
+            self.edge(stage, column, "TRANSFORM")
+            if kind == "Union":
+                for child, (mapping, _rowset) in zip(children, results):
+                    fields = _lineage_seq(child.output())
+                    self.edge(mapping[_lineage_key(fields[index])], column)
+            elif key in named:
+                self.edge(self.expression(named[key], inputs), column)
+            elif key in generated:
+                self.edge(generator, column)
+            elif key in inputs:
+                self.edge(inputs[key], column)
+            else:
+                self.edge(self.unknown(kind, "unresolved_output"), column)
+            outputs[key] = column
+        return outputs, stage
+
+    def analyse(self, plan):
+        columns, rowset = self.visit(plan)
+        if len(self.nodes) > _LINEAGE_MAX_NODES or len(self.edges) > _LINEAGE_MAX_EDGES:
+            raise ValueError("lineage_limit")
+        return {"nodes": self.nodes, "edges": self.edges, "rowset": rowset,
+                "output_ids": [columns[_lineage_key(a)] for a in _lineage_seq(plan.output())]}
+
+
+def _lineage_ancestors(fragment, output):
+    incoming = {}
+    for source, target, role in fragment["edges"]:
+        incoming.setdefault(target, []).append((source, role))
+    pending, seen, roots, gaps, transformations = [(output, ())], set(), {}, set(), set()
+    while pending:
+        token, roles = pending.pop()
+        if (token, roles) in seen:
+            continue
+        seen.add((token, roles))
+        if len(seen) > _LINEAGE_MAX_EDGES * 2:
+            raise ValueError("lineage_limit")
+        node = fragment["nodes"][token]
+        if node.get("gap_code"):
+            gaps.add(node["gap_code"])
+        if node["node_type"] in {"EXPRESSION", "OPERATOR"}:
+            transformations.add(token)
+        if node["node_type"] in {"SOURCE_COLUMN", "SOURCE_ASSET"}:
+            roots.setdefault(token, set()).update(roles or ("VALUE",))
+        for source, dependency in incoming.get(token, []):
+            next_roles = set(roles)
+            if dependency not in {"VALUE", "TRANSFORM"}:
+                next_roles.add(dependency)
+            if next_roles - {"ROW_SET"}:
+                next_roles.discard("ROW_SET")
+            pending.append((source, tuple(sorted(next_roles))))
+    status = "partial" if gaps and roots else "unknown" if gaps else "complete"
+    return {"status": status, "sources": [{"node_id": key, "dependency_types": sorted(roles)} for key, roles in sorted(roots.items())],
+            "gaps": sorted(gaps), "transformation_node_ids": sorted(transformations)}, {token for token, _role in seen}
+
+
+def _lineage_graph(fragment, names, table_id, write_mode):
+    outputs, keep = [], set()
+    for name, token in zip(names, fragment["output_ids"]):
+        detail, ancestors = _lineage_ancestors(fragment, token)
+        keep.update(ancestors)
+        outputs.append({"column_id": build_column_id(table_id, name), "column_name": name, "node_id": token, **detail})
+    statuses = {row["status"] for row in outputs}
+    status = "complete" if statuses == {"complete"} else "unknown" if statuses <= {"unknown"} else "partial"
+    graph = {"version": 1, "detector": "spark_catalyst_v1", "scope": "write_input", "write_mode": write_mode,
+             "status": status, "output_count": len(names), "omitted_output_count": 0, "gaps": [], "outputs": outputs,
+             "nodes": [fragment["nodes"][key] for key in sorted(keep)],
+             "edges": [{"source_node_id": a, "target_node_id": b, "dependency_type": c}
+                       for a, b, c in sorted(fragment["edges"]) if a in keep and b in keep]}
+    if len(json.dumps(graph).encode()) > _LINEAGE_MAX_BYTES:
+        raise ValueError("lineage_limit")
+    return graph
+
+
+def _lineage_tracker(plan):
+    return plan.lineage.setdefault("tracker", LineageTracker())
+
+
+def register_read_lineage(plan, result):
+    """Freeze trusted Read identities without persisting JVM objects or row data."""
+    try:
+        table_id = result["table_id"]
+        binding = plan.runtime_context["_pipeline_bindings"][table_id]
+        asset = {"table_id": table_id, "asset_type": result.get("asset_type", "TABLE"),
+                 "asset_workspace_id": binding["asset_workspace_id"]}
+        _lineage_tracker(plan).register(result["dataframe"], asset,
+            opaque=bool(result.get("is_query") and binding.get("kind") == "warehouse"))
+    except Exception:
+        # Unsupported runtimes still retain participation and an explicit Write gap.
+        pass
+
+
+def capture_write_lineage(dataframe, *, context, table_id, write_mode):
+    """Attach lineage before writer materialization; introspection never fails a Write."""
+    plan = (context or {}).get("execution_plan")
+    if plan is None:
+        return None
+    try:
+        identity = json.loads(plan.participants_json).get(table_id)
+        if not identity:
+            return None
+        key = "target:" + (identity.get("logical_id") or identity['store'] + '/' + identity['table_name'])
+        record = plan.evidence["operations"].get(key)
+        if record is None:
+            return None
+    except (AttributeError, KeyError, TypeError, ValueError):
+        return None
+    names, fragment = [], None
+    try:
+        names = list(dataframe.columns)
+        if len(names) > _LINEAGE_MAX_OUTPUTS:
+            raise ValueError("lineage_limit")
+        fragment = _lineage_tracker(plan).analyse(dataframe)
+        graph = _lineage_graph(fragment, names, table_id, write_mode)
+    except Exception as exc:
+        code = "lineage_limit" if isinstance(exc, (ValueError, RecursionError)) else "plan_access_unavailable"
+        # A bounded fallback must itself succeed even if JVM access or graph budgets fail.
+        # Omitted outputs are explicit; a shortened graph can never claim completeness.
+        fragment = None
+        outputs, nodes, used_bytes = [], [], 0
+        for index, name in enumerate(names[:_LINEAGE_MAX_OUTPUTS]):
+            used_bytes += len(json.dumps(name).encode()) + 1000
+            if used_bytes > _LINEAGE_MAX_BYTES // 2:
+                break
+            token = f"unknown:{index}"
+            outputs.append({"column_id": build_column_id(table_id, name), "column_name": name,
+                "node_id": token, "status": "unknown", "sources": [], "gaps": [code], "transformation_node_ids": []})
+            nodes.append({"node_id": token, "node_type": "UNKNOWN", "operation": "Unresolved", "gap_code": code})
+        graph = {"version": 1, "detector": "spark_catalyst_v1", "scope": "write_input", "write_mode": write_mode,
+            "status": "unknown", "output_count": len(names), "omitted_output_count": len(names) - len(outputs),
+            "gaps": [code], "outputs": outputs, "nodes": nodes, "edges": []}
+
+    record["lineage"] = graph
+    return fragment
+
+
+def bridge_write_snapshot(dataframe, fragment, *, context):
+    """Preserve only snapshots produced and verified by FabricOps itself."""
+    plan = (context or {}).get("execution_plan")
+    if plan is not None and fragment is not None:
+        try:
+            _lineage_tracker(plan).bridge(dataframe, fragment)
+        except Exception:
+            pass
+
+
+def _column_lineage_snapshot(run):
+    from fabricops_kit.config.metadata_schemas import decode_metadata_row
+
+    decoded = decode_metadata_row("METADATA_PIPELINE_RUN", validate_pipeline_run(run))
+    fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
+    return pipeline_record_content({name: decoded[name] for name in fields if name in decoded})
+
+
+def column_lineage_rows(run):
+    """Project scalar Power BI facts from a Run; participation never becomes a dependency.
+
+    Grain: Run/Write/output/source/dependency type, with null-source rows for
+    constants and gaps. Historical Runs without a graph produce no facts.
+    """
+    from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, decode_metadata_row
+
+    decoded = decode_metadata_row("METADATA_PIPELINE_RUN", run)
+    digest = _metadata_hash(_column_lineage_snapshot(run))
+    rows = []
+    audit = {name: run.get(name) for name, *_ in AUDIT_SCHEMA_FIELDS}
+    for operation in decoded.get("operations", []):
+        graph = operation.get("lineage")
+        if graph is None:
+            continue
+        if graph["version"] != 1:
+            raise ValueError("Unsupported Run column-lineage version.")
+        nodes = {node["node_id"]: node for node in graph["nodes"]}
+        base = {"lineage_version": 1, "run_id": run["run_id"], "pipeline_id": run.get("pipeline_id"),
+            "execution_workspace_id": run.get("workspace_id"), "operation_key": operation["operation_key"],
+            "target_asset_workspace_id": operation["asset_workspace_id"], "target_table_id": operation["table_id"],
+            "target_asset_type": operation["asset_type"], "run_status": run.get("status"),
+            "operation_status": operation["status"], "publication_status": operation.get("publication_status"),
+            "write_mode": graph["write_mode"], "detector": graph["detector"], "scope": graph["scope"],
+            "source_run_sha256": digest, **audit}
+        for output in graph["outputs"]:
+            transformations = [nodes[key]["operation"] for key in output["transformation_node_ids"]]
+            for source in output["sources"] or [{"node_id": None, "dependency_types": []}]:
+                root = nodes.get(source["node_id"], {})
+                for dependency in source["dependency_types"] or [None]:
+                    record_type = ("COLUMN_DEPENDENCY" if root.get("column_id") else "ROW_SET_DEPENDENCY" if root
+                                   else "OUTPUT" if output["status"] == "complete" else "GAP")
+                    row = {**base, "record_type": record_type,
+                        "target_column_id": output["column_id"], "target_column_name": output["column_name"],
+                        "source_asset_workspace_id": root.get("asset_workspace_id"), "source_table_id": root.get("table_id"),
+                        "source_asset_type": root.get("asset_type"), "source_column_id": root.get("column_id"),
+                        "source_column_name": root.get("name"), "dependency_type": dependency,
+                        "coverage": output["status"], "gap_codes": ";".join(output["gaps"]),
+                        "transformation_operations": ";".join(sorted(set(transformations))),
+                        "transformation_count": len(output["transformation_node_ids"]),
+                        "output_node_id": output["node_id"], "source_node_id": source["node_id"], "omitted_output_count": 0}
+                    row["lineage_id"] = _metadata_hash([run["run_id"], operation["operation_key"], output["column_id"],
+                                                        source["node_id"], dependency])
+                    rows.append(row)
+        if graph["gaps"] or graph["omitted_output_count"]:
+            rows.append({**base, "lineage_id": _metadata_hash([run["run_id"], operation["operation_key"], "capture_gap"]),
+                "record_type": "CAPTURE_GAP", "coverage": "unknown", "gap_codes": ";".join(graph["gaps"]),
+                "omitted_output_count": graph["omitted_output_count"]})
+    return rows
+
+
+def publish_column_lineage(run, *, context, spark_session=None):
+    """Materialize an exact finalized Run as retry-safe scalar Delta facts.
+
+    The Run is verified before publication. A single idempotent Delta append
+    projects the entire immutable snapshot; confirmed aborted metadata conflicts
+    can retry without replaying business Writes. Exact read-back confirms lost
+    acknowledgements. Historical participation rows remain untouched.
+    """
+    if not persistence_permitted(context):
+        return {"status": "diagnostic_only", "row_count": 0}
+    if not run.get("completed_at"):
+        raise ValueError("Column lineage publication requires a finalized Run.")
+    rows = column_lineage_rows(run)
+    if not rows:
+        return {"status": "not_captured", "row_count": 0}
+    from delta.tables import DeltaTable
+    from pyspark.sql import functions as F
+    from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
+
+    spark = get_spark_session(spark_session, context=context)
+    table = "METADATA_DATA_LINEAGE"
+    schema = metadata_table_schema_registry()[table]
+    physical = [coerce_metadata_row_types(table, row) for row in rows]
+    expected = {row["lineage_id"]: pipeline_record_content(row) for row in physical}
+    if len(expected) != len(physical):
+        raise ValueError("Column lineage contains duplicate fact identities.")
+    stored = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
+        schema=metadata_table_physical_schema(context["config"], "METADATA_PIPELINE_RUN"),
+        context={**context, "_spark_session": spark, "_fabricops_suppress_io_log": True})
+    matches = stored.where(F.col("run_id") == run["run_id"]).limit(2).collect()
+    if len(matches) != 1 or _column_lineage_snapshot(matches[0].asDict(recursive=True)) != _column_lineage_snapshot(run):
+        raise ValueError("Lineage requires the exact committed finalized Run snapshot.")
+    _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
+        metadata_table_physical_schema(context["config"], table), context=context)
+    properties = DeltaTable.forPath(spark, path).detail().select("properties").first()["properties"]
+    if "delta.setTransactionRetentionDuration" in properties:
+        raise RuntimeError("Column lineage requires unbounded Delta transaction identity retention.")
+
+    def confirmed():
+        observed = (spark.read.format("delta").load(path).where((F.col("run_id") == run["run_id"])
+            & (F.col("lineage_version") == 1)).select(*schema.fieldNames()).collect())
+        values = [pipeline_record_content(row.asDict(recursive=True)) for row in observed]
+        return len(values) == len(expected) and {row["lineage_id"]: row for row in values} == expected
+
+    frame = spark.createDataFrame(physical, schema)
+    try:
+        retry_delta_metadata(lambda: frame.write.format("delta").mode("append")
+            .option("txnAppId", "fabricops-column-lineage:" + run["run_id"]).option("txnVersion", 1).save(path))
+    except Exception:
+        if not confirmed():
+            raise
+    if not confirmed():
+        raise RuntimeError("Column lineage projection was not confirmed; inspect the Run and projection before retrying.")
+    return {"status": "published", "row_count": len(physical), "source_run_sha256": rows[0]["source_run_sha256"]}
+
+
+def sync_pipeline_lineage(plan, *, spark_session=None):
+    """Retry projection independently of the already committed business/Run outcome."""
+    run = plan.evidence["final_result"]
+    if not plan.permits_persistence or not any(op.get("lineage") for op in run.get("operations", [])):
+        return
+    digest = _metadata_hash(_column_lineage_snapshot(run))
+    if plan.evidence.get("lineage_projection", {}).get("source_run_sha256") == digest:
+        return
+    try:
+        plan.evidence["lineage_projection"] = publish_column_lineage(run,
+            context={**plan.runtime_context, "execution_plan": plan}, spark_session=spark_session)
+    except Exception as exc:
+        plan.evidence["lineage_projection"] = {"status": "failed", "error_type": type(exc).__name__}
+        error = RuntimeError(f"Run {run['run_id']} is committed, but column lineage projection failed. Retry finalize_pipeline(pipeline) "
+                             "or rebuild from the finalized Run; do not replay business Writes.")
+        error.run_id = run["run_id"]
+        error.published = any(op.get("publication_status") == "published" for op in run.get("operations", []))
+        error.failed_stage = "Lineage metadata"
+        raise error from exc
+
+
 def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
     """Capture actual table/contract participation and governed settings."""
     identities, contracts = json.loads(plan.participants_json), json.loads(plan.contracts_json)
@@ -6340,6 +6877,7 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                 **{name: actual.get(name) for name in ("read_parameters", "write_parameters", "repartition_by", "read_mode", "write_mode", "query_sha256", "incremental_target_table_id",
                     "started_at", "completed_at", "rows_read", "rows_written", "observed_columns_json")},
                 "metrics": dict(actual.get("metrics") or {}),
+                **({"lineage": actual["lineage"]} if "lineage" in actual else {}),
                 "source_assets": actual.get("source_assets", []),
                 "status": actual["status"], "stages": actual["stages"]})
     config = plan.runtime_context["config"]
@@ -6647,6 +7185,7 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
         if plan.evidence.get("persistence_failed"):
             raise RuntimeError("Evidence persistence failed; create a new plan.")
         if plan.evidence.get("sealed"):
+            sync_pipeline_lineage(plan, spark_session=spark_session)
             return plan.evidence["final_result"]
         if failed:
             plan.evidence["failures"].append({"code": "project_execution_failed"})
@@ -6689,6 +7228,7 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
                     except Exception:
                         plan.evidence["source_snapshot_acceptance"]["diagnostics_persisted"] = False
         plan.evidence.update(sealed=True, final_result=row)
+        sync_pipeline_lineage(plan, spark_session=spark_session)
         if plan.execution_mode == "dry_run" and status == "dry_run_completed" and plan.evidence.get("notebook_snapshot") is not None:
             from fabricops_kit.activated_pipeline.shared import persist_engineering_dry_run
             try:
@@ -6843,11 +7383,12 @@ class PipelineSession:
             return self.plan
 
     def register_source(self, result):
-        """Associate a successful Read with this execution, without claiming exact lineage."""
+        """Associate Read participation and register its trusted column-lineage boundary."""
         with self.plan.lock:
             if result.get("execution_plan_id") != self.plan.plan_id:
                 raise ValueError("Read belongs to another execution.")
             self.sources.append(result)
+            register_read_lineage(self.plan, result)
         self.refresh()
         return result
 
@@ -6900,6 +7441,7 @@ class PipelineSession:
             if failed or not self.plan.evidence.get("boundary_completed") or self.plan.evidence.get("final_result", {}).get("status") not in {"succeeded", "ungoverned_completed", "dry_run_completed"}:
                 self.plan.evidence.pop("profile_observations", None)
             self.sources.clear()
+            self.plan.lineage.clear()
             for cache in (_CURRENT_FRESHNESS_EVIDENCE,
                           _PENDING_SOURCE_OBSERVATIONS,
                           _INCREMENTAL_SOURCE_SCOPES, _ACTIVE_PUBLICATION_SOURCES):

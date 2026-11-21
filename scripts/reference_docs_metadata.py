@@ -154,10 +154,19 @@ METADATA_TABLE_MODELS = {
             {"related_table": "METADATA_DATA_CONTRACT_ACTIVATION", "fields": ["operations_json"], "cardinality": "N:M", "statement": "Logical physical workspace/Table ID association; current Contracts resolve independently on each new run."},
         ],
     },
+    "METADATA_DATA_LINEAGE": {
+        "purpose": "Stores scalar Run/output/source column dependencies for Power BI and impact queries.",
+        "grain": "One finalized Run/Write/output/source/dependency type, with explicit constant, row-set and gap facts.",
+        "implementation_notes": "Finalization derives immutable lineage_version=1 facts from the exact committed Run graph. Source/target physical Catalogue identities and column IDs, dependency_type, coverage, publication status and transformation summaries are scalar columns; no JSON expansion is required for reporting. Detailed graphs remain in Run operations for drill-through and rebuilding. Append transaction identities and exact read-back make retries idempotent without business-write replay. Setup additively evolves historical activity layouts, retaining old rows and extension columns unchanged. Historical rows have null lineage_version and must be excluded from dependency reports. Rows describe Write input, not retained target history. Run and projection are separate Delta commits; projection failure is explicit and independently retryable.",
+        "primary_key": ["lineage_id"],
+        "foreign_keys": [{"local_field": "run_id", "referenced_table": "METADATA_PIPELINE_RUN", "referenced_field": "run_id", "cardinality": "N:1", "statement": "Exact committed finalized Run; source_run_sha256 pins normalized content."}],
+        "relationships": [{"related_table": "METADATA_PIPELINE_RUN", "fields": ["run_id"], "cardinality": "N:1", "statement": "Finalized Run owns the source graph and publication outcome."},
+                          {"related_table": "METADATA_DATA_CATALOGUE", "fields": ["source_asset_workspace_id", "source_table_id", "source_asset_type", "target_asset_workspace_id", "target_table_id", "target_asset_type"], "cardinality": "N:M", "statement": "Join each physical source/target role separately to Catalogue asset_workspace_id + table_id + asset_type, then column_id in columns_json. Null sources represent constants or gaps."}],
+    },
     "METADATA_PIPELINE_RUN": {
         "purpose": "Records Run participation, execution outcomes and exact per-operation Contract versions.",
         "grain": "One authoritative execution with validated JSON operations, profiling, failures and versioned provenance.",
-        "implementation_notes": "Fresh runs use schema version 4 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash and are the authoritative source/target participation record. Flatten operations with pipeline_participation(); exclude not_started declarations and retain operation status independently of Run status. Table publication_status is retained when known; missing historical publication status means unknown. Join projected operations to the Catalogue using operations[].asset_workspace_id, common table_id and asset_type. Operations use table_id and asset_type for every asset, with one typed source_assets array for inputs. Released Run JSON remains unchanged and is interpreted when read. Participation does not prove transformation dependencies. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.",
+        "implementation_notes": "Fresh runs use schema version 4 and pin execution workspace, Pipeline version, promotion ID, Governed notebook and execution identity. Operations retain exact Contract ID/version/payload hash and are the authoritative source/target participation record. Flatten operations with pipeline_participation(); exclude not_started declarations and retain operation status independently of Run status. Table publication_status is retained when known; missing historical publication status means unknown. Join projected operations to the Catalogue using operations[].asset_workspace_id, common table_id and asset_type. Operations use table_id and asset_type for every asset, with one typed source_assets array for inputs. Released Run JSON remains unchanged and is interpreted when read. Participation does not prove transformation dependencies. Prepared Writes additionally retain an optional bounded versioned Catalyst graph in operations[].lineage, describing source columns, transformations, dependency roles and complete/partial/unknown coverage for the Write input. Graphs are captured before framework checkpoints and retained with publication status; finalized graphs are projected automatically to scalar METADATA_DATA_LINEAGE facts; historical Runs remain absent rather than backfilled. Run JSON/content hashing and whole-row CAS remain. Historical null provenance is excluded from original hash projections. Setup evolves compatible schemas automatically while preserving Run history and Processing State.",
         "primary_key": ["run_id"],
         "foreign_keys": [
             {"local_field": "promotion_id", "referenced_table": "METADATA_PIPELINE_REGISTRY", "referenced_field": "promotion_id", "cardinality": "N:1", "statement": "Exact captured immutable Pipeline Promotion; superseded versions remain resolvable."},
@@ -278,6 +287,7 @@ METADATA_EXPLORER_WRITE_ENTRYPOINTS = {
     "METADATA_DATA_PROFILED": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_DATA_PROFILED_FREQUENCY": ["orchestrate_read", "orchestrate_write", "profile_table"],
     "METADATA_GUARDRAIL_RESULTS": ["orchestrate_read", "orchestrate_write"],
+    "METADATA_DATA_LINEAGE": ["finalize_pipeline"],
     "METADATA_DATA_ACCESS": ["scan_workspace_access", "scan_onelake_access", "scan_sql_access"],
 }
 
@@ -293,6 +303,7 @@ METADATA_REFERENCE_ORDER = [
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_ACCESS",
+    "METADATA_DATA_LINEAGE",
     "METADATA_GUARDRAIL_RESULTS",
 ]
 
@@ -502,6 +513,10 @@ METADATA_COLUMN_OWNERS = {
         "severity": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "reason": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
         "result_payload_json": ["fabricops_kit.pipeline.shared.write_guardrail_result_row", "fabricops_kit.pipeline.shared.check_dq_runtime"],
+    },
+    "METADATA_DATA_LINEAGE": {
+        "__default__": ["fabricops_kit.pipeline.shared.column_lineage_rows", "fabricops_kit.pipeline.shared.publish_column_lineage"],
+        "__audit__": ["fabricops_kit.pipeline.shared.column_lineage_rows"],
     },
     "METADATA_PIPELINE_RUN": {
         "__default__": ["fabricops_kit.pipeline.shared.pipeline_run_row", "fabricops_kit.pipeline.shared.persist_pipeline_run"],
@@ -1724,7 +1739,7 @@ PUBLIC_SYMBOL_DOCS.append({
     'use_when': 'Use after setup_notebook to preview or restart the disposable seven-step Guided Demo.',
     'do_not_use_when': 'Never use against shared or production Metadata, or while demo writers are active.',
     'usage_notes': 'Preview is the default. reset=True discards all dedicated demo metadata, including frozen Contracts and activations, and resets only the eleven named business tables. This Preview API still requires live Fabric acceptance.',
-    'side_effects': 'With reset=True, clears all 12 canonical metadata tables and native saved lifecycle artifacts, restores five Day 1 sources and removes six demo outputs. False does not write.',
+    'side_effects': 'With reset=True, clears current rows in all 13 canonical metadata tables, preserving historical Lineage activity rows and native saved lifecycle artifacts, restores five Day 1 sources and removes six demo outputs. False does not write.',
     'fabric_context': 'Requires successful setup_notebook, a manually created schema-enabled demo_metadata Lakehouse and configured Bronze/Silver/Gold stores with uploaded Files/demo fixtures.',
     'preferred_example': 'from fabricops_kit import setup_notebook, orchestrate_demo_reset\n\ncontext = setup_notebook()\nRESET_DEMO = False\norchestrate_demo_reset(reset=RESET_DEMO)',
     'related_functions': ['setup_notebook', 'setup_metadata_tables'],

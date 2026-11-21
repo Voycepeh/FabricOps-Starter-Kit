@@ -155,8 +155,10 @@ Physical nullability and field order are not rewritten.
 Governed admission remains blocked pending signed-in Fabric acceptance.
 Retirement presence diagnostics are advisory; unsupported tables are never
 read as canonical authority or automatically deleted. METADATA_DATA_LINEAGE
-is retained unchanged as historical activity metadata. Current participation
-is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
+stores scalar column dependency facts projected from finalized Runs. Setup
+additively adds the new nullable fields to retained activity layouts without
+rewriting historical rows; lineage_version=1 identifies new facts. Participation
+remains in METADATA_PIPELINE_RUN.operations.
 
 </div>
 
@@ -170,7 +172,7 @@ is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
 
 `fabricops_kit/config/setup_metadata_tables.py:660`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L660-L962">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L660-L964">View on GitHub</a>
 </div>
 
 

@@ -518,6 +518,8 @@ def pipeline_write(
         from fabricops_kit.io.shared import repartition_dataframe_for_write
         prepared_df = repartition_dataframe_for_write(prepared_df, repartition_by)
         validate_processing_input(prepared_df, processing)
+        from fabricops_kit.pipeline.shared import capture_write_lineage
+        capture_write_lineage(prepared_df, context=context, table_id=target_table_id, write_mode=strategy)
         write_metrics.update(rows_committed=None, measurement_source="dry_run")
         return {
             "table_id": target_table_id, "strategy": strategy, "published": False,

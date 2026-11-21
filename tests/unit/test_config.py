@@ -949,7 +949,7 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
     result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
 
     assert result["created_tables"] == list(registry)
-    assert result["active_metadata_table_count"] == 12
+    assert result["active_metadata_table_count"] == 13
     assert "METADATA_PROCESSING_STATE" not in created
     assert created["METADATA_DATA_ACCESS"].fieldNames() == registry["METADATA_DATA_ACCESS"].fieldNames()
     access_fields = {field.name: field for field in created["METADATA_DATA_ACCESS"].fields}
@@ -1378,12 +1378,12 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
             )
 
 
-def test_lineage_table_is_retained_history_not_canonical():
-    """Run operations replace standalone participation without deleting history."""
+def test_lineage_table_is_canonical_with_scalar_versioned_facts():
+    """The physical table reports real dependencies while preserving old activity rows."""
     from fabricops_kit.config.metadata_schemas import HISTORICAL_METADATA_TABLES, metadata_table_schema_registry
 
-    assert "METADATA_DATA_LINEAGE" not in metadata_table_schema_registry()
-    assert "METADATA_DATA_LINEAGE" in HISTORICAL_METADATA_TABLES
+    assert "METADATA_DATA_LINEAGE" in metadata_table_schema_registry()
+    assert "METADATA_DATA_LINEAGE" not in HISTORICAL_METADATA_TABLES
 
 
 def test_metadata_audit_schema_nullability_contract():

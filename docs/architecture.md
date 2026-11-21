@@ -60,8 +60,8 @@ FabricOps separates Governance, Engineering and Consumption responsibilities. A 
 <a class="fabricops-metadata-preview fabricops-metadata-preview--compact" href="reference/metadata/" aria-label="Explore the interactive FabricOps metadata relationship map">
   <span class="fabricops-metadata-preview__body">
     <span class="fabricops-metadata-preview__eyebrow">Interactive relationship map</span>
-    <strong class="fabricops-metadata-preview__title">12-table metadata relationship map</strong>
-    <span class="fabricops-metadata-preview__description">Inspect keys and scoped references across all 12 metadata tables. Processing State is operational and maintained separately in misc.</span>
+    <strong class="fabricops-metadata-preview__title">13-table metadata relationship map</strong>
+    <span class="fabricops-metadata-preview__description">Inspect keys and scoped references across all 13 metadata tables. Processing State is operational and maintained separately in misc.</span>
     <span class="fabricops-metadata-preview__action">Open metadata explorer <span aria-hidden="true">→</span></span>
   </span>
   <span class="fabricops-metadata-preview__image" aria-hidden="true"><img src="../assets/fabricops-metadata-approved.svg" alt="" loading="lazy" decoding="async"></span>

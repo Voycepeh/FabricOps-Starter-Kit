@@ -64,7 +64,7 @@ def _demo_metadata_counts(_state):
             raise RuntimeError(
                 f"{table} has missing columns or incompatible types: {', '.join(incompatible)}. Run the installed package metadata setup in the demo lakehouse, then restart 00C."
             )
-        counts[table] = frame.count()
+        counts[table] = (frame.where("lineage_version = 1") if table == "METADATA_DATA_LINEAGE" else frame).count()
     state = read_processing_state(context=_state._demo_runtime)
     validate_processing_state_schema(state.schema)
     counts[_DEMO_PROCESSING_STATE] = state.count()
@@ -248,7 +248,10 @@ def _demo_clear_metadata(_state, counts, order):
         _removed = 0
         if counts[_table]:
             _delta = DeltaTable.forPath(_state.spark, _path)
-            _delta.delete()
+            if _table == "METADATA_DATA_LINEAGE":
+                _delta.delete("lineage_version = 1")
+            else:
+                _delta.delete()
             _removed = int(_delta.history(1).first()["operationMetrics"]["numDeletedRows"])
         print(f"{_table}: removed {_removed}")
 
@@ -291,7 +294,8 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     including frozen Contracts, activations, approvals, promotion history and
     Runs. It also clears the dedicated Processing State table. Saved submissions, Dry Run evidence and notebook
     snapshots in its three native lifecycle folders are removed too. Table
-    definitions remain; no metadata migration is performed.
+    definitions remain; no metadata migration is performed. Historical Lineage
+    activity rows remain intact; only lineage_version=1 dependency facts are cleared.
 
     Four Day 1 tables are overwritten, Orders CSV is validated and retained,
     and five Silver outputs plus the obsolete Bronze Orders table are removed in the reserved
@@ -386,6 +390,7 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
         "METADATA_GUARDRAIL_RESULTS",
         _DEMO_PROCESSING_STATE,
         "METADATA_DATA_ACCESS",
+        "METADATA_DATA_LINEAGE",
         "METADATA_PIPELINE_RUN",
         "METADATA_PIPELINE_REGISTRY",
         "METADATA_PIPELINE_ACTIVATION",
@@ -402,6 +407,8 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     for _table in _demo_counts:
         _frame = (read_processing_state(context=runtime) if _table == _DEMO_PROCESSING_STATE else
                   read_lakehouse_table(_table, store="Metadata", schema=metadata_table_physical_schema(_demo._demo_config, _table)))
+        if _table == "METADATA_DATA_LINEAGE":
+            _frame = _frame.where("lineage_version = 1")
         for _row in _frame.toLocalIterator():
             _demo_check_metadata_scope(_demo, _row.asDict(recursive=True))
     _demo_file_counts = _demo_metadata_files(_demo)

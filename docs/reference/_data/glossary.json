@@ -723,10 +723,10 @@
       "data lineage"
     ],
     "category": "FabricOps concepts",
-    "short_definition": "Metadata recording table and file source/target participation within a pipeline activity.",
-    "long_definition": "Data lineage describes source-to-target dependencies, optionally at column level. FabricOps records typed table/file Run participation in METADATA_PIPELINE_RUN.operations; participation alone does not prove transformation dependencies.",
-    "preferred_usage": "Use lineage for recorded source and target asset participation; it does not prove exact transformation dependencies.",
-    "avoid_usage": "dependency when recorded data movement is meant",
+    "short_definition": "Source-to-output dependencies captured for each prepared Write within a pipeline Run.",
+    "long_definition": "FabricOps stores automatic Spark column dependencies and expression/operator steps in METADATA_PIPELINE_RUN.operations[].lineage. Each output records complete, partial or unknown coverage and explicit gaps. The graph describes the Write input; operation publication status determines whether it was published. Typed table/file participation remains separate in operations and source_assets. Finalization materializes scalar dependency facts in METADATA_DATA_LINEAGE for reporting; lineage_version=1 distinguishes them from unchanged historical participation rows.",
+    "preferred_usage": "Use lineage for detected dependencies and their coverage; use participation for the Reads and Writes associated with a Run.",
+    "avoid_usage": "Treating participation, matching column names or an opaque pandas conversion as proven column dependencies",
     "tooltip_labels": [
       "Data Lineage",
       "data lineage"

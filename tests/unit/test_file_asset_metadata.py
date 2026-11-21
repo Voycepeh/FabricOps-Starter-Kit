@@ -192,3 +192,29 @@ def test_file_catalogue_registers_deterministic_columns(writer):
     columns = json.loads(rows[0]["columns_json"])
     assert [row["column_id"] for row in columns] == [
         build_column_id(writer.identity["table_id"], name) for name in ("id", "name")]
+
+
+@pytest.mark.parametrize('mode', ['Dry Run', 'Ungoverned'])
+def test_file_lineage_survives_run_finalization(files, monkeypatch, spark_session, mode):
+    """Real Spark file Read ancestry reaches the file Write and its finalized Run."""
+    from fabricops_kit.pipeline.shared import column_lineage_rows
+    import importlib
+    monkeypatch.setattr(shared, 'publish_column_lineage', lambda run, **kw: {'status': 'published', 'row_count': len(shared.column_lineage_rows(run)), 'source_run_sha256': shared._metadata_hash(shared._column_lineage_snapshot(run))})
+    incoming = spark_session.createDataFrame([(1, 12)], 'id long, amount long')
+    files.readers['csv'].return_value = incoming
+    monkeypatch.setattr(importlib.import_module('fabricops_kit.io'), 'write_lakehouse_file', lambda *a, **kw: {
+        'published': True, 'publication_status': 'published', 'resolved_path': 'output',
+        'write_metrics': {}, 'output_layout': 'single_file', 'overflow_occurred': False, 'overflow_reason': None})
+    monkeypatch.setattr(shared, 'schedule_file_profiling', lambda *a, **kw: {'row_count': 1})
+    session = setup_pipeline(pipeline_mode=mode)
+    source = orchestrate_read(store='Bronze', relative_path='input.csv', file_format='csv')
+    orchestrate_write(source['dataframe'].selectExpr('amount * 2 AS total'), store='Gold',
+        relative_path='output.csv', file_format='csv', write_mode='overwrite')
+    record = finalize_pipeline(session)
+    target = next(op for op in record['operations'] if op['pipeline_role'] == 'target')
+    assert target['lineage']['status'] == 'complete', target['lineage']
+    rows = column_lineage_rows(record)
+    assert any(row['source_table_id'] == source['table_id'] and row['source_column_name'] == 'amount'
+        and row['target_column_name'] == 'total' and row['dependency_type'] == 'VALUE' for row in rows)
+    assert all(row['source_asset_type'] == row['target_asset_type'] == 'FILE' for row in rows)
+    assert session.plan.lineage == {}
