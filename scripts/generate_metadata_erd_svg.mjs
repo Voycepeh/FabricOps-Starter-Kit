@@ -17,7 +17,7 @@ function renderMetadataSvg(layout, models) {
     ["DATA_CONTRACT_ACTIVATION","DATA_CONTRACT","N-1","physical","M425 170H335",[425,170],[335,170],"Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M1115 515H1205",[1115,515],[1205,515],"Pipeline run to recorded guardrail outcomes"],
     ["DATA_CATALOGUE","DATA_PROFILED","1-N","physical","M475 598V642Q475 650 467 650H193Q185 650 185 658V735",[475,598],[185,735],"Catalogue asset to column statistics"],
-    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","reference","M575 598V735",[575,598],[575,735],"Catalogue asset to frequency observations"],
+    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","physical","M575 598V735",[575,598],[575,735],"Catalogue asset to frequency observations"],
     ["DATA_CATALOGUE","GUARDRAIL_RESULTS","1-N","reference","M650 423V398Q650 390 658 390H1272Q1280 390 1280 398V423",[650,423],[1280,423],"Guardrail asset reference when resolved: asset_workspace_id + table_id + asset_type; not a separate Catalogue parent check"],
     ["DATA_CATALOGUE","DATA_LINEAGE","1-N","reference","M625 598V702Q625 710 633 710H767Q775 710 775 718V967Q775 975 783 975H1422Q1430 975 1430 967V959",[625,598],[1430,959],"Each source or target asset reference is 1:N separately: join source_asset_workspace_id + source_table_id + source_asset_type and target_asset_workspace_id + target_table_id + target_asset_type separately to the Catalogue asset key; null sources represent constants or gaps"],
     ["DATA_CATALOGUE","DATA_ACCESS","1-N","physical","M675 598V642Q675 650 683 650H957Q965 650 965 658V735",[675,598],[965,735],"Catalogue table to observed permissions"],

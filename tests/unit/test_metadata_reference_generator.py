@@ -508,7 +508,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     assert "must exist before draft creation" in actual[("DATA_CATALOGUE", "DATA_CONTRACT")].find(f"{namespace}title").text
     assert actual[("DATA_CATALOGUE", "PIPELINE_RUN")].get("data-kind") == "nested"
     assert actual[("DATA_CATALOGUE", "PIPELINE_RUN")].get("data-cardinality") == "N-N"
-    for table in ("GUARDRAIL_RESULTS", "DATA_LINEAGE", "DATA_PROFILED_FREQUENCY"):
+    for table in ("GUARDRAIL_RESULTS", "DATA_LINEAGE"):
         reference = actual[("DATA_CATALOGUE", table)]
         assert reference.get("data-kind") == "reference"
         assert reference.find(f"{namespace}path").get("stroke-dasharray") == "1 6"
@@ -536,7 +536,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         assert box.find(f"{namespace}rect").get("x") == x
     for table in ("DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "DATA_ACCESS"):
         edge = actual[("DATA_CATALOGUE", table)]
-        assert edge.get("data-kind") == ("reference" if table == "DATA_PROFILED_FREQUENCY" else "physical")
+        assert edge.get("data-kind") == "physical"
         assert edge.get("data-cardinality") == "1-N"
 
     assert actual[("DATA_AGREEMENT", "DATA_CONTRACT_ACTIVATION")].get("data-cardinality") == "1-N"
