@@ -512,8 +512,8 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         reference = actual[("DATA_CATALOGUE", table)]
         assert reference.get("data-kind") == "reference"
         assert reference.find(f"{namespace}path").get("stroke-dasharray") == "1 6"
-    assert actual[("DATA_CATALOGUE", "GUARDRAIL_RESULTS")].get("data-cardinality") == ""
-    assert actual[("DATA_CATALOGUE", "DATA_LINEAGE")].get("data-cardinality") == ""
+    assert actual[("DATA_CATALOGUE", "GUARDRAIL_RESULTS")].get("data-cardinality") == "1-N"
+    assert actual[("DATA_CATALOGUE", "DATA_LINEAGE")].get("data-cardinality") == "1-N"
     assert actual[("DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY")].get("data-cardinality") == "1-N"
     lineage_reference = actual[("DATA_CATALOGUE", "DATA_LINEAGE")].find(f"{namespace}title").text
     assert "source_asset_workspace_id + source_table_id + source_asset_type" in lineage_reference
