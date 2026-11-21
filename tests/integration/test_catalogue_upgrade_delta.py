@@ -71,6 +71,15 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
     monkeypatch.setattr(setup, 'read_lakehouse_table', read)
     monkeypatch.setattr(setup, 'write_lakehouse_table', write)
     monkeypatch.setattr(io, 'resolve_configured_lakehouse_table', resolve)
+    monkeypatch.setattr(setup, 'resolve_configured_lakehouse_table', resolve)
+    # Keep the migration/version tests scoped to the schema-upgrade transaction.
+    # Key installation is exercised explicitly below and by the PK Delta suite.
+    enforce_primary_key = setup._enforce_metadata_primary_key
+    monkeypatch.setattr(setup, '_enforce_metadata_primary_key', lambda **kw: None)
+    def enforce_keys():
+        return enforce_primary_key(spark=spark_session, table=read(TABLE, schema='custom_engineering'),
+            table_name=TABLE, metadata_schema='custom_engineering',
+            context={'config': config, 'scope_workspace_id': 'dev'})
     def row(**values):
         audit = {field.name: datetime(2020, 2, 3, 4, 5, 6, 123456) if field.name == '_committed_at' else 'original-' + field.name
                  for field in schema.fields if not field.nullable}
@@ -89,7 +98,7 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
             physical.add(StructField('metadata_key', StringType(), True))
         rows = [{name: json.dumps(value) if name in CATALOGUE_NESTED_FIELDS and name not in native
                  and isinstance(value, (dict, list)) else value for name, value in row.items()} for row in rows]
-        spark_session.createDataFrame(rows, physical).write.format('delta').save(path)
+        spark_session.createDataFrame(rows, physical).write.format('delta').option('delta.isolationLevel', 'Serializable').save(path)
         spark_session.sql(f"ALTER TABLE delta.`{path}` SET TBLPROPERTIES ('owner_note'='retain this')")
     def run():
         return call_with_spark(spark_session, setup.setup_metadata_tables,  config=config, workspace_id='dev', verbose=False)
@@ -100,7 +109,7 @@ def catalogue_delta(spark_session, monkeypatch, tmp_path):
         from delta.tables import DeltaTable
         return DeltaTable.forPath(spark_session, path).history(1).first()['version']
     return SimpleNamespace(spark=spark_session, path=path, schema=schema, row=row, seed=seed,
-                           run=run, upgrade=upgrade, version=version, config=config,
+                           run=run, upgrade=upgrade, enforce_keys=enforce_keys, version=version, config=config,
                            read=lambda: spark_session.read.format('delta').load(path))
 
 
@@ -693,3 +702,21 @@ def test_exact_050_catalogue_uses_retained_run_coordinates(catalogue_delta, monk
     assert json.loads(row['columns_json']) == [{'column_id': 'released-column', 'column_name': 'id', 'data_type': 'long'}]
     assert row['load_strategy_parameters_json'] == parent['load_strategy_parameters_json']
     assert rt.upgrade()[1] is None
+
+
+def test_primary_key_installation_after_released_catalogue_upgrade(catalogue_delta):
+    """The v0.5.0 migration and required-key installation preserve the same rows."""
+    from delta.tables import DeltaTable
+
+    rt = catalogue_delta
+    rt.seed([released_parent(rt, extension='retained')], legacy=True)
+    rt.upgrade()
+    before = rt.read().collect()
+    rt.enforce_keys()
+    assert rt.read().collect() == before
+    properties = DeltaTable.forPath(rt.spark, rt.path).detail().first()['properties']
+    assert properties['delta.isolationLevel'] == 'Serializable'
+    assert 'delta.constraints.fabricops_primary_key_required' in properties
+    version = rt.version()
+    rt.enforce_keys()
+    assert rt.version() == version
