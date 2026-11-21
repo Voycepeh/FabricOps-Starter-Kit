@@ -512,6 +512,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         reference = actual[("DATA_CATALOGUE", table)]
         assert reference.get("data-kind") == "reference"
         assert reference.find(f"{namespace}path").get("stroke-dasharray") == "1 6"
+        assert reference.find(f"{namespace}path").get("stroke") == "#7C3AED"
     assert actual[("DATA_CATALOGUE", "GUARDRAIL_RESULTS")].get("data-cardinality") == "1-N"
     assert actual[("DATA_CATALOGUE", "DATA_LINEAGE")].get("data-cardinality") == "1-N"
     assert actual[("DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY")].get("data-cardinality") == "1-N"
@@ -522,11 +523,11 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     assert ("PIPELINE_RUN", "GUARDRAIL_RESULTS") in actual
     guardrail = next(node for node in svg_tree.findall(f".//{namespace}a")
                      if node.find(f"{namespace}title").text == "Open metadata documentation: GUARDRAIL_RESULTS")
-    assert guardrail.find(f"{namespace}g[@data-key-role='REF']") is None
-    assert guardrail.find(f"{namespace}g[@data-key-role='FK']").get("data-key-fields") == expected_key
+    assert guardrail.find(f"{namespace}g[@data-key-role='FK']") is None
+    assert guardrail.find(f"{namespace}g[@data-key-role='REF']").get("data-key-fields") == expected_key
     lineage = next(node for node in svg_tree.findall(f"{namespace}a")
                    if node.find(f"{namespace}title").text == "Open metadata documentation: DATA_LINEAGE")
-    assert [group.get("data-key-fields") for group in lineage.findall(f"{namespace}g[@data-key-role='FK']")] == [
+    assert [group.get("data-key-fields") for group in lineage.findall(f"{namespace}g[@data-key-role='REF']")] == [
         "source_asset_workspace_id,source_table_id,source_asset_type",
         "target_asset_workspace_id,target_table_id,target_asset_type"]
     assert {"target_asset_workspace_id", "target_table_id", "target_asset_type"} <= {node.text for node in lineage.findall(f"{namespace}text")}

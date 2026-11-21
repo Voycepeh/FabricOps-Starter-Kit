@@ -84,5 +84,5 @@
 <text x="1355" y="759" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">DATA_LINEAGE</text>
 <title>Open metadata documentation: DATA_LINEAGE</title>
 </a>
-<text x="35" y="1032" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">PK: primary key · FK: foreign key · Brackets group fields · Dotted: asset reference · Dashed: operation participation · Key references are application-level · Delta tables commit independently</text>
+<text x="35" y="1032" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">PK: primary key · FK: foreign key · Ref: Catalogue reference · Brackets group fields · Dotted: asset reference · Dashed: operation participation · Key references are application-level · Delta tables commit independently</text>
 </svg>

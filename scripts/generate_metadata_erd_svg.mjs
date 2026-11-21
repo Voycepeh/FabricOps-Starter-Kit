@@ -90,8 +90,8 @@ function renderMetadataSvg(layout, models) {
       ["PK", groupedPrimary ? model.primary_key : [], 0, "Composite primary key"],
       ["FK", catalogueReference, keys.length, "Composite foreign key to DATA_CATALOGUE, checked by FabricOps"],
       ["FK", operationReference, keys.length, "Catalogue asset key within each operations[] entry; application-level reference, not a Delta constraint"],
-      ["FK", resultReference, keys.length, "Optional physical Catalogue asset reference when resolved; results do not require a separate Catalogue parent check"],
-      ...lineageReferences.map((fields, index) => ["FK", fields, keys.length + index * 3,
+      ["REF", resultReference, keys.length, "Optional physical Catalogue asset reference when resolved; results do not require a separate Catalogue parent check"],
+      ...lineageReferences.map((fields, index) => ["REF", fields, keys.length + index * 3,
         `${index === 0 ? "Source" : "Target"} physical Catalogue asset key; join workspace, table and asset type together`]),
     ];
     for (const [kind, groupFields, firstRow, title] of groups) {
@@ -100,7 +100,7 @@ function renderMetadataSvg(layout, models) {
       const firstBaseline = y + 57 + firstRow * rowSpacing;
       const lastBaseline = firstBaseline + (groupFields.length - 1) * rowSpacing;
       const mid = (firstBaseline + lastBaseline) / 2;
-      lines += `\n<g data-key-role="${kind}" data-key-fields="${esc(groupFields.join(","))}"><title>${title}</title><path d="M${x+45} ${firstBaseline-10}H${x+39}V${lastBaseline+4}H${x+45}" fill="none" stroke="${color}"/><text x="${x+13}" y="${mid}" fill="${color}" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">${kind}</text></g>`;
+      lines += `\n<g data-key-role="${kind}" data-key-fields="${esc(groupFields.join(","))}"><title>${title}</title><path d="M${x+45} ${firstBaseline-10}H${x+39}V${lastBaseline+4}H${x+45}" fill="none" stroke="${color}"/><text x="${x+13}" y="${mid}" fill="${color}" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">${kind === "REF" ? "Ref" : kind}</text></g>`;
     }
     block=block.replace(/^<text (?![^>\n]*fill="white")[^\n]*\n/gm,"");
     if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#2563EB" font-size="12" font-family="Segoe UI, Arial, sans-serif">Engineering deployment evidence</text>`;
@@ -157,7 +157,7 @@ function renderMetadataSvg(layout, models) {
     const [from,to,card,kind,d,p0,p1,label]=r;
     const referenceFields = from === "DATA_CATALOGUE" ? models[to].catalogue_reference_fields : [];
     const referenceLabel = referenceFields?.length ? " through " + referenceFields.join(" + ") + " on new records" : "";
-    const color=kind==="logical"?"#7C3AED":"#2563EB";
+    const color=["logical", "reference"].includes(kind)?"#7C3AED":"#2563EB";
     // Explicit orientation follows the first and last path segments.
     const first=d.match(/^M(-?[\d.]+) (-?[\d.]+)([HV])(-?[\d.]+)/);
     const last=d.match(/([HV])(-?[\d.]+)$/);
