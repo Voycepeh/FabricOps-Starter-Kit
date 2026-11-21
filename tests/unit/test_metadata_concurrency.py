@@ -210,7 +210,7 @@ def test_metadata_authoring_destinations_share_one_bounded_retry_budget(monkeypa
     assert all(frame is frames[0] and path == "configured-path" and options["mode"] == ("upsert" if "steward" in destination else "append")
                for frame, path, options in calls)
     if "contract" in destination:
-        assert len(reads) == 2 and len(audits) == 1
+        assert len(reads) == (2 if failure == "transient" else 3) and len(audits) == 1
         assert all(kwargs["context"]["scope_workspace_id"] == "metadata-workspace" for _, kwargs in reads)
         assert frames[0].rows[0]["contract_version"] == 1
         assert frames[0].rows[0]["status"] == "draft"

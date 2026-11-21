@@ -225,6 +225,24 @@ def contract_lifecycle_id(table_id: str) -> str:
     return str(uuid.uuid5(_CONTRACT_NAMESPACE, table))
 
 
+def _clean_authored_payload(payload):
+    """Remove retired execution fields from a newly authored mutable payload in place."""
+    payload.pop("profiling", None)
+    for name in ("processing", "processing_source", "scheduled_refresh"):
+        payload.get("table", {}).pop(name, None)
+    payload["guardrails"] = [rule for rule in payload.get("guardrails", [])
+                             if rule.get("guardrail_type") != "source_drift"]
+    return payload
+
+
+def _draft_revision_condition(draft):
+    """Compare the exact saved draft revision inside both Save and Freeze transactions."""
+    digest = hashlib.sha256(str(draft.get("contract_payload_json") or "").encode("utf-8")).hexdigest()
+    activity = draft.get("_activity_id")
+    activity_condition = "target._activity_id IS NULL" if activity is None else f"target._activity_id = {_sql_literal(str(activity))}"
+    return f"target.status = 'draft' AND {activity_condition} AND sha2(target.contract_payload_json, 256) = '{digest}'"
+
+
 def create_contract_draft(
     *, table_id: str | None = None, file_source: Mapping[str, Any] | None = None,
     config: Any, active_workspace_id: str, spark_session: Any,
@@ -234,7 +252,8 @@ def create_contract_draft(
     """Create or reopen one mutable table or file dataset draft without processing.
 
     File sources require a validated physical selector and an explicitly observed
-    schema; they use table_id and asset_type=FILE.
+    schema; they use table_id and asset_type=FILE. Competing creators reopen the
+    draft admitted by the canonical primary-key transaction without replaying writes.
     """
     if file_source is not None:
         if table_id:
@@ -248,15 +267,16 @@ def create_contract_draft(
         "config": config, **dict(context or {}), "scope_workspace_id": routing_workspace_id,
         "_fabricops_suppress_io_log": True,
     }
-    catalogue_rows = read_lakehouse_table(
-        "METADATA_DATA_CATALOGUE", store=store,
-        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
-        context={**runtime_context, "_spark_session": spark_session},
-    )
     kind, identity, workspace = (
         ("FILE", file_source["table_id"], file_source["asset_workspace_id"]) if file_source is not None
         else ("TABLE", str(table_id).strip(), active_workspace_id)
     )
+    catalogue_rows = _scoped_rows(read_lakehouse_table(
+        "METADATA_DATA_CATALOGUE", store=store,
+        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
+        context={**runtime_context, "_spark_session": spark_session},
+    ), f"asset_workspace_id = {_sql_literal(workspace)}", f"table_id = {_sql_literal(identity)}",
+        f"asset_type = {_sql_literal(kind)}")
     table = next((row for row in current_catalogue_observations(catalogue_rows)
                   if (row.get("asset_type"), row.get("table_id"), row.get("asset_workspace_id")) == (kind, identity, workspace)), None)
     if table is None:
@@ -265,10 +285,10 @@ def create_contract_draft(
     if observed_columns is None:
         raise ValueError(f"Catalogue {kind} {identity!r} needs an observed schema before drafting a Data Contract.")
 
-    rows = row_dicts(read_lakehouse_table(
+    rows = _scoped_rows(read_lakehouse_table(
         DATA_CONTRACT_TABLE, store=store, schema=schema,
-        context={**(runtime_context or {}), "_spark_session": spark_session},
-    ))
+        context={**runtime_context, "_spark_session": spark_session},
+    ), f"contract_id = {_sql_literal(lifecycle_id)}")
     owned = [
         row for row in rows
         if str(row.get("contract_id") or "") == lifecycle_id
@@ -349,12 +369,8 @@ def create_contract_draft(
         payload["table"]["table_id"] = identity
         payload["table"]["asset_type"] = "FILE"
         payload["table"]["store_type"] = "file"
-    payload.pop("profiling", None)
-    payload["guardrails"] = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
+    _clean_authored_payload(payload)
     payload_table_name = str(payload.get("table", {}).get("table_name") or "")
-    payload["table"].pop("processing", None)
-    payload["table"].pop("processing_source", None)
-    payload["table"].pop("scheduled_refresh", None)
     for item in [*payload["enrichment"].get("table", []), *payload["enrichment"].get("columns", [])]:
         item["contract_id"] = lifecycle_id
         item["contract_version"] = version
@@ -379,14 +395,24 @@ def create_contract_draft(
     })
     frame = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE])
     write_options = {"store": store, "schema": schema, "context": runtime_context, "mode": "append"}
-    if store == "Metadata":
-        # Canonical appends already own their retry budget in foundational I/O.
-        write_lakehouse_table(frame, DATA_CONTRACT_TABLE, **write_options)
-    else:
-        # Alternate authoring stores still contain metadata. Retry the fixed
-        # append, never draft discovery/version selection or the whole workflow.
-        _, _, _, path = resolve_configured_lakehouse_table(store, DATA_CONTRACT_TABLE, schema, context=runtime_context)
-        write_metadata_frame(frame, path, DATA_CONTRACT_TABLE)
+    try:
+        if store == "Metadata":
+            write_lakehouse_table(frame, DATA_CONTRACT_TABLE, **write_options)
+        else:
+            _, _, _, path = resolve_configured_lakehouse_table(store, DATA_CONTRACT_TABLE, schema, context=runtime_context)
+            write_metadata_frame(frame, path, DATA_CONTRACT_TABLE)
+    except Exception:
+        # Canonical primary-key transactions admit one creator. Reopen its draft
+        # after contention or a lost acknowledgement; never replay the append.
+        matches = contract_version_records(_scoped_rows(read_lakehouse_table(
+            DATA_CONTRACT_TABLE, store=store, schema=schema,
+            context={**runtime_context, "_spark_session": spark_session},
+        ), f"contract_id = {_sql_literal(lifecycle_id)}", f"contract_version = {version}"),
+            contract_id=lifecycle_id, contract_version=version, workspace_id=active_workspace_id)
+        if len(matches) == 1 and str(matches[0].get("status") or "").lower() == "draft":
+            return dict(matches[0])
+        raise
+
     return row
 
 def _sql_literal(value: Any) -> str:
@@ -641,10 +667,7 @@ def save_contract_draft(
     canonical["format_version"] = 2
     if isinstance(canonical.get("table"), dict):
         canonical["table"]["asset_type"] = draft.get("asset_type") or "TABLE"
-    canonical.get("table", {}).pop("processing", None)
-    canonical.get("table", {}).pop("processing_source", None)
-    canonical.pop("profiling", None)
-    canonical["guardrails"] = [rule for rule in canonical.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
+    _clean_authored_payload(canonical)
     canonical["contract"] = {
         "contract_id": contract_id,
         "contract_version": contract_version,
@@ -700,12 +723,6 @@ def save_contract_draft(
     validate_metadata_merge(DATA_CONTRACT_TABLE, frame, path)
     # Keep the revision check in the MERGE itself so concurrent writers
     # cannot win a race between preflight and publication.
-    prior_payload_digest = hashlib.sha256(str(draft.get("contract_payload_json") or "").encode("utf-8")).hexdigest()
-    prior_activity = draft.get("_activity_id")
-    activity_condition = (
-        "target._activity_id IS NULL" if prior_activity is None
-        else f"target._activity_id = {_sql_literal(str(prior_activity))}"
-    )
     (
         retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path)
         .alias("target")
@@ -714,11 +731,7 @@ def save_contract_draft(
             "target.contract_id = source.contract_id "
             "AND target.contract_version = source.contract_version",
         )
-        .whenMatchedUpdateAll(condition=(
-            "target.status = 'draft' AND "
-            + activity_condition
-            + f" AND sha2(target.contract_payload_json, 256) = '{prior_payload_digest}'"
-        ))
+        .whenMatchedUpdateAll(condition=_draft_revision_condition(draft))
         .execute())
     )
     return _confirm_contract_mutation(
@@ -1546,11 +1559,7 @@ def freeze_contract_record(
         raise ValueError("Save the Data Contract draft before freezing it.")
     payload = json.loads(json.dumps(payload))
     payload["format_version"] = 2
-    payload.get("table", {}).pop("processing", None)
-    payload.get("table", {}).pop("processing_source", None)
-    payload.get("table", {}).pop("scheduled_refresh", None)
-    payload.pop("profiling", None)
-    payload["guardrails"] = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
+    _clean_authored_payload(payload)
     if draft.get("asset_type") == "FILE" and payload.get("source", {}).get("table_id") != draft["table_id"]:
         raise ValueError("Frozen file source identity must match the draft row.")
     validate_contract_definitions(payload)
@@ -1681,9 +1690,7 @@ def assemble_contract_payload(
         },
         "guardrails": guardrail_docs,
     }
-    payload["table"].pop("processing", None)
-    payload["table"].pop("processing_source", None)
-    payload["table"].pop("scheduled_refresh", None)
+    _clean_authored_payload(payload)
     if draft_payload.get("source") is not None:
         payload["source"] = dict(draft_payload["source"])
         if payload["source"].get("asset_type") == "FILE":
@@ -1713,7 +1720,7 @@ def freeze_contract(
     schema: str | None = None,
     metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
-    """Freeze one already-saved draft; its governed JSON becomes immutable."""
+    """Freeze the exact saved revision; reject stale authors without replacing newer edits."""
     from delta.tables import DeltaTable
     from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table
 
@@ -1760,7 +1767,7 @@ def freeze_contract(
             "target.contract_id = source.contract_id AND "
             "target.contract_version = source.contract_version",
         )
-        .whenMatchedUpdateAll(condition="target.status = 'draft'")
+        .whenMatchedUpdateAll(condition=_draft_revision_condition(draft))
         .execute())
     )
     frozen = _confirm_contract_mutation(

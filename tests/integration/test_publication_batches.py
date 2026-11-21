@@ -90,7 +90,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
     reader = import_module('fabricops_kit.pipeline.pipeline_read')
     monkeypatch.setattr(reader, 'table_catalogue_observation', lambda *args, **kw: {})
     monkeypatch.setattr(reader, 'merge_catalogue_asset', lambda *args, **kw: None)
-    monkeypatch.setattr(shared, 'record_pipeline_publication', lambda **kw: None)
+    monkeypatch.setattr(shared, 'record_pipeline_publication', lambda *args, **kw: None)
     monkeypatch.setattr(shared, '_merge_source_observation_records', merge_metadata)
     monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: None)
     monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda store, name, schema, **kw: (store, name, schema, str(tmp_path / name)))

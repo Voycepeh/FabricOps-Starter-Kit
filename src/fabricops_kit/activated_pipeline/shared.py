@@ -320,8 +320,8 @@ def read_activation_history(*, context, spark_session=None):
     return validate_activations(metadata_records(ACTIVATION_TABLE, context=context, spark_session=spark_session))
 
 
-def replace_metadata_transaction(txn, source_files, rows, *, schema, spark_session, path, marker):
-    """Commit a pinned whole-table read and exact replacement, including phantom detection.
+def replace_metadata_transaction(txn, source_files, rows, *, schema, spark_session, path, marker, expected_rows=None):
+    """Replace selected files under the pinned read set and verify the complete committed version.
 
     Reuse the existing Delta optimistic transaction protocol. Never retry a stale
     human approval. Lost acknowledgements are resolved against a unique commit
@@ -356,19 +356,28 @@ def replace_metadata_transaction(txn, source_files, rows, *, schema, spark_sessi
             raise
         version = matches[0]
     actual = spark.read.format("delta").option("versionAsOf", version).load(path)
-    if actual.schema.simpleString() != frame.schema.simpleString() or sorted(
+    expected = frame if expected_rows is None else spark.createDataFrame(expected_rows, schema)
+    if actual.schema.simpleString() != expected.schema.simpleString() or sorted(
             canonical_pipeline_json(pipeline_record_content(row.asDict(recursive=True))) for row in actual.collect()) != sorted(
-            canonical_pipeline_json(pipeline_record_content(row.asDict(recursive=True))) for row in frame.collect()):
+            canonical_pipeline_json(pipeline_record_content(row.asDict(recursive=True))) for row in expected.collect()):
         raise RuntimeError("Metadata transaction committed but exact readback failed; inspect the committed version.")
     return version
 
 
 def mutate_metadata(table, mutation, *, context, spark_session=None, operation_id=None):
-    """Apply a conditional mutation to the exact version tracked by Delta's read set."""
+    """Validate global Governance invariants while rewriting only files with changed rows.
+
+    The whole-table read set intentionally retains phantom detection for global
+    notebook, physical-alias and operation-ID uniqueness. Unchanged history files
+    remain in place; appending a decision or first promotion writes new files only.
+    """
     spark = get_spark_session(spark_session, context=context)
     path = metadata_path(table, context=context)
     schema = metadata_table_schema_registry()[table]
     from fabricops_kit.io.shared import validate_metadata_primary_key
+    from fabricops_kit.config.metadata_schemas import METADATA_PRIMARY_KEYS
+    from pyspark.sql import functions as F
+    from urllib.parse import unquote, urlsplit
 
     def attempt():
         log = spark._jvm.org.apache.spark.sql.delta.DeltaLog.forTable(spark._jsparkSession, path)
@@ -377,7 +386,18 @@ def mutate_metadata(table, mutation, *, context, spark_session=None, operation_i
         files = txn.filterFiles()
         if json.loads(txn.metadata().json())["metaData"]["configuration"].get("delta.isolationLevel") != "Serializable":
             raise ValueError("Governance mutations require Serializable Delta isolation; run fresh setup.")
-        previous = [row.asDict(recursive=True) for row in spark.read.format("delta").option("versionAsOf", int(txn.readVersion())).load(path).collect()]
+        pinned = spark.read.format("delta").option("versionAsOf", int(txn.readVersion())).load(path)
+        physical_rows = [row.asDict(recursive=True) for row in
+                         pinned.withColumn("_fabricops_file", F.input_file_name()).collect()]
+        keys = METADATA_PRIMARY_KEYS[table]
+        root = unquote(urlsplit(path).path).rstrip("/") + "/"
+        locations, previous = {}, []
+        for row in physical_rows:
+            filename = unquote(urlsplit(row.pop("_fabricops_file")).path)
+            if not filename.startswith(root):
+                raise RuntimeError("Governance row is outside the pinned Delta table; mutation refused.")
+            locations[tuple(row[name] for name in keys)] = filename[len(root):]
+            previous.append(row)
         validate_metadata_primary_key(table, previous)
         if table == REGISTRY_TABLE:
             validate_registry(previous)
@@ -393,8 +413,21 @@ def mutate_metadata(table, mutation, *, context, spark_session=None, operation_i
             return result
         rows = [coerce_metadata_row_types(table, row) for row in proposed] if table else proposed
         validate_metadata_primary_key(table, rows)
-        replace_metadata_transaction(txn, files, rows, schema=schema, spark_session=spark, path=path,
-            marker={"fabricops_operation_id": operation_id or str(uuid4()), "content_sha256": manifest_digest(rows)})
+        before = {tuple(row[name] for name in keys): row for row in previous}
+        after = {tuple(row[name] for name in keys): row for row in rows}
+        changed_files = {locations[key] for key in before if before[key] != after.get(key)}
+        available = {str(files.apply(index).path()) for index in range(files.size())}
+        if not changed_files <= available:
+            raise RuntimeError("Governance changed files are outside the transaction read set; mutation refused.")
+        selected = spark._jvm.java.util.ArrayList()
+        for index in range(files.size()):
+            if str(files.apply(index).path()) in changed_files:
+                selected.add(files.apply(index))
+        selected = spark._jvm.scala.collection.JavaConverters.asScalaBufferConverter(selected).asScala().toSeq()
+        replacement = [row for key, row in after.items() if key not in before or locations[key] in changed_files]
+        replace_metadata_transaction(txn, selected, replacement, schema=schema, spark_session=spark, path=path,
+            marker={"fabricops_operation_id": operation_id or str(uuid4()), "content_sha256": manifest_digest(rows)},
+            expected_rows=rows)
         return result
 
     return retry_delta_metadata(attempt)

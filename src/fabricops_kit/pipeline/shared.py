@@ -847,41 +847,11 @@ GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 
 
-
-
 # ---------------------------------------------------------------------------
 # Public API layer
 # ---------------------------------------------------------------------------
 
 
-
-
-
-
-
-
-def _result_status(result: Mapping[str, Any] | None) -> str:
-    """Return a normalized guardrail result status."""
-    return str(
-        (result or {}).get("status")
-        or (result or {}).get("freshness_status")
-        or (result or {}).get("stability_status")
-        or "not_run"
-    ).lower()
-
-
-
-def _result_reason(result: Mapping[str, Any] | None) -> str:
-    """Return the clearest human-readable reason from a result."""
-    if not result:
-        return ""
-    return str(
-        result.get("reason")
-        or result.get("message")
-        or result.get("freshness_message")
-        or result.get("stability_message")
-        or ""
-    )
 def observation_rows(dataframe: Any) -> list[dict[str, Any]]:
     """Return canonical observation rows as dictionaries."""
     values = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
@@ -898,7 +868,7 @@ def _latest_source_target_observation(
     """Return the latest committed baseline for one source-to-target relationship."""
     candidates = [
         row
-        for row in _processing_state_rows(history)
+        for row in _processing_state_rows(history, workspace_id=workspace_id, target_table_id=target_table_id)
         if str(row.get("source_table_id") or "") == source_table_id
         and str(row.get("target_table_id") or "") == target_table_id
         and str(row.get("workspace_id") or "") == workspace_id
@@ -932,16 +902,6 @@ def _progress_key(value: Any, *, timestamp: bool = False) -> tuple[int, Any]:
                 )
             return (1, text)
         return (1, parsed.astimezone(UTC))
-
-
-def _looks_like_naive_timestamp(value: Any) -> bool:
-    """Recognize timestamp-shaped strings without assigning them a timezone."""
-    text = str(value or "")
-    try:
-        parsed = datetime.fromisoformat(text)
-    except ValueError:
-        return False
-    return parsed.tzinfo is None and ("T" in text or (len(text) >= 19 and text[10] == " "))
 
 
 def _watermark_timestamp(value: Any) -> str:
@@ -1139,7 +1099,6 @@ def _source_snapshot_state(context):
     """Keep source hash rows distributed and history independent of Pipeline ID."""
     from pyspark.sql import functions as F
     return read_processing_state(context=context).where(F.col("workspace_id") == context["execution_plan"].workspace_id)
-
 
 
 def _source_snapshot_keys(identity, context):
@@ -1653,7 +1612,8 @@ class PublicationBatch:
                 self.receipt, self.already_applied = alias, True
             history = read_processing_state(context=self.context)
             receipts = []
-            history_rows = _processing_state_rows(history)
+            history_rows = _processing_state_rows(history,
+                workspace_id=self.context["scope_workspace_id"], target_table_id=self.identity["table_id"])
             for row in history_rows:
                 if (row.get("record_type") != "publication_receipt" or row.get("workspace_id") != self.context["scope_workspace_id"]
                         or row.get("target_table_id") != self.identity["table_id"]):
@@ -1723,7 +1683,8 @@ class PublicationBatch:
                 self.receipt = receipt
                 self.already_applied = True
                 history = read_processing_state(context=self.context)
-                self._freeze_publication_snapshot(_processing_state_rows(history))
+                self._freeze_publication_snapshot(_processing_state_rows(history,
+                    workspace_id=self.context["scope_workspace_id"], target_table_id=self.identity["table_id"]))
                 return
             raise RuntimeError(
                 "Physical publication did not establish the exact batch receipt; "
@@ -1953,8 +1914,8 @@ def read_processing_state(*, context):
         ) from None
 
 
-def _processing_state_rows(history):
-    """Reject unsupported Preview layouts before interpreting any persisted progress."""
+def _processing_state_rows(history, *, workspace_id=None, target_table_id=None):
+    """Collect only one publication scope, retaining all its source and receipt members."""
     required = set(processing_state_schema().fieldNames()) - {"snapshot_payload_json"}
     if hasattr(history, "columns") and (
         required - set(history.columns) or {"observation_status", "publication_payload_json"} & set(history.columns)
@@ -1963,8 +1924,14 @@ def _processing_state_rows(history):
     snapshot_types = {"source_snapshot", "source_row_evidence", "source_drift_baseline", "source_snapshot_acceptance"}
     if hasattr(history, "where"):
         from pyspark.sql import functions as F
+        if workspace_id is not None:
+            history = history.where(F.col("workspace_id") == workspace_id)
+        if target_table_id is not None:
+            history = history.where(F.col("target_table_id") == target_table_id)
         history = history.where(F.col("record_type").isNull() | ~F.col("record_type").isin(*snapshot_types))
-    rows = [row for row in observation_rows(history) if row.get("record_type") not in snapshot_types]
+    rows = [row for row in observation_rows(history) if row.get("record_type") not in snapshot_types
+            and (workspace_id is None or row.get("workspace_id") == workspace_id)
+            and (target_table_id is None or row.get("target_table_id") == target_table_id)]
     for row in rows:
         if ("observation_status" in row or "publication_payload_json" in row
                 or row.get("record_type") not in {"source_observation", "incremental_checkpoint", "drift_baseline", "full_source_baseline", "publication_receipt"}
@@ -2097,7 +2064,7 @@ def _recover_completed_source_observations(
     source_table_id: str, target_table_id: str,
 ) -> list[dict[str, Any]]:
     """Accept an entire staged publication in one Delta transaction after verification."""
-    rows = _processing_state_rows(history)
+    rows = _processing_state_rows(history, workspace_id=active_workspace_id, target_table_id=target_table_id)
     publication_ids = {row.get("publication_id") for row in rows
                        if row.get("workspace_id") == active_workspace_id and row.get("source_table_id") == source_table_id
                        and row.get("target_table_id") == target_table_id and row.get("status") == "staged"}
@@ -2294,8 +2261,6 @@ def incremental_publication_scopes(
         if (workspace_id, activity_id, source_table_id, target_table_id)
         in _INCREMENTAL_SOURCE_SCOPES
     }
-
-
 
 
 def snapshot_pipeline_write_observations(*, workspace_id, activity_id, target_table_id, source_table_ids, context=None):
@@ -2595,7 +2560,6 @@ def _bucket_column(dataframe, *, column_name, parameters):
     return dataframe.withColumn(column_name, F.when(value.isNull(), F.lit(None)).otherwise(bucket))
 
 
-
 def check_sensitive_data_rules(
     dataframe,
     *,
@@ -2849,8 +2813,6 @@ _ACTIVE_RULE_REVIEW_STATUSES = {"authored", "self_approved", "governance_approve
 _BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
 
 
-
-
 STANDARD_DQ_RULE_TYPES = ("completeness", "uniqueness", "value_set", "range", "pattern")
 TABLE_DQ_RULE_TYPES = (
     "column_relationship", "conditional_completeness", "conditional_values",
@@ -2876,220 +2838,6 @@ def dq_tolerance_parameter(rule_type: str, mode: str = "") -> str | None:
     return None
 
 DQ_COMPARISON_OPERATORS = ("=", "!=", ">", ">=", "<", "<=")
-
-_COMPARISON_SCOPES = {"complete", "partitions", "partial"}
-
-def _is_spark_dataframe(dataframe) -> bool:
-    """Return whether a value exposes the Spark DataFrame contract used here."""
-    return dataframe is not None and hasattr(dataframe, "sparkSession") and hasattr(dataframe, "schema")
-
-def _local_source_rows(dataframe) -> list[dict]:
-    """Return local row mappings without accepting Spark DataFrames."""
-    if _is_spark_dataframe(dataframe):
-        raise TypeError("Spark DataFrames must use the distributed changes implementation")
-    if dataframe is None:
-        return []
-    rows = [dataframe] if isinstance(dataframe, dict) else dataframe
-    return [_row_to_dict(row) for row in rows]
-
-def _stable_source_value(value):
-    if isinstance(value, datetime | date):
-        return value.isoformat()
-    if isinstance(value, Decimal):
-        return str(value)
-    if isinstance(value, dict):
-        return {str(key): _stable_source_value(value[key]) for key in sorted(value, key=str)}
-    if isinstance(value, (list, tuple)):
-        return [_stable_source_value(item) for item in value]
-    return value
-
-def _source_hash(payload) -> str:
-    encoded = json.dumps(_stable_source_value(payload), sort_keys=True, separators=(",", ":"), default=str)
-    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
-
-def _validate_changes_configuration(comparison_scope, refresh_days):
-    scope = str(comparison_scope).strip().lower()
-    if scope not in _COMPARISON_SCOPES:
-        raise ValueError("comparison_scope must be one of: complete, partitions, partial")
-    if isinstance(refresh_days, bool):
-        raise ValueError("refresh_days must be a non-negative integer")
-    try:
-        window_days = int(refresh_days)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("refresh_days must be a non-negative integer") from exc
-    if window_days < 0:
-        raise ValueError("refresh_days must be a non-negative integer")
-    return scope, window_days
-
-def _partition_identity(row, partitions):
-    return tuple(row.get(column) for column in partitions) if partitions else ("__FULL_SOURCE__",)
-
-def _validate_local_logical_keys(rows, keys):
-    seen = set()
-    for row in rows:
-        identity = tuple(row.get(column) for column in keys)
-        if any(value is None for value in identity):
-            raise ValueError("logical key columns must not contain null values")
-        key_hash = _source_hash(identity)
-        if key_hash in seen:
-            raise ValueError("logical key columns must uniquely identify rows")
-        seen.add(key_hash)
-
-def _local_partition_observations(rows, partitions, range_column, all_columns):
-    grouped = {}
-    for row in rows:
-        grouped.setdefault(_partition_identity(row, partitions), []).append(row)
-    observations = []
-    for partition, members in sorted(grouped.items(), key=lambda item: str(item[0])):
-        values = [row.get(range_column) for row in members if range_column and row.get(range_column) is not None]
-        row_hashes = sorted(_source_hash([(column, row.get(column)) for column in all_columns]) for row in members)
-        observations.append({
-            "partition": dict(zip(partitions, partition, strict=True)) if partitions else {},
-            "row_count": len(members),
-            "min_value": _stable_source_value(min(values)) if values else None,
-            "max_value": _stable_source_value(max(values)) if values else None,
-            "fingerprint": _source_hash(row_hashes),
-            "_partition_id": _source_hash(partition),
-        })
-    return observations
-
-def _changed_partition_sets(current_observations, previous_observations, scope):
-    current = {item["_partition_id"]: item for item in current_observations}
-    previous = {item["_partition_id"]: item for item in previous_observations}
-    changed = {key for key in current.keys() & previous.keys() if current[key]["fingerprint"] != previous[key]["fingerprint"]}
-    new = current.keys() - previous.keys()
-    missing = previous.keys() - current.keys() if scope == "complete" else set()
-    return changed, set(new), set(missing)
-
-def _classify_change_date(value, recent_start):
-    observed = _coerce_date(value)
-    return "recent" if observed is not None and observed >= recent_start else "historical"
-
-def _local_row_comparison(current, previous, *, relevant_current_partitions, relevant_previous_partitions,
-                          partitions, keys, content_columns, range_column, scope, recent_start):
-    current = [row for row in current if _source_hash(_partition_identity(row, partitions)) in relevant_current_partitions]
-    previous = [row for row in previous if _source_hash(_partition_identity(row, partitions)) in relevant_previous_partitions]
-
-    def keyed(rows):
-        output = {}
-        for row in rows:
-            identity = tuple(row.get(column) for column in keys)
-            if any(value is None for value in identity):
-                raise ValueError("logical key columns must not contain null values")
-            key_hash = _source_hash(identity)
-            if key_hash in output:
-                raise ValueError("logical key columns must uniquely identify rows")
-            output[key_hash] = (row, _source_hash([(column, row.get(column)) for column in content_columns]))
-        return output
-
-    current_by_key, previous_by_key = keyed(current), keyed(previous)
-    inserted = sorted(set(current_by_key) - set(previous_by_key))
-    shared = set(current_by_key) & set(previous_by_key)
-    updated = sorted(key for key in shared if current_by_key[key][1] != previous_by_key[key][1])
-    deletion_allowed = scope in {"complete", "partitions"}
-    deleted = sorted(set(previous_by_key) - set(current_by_key)) if deletion_allowed else []
-    changes = {"inserted": inserted, "updated": updated, "deleted": deleted}
-    recent, historical = [], []
-    for change_type, hashes in changes.items():
-        source = previous_by_key if change_type == "deleted" else current_by_key
-        for key_hash in hashes:
-            classified = {"key_hash": key_hash, "change_type": change_type}
-            if range_column:
-                target = recent if _classify_change_date(source[key_hash][0].get(range_column), recent_start) == "recent" else historical
-                target.append(classified)
-    return changes, recent, historical
-
-def _spark_column(name):
-    from pyspark.sql import functions as F
-    return F.col(f"`{str(name).replace('`', '``')}`")
-
-def _spark_canonical_hash(columns):
-    from pyspark.sql import functions as F
-    struct = F.struct(*[_spark_column(column).alias(str(column)) for column in columns])
-    return F.sha2(F.to_json(struct, {"ignoreNullFields": "false"}), 256)
-
-def _validate_spark_logical_keys(dataframe, keys):
-    from functools import reduce
-    from pyspark.sql import functions as F
-    null_key = reduce(lambda left, right: left | right, [_spark_column(column).isNull() for column in keys])
-    if dataframe.filter(null_key).limit(1).count():
-        raise ValueError("logical key columns must not contain null values")
-    if dataframe.groupBy(*keys).count().filter(F.col("count") > 1).limit(1).count():
-        raise ValueError("logical key columns must uniquely identify rows")
-
-def _spark_partition_frame(dataframe, partitions, range_column, all_columns):
-    from pyspark.sql import functions as F
-    partition_id = _spark_canonical_hash(partitions) if partitions else F.lit(_source_hash(("__FULL_SOURCE__",)))
-    row_hash = _spark_canonical_hash(all_columns)
-    prepared = dataframe.withColumn("__fabricops_partition_id", partition_id).withColumn("__fabricops_row_hash", row_hash)
-    grouping = ["__fabricops_partition_id", *partitions]
-    aggregates = [
-        F.count(F.lit(1)).alias("row_count"),
-        F.min("__fabricops_row_hash").alias("__min_hash"),
-        F.max("__fabricops_row_hash").alias("__max_hash"),
-        F.sum(F.xxhash64("__fabricops_row_hash").cast("decimal(38,0)")).alias("__hash_sum"),
-    ]
-    if range_column:
-        aggregates.extend([F.min(_spark_column(range_column)).alias("min_value"), F.max(_spark_column(range_column)).alias("max_value")])
-    grouped = prepared.groupBy(*grouping).agg(*aggregates)
-    grouped = grouped.withColumn(
-        "fingerprint",
-        F.sha2(F.concat_ws("|", F.col("row_count"), F.col("__min_hash"), F.col("__max_hash"), F.col("__hash_sum")), 256),
-    )
-    return prepared.drop("__fabricops_row_hash"), grouped
-
-def _collect_spark_observations(grouped, partitions):
-    from pyspark.sql import functions as F
-    rows = grouped.select("__fabricops_partition_id", *partitions, "row_count", "min_value" if "min_value" in grouped.columns else F.lit(None).alias("min_value"), "max_value" if "max_value" in grouped.columns else F.lit(None).alias("max_value"), "fingerprint").collect()
-    return [{
-        "partition": {column: _stable_source_value(row[column]) for column in partitions},
-        "row_count": row["row_count"],
-        "min_value": _stable_source_value(row["min_value"]),
-        "max_value": _stable_source_value(row["max_value"]),
-        "fingerprint": row["fingerprint"],
-        "_partition_id": row["__fabricops_partition_id"],
-    } for row in rows]
-
-def _spark_row_comparison(current, previous, *, relevant_current_partitions, relevant_previous_partitions,
-                          keys, content_columns, range_column, scope, recent_start, include_row_changes):
-    from pyspark.sql import functions as F
-    current = current.filter(F.col("__fabricops_partition_id").isin(sorted(relevant_current_partitions)))
-    previous = previous.filter(F.col("__fabricops_partition_id").isin(sorted(relevant_previous_partitions)))
-    current = current.withColumn("key_hash", _spark_canonical_hash(keys)).withColumn("non_key_hash", _spark_canonical_hash(content_columns))
-    previous = previous.withColumn("key_hash", _spark_canonical_hash(keys)).withColumn("non_key_hash", _spark_canonical_hash(content_columns))
-    for dataframe in (current, previous):
-        if dataframe.groupBy("key_hash").count().filter(F.col("count") > 1).limit(1).count():
-            raise ValueError("logical key columns must uniquely identify rows")
-    current_rows = current.select("key_hash", "non_key_hash", *([_spark_column(range_column).alias("range_value")] if range_column else [F.lit(None).alias("range_value")]))
-    previous_rows = previous.select("key_hash", "non_key_hash", *([_spark_column(range_column).alias("range_value")] if range_column else [F.lit(None).alias("range_value")]))
-    joined = current_rows.alias("c").join(previous_rows.alias("p"), "key_hash", "full_outer")
-    deletion_allowed = scope in {"complete", "partitions"}
-    classified = joined.withColumn("change_type", F.when(F.col("p.non_key_hash").isNull(), "inserted").when(F.col("c.non_key_hash").isNull() & F.lit(deletion_allowed), "deleted").when(F.col("c.non_key_hash") != F.col("p.non_key_hash"), "updated"))
-    classified = classified.filter(F.col("change_type").isNotNull())
-    change_date = F.coalesce(F.col("c.range_value"), F.col("p.range_value")).cast("date")
-    classified = classified.withColumn("age_class", F.when(change_date >= F.lit(recent_start), "recent").otherwise("historical") if range_column else F.lit(None).cast("string"))
-    counts = {row["change_type"]: row["count"] for row in classified.groupBy("change_type").count().collect()}
-    ages = {row["age_class"]: row["count"] for row in classified.filter(F.col("age_class").isNotNull()).groupBy("age_class").count().collect()}
-    row_changes = {"inserted": [], "updated": [], "deleted": [], "recent": [], "historical": []}
-    if include_row_changes:
-        for row in classified.select("key_hash", "change_type", "age_class").collect():
-            row_changes[row["change_type"]].append(row["key_hash"])
-            if row["age_class"]:
-                row_changes[row["age_class"]].append({"key_hash": row["key_hash"], "change_type": row["change_type"]})
-    return counts, ages, row_changes
-
-def _strip_internal_observation_fields(observations):
-    return [{key: value for key, value in item.items() if not key.startswith("_")} for item in observations]
-
-def _changes_content_columns(columns, keys, non_key_columns):
-    """Resolve the business content columns used for comparison."""
-    if non_key_columns is not None:
-        return tuple(non_key_columns)
-    return tuple(
-        column
-        for column in columns
-        if column not in keys
-    )
 
 
 def _rule_review_status(row: dict) -> str:
@@ -3156,7 +2904,6 @@ def _contract_payload(row: dict[str, Any]) -> dict[str, Any]:
     if str(table.get("table_id") or "") != str(row.get("table_id") or ""):
         raise ValueError("Active Data Contract payload table_id does not match its version row.")
     return payload
-
 
 
 def resolve_data_contract_version(
@@ -3925,7 +3672,6 @@ def select_table_guardrail_rule(rules_df, *, guardrail_type: str, table_id: str,
     )
 
 
-
 def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
     if rule and _rule_review_status(rule) == "active_pending_governance_review":
         reason = str(result.get("reason") or result.get("message") or "")
@@ -4009,11 +3755,6 @@ def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
 
     columns = [str(column) for column in getattr(df, "columns", [])]
     return columns, {}
-
-
-
-
-
 
 
 _SCHEMA_PRESETS = {"strict", "allow_new_columns", "monitor_only"}
@@ -4173,7 +3914,6 @@ def _row_to_dict(row) -> dict:
     if hasattr(row, "asDict"):
         return row.asDict(recursive=True)
     return {name: getattr(row, name) for name in dir(row) if not name.startswith("_")}
-
 
 
 def _max_column_value(dataframe, column_name: str, *, config=None):
@@ -4433,7 +4173,6 @@ def _catalogue_value(row: dict, *names: str):
 
 def _string_value(value) -> str:
     return "" if value is None else str(value)
-
 
 
 def stop_if_failed(result) -> None:
@@ -7584,12 +7323,10 @@ def start_pipeline_session(pipeline_mode, *, inspector=None):
         raise
 
 
-
 def build_pipeline_audit_fields(*, config=None, active_workspace_id=None, runtime_context=None):
     """Allow absent notebook audit fields only for nonpersisting Dry Run diagnostics."""
     return build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context,
         require_notebook_identity=persistence_permitted(runtime_context))
-
 
 
 PROFILING_ACTIVITIES = ("standard", "grain", "frequency")
@@ -8057,11 +7794,6 @@ PROFILED_COLUMNS = metadata_table_schema_registry()[PROFILED_TABLE].fieldNames()
 
 
 PROFILED_FREQUENCY_COLUMNS = metadata_table_schema_registry()[PROFILED_FREQUENCY_TABLE].fieldNames()
-
-
-
-
-LOAD_STRATEGIES = {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}
 
 
 _PROFILE_EXCLUDED_NAMES = {
@@ -8550,128 +8282,6 @@ def _warehouse_profile_key_candidates(
         if matches:
             return matches
     return []
-
-
-def _require_non_empty_string(value: Any, name: str) -> str:
-    """Return a stripped required string or raise a clear validation error."""
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{name} must be a non-empty string.")
-    return value.strip()
-
-
-def _normalize_choice(value: Any, name: str, allowed: set[str]) -> str:
-    """Return a normalized allowed choice or raise a clear validation error."""
-    normalized = _require_non_empty_string(value, name).lower()
-    if normalized not in allowed:
-        choices = ", ".join(sorted(allowed))
-        raise ValueError(f"{name} must be one of: {choices}.")
-    return normalized
-
-
-def _processing_definition(
-    profile_role: str,
-    load_strategy: Any,
-    load_strategy_parameters: Any,
-) -> tuple[str | None, str | None]:
-    """Validate and canonically serialize one table-owned processing definition."""
-    supplied = load_strategy is not None or load_strategy_parameters is not None
-    if profile_role == "source":
-        if supplied:
-            raise ValueError("Source registration does not accept target processing arguments.")
-        return None, None
-    if load_strategy is None:
-        if load_strategy_parameters is not None:
-            raise ValueError("load_strategy is required when load_strategy_parameters is supplied.")
-        return None, None
-    strategy = _normalize_choice(load_strategy, "load_strategy", LOAD_STRATEGIES)
-    if load_strategy_parameters is None:
-        parameters: dict[str, Any] = {}
-    elif not isinstance(load_strategy_parameters, dict):
-        raise ValueError("load_strategy_parameters must be a mapping when supplied.")
-    else:
-        parameters = dict(load_strategy_parameters)
-    allowed = {
-        "overwrite": {"watermark_column"},
-        "append_all": {"watermark_column"},
-        "append_new_only": {"watermark_column"},
-        "scd1": {"key_columns", "watermark_column"},
-        "scd2": {"key_columns", "effective_column", "tracked_columns", "watermark_column"},
-    }[strategy]
-    unexpected = sorted(set(parameters) - allowed)
-    if unexpected:
-        raise ValueError(f"{strategy} does not accept processing parameters: {', '.join(unexpected)}.")
-    for name in ("key_columns", "tracked_columns"):
-        if name in parameters:
-            values = parameters[name]
-            if not isinstance(values, (list, tuple)) or not values:
-                raise ValueError(f"{name} must be a non-empty sequence of column names.")
-            parameters[name] = [_require_non_empty_string(value, name) for value in values]
-    for name in ("effective_column", "watermark_column"):
-        if name in parameters:
-            parameters[name] = _require_non_empty_string(parameters[name], name)
-    if strategy in {"scd1", "scd2"} and "key_columns" not in parameters:
-        raise ValueError(f"{strategy} requires key_columns.")
-    if strategy == "scd2" and "effective_column" not in parameters:
-        raise ValueError("scd2 requires effective_column.")
-    return strategy, json.dumps(parameters, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-
-
-def _validate_processing_columns(df: Any, parameters_json: str | None) -> None:
-    """Require every authored processing column name to exist in the target schema."""
-    if parameters_json is None:
-        return
-    parameters = json.loads(parameters_json)
-    available = {str(field.name) for field in df.schema.fields}
-    referenced = []
-    for name in ("effective_column", "watermark_column"):
-        if parameters.get(name):
-            referenced.append(str(parameters[name]))
-    for name in ("key_columns", "tracked_columns"):
-        referenced.extend(str(value) for value in parameters.get(name, []))
-    missing = sorted(set(referenced) - available)
-    if missing:
-        raise ValueError(f"Processing definition references columns not present in df: {', '.join(missing)}.")
-
-
-def _validate_resolved_identity(table: Any, *, config: Any, active_workspace_id: str) -> dict[str, str | None]:
-    """Validate a caller-supplied identity against the active Fabric config."""
-    if not isinstance(table, Mapping):
-        raise ValueError("table must be a canonical table identity mapping.")
-    required = {"table_id", "store", "schema", "table_name", "store_kind"}
-    missing = sorted(required - set(table))
-    if missing:
-        raise ValueError(f"table identity is missing required fields: {', '.join(missing)}.")
-    resolved = resolve_physical_table_identity(
-        config,
-        active_workspace_id,
-        store=table["store"],
-        schema=table["schema"],
-        table_name=table["table_name"],
-    )
-    supplied = {name: table[name] for name in required}
-    if supplied != resolved:
-        raise ValueError(
-            "table identity is inconsistent with the canonical identity resolved from the active Fabric config."
-        )
-    return resolved
-
-
-def _validate_frequency_profile_dataframe(source_df, frequency_profile_df, selected_columns: Sequence[str]):
-    """Return the frequency DataFrame after validating caller-provided scope."""
-    if frequency_profile_df is None:
-        return source_df, "full_source"
-    source_session = getattr(source_df, "sparkSession", None)
-    frequency_session = getattr(frequency_profile_df, "sparkSession", None)
-    if source_session is not None and frequency_session is not None and source_session is not frequency_session:
-        raise ValueError("frequency_profile_df must use the same Spark session as df.")
-    fields = getattr(getattr(frequency_profile_df, "schema", None), "fields", None)
-    if fields is None:
-        raise ValueError("frequency_profile_df must be a Spark DataFrame-like object with a schema.")
-    available_columns = {field.name for field in fields}
-    missing_columns = [column for column in selected_columns if column not in available_columns]
-    if missing_columns:
-        raise ValueError(f"frequency_profile_df is missing selected frequency columns: {', '.join(missing_columns)}")
-    return frequency_profile_df, "caller_provided"
 
 
 def _scalar_frequency_columns(df, candidate_columns: Sequence[str]) -> list[str]:
