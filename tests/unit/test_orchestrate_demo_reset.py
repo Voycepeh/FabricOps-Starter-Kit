@@ -24,10 +24,11 @@ def _environment(monkeypatch):
     setup = SimpleNamespace(workspace_id='dev', readiness_status='ready', paths=stores)
     config = SimpleNamespace(path_config=SimpleNamespace(paths={'dev': stores, 'governance': {'Metadata': stores['Metadata']}}))
     runtime = {'_notebook_setup': {'config': config, 'scope_workspace_id': 'dev', 'result': setup}}
-    def read(table, **kwargs):
-        return SimpleNamespace(schema=registry[table], count=lambda: len(rows[table]),
-            toLocalIterator=lambda: iter([SimpleNamespace(asDict=lambda recursive=True, r=row: r) for row in rows[table]]),
-            collect=lambda: rows[table], select=lambda *a: SimpleNamespace(distinct=lambda: SimpleNamespace(collect=lambda: [])))
+    def read(table, selected=None, **kwargs):
+        values = rows[table] if selected is None else selected
+        return SimpleNamespace(where=lambda predicate: read(table, [r for r in values if r.get("lineage_version") == 1]),schema=registry[table], count=lambda: len(values),
+            toLocalIterator=lambda: iter([SimpleNamespace(asDict=lambda recursive=True, r=row: r) for row in values]),
+            collect=lambda: values, select=lambda *a: SimpleNamespace(distinct=lambda: SimpleNamespace(collect=lambda: [])))
     def request(method, path):
         if path.endswith('/notebooks') or path.endswith('/jobs/instances'):
             return {'value': []}
@@ -61,8 +62,11 @@ def _ready(monkeypatch):
     def clear(self, counts, order):
         for table in order:
             print(f'{table}: removed {len(env.rows[table])}')
-            if env.rows[table]: env.removed.append(table)
-            env.rows[table].clear()
+            if counts[table]: env.removed.append(table)
+            if table == 'METADATA_DATA_LINEAGE':
+                env.rows[table][:] = [r for r in env.rows[table] if r.get('lineage_version') != 1]
+            else:
+                env.rows[table].clear()
     monkeypatch.setattr(API, '_demo_clear_metadata', clear)
     return env
 
@@ -307,7 +311,8 @@ def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
 
 def test_true_clears_all_tables_children_first_and_repeated_reset_is_safe(monkeypatch, capsys):
     env = _ready(monkeypatch)
-    for table in env.rows: env.rows[table] = [{'table_id': 'orders'}]
+    for table in env.rows:
+        env.rows[table] = [{'table_id': 'orders', **({'lineage_version': 1} if table == 'METADATA_DATA_LINEAGE' else {})}]
     API.orchestrate_demo_reset(reset=True)
     assert not any(env.rows.values())
     assert set(env.removed) == {*CANONICAL_METADATA_TABLES, API._DEMO_PROCESSING_STATE}

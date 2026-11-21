@@ -243,10 +243,11 @@ def test_runtime_without_jvm_plan_records_unknown(tracked):
     assert graph['outputs'][0]['gaps'] == ['plan_access_unavailable']
 
 
-def test_run_finalization_retains_graph_and_projection_status(runtime, spark_session):
+def test_run_finalization_retains_graph_and_projection_status(runtime, spark_session, monkeypatch):
     """Persist the captured graph through the actual Run journal and failure finalization."""
     from fabricops_kit.pipeline import shared
     make, operation, saved, _, _ = runtime
+    monkeypatch.setattr(shared, "publish_column_lineage", lambda run, **kw: {"status": "published", "row_count": len(shared.column_lineage_rows(run)), "source_run_sha256": shared._metadata_hash(shared._column_lineage_snapshot(run))})
     plan = make(mode='ungoverned', roles=('source', 'target'))
     operation(plan, 0)
     a = spark_session.createDataFrame([(1, 5)], 'id long, amount long')
@@ -261,7 +262,7 @@ def test_run_finalization_retains_graph_and_projection_status(runtime, spark_ses
     assert retained['operations'][1]['lineage']['status'] == 'complete'
     rows = lineage.column_lineage_rows(record)
     assert any(row['source_table_id'] == 'table0' and row['source_column_name'] == 'amount'
-               and row['target_column_name'] == 'result' and 'VALUE' in row['dependency_types'] for row in rows)
+               and row['target_column_name'] == 'result' and row['dependency_type'] == 'VALUE' for row in rows)
     assert all(row['run_id'] == plan.plan_id and row['publication_status'] == 'published' for row in rows)
 
 
@@ -315,3 +316,54 @@ def test_source_registry_limit_cannot_erase_a_conflicting_identity(tracked):
     assert len(tracker.reads) == 128
     assert graph['status'] == 'unknown' and graph['gaps'] == ['lineage_limit']
     assert roots(graph, 'id') == set()
+
+
+def test_physical_fact_grain_is_scalar_and_json_rebuild_is_stable(runtime, spark_session):
+    """Each role gets a distinct scalar fact; raw Run JSON produces identical identities/hashes."""
+    from fabricops_kit.config.metadata_schemas import encode_metadata_row
+    make, operation, _, _, _ = runtime
+    plan = make(mode='ungoverned', roles=('source', 'target'))
+    source = spark_session.createDataFrame([(12,)], 'amount long')
+    lineage.register_read_lineage(plan, {'table_id': 'table0', 'dataframe': source})
+    operation(plan, 0)
+    operation(plan, 1)
+    lineage.capture_write_lineage(source.where('amount > 5').selectExpr('amount * 2 AS total'),
+        context={'execution_plan': plan}, table_id='table1', write_mode='overwrite')
+    plan.evidence['boundary_completed'] = True
+    run = lineage.finalize_pipeline_run(plan, spark_session=spark_session)
+    facts = lineage.column_lineage_rows(run)
+    links = [row for row in facts if row['source_column_name'] == 'amount']
+    assert {row['dependency_type'] for row in links} >= {'VALUE', 'FILTER'}
+    assert len({row['lineage_id'] for row in facts}) == len(facts)
+    assert all(not isinstance(value, (list, dict, tuple)) for row in facts for value in row.values())
+    rebuilt = lineage.column_lineage_rows(encode_metadata_row('METADATA_PIPELINE_RUN', run))
+    assert lineage.pipeline_record_content(rebuilt) == lineage.pipeline_record_content(facts)
+
+
+def test_closed_session_can_retry_projection_without_replaying_run(runtime, spark_session, monkeypatch):
+    """The public retry path works after close() has sealed the committed Run."""
+    from fabricops_kit import finalize_pipeline
+    make, operation, saved, writes, _ = runtime
+    plan = make(mode='ungoverned', roles=('source', 'target'))
+    operation(plan, 0)
+    operation(plan, 1)
+    lineage.capture_write_lineage(spark_session.range(1), context={'execution_plan': plan},
+        table_id='table1', write_mode='overwrite')
+    plan.evidence['boundary_completed'] = True
+    attempts = []
+    def publish(run, **kwargs):
+        attempts.append(run['run_id'])
+        if len(attempts) == 1:
+            raise PermissionError('test denial')
+        return {'status': 'published', 'row_count': 1,
+                'source_run_sha256': lineage._metadata_hash(lineage._column_lineage_snapshot(run))}
+    monkeypatch.setattr(lineage, 'publish_column_lineage', publish)
+    session = lineage.PipelineSession(plan, spark_session)
+    with pytest.raises(RuntimeError, match='Run .* is committed.*lineage projection failed'):
+        session.close()
+    assert session.closed and plan.evidence['sealed']
+    before = len(writes)
+    result = finalize_pipeline(session)
+    assert result['lineage_projection']['status'] == 'published'
+    assert len(writes) == before and attempts == [plan.plan_id, plan.plan_id]
+    assert saved[plan.plan_id]['status'] == 'ungoverned_completed'

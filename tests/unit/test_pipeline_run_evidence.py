@@ -16,6 +16,9 @@ from fabricops_kit.pipeline.shared import pipeline_physical_bindings, resolve_ph
 @pytest.fixture
 def runtime(monkeypatch):
     """Keep the real journal and persistence logic; simulate only Fabric/Delta I/O."""
+    monkeypatch.setattr(shared, "publish_column_lineage", lambda run, **kw: {
+        "status": "published", "row_count": len(shared.column_lineage_rows(run)),
+        "source_run_sha256": shared._metadata_hash(shared._column_lineage_snapshot(run))})
     from fabricops_kit.activated_pipeline import shared as activation
     monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
     from importlib import metadata

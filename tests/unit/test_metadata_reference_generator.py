@@ -230,8 +230,8 @@ def test_metadata_explorer_keeps_keys_readable_and_loads_canonical_details() -> 
     svg_source = diagram.read_text(encoding="utf-8")
     svg = ET.fromstring(svg_source)
     links = svg.findall(".//{http://www.w3.org/2000/svg}a")
-    assert len(links) == 12
-    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 12
+    assert len(links) == 13
+    assert len({link.get("{http://www.w3.org/1999/xlink}href") for link in links}) == 13
     assert "metadata-explorer-approved-svg" in js
     assert "fabricops-metadata-approved.svg" in js
     table_titles = [link.find("{http://www.w3.org/2000/svg}title").text for link in links]
@@ -450,7 +450,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
         node.text
         for node in svg_tree.findall(f".//{namespace}a/{namespace}title")
     ]
-    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 12
+    assert len(titles) == len(CANONICAL_METADATA_TABLES) == 13
     assert set(titles) == {
         f"Open metadata documentation: {name.removeprefix('METADATA_')}"
         for name in CANONICAL_METADATA_TABLES
@@ -490,7 +490,7 @@ def test_generated_svg_preserves_layout_and_has_explicit_cardinality_for_all_rel
     connectors = svg_tree.findall(
         f".//{namespace}g[@id='metadata-er-relationships']/{namespace}g"
     )
-    assert len(connectors) == 11
+    assert len(connectors) == 12
     actual = {
         (edge.get("data-from"), edge.get("data-to")): edge
         for edge in connectors
@@ -619,7 +619,7 @@ def test_metadata_explorer_navigation_matches_canonical_svg() -> None:
     assert set(names) == {name.removeprefix("METADATA_") for name in CANONICAL_METADATA_TABLES}
     svg = ET.parse(root / "docs/assets/fabricops-metadata-approved.svg")
     edges = svg.findall(".//{http://www.w3.org/2000/svg}g[@class='metadata-er-relationship']")
-    assert len(edges) == 11
+    assert len(edges) == 12
     assert {edge.get("data-from") for edge in edges} | {edge.get("data-to") for edge in edges} <= set(names)
     assert 'Array.from(svg.querySelectorAll(".metadata-er-relationship")' in js
     assert "const links = [" not in js

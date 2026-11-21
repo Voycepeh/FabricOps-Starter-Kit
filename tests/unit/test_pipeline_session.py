@@ -25,6 +25,9 @@ def runtime(monkeypatch):
     config = {}
     context = {'config': config, 'scope_workspace_id': 'dev', 'notebook_id': '00000000-0000-4000-8000-000000000001'}
     monkeypatch.setattr(shared, 'get_default_fabric_context', lambda **kwargs: context)
+    monkeypatch.setattr(shared, "publish_column_lineage", lambda run, **kw: {
+        "status": "published", "row_count": len(shared.column_lineage_rows(run)),
+        "source_run_sha256": shared._metadata_hash(shared._column_lineage_snapshot(run))})
     spark = SimpleNamespace(conf=SimpleNamespace(get=lambda key: 'test'))
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (config, 'dev', context or {'config': config, 'scope_workspace_id': 'dev'}))
     monkeypatch.setattr(shared, 'get_spark_session', lambda *args, **_kwargs: spark)

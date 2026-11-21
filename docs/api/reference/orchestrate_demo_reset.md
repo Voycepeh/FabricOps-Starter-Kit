@@ -97,7 +97,8 @@ True clears all current canonical metadata rows in the dedicated item,
 including frozen Contracts, activations, approvals, promotion history and
 Runs. It also clears the dedicated Processing State table. Saved submissions, Dry Run evidence and notebook
 snapshots in its three native lifecycle folders are removed too. Table
-definitions remain; no metadata migration is performed.
+definitions remain; no metadata migration is performed. Historical Lineage
+activity rows remain intact; only lineage_version=1 dependency facts are cleared.
 
 Four Day 1 tables are overwritten, Orders CSV is validated and retained,
 and five Silver outputs plus the obsolete Bronze Orders table are removed in the reserved
@@ -133,9 +134,9 @@ this walkthrough. Stop all demo executions and schedules before resetting.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/orchestrate_demo_reset.py:256`
+`fabricops_kit/config/orchestrate_demo_reset.py:259`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L256-L459">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L259-L466">View on GitHub</a>
 </div>
 
 

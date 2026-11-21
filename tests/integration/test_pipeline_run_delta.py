@@ -25,7 +25,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
     pytest.importorskip('delta.tables')
     if 'DeltaSparkSessionExtension' not in spark_session.conf.get('spark.sql.extensions', ''):
         pytest.skip('requires Delta Spark extensions')
-    tables = ('METADATA_PIPELINE_RUN', 'METADATA_GUARDRAIL_RESULTS', 'METADATA_DATA_CONTRACT', 'METADATA_DATA_AGREEMENT', 'METADATA_PIPELINE_REGISTRY')
+    tables = ('METADATA_DATA_LINEAGE', 'METADATA_PIPELINE_RUN', 'METADATA_GUARDRAIL_RESULTS', 'METADATA_DATA_CONTRACT', 'METADATA_DATA_AGREEMENT', 'METADATA_PIPELINE_REGISTRY')
     paths = {table: str(tmp_path / table) for table in tables}
     registry = metadata_table_schema_registry()
     for table in tables:
@@ -253,3 +253,75 @@ def test_failed_run_publication_never_reports_success(runs_delta, monkeypatch):
         finalize_pipeline(shared.PipelineSession(plan, r.spark))
     assert r.rows() == before
     assert plan.evidence['persistence_failed'] and not plan.evidence.get('sealed')
+
+
+def _lineage_plan(runtime):
+    plan = runtime.make(mode='ungoverned')
+    runtime.complete(plan)
+    source = runtime.spark.createDataFrame([(1, 12)], 'id long, amount long')
+    shared.register_read_lineage(plan, {'table_id': 'table0', 'dataframe': source})
+    shared.capture_write_lineage(source.selectExpr('amount * 2 AS total'), context={'execution_plan': plan},
+                                table_id='table1', write_mode='overwrite')
+    plan.evidence['operations']['target:table1']['publication_status'] = 'published'
+    return plan
+
+
+def test_lineage_finalization_publishes_scalar_facts_and_retry_is_idempotent(runs_delta):
+    """Power BI facts persist through real Delta; rebuilding from physical Run JSON is stable."""
+    r = runs_delta
+    plan = _lineage_plan(r)
+    shared.finalize_pipeline_run(plan, spark_session=r.spark)
+    table = r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE'])
+    rows = table.collect()
+    assert rows and len({row.lineage_id for row in rows}) == len(rows)
+    assert any(row.source_table_id == 'table0' and row.source_column_name == 'amount'
+               and row.target_column_name == 'total' and row.dependency_type == 'VALUE' for row in rows)
+    assert all(not hasattr(field.dataType, 'elementType') and field.dataType.typeName() != 'struct' for field in table.schema)
+    assert all(row.run_id == plan.plan_id and row.lineage_version == 1 and row.publication_status == 'published' for row in rows)
+    physical_run = r.spark.read.format('delta').load(r.paths['METADATA_PIPELINE_RUN']).first().asDict(recursive=True)
+    first = shared.publish_column_lineage(physical_run, context=r.context, spark_session=r.spark)
+    second = shared.publish_column_lineage(physical_run, context=r.context, spark_session=r.spark)
+    assert first == second and first['row_count'] == len(rows)
+    assert r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).count() == len(rows)
+
+
+def test_lineage_failure_retries_projection_after_run_commit(runs_delta, monkeypatch):
+    """Projection permission failure leaves a finalized Run and can recover without business IO."""
+    from pyspark.sql.readwriter import DataFrameWriter
+    r = runs_delta
+    plan = _lineage_plan(r)
+    save = DataFrameWriter.save
+    def deny(writer, path=None, *args, **kwargs):
+        if path == r.paths['METADATA_DATA_LINEAGE']:
+            raise PermissionError('test denial')
+        return save(writer, path, *args, **kwargs)
+    monkeypatch.setattr(DataFrameWriter, 'save', deny)
+    with pytest.raises(RuntimeError, match='Run .* is committed.*lineage projection failed') as caught:
+        shared.finalize_pipeline_run(plan, spark_session=r.spark)
+    assert caught.value.published is True and plan.evidence['sealed'] is True
+    assert r.rows()[0]['status'] == 'ungoverned_completed'
+    assert r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).count() == 0
+    monkeypatch.setattr(DataFrameWriter, 'save', save)
+    shared.finalize_pipeline_run(plan, spark_session=r.spark)
+    assert plan.evidence['lineage_projection']['status'] == 'published'
+    assert r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).count() > 0
+
+
+def test_lineage_lost_append_acknowledgement_is_confirmed(runs_delta, monkeypatch):
+    """An acknowledged-by-read-back append never duplicates facts on retry."""
+    from pyspark.sql.readwriter import DataFrameWriter
+    r = runs_delta
+    plan = _lineage_plan(r)
+    save = DataFrameWriter.save
+    def lost_ack(writer, path=None, *args, **kwargs):
+        result = save(writer, path, *args, **kwargs)
+        if path == r.paths['METADATA_DATA_LINEAGE']:
+            raise OSError('test lost acknowledgement')
+        return result
+    monkeypatch.setattr(DataFrameWriter, 'save', lost_ack)
+    shared.finalize_pipeline_run(plan, spark_session=r.spark)
+    assert plan.evidence['lineage_projection']['status'] == 'published'
+    monkeypatch.setattr(DataFrameWriter, 'save', save)
+    shared.publish_column_lineage(r.rows()[0], context=r.context, spark_session=r.spark)
+    rows = r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).collect()
+    assert len(rows) == len({row.lineage_id for row in rows})

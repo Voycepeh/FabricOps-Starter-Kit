@@ -665,7 +665,7 @@ def setup_metadata_tables(
     verbose: bool = True,
     raise_on_failure: bool = False,
 ) -> dict[str, Any]:
-    """Create, validate and safely evolve the 12 canonical metadata tables.
+    """Create, validate and safely evolve the 13 canonical metadata tables.
 
     Parameters
     ----------
@@ -739,8 +739,10 @@ def setup_metadata_tables(
     Governed admission remains blocked pending signed-in Fabric acceptance.
     Retirement presence diagnostics are advisory; unsupported tables are never
     read as canonical authority or automatically deleted. METADATA_DATA_LINEAGE
-    is retained unchanged as historical activity metadata. Current participation
-    is recorded in METADATA_PIPELINE_RUN.operations; no duplicate table is created.
+    stores scalar column dependency facts projected from finalized Runs. Setup
+    additively adds the new nullable fields to retained activity layouts without
+    rewriting historical rows; lineage_version=1 identifies new facts. Participation
+    remains in METADATA_PIPELINE_RUN.operations.
 
     Examples
     --------

@@ -2,18 +2,35 @@
 
 FabricOps captures source-to-output dependencies for each prepared Write in `METADATA_PIPELINE_RUN.operations[].lineage`. The parent `run_id` and operation identity own the graph. Read/Write participation remains in the existing operation fields and `source_assets`.
 
-## Storage follows the question
+## Physical storage for reporting
 
-**The primary query is: for this Run and output column, which source columns contributed, and through which transformations?** A versioned per-Write graph inside the existing `operations` JSON STRING keeps that answer with its Run, Contract references, target and publication outcome. There is no extra physical table, metadata commit or migration of retained rows. `METADATA_DATA_LINEAGE` remains a historical archive; current workflows never write or delete it.
+**Power BI reads `METADATA_DATA_LINEAGE` directly.** Persistent finalization materializes one scalar row per Run × Write × output column × source column × dependency type. A source with both VALUE and FILTER roles produces separate facts. Constants/generated outputs, source row-set dependencies and unknown/omitted outputs have explicit record types, so an absent source is never confused with a participating Read.
 
-| Query | Representation |
+| Consumer | Storage |
 | --- | --- |
-| Inspect a Run's output column and intermediate steps | Read the Write's graph and follow incoming edges from its output node |
-| Join contributing assets/columns to the Catalogue | Flatten `outputs[].sources` through `nodes`; join physical `asset_workspace_id + table_id + asset_type`, then `column_id` in Catalogue `columns_json` |
-| List the assets participating in a Run | Use operations and `source_assets`; participation makes no claim about column dependencies |
-| Search affected outputs across many Runs | Filter Runs first, then project graphs; if this becomes a frequent large scan, materialize a rebuildable edge index keyed by Run/operation/output/source and detector version |
+| Power BI and cross-run impact queries | `METADATA_DATA_LINEAGE`, filtered to `lineage_version = 1`; no JSON expansion required |
+| Detailed expression/operator drill-through | The owning Run's `operations[].lineage` graph, linked by operation/output/source node IDs |
+| Run participation | Existing operations and `source_assets`, independently of detected dependencies |
 
-A future impact index should be derived from Run graphs, with the same coverage and publication filters. Maintaining two independent lineage authorities would introduce disagreement and another failure boundary. This implementation adds no such index.
+The physical facts include Run/Pipeline/execution workspace, source and target physical Catalogue keys and column IDs/names, one `dependency_type`, coverage, gap codes, Run/operation/publication status and transformation summaries. `transformation_operations` lists distinct operator classes for display, not their execution order; the graph records actual paths. `source_run_sha256` pins the normalized committed snapshot. Facts are derived from the retained graph and can be rebuilt without executing business code.
+
+### Power BI model
+
+Import the physical table through the Lakehouse SQL endpoint or supported Delta connection, filter `lineage_version = 1`, and keep `record_type` in the model. Relate `run_id` to `METADATA_PIPELINE_RUN`. Use separate source and target Catalogue dimensions; join each role on physical `asset_workspace_id + table_id + asset_type` (create a composite model key when required). Column IDs/names already exist in the fact table. If current Catalogue columns are needed as dimensions, flatten its `columns_json` once; lineage reports themselves need no JSON parsing.
+
+Use distinct output-column counts when counting impacted columns: multiple source columns and dependency types intentionally create multiple facts. Filter `publication_status = published` when reporting confirmed publication, and retain coverage/gap filters. A published Write can belong to a later failed Run. Row-set dependencies have no source column ID; OUTPUT/GAP/CAPTURE_GAP rows do not assert source-column dependencies.
+
+### Publication and recovery
+
+The Run commits first. Finalization then publishes the entire projection in one idempotent Delta append, using a permanent per-Run transaction identity, metadata-conflict retry and exact read-back verification. The Run and projection are separate Delta commits; facts become available at finalization, including failed or incomplete Run boundaries. A hard interruption can leave a committed Run awaiting projection. A normal projection failure is explicit and never changes business publication or rewrites the finalized Run.
+
+Retry `finalize_pipeline(pipeline)` with the retained session to retry projection only, even if that session already closed. An internal maintainer repair can call `publish_column_lineage(run_record, context=runtime, spark_session=spark)` after reading the finalized Run from configured Metadata. The publisher verifies the exact committed snapshot and rejects fabricated or incomplete inputs. Retry handles a lost append acknowledgement by reading back the complete expected facts. Do not replay business Writes to repair reporting. Delta transaction identity retention must remain unbounded; unsupported finite retention fails explicitly.
+
+### Upgrade and rollback boundary
+
+`setup_metadata_tables` creates the new canonical table for fresh installations. For an existing historical activity layout, it adds the nullable fact columns without rewriting rows or dropping original/extension columns. Repeat setup is safe. Historical activity rows keep `lineage_version`, `run_id` and `record_type` null; no Run or column dependencies are inferred from participation. Dependency reports must filter `lineage_version = 1`. Old Runs without graphs are not backfilled with invented dependencies.
+
+An older runtime can continue to see the retained historical columns; reverting package code does not remove new columns or facts. Legacy reports must select null `lineage_version` before treating rows as activity. Keep the evolved data intact when rolling back; do not drop/rebuild the table. The explicitly requested demo reset clears version 1 facts while retaining historical activity rows.
 
 ## Automatic capture
 
@@ -64,10 +81,10 @@ from fabricops_kit.pipeline.shared import column_lineage_rows
 rows = column_lineage_rows(run_record)
 value_links = [row for row in rows
                if row["target_column_name"] == "revenue"
-               and "VALUE" in row["dependency_types"]]
+               and row["dependency_type"] == "VALUE"]
 ```
 
-Each projected row includes Run/operation, physical target/source identities, column IDs, dependency roles, coverage, gaps and operation/publication status. Constants and unknown outputs produce rows with null source fields. Retained Runs without captured lineage return no projected rows; absence is not proof of no dependencies. The helper is an internal maintainer interface, not a supported public export. SQL consumers can use the canonical `metadata_json_schema("METADATA_PIPELINE_RUN", "operations")` to parse operations before exploding graph outputs and sources; resolve `node_id` against the graph's nodes.
+Each projected row includes Run/operation, physical target/source identities, column IDs, one dependency type, coverage, scalar gap codes, transformation summaries and operation/publication status. Constants and unknown outputs produce rows with null source fields. Retained Runs without captured lineage return no projected rows; absence is not proof of no dependencies. The helper is an internal maintainer interface, not a supported public export. Power BI consumers use the physical scalar table. Maintainers exploring detailed graphs can obtain the operations type from `metadata_json_schema("METADATA_PIPELINE_RUN")["operations"]` and resolve node IDs within the owning Write graph.
 
 ## Research and detector choice
 
@@ -77,6 +94,6 @@ FabricOps follows the plan/expression approach while capturing at its existing R
 
 ## Verification and Fabric acceptance
 
-`tests/unit/test_column_lineage.py` uses real Spark plans for multi-Read/multi-Write transformations, self-joins, union-by-name with different orders, windows, CASE, casts, SQL views, explode, cache, checkpoints, opaque UDFs, an actual pandas round trip, generated constants, bounds and inaccessible plans. It independently asserts expected source columns and roles, excludes unused Reads, and checks Run finalization/projection after failure. `tests/integration/test_write_publication_input.py` verifies capture before actual writer checkpointing, including hash/audit columns, for persistent and Dry Run modes. `tests/unit/test_file_asset_metadata.py` verifies real Spark FILE-to-FILE lineage through orchestration and finalization. Metadata transport in these tests is simulated.
+`tests/unit/test_column_lineage.py` uses real Spark plans for multi-Read/multi-Write transformations, self-joins, union-by-name with different orders, windows, CASE, casts, SQL views, explode, cache, checkpoints, opaque UDFs, an actual pandas round trip, generated constants, bounds and inaccessible plans. It independently asserts expected source columns and roles, excludes unused Reads, and checks Run finalization/projection after failure. `tests/integration/test_write_publication_input.py` verifies capture before actual writer checkpointing, including hash/audit columns, for persistent and Dry Run modes. `tests/unit/test_file_asset_metadata.py` verifies real Spark FILE-to-FILE lineage through orchestration and finalization. Those detector/orchestration tests simulate Fabric transport. Delta-enabled integration cases in `test_pipeline_run_delta.py` verify physical fact publication, rebuilding from physical Run JSON, idempotent retries, a denied projection after Run commit and lost append acknowledgements. `test_column_lineage_upgrade.py` verifies additive upgrade/repeat setup with retained legacy bytes and extension columns.
 
 Local Spark tests do not establish signed-in Microsoft Fabric acceptance. Before claiming a runtime is validated, run table and file cases in an isolated Fabric workspace using its intended Spark version, including Lakehouse/Delta and Warehouse connector plans, an opaque Warehouse query, cross-workspace Catalogue joins, SCD/append scope, a later notebook failure, and a pandas boundary. Inspect persisted operations and publication status after reopening the Run. No runtime compatibility claim should be inferred from a green local Spark suite.

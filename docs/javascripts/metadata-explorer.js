@@ -15,6 +15,7 @@
     ["DATA_CATALOGUE", "engineering", ["asset_workspace_id", "table_id", "asset_type"], [], "metadata_data_catalogue/"],
     ["DATA_PROFILED", "engineering", ["profile_id"], [], "metadata_data_profiled/"],
     ["DATA_PROFILED_FREQUENCY", "engineering", ["frequency_id"], ["profile_id"], "metadata_data_profiled_frequency/"],
+    ["DATA_LINEAGE", "engineering", ["lineage_id"], ["run_id"], "metadata_data_lineage/"],
     ["DATA_ACCESS", "engineering", ["access_id"], [], "metadata_data_access/"]
   ];
 

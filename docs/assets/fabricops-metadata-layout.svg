@@ -78,5 +78,11 @@
 <text x="1745" y="447" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">PIPELINE_REGISTRY</text>
 <title>Open metadata documentation: PIPELINE_REGISTRY</title>
 </a>
+<a xlink:href="https://voycepeh.github.io/FabricOps-Starter-Kit/reference/metadata/metadata_data_lineage/" target="_blank">
+<rect x="1205" y="735" width="300" height="175" rx="4" fill="white" stroke="#2563EB" stroke-width="1.65"/>
+<path d="M1209 735H1501Q1505 735 1505 739V772H1205V739Q1205 735 1209 735Z" fill="#2563EB"/>
+<text x="1355" y="759" text-anchor="middle" font-size="15" font-weight="700" font-family="Segoe UI, Arial, sans-serif" fill="white">DATA_LINEAGE</text>
+<title>Open metadata documentation: DATA_LINEAGE</title>
+</a>
 <text x="35" y="966" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">PK: primary key · FK: foreign key · REF: Catalogue reference · Brackets group fields · Dashed: via operations · Key references are application-enforced · Delta tables commit independently</text>
 </svg>

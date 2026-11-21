@@ -6715,16 +6715,26 @@ def bridge_write_snapshot(dataframe, fragment, *, context):
             pass
 
 
-def column_lineage_rows(run):
-    """Flatten a Run's output/source relationships, including constants and gaps.
-
-    This query needs no Spark session. It preserves operation/publication status,
-    so attempted Writes are never presented as confirmed published dependencies.
-    """
+def _column_lineage_snapshot(run):
     from fabricops_kit.config.metadata_schemas import decode_metadata_row
 
+    decoded = decode_metadata_row("METADATA_PIPELINE_RUN", validate_pipeline_run(run))
+    fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
+    return pipeline_record_content({name: decoded[name] for name in fields if name in decoded})
+
+
+def column_lineage_rows(run):
+    """Project scalar Power BI facts from a Run; participation never becomes a dependency.
+
+    Grain: Run/Write/output/source/dependency type, with null-source rows for
+    constants and gaps. Historical Runs without a graph produce no facts.
+    """
+    from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, decode_metadata_row
+
     decoded = decode_metadata_row("METADATA_PIPELINE_RUN", run)
+    digest = _metadata_hash(_column_lineage_snapshot(run))
     rows = []
+    audit = {name: run.get(name) for name, *_ in AUDIT_SCHEMA_FIELDS}
     for operation in decoded.get("operations", []):
         graph = operation.get("lineage")
         if graph is None:
@@ -6732,19 +6742,114 @@ def column_lineage_rows(run):
         if graph["version"] != 1:
             raise ValueError("Unsupported Run column-lineage version.")
         nodes = {node["node_id"]: node for node in graph["nodes"]}
+        base = {"lineage_version": 1, "run_id": run["run_id"], "pipeline_id": run.get("pipeline_id"),
+            "execution_workspace_id": run.get("workspace_id"), "operation_key": operation["operation_key"],
+            "target_asset_workspace_id": operation["asset_workspace_id"], "target_table_id": operation["table_id"],
+            "target_asset_type": operation["asset_type"], "run_status": run.get("status"),
+            "operation_status": operation["status"], "publication_status": operation.get("publication_status"),
+            "write_mode": graph["write_mode"], "detector": graph["detector"], "scope": graph["scope"],
+            "source_run_sha256": digest, **audit}
         for output in graph["outputs"]:
+            transformations = [nodes[key]["operation"] for key in output["transformation_node_ids"]]
             for source in output["sources"] or [{"node_id": None, "dependency_types": []}]:
                 root = nodes.get(source["node_id"], {})
-                rows.append({"run_id": run["run_id"], "operation_key": operation["operation_key"],
-                    "target_asset_workspace_id": operation["asset_workspace_id"], "target_table_id": operation["table_id"],
-                    "target_asset_type": operation["asset_type"], "target_column_id": output["column_id"],
-                    "target_column_name": output["column_name"], "source_asset_workspace_id": root.get("asset_workspace_id"),
-                    "source_table_id": root.get("table_id"), "source_asset_type": root.get("asset_type"),
-                    "source_column_id": root.get("column_id"), "source_column_name": root.get("name"),
-                    "dependency_types": source["dependency_types"], "coverage": output["status"], "gaps": output["gaps"],
-                    "operation_status": operation["status"], "publication_status": operation.get("publication_status"),
-                    "transformation_node_ids": output["transformation_node_ids"]})
+                for dependency in source["dependency_types"] or [None]:
+                    record_type = ("COLUMN_DEPENDENCY" if root.get("column_id") else "ROW_SET_DEPENDENCY" if root
+                                   else "OUTPUT" if output["status"] == "complete" else "GAP")
+                    row = {**base, "record_type": record_type,
+                        "target_column_id": output["column_id"], "target_column_name": output["column_name"],
+                        "source_asset_workspace_id": root.get("asset_workspace_id"), "source_table_id": root.get("table_id"),
+                        "source_asset_type": root.get("asset_type"), "source_column_id": root.get("column_id"),
+                        "source_column_name": root.get("name"), "dependency_type": dependency,
+                        "coverage": output["status"], "gap_codes": ";".join(output["gaps"]),
+                        "transformation_operations": ";".join(sorted(set(transformations))),
+                        "transformation_count": len(output["transformation_node_ids"]),
+                        "output_node_id": output["node_id"], "source_node_id": source["node_id"], "omitted_output_count": 0}
+                    row["lineage_id"] = _metadata_hash([run["run_id"], operation["operation_key"], output["node_id"],
+                                                        source["node_id"], dependency])
+                    rows.append(row)
+        if graph["gaps"] or graph["omitted_output_count"]:
+            rows.append({**base, "lineage_id": _metadata_hash([run["run_id"], operation["operation_key"], "capture_gap"]),
+                "record_type": "CAPTURE_GAP", "coverage": "unknown", "gap_codes": ";".join(graph["gaps"]),
+                "omitted_output_count": graph["omitted_output_count"]})
     return rows
+
+
+def publish_column_lineage(run, *, context, spark_session=None):
+    """Materialize an exact finalized Run as retry-safe scalar Delta facts.
+
+    The Run is verified before publication. A single idempotent Delta append
+    projects the entire immutable snapshot; confirmed aborted metadata conflicts
+    can retry without replaying business Writes. Exact read-back confirms lost
+    acknowledgements. Historical participation rows remain untouched.
+    """
+    if not persistence_permitted(context):
+        return {"status": "diagnostic_only", "row_count": 0}
+    if not run.get("completed_at"):
+        raise ValueError("Column lineage publication requires a finalized Run.")
+    rows = column_lineage_rows(run)
+    if not rows:
+        return {"status": "not_captured", "row_count": 0}
+    from delta.tables import DeltaTable
+    from pyspark.sql import functions as F
+    from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
+
+    spark = get_spark_session(spark_session, context=context)
+    table = "METADATA_DATA_LINEAGE"
+    schema = metadata_table_schema_registry()[table]
+    physical = [coerce_metadata_row_types(table, row) for row in rows]
+    expected = {row["lineage_id"]: pipeline_record_content(row) for row in physical}
+    if len(expected) != len(physical):
+        raise ValueError("Column lineage contains duplicate fact identities.")
+    stored = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
+        schema=metadata_table_physical_schema(context["config"], "METADATA_PIPELINE_RUN"),
+        context={**context, "_spark_session": spark, "_fabricops_suppress_io_log": True})
+    matches = stored.where(F.col("run_id") == run["run_id"]).limit(2).collect()
+    if len(matches) != 1 or _column_lineage_snapshot(matches[0].asDict(recursive=True)) != _column_lineage_snapshot(run):
+        raise ValueError("Lineage requires the exact committed finalized Run snapshot.")
+    _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
+        metadata_table_physical_schema(context["config"], table), context=context)
+    properties = DeltaTable.forPath(spark, path).detail().select("properties").first()["properties"]
+    if "delta.setTransactionRetentionDuration" in properties:
+        raise RuntimeError("Column lineage requires unbounded Delta transaction identity retention.")
+
+    def confirmed():
+        observed = (spark.read.format("delta").load(path).where((F.col("run_id") == run["run_id"])
+            & (F.col("lineage_version") == 1)).select(*schema.fieldNames()).collect())
+        values = [pipeline_record_content(row.asDict(recursive=True)) for row in observed]
+        return len(values) == len(expected) and {row["lineage_id"]: row for row in values} == expected
+
+    frame = spark.createDataFrame(physical, schema)
+    try:
+        retry_delta_metadata(lambda: frame.write.format("delta").mode("append")
+            .option("txnAppId", "fabricops-column-lineage:" + run["run_id"]).option("txnVersion", 1).save(path))
+    except Exception:
+        if not confirmed():
+            raise
+    if not confirmed():
+        raise RuntimeError("Column lineage projection was not confirmed; inspect the Run and projection before retrying.")
+    return {"status": "published", "row_count": len(physical), "source_run_sha256": rows[0]["source_run_sha256"]}
+
+
+def sync_pipeline_lineage(plan, *, spark_session=None):
+    """Retry projection independently of the already committed business/Run outcome."""
+    run = plan.evidence["final_result"]
+    if not plan.permits_persistence or not any(op.get("lineage") for op in run.get("operations", [])):
+        return
+    digest = _metadata_hash(_column_lineage_snapshot(run))
+    if plan.evidence.get("lineage_projection", {}).get("source_run_sha256") == digest:
+        return
+    try:
+        plan.evidence["lineage_projection"] = publish_column_lineage(run,
+            context={**plan.runtime_context, "execution_plan": plan}, spark_session=spark_session)
+    except Exception as exc:
+        plan.evidence["lineage_projection"] = {"status": "failed", "error_type": type(exc).__name__}
+        error = RuntimeError(f"Run {run['run_id']} is committed, but column lineage projection failed. Retry finalize_pipeline(pipeline) "
+                             "or rebuild from the finalized Run; do not replay business Writes.")
+        error.run_id = run["run_id"]
+        error.published = any(op.get("publication_status") == "published" for op in run.get("operations", []))
+        error.failed_stage = "Lineage metadata"
+        raise error from exc
 
 
 def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
@@ -7080,6 +7185,7 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
         if plan.evidence.get("persistence_failed"):
             raise RuntimeError("Evidence persistence failed; create a new plan.")
         if plan.evidence.get("sealed"):
+            sync_pipeline_lineage(plan, spark_session=spark_session)
             return plan.evidence["final_result"]
         if failed:
             plan.evidence["failures"].append({"code": "project_execution_failed"})
@@ -7122,6 +7228,7 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
                     except Exception:
                         plan.evidence["source_snapshot_acceptance"]["diagnostics_persisted"] = False
         plan.evidence.update(sealed=True, final_result=row)
+        sync_pipeline_lineage(plan, spark_session=spark_session)
         if plan.execution_mode == "dry_run" and status == "dry_run_completed" and plan.evidence.get("notebook_snapshot") is not None:
             from fabricops_kit.activated_pipeline.shared import persist_engineering_dry_run
             try:

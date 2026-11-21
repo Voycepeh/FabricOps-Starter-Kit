@@ -14,6 +14,7 @@ CANONICAL_METADATA_TABLES = [
     "METADATA_DATA_PROFILED",
     "METADATA_DATA_PROFILED_FREQUENCY",
     "METADATA_DATA_ACCESS",
+    "METADATA_DATA_LINEAGE",
     "METADATA_PIPELINE_ACTIVATION",
     "METADATA_PIPELINE_REGISTRY",
     "METADATA_PIPELINE_RUN",
@@ -160,13 +161,7 @@ LEGACY_WORKSPACE_TABLES = frozenset({
 # Historical release manifests validate this registry in test_metadata_retirements.py.
 # Retained historical tables are neither canonical nor automatically deleted.
 # This retirement has no release number until the next release is prepared.
-HISTORICAL_METADATA_TABLES = {
-    "METADATA_DATA_LINEAGE": {
-        "guidance": "Participation now comes from METADATA_PIPELINE_RUN.operations. "
-        "Existing rows remain historical activity records; run_id cannot be inferred universally. "
-        "Use reconcile_pipeline_participation() for a read-only matching report.",
-    },
-}
+HISTORICAL_METADATA_TABLES = {}
 
 RETIRED_PREVIEW_METADATA_TABLES = {
     "METADATA_DATA_AGREEMENT_EVIDENCE": {
@@ -665,6 +660,41 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                              ("evaluation_status", "string")], False)], False),
              ("profiling", PROFILE_EVENT_FIELDS, False), ("warnings_json", "string", False),
              ("failures", [("code", "string", False), ("exception_type", "string")], False), *audit],
+        ),
+        "METADATA_DATA_LINEAGE": build_metadata_schema(
+            "METADATA_DATA_LINEAGE",
+            [('lineage_id', 'string'),
+             ('lineage_version', 'integer'),
+             ('record_type', 'string'),
+             ('run_id', 'string'),
+             ('pipeline_id', 'string'),
+             ('execution_workspace_id', 'string'),
+             ('operation_key', 'string'),
+             ('run_status', 'string'),
+             ('operation_status', 'string'),
+             ('publication_status', 'string'),
+             ('write_mode', 'string'),
+             ('detector', 'string'),
+             ('scope', 'string'),
+             ('coverage', 'string'),
+             ('target_asset_workspace_id', 'string'),
+             ('target_table_id', 'string'),
+             ('target_asset_type', 'string'),
+             ('target_column_id', 'string'),
+             ('target_column_name', 'string'),
+             ('source_asset_workspace_id', 'string'),
+             ('source_table_id', 'string'),
+             ('source_asset_type', 'string'),
+             ('source_column_id', 'string'),
+             ('source_column_name', 'string'),
+             ('dependency_type', 'string'),
+             ('gap_codes', 'string'),
+             ('transformation_operations', 'string'),
+             ('transformation_count', 'integer'),
+             ('output_node_id', 'string'),
+             ('source_node_id', 'string'),
+             ('omitted_output_count', 'integer'),
+             ('source_run_sha256', 'string'), *audit],
         ),
         "METADATA_GUARDRAIL_RESULTS": build_metadata_schema(
             "METADATA_GUARDRAIL_RESULTS",

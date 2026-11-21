@@ -76,7 +76,11 @@ dict
     detailed Read or strategy-specific Write metrics. Missing fields on
     historical records remain valid and display as not captured. Prepared Writes
     additionally retain operations[].lineage: a versioned graph of source columns,
-    transformations and explicit coverage gaps. Dry Run retains it only in memory.
+    transformations and explicit coverage gaps. Persistent finalization also
+    materializes scalar versioned dependency facts in METADATA_DATA_LINEAGE.
+    lineage_projection reports the separate projection outcome; a projection
+    failure after Run commit is retryable via finalize_pipeline(pipeline)
+    without replaying business Writes. Dry Run retains graphs only in memory.
     When no session is active, returns the resolved pipeline_id and handoff
     (the displayed controls and their state/actions), without a Run record.
 
@@ -87,7 +91,9 @@ ValueError
 RuntimeError
     If notebook setup is invalid, runtime identity has changed, another task
     owns the execution, or metadata publication fails. Run and Guardrail IDs
-    remain stable for supported publication retries.
+    remain stable for supported publication retries. A column-lineage projection
+    failure can occur after the immutable Run commits; retrying this function
+    with the retained session retries only that projection.
 
 ## Behavior and scope
 
@@ -137,9 +143,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/finalize_pipeline.py:221`
+`fabricops_kit/pipeline/finalize_pipeline.py:222`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L221-L342">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L222-L352">View on GitHub</a>
 </div>
 
 
@@ -155,7 +161,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 125 |
+| Live-critical dependencies | 132 |
 
 ### Release history
 
@@ -210,6 +216,7 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.validate_file_execution_authorizations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_registry</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_submission</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.verify_governed_plan</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_promotion_integrity</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_registry_approval</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
@@ -276,17 +283,23 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.finalize_pipeline._format_duration</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._operation_summary_rows</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._print_pipeline_summary</code></li>
+<li><code>fabricops_kit.pipeline.shared._column_lineage_snapshot</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
+<li><code>fabricops_kit.pipeline.shared._metadata_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
+<li><code>fabricops_kit.pipeline.shared.column_lineage_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.current_pipeline_session</code></li>
 <li><code>fabricops_kit.pipeline.shared.file_binding_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.file_participant_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
+<li><code>fabricops_kit.pipeline.shared.publish_column_lineage</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_file_participant</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.sync_pipeline_lineage</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_freshness_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>

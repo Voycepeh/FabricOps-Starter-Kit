@@ -21,6 +21,7 @@ function renderMetadataSvg(layout, models) {
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1-N","physical","M335 821H425",[335,821],[425,821],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1-N","physical","M335 194H395V360H965V423",[335,194],[965,423],"Contract versions to their Guardrail results"],
     ["DATA_CATALOGUE","PIPELINE_RUN","N-N","nested","M335 515H425",[335,515],[425,515],"Run asset participation via operations: asset_workspace_id + table_id + asset_type; participation does not prove transformation dependencies"],
+    ["PIPELINE_RUN","DATA_LINEAGE","1-N","physical","M690 598V687Q690 695 698 695H1247Q1255 695 1255 703V735",[690,598],[1255,735],"Finalized Run to scalar output/source dependency facts; detailed graph retained in Run"],
   ];
   const esc = value => String(value).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const source = layout.indexOf("<a ");
@@ -98,7 +99,7 @@ function renderMetadataSvg(layout, models) {
     return block;
   });
   const named=Object.keys(models);
-  if(named.length!==12||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
+  if(named.length!==13||found.size!==named.length)throw Error("Canonical model / visual layout changed. Review placements for "+named.filter(n=>!found.has(n)).join(", "));
   for(const row of routes){if(!found.has(row[0])||!found.has(row[1]))throw Error("Unknown relationship table");if(row[0]===row[1])throw Error("Self-referential 1-N connector would be misleading: "+row[0]);}
   // Every direct scalar key reference in this overview needs one connector.
   // Optional promotion provenance and nested references remain in the full schema.
@@ -156,13 +157,14 @@ function renderMetadataSvg(layout, models) {
       // Clamped badge offset stays outside the table, close to its connector.
       end=horiz?[end[0]+side*25,end[1]]:[end[0],end[1]+side*25];
     }
+    if (from === "PIPELINE_RUN" && to === "DATA_LINEAGE") start = [690, 665];
     const [one,many]=card ? card.split("-") : ["", ""];
     const relationshipLabel = from === "DATA_CATALOGUE" && to === "PIPELINE_RUN"
       ? '<text x="380" y="482" text-anchor="middle" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">via</text><text x="380" y="497" text-anchor="middle" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">operations</text>'
       : from === "DATA_CATALOGUE" && to === "DATA_CONTRACT"
       ? '<text x="203" y="337" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">Draft authoring</text>'
       : "";
-    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label + referenceLabel)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "nested asset participation; join by identity" : kind === "logical" ? "logical identity reference" : kind === "optional" ? "optional physical asset reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${["logical", "nested", "optional"].includes(kind)?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}${relationshipLabel}\n</g>`;
+    return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label + referenceLabel)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "nested asset participation; join by identity" : kind === "logical" ? "logical identity reference" : kind === "optional" ? "optional physical asset reference" : "keyed reference; application-enforced"})</title>\n${from === "PIPELINE_RUN" && to === "DATA_LINEAGE" ? '<path d="M690 622V638" fill="none" stroke="#EFF6FF" stroke-width="8"/>' : ""}<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${["logical", "nested", "optional"].includes(kind)?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}${relationshipLabel}\n</g>`;
   }).join("\n");
   return prefix+`<g id="metadata-er-relationships" aria-label="Metadata table relationships">\n${rendered}\n</g>\n`+body;
 }

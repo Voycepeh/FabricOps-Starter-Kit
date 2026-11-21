@@ -199,6 +199,7 @@ def test_file_lineage_survives_run_finalization(files, monkeypatch, spark_sessio
     """Real Spark file Read ancestry reaches the file Write and its finalized Run."""
     from fabricops_kit.pipeline.shared import column_lineage_rows
     import importlib
+    monkeypatch.setattr(shared, 'publish_column_lineage', lambda run, **kw: {'status': 'published', 'row_count': len(shared.column_lineage_rows(run)), 'source_run_sha256': shared._metadata_hash(shared._column_lineage_snapshot(run))})
     incoming = spark_session.createDataFrame([(1, 12)], 'id long, amount long')
     files.readers['csv'].return_value = incoming
     monkeypatch.setattr(importlib.import_module('fabricops_kit.io'), 'write_lakehouse_file', lambda *a, **kw: {
@@ -214,6 +215,6 @@ def test_file_lineage_survives_run_finalization(files, monkeypatch, spark_sessio
     assert target['lineage']['status'] == 'complete', target['lineage']
     rows = column_lineage_rows(record)
     assert any(row['source_table_id'] == source['table_id'] and row['source_column_name'] == 'amount'
-        and row['target_column_name'] == 'total' and 'VALUE' in row['dependency_types'] for row in rows)
+        and row['target_column_name'] == 'total' and row['dependency_type'] == 'VALUE' for row in rows)
     assert all(row['source_asset_type'] == row['target_asset_type'] == 'FILE' for row in rows)
     assert session.plan.lineage == {}

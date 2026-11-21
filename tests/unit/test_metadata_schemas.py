@@ -28,6 +28,7 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_DATA_PROFILED": "engineering",
         "METADATA_DATA_PROFILED_FREQUENCY": "engineering",
         "METADATA_DATA_ACCESS": "engineering",
+        "METADATA_DATA_LINEAGE": "engineering",
         "METADATA_GUARDRAIL_RESULTS": "engineering",
         "METADATA_PIPELINE_RUN": "engineering",
         "METADATA_PIPELINE_REGISTRY": "engineering",
@@ -175,7 +176,7 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
 def test_participation_is_nested_in_run_operations():
     """Participation has a Run ID through its existing operation records."""
     registry = metadata_table_schema_registry()
-    assert "METADATA_DATA_LINEAGE" not in registry
+    assert "METADATA_DATA_LINEAGE" in registry
     assert {"run_id", "operations"} <= set(registry["METADATA_PIPELINE_RUN"].fieldNames())
 
 

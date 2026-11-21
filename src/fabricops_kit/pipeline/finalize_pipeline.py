@@ -9,6 +9,7 @@ from fabricops_kit.pipeline.shared import (
     current_pipeline_session,
     _ACTIVE_PIPELINE,
     finalize_pipeline_run,
+    sync_pipeline_lineage,
 )
 
 
@@ -277,7 +278,11 @@ def finalize_pipeline(pipeline=None, *, failed=False):
         detailed Read or strategy-specific Write metrics. Missing fields on
         historical records remain valid and display as not captured. Prepared Writes
         additionally retain operations[].lineage: a versioned graph of source columns,
-        transformations and explicit coverage gaps. Dry Run retains it only in memory.
+        transformations and explicit coverage gaps. Persistent finalization also
+        materializes scalar versioned dependency facts in METADATA_DATA_LINEAGE.
+        lineage_projection reports the separate projection outcome; a projection
+        failure after Run commit is retryable via finalize_pipeline(pipeline)
+        without replaying business Writes. Dry Run retains graphs only in memory.
         When no session is active, returns the resolved pipeline_id and handoff
         (the displayed controls and their state/actions), without a Run record.
 
@@ -288,7 +293,9 @@ def finalize_pipeline(pipeline=None, *, failed=False):
     RuntimeError
         If notebook setup is invalid, runtime identity has changed, another task
         owns the execution, or metadata publication fails. Run and Guardrail IDs
-        remain stable for supported publication retries.
+        remain stable for supported publication retries. A column-lineage projection
+        failure can occur after the immutable Run commits; retrying this function
+        with the retained session retries only that projection.
 
     Examples
     --------
@@ -321,7 +328,10 @@ def finalize_pipeline(pipeline=None, *, failed=False):
             pipeline.validate_current_context()
             pipeline.plan.evidence["boundary_completed"] = not failed
             pipeline.close(failed=failed)
+        sync_pipeline_lineage(pipeline.plan, spark_session=pipeline.spark)
         result = pipeline.plan.run_result
+        if "lineage_projection" in pipeline.plan.evidence:
+            result = {**result, "lineage_projection": dict(pipeline.plan.evidence["lineage_projection"])}
         # Render from the finalized run snapshot; do not re-read metadata or
         # trigger additional source/target actions just to build the report.
         _print_pipeline_summary(pipeline, result)
