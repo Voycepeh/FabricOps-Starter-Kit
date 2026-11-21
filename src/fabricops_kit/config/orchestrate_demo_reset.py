@@ -105,7 +105,6 @@ def _demo_check_metadata_scope(_state, value):
                 "_workspace_id",
                 "execution_workspace_id",
                 "source_workspace_id",
-                "evidence_workspace_id",
             }:
                 if item and str(item).casefold() not in _state._demo_workspaces:
                     raise RuntimeError("Non-demo workspace reference; metadata is preserved.")

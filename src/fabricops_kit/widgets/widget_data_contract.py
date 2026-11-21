@@ -1344,7 +1344,7 @@ def widget_data_contract(
                 "ai_usage_metadata": {"table_id": state.get("dataset_id"), "asset_type": state.get("asset_type"), "column_id": column_id,
                                       "contract_id": contract.get("contract_id"),
                                       "contract_version": state.get("contract_version"),
-                                      "evidence_workspace_id": contract.get("evidence_workspace_id") or state["workspace_id"]}}
+                                      "asset_workspace_id": contract.get("asset_workspace_id") or state["workspace_id"]}}
 
     def apply_view(*_args: Any) -> None:
         selected_view = str(top_nav.value)

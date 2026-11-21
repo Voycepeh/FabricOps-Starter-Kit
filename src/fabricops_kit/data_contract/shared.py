@@ -333,7 +333,7 @@ def create_contract_draft(
         "table": {
             **dict(seed.get("table") or {}),
             **_fields(table, ("table_id", "store_type", "layer", "schema_name", "table_name")),
-            "evidence_workspace_id": workspace,
+            "asset_workspace_id": workspace,
             "table_id": identity, "asset_type": kind,
             "columns": columns,
             "writer": {
@@ -372,7 +372,7 @@ def create_contract_draft(
         "table_id": identity,
         "asset_type": kind,
         "table_name": payload_table_name,
-        "evidence_workspace_id": workspace,
+        "asset_workspace_id": workspace,
         "contract_payload_json": json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
         "status": "draft",
         **audit,
@@ -1668,7 +1668,7 @@ def assemble_contract_payload(
             **dict(draft_payload.get("table") or _fields(table, ("table_id", "store_type", "layer", "schema_name", "table_name"))),
             **({"table_id": table_id} if table_id else {}),
             "asset_type": draft.get("asset_type") or "TABLE",
-            "evidence_workspace_id": draft.get("evidence_workspace_id") or workspace_id,
+            "asset_workspace_id": draft.get("asset_workspace_id") or workspace_id,
             "columns": column_docs,
             "writer": dict(draft_payload["table"]["writer"]) if "writer" in draft_payload.get("table", {}) else {
                 "notebook_id": str(table.get("writer_notebook_id") or table.get("_notebook_id") or "").strip(),
