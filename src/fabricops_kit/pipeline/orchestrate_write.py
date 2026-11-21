@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Iterable
+from typing import Any
 from datetime import UTC, datetime
 from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.check_schema import check_schema
@@ -21,12 +21,21 @@ from fabricops_kit.pipeline.shared import (
     execution_result,
     tested_contract_identities,
     source_guardrail_results,
-    _run_orchestration_stage,
+    run_orchestration_stage,
     prepare_pipeline_execution,
     pipeline_guardrail_types,
     print_pipeline_contract,
     PIPELINE_MODE_NAMES,
 )
+
+
+def _write_metrics(result):
+    """Normalize already-measured table Write metrics without evaluating any data."""
+    metrics = dict(result.get("write_metrics") or {})
+    for key in ("input_rows", "rows_committed", "total_target_rows", "rows_inserted", "rows_updated",
+                "rows_unchanged", "versions_inserted", "versions_expired", "measurement_source"):
+        metrics.setdefault(key, None)
+    return metrics
 
 
 def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, table_name: str | None = None, write_mode: str, write_parameters: dict[str, Any] | None = None, repartition_by: int | None = None, existing_mapping=None, verbose: bool = False, dq_diagnostics: str = "sample", relative_path: str | None = None, file_format: str | None = None, write_options: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -184,12 +193,18 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
             repartition_dataframe_for_write(dataframe, repartition_by)
         elif not table_name:
             raise ValueError("table_name or a complete file destination is required.")
-        execution_plan = session.operation_plan("target", locals())
+        arguments = {
+            "dataframe": dataframe, "store": store, "schema": schema, "table_name": table_name,
+            "write_mode": write_mode, "write_parameters": write_parameters, "repartition_by": repartition_by,
+            "existing_mapping": existing_mapping, "relative_path": relative_path, "file_format": file_format,
+            "write_options": write_options, "verbose": verbose, "dq_diagnostics": dq_diagnostics,
+            "spark_session": spark_session,
+        }
+        execution_plan = session.operation_plan("target", arguments)
     except BaseException:
         session.close(failed=True)
         raise
-    sources = tuple(session.sources)
-    arguments = {key: value for key, value in locals().items() if key not in {"session"}}
+    arguments["sources"] = tuple(session.sources)
     with PipelineOperation(execution_plan, "target", arguments) as operation:
         sources = operation.arguments["sources"]
         if dq_diagnostics not in {"none", "sample", "full"}:
@@ -234,7 +249,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
             print(f"FabricOps WRITE · {table_name} · {PIPELINE_MODE_NAMES[execution_plan.execution_mode]}")
         print_pipeline_contract(context, target_id, operation="Write", guardrails=[name for name in names if name not in {"Write", "Profile", "Processing"}], verbose=verbose)
         def run(stage, function):
-            result, record = _run_orchestration_stage(operation="WRITE", name=table_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose, allow_blocked=not execution_plan.permits_persistence)
+            result, record = run_orchestration_stage(operation="WRITE", name=table_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose, allow_blocked=not execution_plan.permits_persistence)
             stages.append(record)
             return result
         skipped = {"status": "skipped", "can_continue": True, "checks": []}
@@ -274,9 +289,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
                                             "simulated": [], "not_verified": ["target preparation and publication"]}}
                 dry_run = run("Processing", evaluate_processing)
                 profile = run("Profile", lambda: schedule_table_profiling(target_id, "write", verbose=verbose, presentations=presentations, dataframe=prepared, context=context, spark_session=spark_session))
-                metrics = dict(dry_run.get("write_metrics") or {})
-                for key in ("input_rows", "rows_committed", "total_target_rows", "rows_inserted", "rows_updated", "rows_unchanged", "versions_inserted", "versions_expired", "measurement_source"):
-                    metrics.setdefault(key, None)
+                metrics = _write_metrics(dry_run)
                 if metrics["input_rows"] is None:
                     metrics["input_rows"] = profile.get("row_count")
                 columns = getattr(prepared, "columns", None)
@@ -285,73 +298,71 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
                 passed = all(item["can_continue"] for item in source_checks) and all(stage["status"] != "blocked" for stage in [
                     *stages, *(stage for source in sources for stage in source.get("orchestration_stages", []))
                 ])
-                duration = summary.finish([("Mode", "Dry Run"), ("Target", target),
-                                           ("Checks passed", passed), ("Published", "No"), ("Persistence", "Disabled")])
-                display_profile_presentations(presentations)
-                operation.complete(stages, metrics=metrics)
-                return {**common_results, **dry_run, "dataframe": dry_run.get("dataframe", prepared), "published": False,
-                        "publication_status": "not_published", "profile_result": profile,
-                        "write_metrics": metrics,
-                        "validation_passed": passed, "testing_completed_at": datetime.now(UTC).isoformat(),
-                        "tested_contracts": tested_contract_identities(context, [target_id, *participant_ids]),
-                        "total_duration_seconds": duration}
-            write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, load_strategy_parameters=write_parameters, source_table_ids=source_ids, repartition_by=repartition_by, verbose=False, context={**(context or {}), "_spark_session": spark_session}))
-            published = write_result.get("published", True)
-            publication_status = write_result.get("publication_status", "published")
-            metrics = dict(write_result.get("write_metrics") or {})
-            for key in ("input_rows", "rows_committed", "total_target_rows", "rows_inserted", "rows_updated", "rows_unchanged", "versions_inserted", "versions_expired", "measurement_source"):
-                metrics.setdefault(key, None)
-            strategy = write_result.get("strategy", write_mode)
-            columns = getattr(prepared, "columns", None)
-            metrics.setdefault("input_columns", len(columns) if columns is not None else None)
-            operation.capture_metrics(metrics)
-            try:
-                profile = (run("Profile", lambda: schedule_table_profiling(write_result["table_id"], "write", verbose=verbose, presentations=presentations, context=context, spark_session=spark_session))
-                           if published else skip_table_profiling(target_id, "write", "No successful publication", context=context, spark_session=spark_session))
-            except RuntimeError as exc:
-                exc.published = published
-                exc.table_id = write_result["table_id"]
-                exc.write_metrics = dict(metrics)
-                exc.failed_stage = "Profile"
-                message = ("Target publication and checkpoint finalization already succeeded; Profile failed afterwards."
-                           if published else "The empty incremental scope was not published; Profile failed afterwards.")
-                exc.args = (f"{exc} {message}",)
-                if verbose:
-                    print(message)
-                raise
-            if profile.get("row_count") is not None:
-                metrics["total_target_rows"] = profile["row_count"]
-            load_status = (
-                "Already loaded"
-                if publication_status in {"already_applied", "metadata_recovered"}
-                else "Skipped — no new data"
-                if publication_status in {"empty_incremental_scope", "no_unseen_hashes"}
-                else "Loaded"
-                if published
-                else "Not loaded"
-            )
-            fields = [
-                ("Target", target),
-                ("Strategy", strategy.replace("_", " ").title()),
-                ("Load status", load_status),
-                ("Rows processed", metrics["input_rows"]),
-            ]
-            if strategy == "scd1":
-                fields.extend((label, metrics[key]) for label, key in (("Rows inserted", "rows_inserted"), ("Rows updated", "rows_updated"), ("Rows unchanged", "rows_unchanged")))
-            elif strategy == "scd2":
-                fields.extend((label, metrics[key]) for label, key in (("Versions inserted", "versions_inserted"), ("Versions expired", "versions_expired"), ("Rows unchanged", "rows_unchanged")))
-            elif strategy in {"append_all", "append_new_only"}:
-                fields.extend((label, metrics[key]) for label, key in (("Rows inserted", "rows_inserted"), ("Rows committed", "rows_committed")))
+                write_result = dry_run
+                published, publication_status = False, "not_published"
+                fields = [("Mode", "Dry Run"), ("Target", target), ("Checks passed", passed),
+                          ("Published", "No"), ("Persistence", "Disabled")]
             else:
-                fields.append(("Rows committed", metrics["rows_committed"]))
+                write_result = run("Write", lambda: pipeline_write(prepared, store=store, schema=schema, table_name=table_name, load_strategy=write_mode, load_strategy_parameters=write_parameters, source_table_ids=source_ids, repartition_by=repartition_by, verbose=False, context={**(context or {}), "_spark_session": spark_session}))
+                published = write_result.get("published", True)
+                publication_status = write_result.get("publication_status", "published")
+                metrics = _write_metrics(write_result)
+                strategy = write_result.get("strategy", write_mode)
+                columns = getattr(prepared, "columns", None)
+                metrics.setdefault("input_columns", len(columns) if columns is not None else None)
+                operation.capture_metrics(metrics)
+                try:
+                    profile = (run("Profile", lambda: schedule_table_profiling(write_result["table_id"], "write", verbose=verbose, presentations=presentations, context=context, spark_session=spark_session))
+                               if published else skip_table_profiling(target_id, "write", "No successful publication", context=context, spark_session=spark_session))
+                except RuntimeError as exc:
+                    exc.published = published
+                    exc.table_id = write_result["table_id"]
+                    exc.write_metrics = dict(metrics)
+                    exc.failed_stage = "Profile"
+                    message = ("Target publication and checkpoint finalization already succeeded; Profile failed afterwards."
+                               if published else "The empty incremental scope was not published; Profile failed afterwards.")
+                    exc.args = (f"{exc} {message}",)
+                    if verbose:
+                        print(message)
+                    raise
+                if profile.get("row_count") is not None:
+                    metrics["total_target_rows"] = profile["row_count"]
+                load_status = (
+                    "Already loaded"
+                    if publication_status in {"already_applied", "metadata_recovered"}
+                    else "Skipped — no new data"
+                    if publication_status in {"empty_incremental_scope", "no_unseen_hashes"}
+                    else "Loaded"
+                    if published
+                    else "Not loaded"
+                )
+                fields = [
+                    ("Target", target),
+                    ("Strategy", strategy.replace("_", " ").title()),
+                    ("Load status", load_status),
+                    ("Rows processed", metrics["input_rows"]),
+                ]
+                if strategy == "scd1":
+                    fields.extend((label, metrics[key]) for label, key in (("Rows inserted", "rows_inserted"), ("Rows updated", "rows_updated"), ("Rows unchanged", "rows_unchanged")))
+                elif strategy == "scd2":
+                    fields.extend((label, metrics[key]) for label, key in (("Versions inserted", "versions_inserted"), ("Versions expired", "versions_expired"), ("Rows unchanged", "rows_unchanged")))
+                elif strategy in {"append_all", "append_new_only"}:
+                    fields.extend((label, metrics[key]) for label, key in (("Rows inserted", "rows_inserted"), ("Rows committed", "rows_committed")))
+                else:
+                    fields.append(("Rows committed", metrics["rows_committed"]))
             duration = summary.finish(fields)
             display_profile_presentations(presentations)
-            operation.complete(
-                stages,
-                rows_written=metrics.get("rows_committed"),
-                metrics=metrics,
-            )
-            return {**common_results, **write_result, "write_metrics": metrics, "total_duration_seconds": duration, "dataframe": write_result.get("dataframe", prepared), "published": published, "publication_status": publication_status, "profile_result": profile}
+            if execution_plan.permits_persistence:
+                operation.complete(stages, rows_written=metrics.get("rows_committed"), metrics=metrics)
+            else:
+                operation.complete(stages, metrics=metrics)
+            result = {**common_results, **write_result, "write_metrics": metrics,
+                      "total_duration_seconds": duration, "dataframe": write_result.get("dataframe", prepared),
+                      "published": published, "publication_status": publication_status, "profile_result": profile}
+            if not execution_plan.permits_persistence:
+                result.update(validation_passed=passed, testing_completed_at=datetime.now(UTC).isoformat(),
+                              tested_contracts=tested_contract_identities(context, [target_id, *participant_ids]))
+            return result
         except Exception:
             mapping = sensitive.get("support_mapping")
             if mapping is not None:
@@ -385,7 +396,7 @@ def _write_file(dataframe, *, operation, execution_plan, sources, store, relativ
     summary = ExecutionSummary("WRITE", verbose=verbose)
     presentations, stages = [], []
     def run(name, function):
-        result, record = _run_orchestration_stage(operation="WRITE", name=relative_path,
+        result, record = run_orchestration_stage(operation="WRITE", name=relative_path,
             index=len(stages)+1, total=2, stage=name, function=function, verbose=verbose,
             allow_blocked=not execution_plan.permits_persistence)
         stages.append(record)

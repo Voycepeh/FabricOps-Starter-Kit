@@ -10,9 +10,9 @@ LIVE_PLAN = SimpleNamespace(execution_mode="governed", plan_id="plan", permits_p
 
 def test_dq_stage_prints_observed_percentages_independently_of_decision(capsys):
     """A passed tolerance decision must still display the observed violation rate."""
-    from fabricops_kit.pipeline.shared import _run_orchestration_stage
+    from fabricops_kit.pipeline.shared import run_orchestration_stage
 
-    _run_orchestration_stage(operation="READ", name="orders", index=1, total=1, stage="Data Quality",
+    run_orchestration_stage(operation="READ", name="orders", index=1, total=1, stage="Data Quality",
                              function=lambda: {"status": "passed", "summary": {
                                  "DQ_PASSED_ROW_PERCENT": 99.0, "DQ_FAILED_ROW_PERCENT": 1.0,
                                  "DQ_NOT_APPLICABLE_ROW_COUNT": 2,
@@ -342,13 +342,13 @@ def test_orchestration_status_aggregates_multi_source_results():
 
 def test_orchestration_stage_duration_is_two_decimal_seconds_with_minimum():
     """Stage inspection reports stable seconds instead of tiny scientific-notation values."""
-    from fabricops_kit.pipeline.shared import _run_orchestration_stage
+    from fabricops_kit.pipeline.shared import run_orchestration_stage
 
     with patch(
         "fabricops_kit.pipeline.shared.time.perf_counter",
         side_effect=[100.0, 100.000001],
     ):
-        _result, record = _run_orchestration_stage(
+        _result, record = run_orchestration_stage(
             operation="READ",
             name="orders",
             index=1,
@@ -364,7 +364,7 @@ def test_orchestration_stage_duration_is_two_decimal_seconds_with_minimum():
         "fabricops_kit.pipeline.shared.time.perf_counter",
         side_effect=[100.0, 101.234],
     ):
-        _result, record = _run_orchestration_stage(
+        _result, record = run_orchestration_stage(
             operation="WRITE",
             name="orders",
             index=1,
@@ -392,8 +392,8 @@ def test_orchestrators_reject_notebook_profiling_controls(operation, parameter):
 
 def test_testing_blocked_stage_prints_diagnostics_and_retains_result(capsys):
     """A normal Testing violation must remain inspectable with verbose output enabled."""
-    from fabricops_kit.pipeline.shared import _run_orchestration_stage
-    result, stage = _run_orchestration_stage(operation="WRITE", name="orders", index=1, total=1,
+    from fabricops_kit.pipeline.shared import run_orchestration_stage
+    result, stage = run_orchestration_stage(operation="WRITE", name="orders", index=1, total=1,
         stage="Grain", function=lambda: {"status": "failed", "can_continue": False}, verbose=True, allow_blocked=True)
     assert not result["can_continue"] and stage["status"] == "blocked"
     assert "Blocked (diagnostic)" in capsys.readouterr().out
@@ -401,7 +401,7 @@ def test_testing_blocked_stage_prints_diagnostics_and_retains_result(capsys):
 
 def test_stage_failure_retains_actual_publication_and_persistence_status():
     """Stage attribution must preserve the partial outcome returned by a native writer."""
-    from fabricops_kit.pipeline.shared import _run_orchestration_stage
+    from fabricops_kit.pipeline.shared import run_orchestration_stage
     failure = ValueError("metadata finalization failed")
     failure.published = True
     failure.persistence_status = "incomplete"
@@ -409,7 +409,7 @@ def test_stage_failure_retains_actual_publication_and_persistence_status():
     def fail():
         raise failure
     with pytest.raises(RuntimeError) as raised:
-        _run_orchestration_stage(operation="WRITE", name="orders", index=1, total=1, stage="Write", function=fail, verbose=False)
+        run_orchestration_stage(operation="WRITE", name="orders", index=1, total=1, stage="Write", function=fail, verbose=False)
     assert raised.value.published is True and raised.value.persistence_status == "incomplete"
     assert raised.value.table_id == "target" and raised.value.__cause__ is failure
 
@@ -417,15 +417,15 @@ def test_stage_failure_retains_actual_publication_and_persistence_status():
 @pytest.mark.parametrize("stage", ["Schema", "Grain", "Data Quality", "Sensitive Data", "Source Drift"])
 def test_required_unexecuted_guardrail_fails_live_and_keeps_testing_input(stage):
     """An unexecuted check cannot authorize Live or discard Testing's prepared input."""
-    from fabricops_kit.pipeline.shared import _run_orchestration_stage
+    from fabricops_kit.pipeline.shared import run_orchestration_stage
     frame = object()
     outcome = {"status": "skipped", "can_continue": True, "dataframe": frame}
     value = [outcome] if stage == "Source Drift" else outcome
     options = dict(operation="WRITE", name="orders", index=1, total=1, stage=stage,
                    function=lambda: value, verbose=False)
     with pytest.raises(RuntimeError, match="configured Guardrail did not execute"):
-        _run_orchestration_stage(**options)
-    result, record = _run_orchestration_stage(**options, allow_blocked=True)
+        run_orchestration_stage(**options)
+    result, record = run_orchestration_stage(**options, allow_blocked=True)
     actual = result[0] if isinstance(result, list) else result
     assert actual["dataframe"] is frame and actual["can_continue"] is False
     assert record["status"] == "blocked" and record["evaluation_status"] == "not_fully_evaluated"
@@ -433,8 +433,8 @@ def test_required_unexecuted_guardrail_fails_live_and_keeps_testing_input(stage)
 
 def test_static_freshness_is_an_intentional_contract_opt_out():
     """No refresh expected is a saved policy rather than an unavailable required check."""
-    from fabricops_kit.pipeline.shared import _run_orchestration_stage
-    result, record = _run_orchestration_stage(operation="READ", name="static", index=1, total=1,
+    from fabricops_kit.pipeline.shared import run_orchestration_stage
+    result, record = run_orchestration_stage(operation="READ", name="static", index=1, total=1,
         stage="Freshness", function=lambda: {"status": "skipped", "rule_type": "skip", "can_continue": True}, verbose=False)
     assert result["can_continue"] and record["status"] == "skipped"
 
@@ -448,3 +448,44 @@ def isolated_operation_journal(monkeypatch):
     for name in ("orchestrate_read", "orchestrate_write"):
         monkeypatch.setattr(import_module(f"fabricops_kit.pipeline.{name}"), "PipelineOperation",
                             lambda _plan, _role, arguments: nullcontext(Mock(arguments=arguments)))
+
+
+@pytest.mark.parametrize("mode", ["dry_run", "ungoverned", "governed"])
+def test_table_write_sequence_is_identical_across_execution_modes(monkeypatch, mode):
+    """Keep checks before processing/publication and Profile after it in every table mode."""
+    from copy import deepcopy
+    from tests.helpers import execution_context_stub
+    owner = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
+    plan = deepcopy(LIVE_PLAN)
+    plan.execution_mode, plan.permits_persistence = mode, mode != "dry_run"
+    frame = SimpleNamespace(columns=["id"])
+    context = execution_context_stub({"target": None}, {"target": [
+        {"guardrail_type": kind} for kind in ("sensitive_data", "schema", "data_quality")]})
+    context["execution_plan"] = plan
+    events = []
+    def action(name, result):
+        def call(*args, **kwargs):
+            events.append(name)
+            return result
+        return call
+    monkeypatch.setattr(owner, "resolve_table_id", lambda **kw: "target")
+    monkeypatch.setattr(owner, "prepare_pipeline_execution", lambda *a, **kw: context)
+    monkeypatch.setattr(owner, "evaluate_pipeline_source_drift", action("Source Drift", {"status": "disabled"}))
+    monkeypatch.setattr(owner, "source_guardrail_results", action("Source checks", []))
+    monkeypatch.setattr(owner, "check_sensitive_data", action("Sensitive Data", {"status": "passed", "dataframe": frame}))
+    monkeypatch.setattr(owner, "check_schema", action("Schema", {"status": "passed"}))
+    monkeypatch.setattr(owner, "check_dq", action("Data Quality", {"status": "passed"}))
+    boundary = "Write" if plan.permits_persistence else "Processing"
+    monkeypatch.setattr(owner, "pipeline_write", action(boundary, {"table_id": "target", "dataframe": frame,
+        "strategy": "overwrite", "published": plan.permits_persistence,
+        "publication_status": "published" if plan.permits_persistence else "not_published"}))
+    monkeypatch.setattr(owner, "schedule_table_profiling", action("Profile", {"status": "completed", "row_count": 2}))
+    monkeypatch.setattr(owner, "tested_contract_identities", lambda *a: [])
+    result = run_pipeline_operation(owner.orchestrate_write, frame, plan=plan,
+        store="Silver", table_name="target", write_mode="overwrite", verbose=False)
+    assert events == ["Source Drift", "Source checks", "Sensitive Data", "Schema", "Data Quality", boundary, "Profile"]
+    assert [stage["stage"] for stage in result["orchestration_stages"]] == ["Sensitive Data", "Schema", "Data Quality", boundary, "Profile"]
+    assert result["dataframe"] is frame
+    assert result["published"] is plan.permits_persistence
+    assert result["write_metrics"]["rows_committed"] is None
+    assert result["write_metrics"]["input_columns"] == 1

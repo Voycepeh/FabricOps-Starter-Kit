@@ -155,7 +155,7 @@ def _orchestration_status(result: Any) -> str:
     return "passed"
 
 
-def _run_orchestration_stage(*, operation: str, name: str, index: int, total: int, stage: str, function, verbose: bool, allow_blocked: bool = False):
+def run_orchestration_stage(*, operation: str, name: str, index: int, total: int, stage: str, function, verbose: bool, allow_blocked: bool = False):
     """Run one visible stage while retaining its original exception as the cause."""
     started = time.perf_counter()
     if verbose:

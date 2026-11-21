@@ -470,3 +470,42 @@ def test_dry_run_reports_blocked_sources_without_publication(files, monkeypatch)
     assert result['validation_passed'] is False and result['published'] is False
     assert result['testing_completed_at'] and result['output_layout'] is None
     assert result['overflow_occurred'] is None
+
+
+@pytest.mark.parametrize("mode", ["Dry Run", "Ungoverned"])
+@pytest.mark.parametrize("write_mode", ["overwrite", "append_all"])
+def test_file_orchestration_preserves_read_and_write_stage_sequences(files, output, monkeypatch, mode, write_mode):
+    """File overwrites profile before replacement; appends profile afterwards; Dry Run never writes."""
+    reader = importlib.import_module("fabricops_kit.pipeline.orchestrate_read")
+    writer = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
+    io = importlib.import_module("fabricops_kit.io")
+    events = []
+    def observe(name, function):
+        def call(*args, **kwargs):
+            events.append(name)
+            return function(*args, **kwargs)
+        return call
+    monkeypatch.setattr(reader, "read_file_participant", observe("Read", reader.read_file_participant))
+    def profile(*args, **kwargs):
+        events.append("Write Profile" if kwargs.get("operation") == "write" else "Read Profile")
+        return {"status": "completed", "row_count": 2}
+    monkeypatch.setattr(shared, "schedule_file_profiling", profile)
+    monkeypatch.setattr(reader, "schedule_file_profiling", profile)
+    monkeypatch.setattr(writer, "source_guardrail_results", observe("Source checks", writer.source_guardrail_results))
+    monkeypatch.setattr(writer, "evaluate_pipeline_source_drift", observe("Source Drift", writer.evaluate_pipeline_source_drift))
+    monkeypatch.setattr(io, "write_lakehouse_file", observe("Write", io.write_lakehouse_file))
+    setup_pipeline(pipeline_mode=mode)
+    source = orchestrate_read(store="Bronze", relative_path="input/orders.csv", file_format="csv")
+    result = orchestrate_write(output.frame, store="Silver", relative_path="orders.csv", file_format="csv", write_mode=write_mode)
+    assert [stage["stage"] for stage in source["orchestration_stages"]] == ["Read", "Profile"]
+    prefix = ["Read", "Read Profile", "Source checks", "Source Drift"]
+    if mode == "Dry Run":
+        assert events == prefix + ["Write Profile"]
+        assert [stage["stage"] for stage in result["orchestration_stages"]] == ["Processing", "Profile"]
+        assert result["published"] is False
+    elif write_mode == "overwrite":
+        assert events == prefix + ["Write Profile", "Write"]
+        assert [stage["stage"] for stage in result["orchestration_stages"]] == ["Profile", "Write"]
+    else:
+        assert events == prefix + ["Write", "Write Profile"]
+        assert [stage["stage"] for stage in result["orchestration_stages"]] == ["Write", "Profile"]

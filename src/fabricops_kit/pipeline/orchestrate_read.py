@@ -16,7 +16,7 @@ from fabricops_kit.pipeline.shared import (
     schedule_table_profiling,
     PipelineOperation,
     execution_result,
-    _run_orchestration_stage,
+    run_orchestration_stage,
     prepare_pipeline_execution,
     pipeline_guardrail_types,
     print_pipeline_contract,
@@ -153,7 +153,14 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
             if (not isinstance(target_store, str) or not target_store.strip()
                     or not isinstance(target_table_name, str) or not target_table_name.strip()):
                 raise ValueError("target_store and target_table_name are required for incremental reads or supplied target coordinates.")
-        execution_plan = session.operation_plan("source", locals())
+        arguments = {
+            "store": store, "schema": schema, "table_name": table_name, "read_mode": read_mode,
+            "query": query, "read_parameters": read_parameters, "target_store": target_store,
+            "target_schema": target_schema, "target_table_name": target_table_name,
+            "relative_path": relative_path, "file_format": file_format, "read_options": read_options,
+            "verbose": verbose, "dq_diagnostics": dq_diagnostics, "spark_session": spark_session,
+        }
+        execution_plan = session.operation_plan("source", arguments)
         target_table_id = resolve_table_id(
             store=target_store, schema=target_schema, table_name=target_table_name,
             context=execution_plan.runtime_context,
@@ -161,7 +168,7 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
     except BaseException:
         session.close(failed=True)
         raise
-    arguments = {key: value for key, value in locals().items() if key not in {"session"}}
+    arguments["target_table_id"] = target_table_id
     with PipelineOperation(execution_plan, "source", arguments) as operation:
         if dq_diagnostics not in {"none", "sample", "full"}:
             raise ValueError("dq_diagnostics must be 'none', 'sample', or 'full'.")
@@ -188,7 +195,7 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
             print(f"FabricOps READ · {source_name} · {PIPELINE_MODE_NAMES[execution_plan.execution_mode]}")
         print_pipeline_contract(context, table_id, operation="Read", guardrails=[label for kind, label in labels if kind in active], verbose=verbose)
         def run(stage, function):
-            result, record = _run_orchestration_stage(operation="READ", name=source_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose, allow_blocked=not execution_plan.permits_persistence)
+            result, record = run_orchestration_stage(operation="READ", name=source_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose, allow_blocked=not execution_plan.permits_persistence)
             stages.append(record)
             return result
         source = run("Read", lambda: read_file_participant(file_identity, context=context, spark_session=spark_session)) if is_file else run("Read", lambda: pipeline_read(store=store, schema=schema, table_name=table_name, read_mode=read_mode, query=query, read_parameters=read_parameters, target_table_id=target_table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}))

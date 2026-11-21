@@ -173,7 +173,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:28`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L240">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L247">View on GitHub</a>
 </div>
 
 
@@ -386,7 +386,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._replace_snapshot_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared._rule_review_status</code></li>
-<li><code>fabricops_kit.pipeline.shared._run_orchestration_stage</code></li>
 <li><code>fabricops_kit.pipeline.shared._scalar_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_table_guardrail_rule</code></li>
@@ -468,6 +467,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.resolve_profiled_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.row_hash_expression</code></li>
 <li><code>fabricops_kit.pipeline.shared.row_hash_totals</code></li>
+<li><code>fabricops_kit.pipeline.shared.run_orchestration_stage</code></li>
 <li><code>fabricops_kit.pipeline.shared.schedule_file_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.schedule_table_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.schema_check_core</code></li>
