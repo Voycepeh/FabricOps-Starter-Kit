@@ -177,3 +177,22 @@ def test_finalization_keeps_the_snapshot_staged_for_the_physical_batch(monkeypat
     assert [r['max_change_value'] for r in records if r['record_type'] != 'publication_receipt'] == ['2026-09-11']
     assert shared._PENDING_SOURCE_OBSERVATIONS[key] == [newer]
     assert written == records
+
+
+def test_processing_history_scope_keeps_complete_receipt_packages(spark_session):
+    """Filter unrelated workspaces and targets before collecting, keeping receipts with no source ID."""
+    from copy import deepcopy
+    records = [
+        {"record_id": "receipt", "record_type": "publication_receipt", "status": "committed",
+         "workspace_id": "dev", "target_table_id": "target", "publication_id": "publication"},
+        {"record_id": "checkpoint", "record_type": "incremental_checkpoint", "status": "committed",
+         "workspace_id": "dev", "target_table_id": "target", "source_table_id": "source", "publication_id": "publication"},
+        {"record_id": "unrelated-workspace", "record_type": "unsupported", "workspace_id": "other", "target_table_id": "target"},
+        {"record_id": "unrelated-target", "record_type": "unsupported", "workspace_id": "dev", "target_table_id": "other"},
+    ]
+    records = [{**_audit(), "status": "committed", **row} for row in records]
+    frame = spark_session.createDataFrame(records, shared.processing_state_schema())
+    for history in (deepcopy(records), frame):
+        scoped = shared._processing_state_rows(history, workspace_id="dev", target_table_id="target")
+        assert {row["record_id"] for row in scoped} == {"receipt", "checkpoint"}
+        assert next(row for row in scoped if row["record_id"] == "receipt").get("source_table_id") is None

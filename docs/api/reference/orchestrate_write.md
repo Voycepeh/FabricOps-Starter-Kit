@@ -224,7 +224,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 296 |
+| Live-critical dependencies | 297 |
 
 ### Release history
 
@@ -363,6 +363,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data</code></li>
 <li><code>fabricops_kit.pipeline.orchestrate_write._write_file</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._persist_target_processing</code></li>
+<li><code>fabricops_kit.pipeline.pipeline_write._record_recovered_metrics</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._source_table_ids</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._target_has_rows</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._warehouse_target_exists</code></li>

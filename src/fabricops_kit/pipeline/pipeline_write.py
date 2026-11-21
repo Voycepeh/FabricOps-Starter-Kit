@@ -185,6 +185,17 @@ def _source_table_ids(values: list[str] | tuple[str, ...] | None) -> list[str]:
     return source_ids
 
 
+def _record_recovered_metrics(metrics, strategy):
+    """Report zero new business mutations for a verified previously published batch."""
+    metrics.update(rows_committed=0, measurement_source="already_applied")
+    if strategy == "scd1":
+        metrics.update(rows_inserted=0, rows_updated=0)
+    elif strategy == "scd2":
+        metrics.update(versions_inserted=0, versions_expired=0)
+    else:
+        metrics["rows_inserted"] = 0
+
+
 def pipeline_write(
     df,
     *,
@@ -639,13 +650,7 @@ def pipeline_write(
         )
 
         if batch.already_applied:
-            write_metrics.update(rows_committed=0, measurement_source="already_applied")
-            if strategy == "scd1":
-                write_metrics.update(rows_inserted=0, rows_updated=0)
-            elif strategy == "scd2":
-                write_metrics.update(versions_inserted=0, versions_expired=0)
-            else:
-                write_metrics["rows_inserted"] = 0
+            _record_recovered_metrics(write_metrics, strategy)
             if verbose:
                 label = "metadata-finalization recovery" if batch.finalization_recovery else "already-applied exact batch"
                 print(f"5. Physical publication → {label}; exact batch verified")
@@ -709,13 +714,7 @@ def pipeline_write(
                 physical_options["userMetadata"] = json.dumps(batch.receipt, sort_keys=True)
             success_context["publication_snapshot"] = batch.publication_snapshot
             stage_pipeline_write_observations(success_context)
-            write_metrics.update(rows_committed=0, measurement_source="already_applied")
-            if strategy == "scd1":
-                write_metrics.update(rows_inserted=0, rows_updated=0)
-            elif strategy == "scd2":
-                write_metrics.update(versions_inserted=0, versions_expired=0)
-            else:
-                write_metrics["rows_inserted"] = 0
+            _record_recovered_metrics(write_metrics, strategy)
         record_pipeline_publication(target_table_id, "published", receipt=batch.receipt, context=context)
         # Receipt counts become committed metrics only after physical confirmation.
         # Keyed merges cannot infer business changes from their input cardinality.

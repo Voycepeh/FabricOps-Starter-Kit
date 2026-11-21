@@ -547,11 +547,7 @@ def test_profile_registration_rejects_partition_processing_parameter():
     module = importlib.import_module("fabricops_kit.pipeline.shared")
 
     with pytest.raises(ValueError, match="partition_column"):
-        module._processing_definition(
-            "target",
-            "overwrite",
-            {"partition_column": "business_date"},
-        )
+        module.validated_processing({"load_strategy": "overwrite", "partition_column": "business_date"})
 
 
 def test_profile_snapshot_identity_is_stable_per_activity_and_distinct_between_activities(monkeypatch):

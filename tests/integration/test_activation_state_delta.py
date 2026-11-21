@@ -132,7 +132,7 @@ def contract_activation_delta(authority_delta, monkeypatch):
     original = service.metadata_records
     monkeypatch.setattr(service, "metadata_records", lambda table, **kw: [dict(contract)] if table == "METADATA_DATA_CONTRACT" else original(table, **kw))
     monkeypatch.setattr(pipeline, "resolve_catalogue_table_identity", lambda *a, **kw: {"table_id": "orders"})
-    monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda identities, **kw: {"orders": operation(workspace=kw["workspace_id"])["destination"]})
+    monkeypatch.setattr(pipeline, "pipeline_physical_bindings", lambda identities, **kw: {"orders": service.operation_physical_binding(operation(workspace=kw["workspace_id"]))})
     r.payload_sha256 = hashlib.sha256(payload.encode()).hexdigest()
     return r
 
@@ -164,9 +164,41 @@ def test_contract_activation_rejects_changed_human_review_before_mutation(contra
     """Reviewed physical binding and payload hashes are checked before acquiring mutation authority."""
     from tests.unit.test_activated_pipeline import operation
     r = contract_activation_delta
-    checks = {'expected_destination': operation(workspace='OTHER')['destination']} if precondition == 'binding' else {'expected_payload_sha256': 'f' * 64}
+    checks = {'expected_destination': service.operation_physical_binding(operation(workspace='OTHER'))} if precondition == 'binding' else {'expected_payload_sha256': 'f' * 64}
     with pytest.raises(ValueError, match='changed after review'):
         service.set_table_contract_activation('orders', 'contract', 1, expected_activation_id=None,
             activation_id='reviewed-operation', governance_confirmed=True, context=r.context,
             spark_session=r.spark, **checks)
     assert service.read_activations(context=r.context, spark_session=r.spark) == []
+
+
+def test_governance_mutations_retain_unaffected_history_files(authority_delta):
+    """Inserts retain all old files and updates retain files owned by an unrelated workspace."""
+    r = authority_delta
+    service.commit_pipeline_promotion(r.candidate(workspace="OTHER"), expected_active_version=None,
+        context=r.context, spark_session=r.spark)
+    foreign_files = set(r.spark.read.format("delta").load(r.path).inputFiles())
+    service.commit_pipeline_promotion(r.candidate(), expected_active_version=None, context=r.context, spark_session=r.spark)
+    all_files = set(r.spark.read.format("delta").load(r.path).inputFiles())
+    assert foreign_files <= all_files
+    assert all_files - foreign_files
+    service.commit_pipeline_promotion(r.candidate(2), expected_active_version=1, context=r.context, spark_session=r.spark)
+    assert foreign_files <= set(r.spark.read.format("delta").load(r.path).inputFiles())
+    rows = service.read_registry(context=r.context, spark_session=r.spark)
+    assert len(rows) == 3
+    assert {(row["execution_workspace_id"], row["pipeline_version"]) for row in rows if row["status"] == "active"} == {
+        ("DEV", 2), ("OTHER", 1)}
+
+
+def test_governance_update_preserves_unrelated_rows_in_a_shared_file(authority_delta):
+    """Replacing one owner's rows cannot erase another owner's rows in the same Delta file."""
+    r = authority_delta
+    foreign = r.candidate(workspace="OTHER")
+    r.spark.createDataFrame([r.candidate(), foreign], metadata_table_schema_registry()[service.REGISTRY_TABLE]).coalesce(1).write.format(
+        "delta").mode("append").save(r.path)
+    assert len(r.spark.read.format("delta").load(r.path).inputFiles()) == 1
+    service.commit_pipeline_promotion(r.candidate(2), expected_active_version=1, context=r.context, spark_session=r.spark)
+    rows = service.read_registry(context=r.context, spark_session=r.spark)
+    assert len(rows) == 3
+    retained = next(row for row in rows if row["execution_workspace_id"] == "OTHER")
+    assert all(retained.get(key) == value for key, value in foreign.items())
