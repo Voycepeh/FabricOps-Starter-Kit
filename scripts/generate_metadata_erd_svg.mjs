@@ -17,9 +17,9 @@ function renderMetadataSvg(layout, models) {
     ["DATA_CONTRACT_ACTIVATION","DATA_CONTRACT","N-1","physical","M425 170H335",[425,170],[335,170],"Each physical workspace/Table ID activation references one exact frozen Contract version independently of Pipeline Promotion"],
     ["PIPELINE_RUN","GUARDRAIL_RESULTS","1-N","physical","M1115 515H1205",[1115,515],[1205,515],"Pipeline run to recorded guardrail outcomes"],
     ["DATA_CATALOGUE","DATA_PROFILED","1-N","physical","M475 598V642Q475 650 467 650H193Q185 650 185 658V735",[475,598],[185,735],"Catalogue asset to column statistics"],
-    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","reference","M575 598V735",[575,598],[575,735],"Catalogue asset to frequency observations"],
-    ["DATA_CATALOGUE","GUARDRAIL_RESULTS","","reference","M650 423V398Q650 390 658 390H1272Q1280 390 1280 398V423",[650,423],[1280,423],"Guardrail asset reference when resolved: asset_workspace_id + table_id + asset_type; not a separate Catalogue parent check"],
-    ["DATA_CATALOGUE","DATA_LINEAGE","","reference","M625 598V702Q625 710 633 710H767Q775 710 775 718V967Q775 975 783 975H1422Q1430 975 1430 967V959",[625,598],[1430,959],"Source and target asset references: join source_asset_workspace_id + source_table_id + source_asset_type and target_asset_workspace_id + target_table_id + target_asset_type separately to the Catalogue asset key; null sources represent constants or gaps"],
+    ["DATA_CATALOGUE","DATA_PROFILED_FREQUENCY","1-N","physical","M575 598V735",[575,598],[575,735],"Catalogue asset to frequency observations"],
+    ["DATA_CATALOGUE","GUARDRAIL_RESULTS","1-N","reference","M650 423V398Q650 390 658 390H1272Q1280 390 1280 398V423",[650,423],[1280,423],"Guardrail asset reference when resolved: asset_workspace_id + table_id + asset_type; not a separate Catalogue parent check"],
+    ["DATA_CATALOGUE","DATA_LINEAGE","1-N","reference","M625 598V702Q625 710 633 710H767Q775 710 775 718V967Q775 975 783 975H1422Q1430 975 1430 967V959",[625,598],[1430,959],"Each source or target asset reference is 1:N separately: join source_asset_workspace_id + source_table_id + source_asset_type and target_asset_workspace_id + target_table_id + target_asset_type separately to the Catalogue asset key; null sources represent constants or gaps"],
     ["DATA_CATALOGUE","DATA_ACCESS","1-N","physical","M675 598V642Q675 650 683 650H957Q965 650 965 658V735",[675,598],[965,735],"Catalogue table to observed permissions"],
     ["DATA_PROFILED","DATA_PROFILED_FREQUENCY","1-N","physical","M335 821H425",[335,821],[425,821],"Optional statistical profile reference on frequency rows"],
     ["DATA_CONTRACT","GUARDRAIL_RESULTS","1-N","physical","M335 194H395V352Q395 360 403 360H1347Q1355 360 1355 368V423",[335,194],[1355,423],"Contract versions to their Guardrail results"],
@@ -90,8 +90,8 @@ function renderMetadataSvg(layout, models) {
       ["PK", groupedPrimary ? model.primary_key : [], 0, "Composite primary key"],
       ["FK", catalogueReference, keys.length, "Composite foreign key to DATA_CATALOGUE, checked by FabricOps"],
       ["FK", operationReference, keys.length, "Catalogue asset key within each operations[] entry; application-level reference, not a Delta constraint"],
-      ["FK", resultReference, keys.length, "Optional physical Catalogue asset reference when resolved; results do not require a separate Catalogue parent check"],
-      ...lineageReferences.map((fields, index) => ["FK", fields, keys.length + index * 3,
+      ["REF", resultReference, keys.length, "Optional physical Catalogue asset reference when resolved; results do not require a separate Catalogue parent check"],
+      ...lineageReferences.map((fields, index) => ["REF", fields, keys.length + index * 3,
         `${index === 0 ? "Source" : "Target"} physical Catalogue asset key; join workspace, table and asset type together`]),
     ];
     for (const [kind, groupFields, firstRow, title] of groups) {
@@ -100,7 +100,7 @@ function renderMetadataSvg(layout, models) {
       const firstBaseline = y + 57 + firstRow * rowSpacing;
       const lastBaseline = firstBaseline + (groupFields.length - 1) * rowSpacing;
       const mid = (firstBaseline + lastBaseline) / 2;
-      lines += `\n<g data-key-role="${kind}" data-key-fields="${esc(groupFields.join(","))}"><title>${title}</title><path d="M${x+45} ${firstBaseline-10}H${x+39}V${lastBaseline+4}H${x+45}" fill="none" stroke="${color}"/><text x="${x+13}" y="${mid}" fill="${color}" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">${kind}</text></g>`;
+      lines += `\n<g data-key-role="${kind}" data-key-fields="${esc(groupFields.join(","))}"><title>${title}</title><path d="M${x+45} ${firstBaseline-10}H${x+39}V${lastBaseline+4}H${x+45}" fill="none" stroke="${color}"/><text x="${x+13}" y="${mid}" fill="${color}" font-weight="700" font-size="14" font-family="Segoe UI, Arial, sans-serif">${kind === "REF" ? "Ref" : kind}</text></g>`;
     }
     block=block.replace(/^<text (?![^>\n]*fill="white")[^\n]*\n/gm,"");
     if (name === "PIPELINE_REGISTRY") lines += `\n<text x="${x+13}" y="${y+162}" fill="#2563EB" font-size="12" font-family="Segoe UI, Arial, sans-serif">Engineering deployment evidence</text>`;
@@ -157,7 +157,7 @@ function renderMetadataSvg(layout, models) {
     const [from,to,card,kind,d,p0,p1,label]=r;
     const referenceFields = from === "DATA_CATALOGUE" ? models[to].catalogue_reference_fields : [];
     const referenceLabel = referenceFields?.length ? " through " + referenceFields.join(" + ") + " on new records" : "";
-    const color=kind==="logical"?"#7C3AED":"#2563EB";
+    const color=["logical", "reference"].includes(kind)?"#7C3AED":"#2563EB";
     // Explicit orientation follows the first and last path segments.
     const first=d.match(/^M(-?[\d.]+) (-?[\d.]+)([HV])(-?[\d.]+)/);
     const last=d.match(/([HV])(-?[\d.]+)$/);
@@ -173,6 +173,8 @@ function renderMetadataSvg(layout, models) {
       ? '<text x="770" y="482" text-anchor="middle" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">via</text><text x="770" y="497" text-anchor="middle" font-size="12" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">operations</text>'
       : from === "DATA_CATALOGUE" && to === "DATA_CONTRACT"
       ? '<text x="203" y="337" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">Catalogue asset</text>'
+      : from === "DATA_CATALOGUE" && to === "DATA_LINEAGE"
+      ? '<text x="793" y="949" font-size="13" font-family="Segoe UI, Arial, sans-serif" fill="#52627A">Source / target</text>'
       : "";
     return `<g class="metadata-er-relationship" data-from="${from}" data-to="${to}" data-cardinality="${card}" data-kind="${kind}">\n<title>${esc(label + referenceLabel)} (${card ? esc(card) + "; " : ""}${kind === "nested" ? "nested asset participation; join by identity" : kind === "logical" ? "logical identity reference" : kind === "reference" ? "asset reference; join by physical identity" : kind === "optional" ? "optional physical asset reference" : "keyed reference; application-enforced"})</title>\n<path d="${d}" fill="none" stroke="${color}" stroke-width="${kind==="logical"?"1.9":"2.2"}" stroke-linecap="round" stroke-linejoin="round" ${kind === "reference" ? 'stroke-dasharray="1 6"' : ["logical", "nested", "optional"].includes(kind)?'stroke-dasharray="5 4"':""}/>\n${badge(start[0],start[1],one,color)}${badge(end[0],end[1],many,color)}${relationshipLabel}\n</g>`;
   }).join("\n");
