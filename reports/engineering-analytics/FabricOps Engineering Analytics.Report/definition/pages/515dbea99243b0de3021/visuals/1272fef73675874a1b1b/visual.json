@@ -1,0 +1,447 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "1272fef73675874a1b1b",
+  "position": {
+    "x": 24,
+    "y": 947,
+    "z": 90,
+    "height": 158,
+    "width": 1392,
+    "tabOrder": 90
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "drillFilterOtherVisuals": true,
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Event order"
+                }
+              },
+              "queryRef": "FactProfileEvent.Event order",
+              "nativeQueryRef": "Event order (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Data asset"
+                }
+              },
+              "queryRef": "FactProfileEvent.Data asset",
+              "nativeQueryRef": "Data asset (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Trigger"
+                }
+              },
+              "queryRef": "FactProfileEvent.Trigger",
+              "nativeQueryRef": "Trigger (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Activity"
+                }
+              },
+              "queryRef": "FactProfileEvent.Activity",
+              "nativeQueryRef": "Activity (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Profile status"
+                }
+              },
+              "queryRef": "FactProfileEvent.Profile status",
+              "nativeQueryRef": "Profile status (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Persisted"
+                }
+              },
+              "queryRef": "FactProfileEvent.Persisted",
+              "nativeQueryRef": "Persisted (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Empty result"
+                }
+              },
+              "queryRef": "FactProfileEvent.Empty result",
+              "nativeQueryRef": "Empty result (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Snapshot ID"
+                }
+              },
+              "queryRef": "FactProfileEvent.Snapshot ID",
+              "nativeQueryRef": "Snapshot ID (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Completion UTC"
+                }
+              },
+              "queryRef": "FactProfileEvent.Completion UTC",
+              "nativeQueryRef": "Completion UTC (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Profile scope"
+                }
+              },
+              "queryRef": "FactProfileEvent.Profile scope",
+              "nativeQueryRef": "Profile scope (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Profile rows"
+                }
+              },
+              "queryRef": "FactProfileEvent.Profile rows",
+              "nativeQueryRef": "Profile rows (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Profile limit"
+                }
+              },
+              "queryRef": "FactProfileEvent.Profile limit",
+              "nativeQueryRef": "Profile limit (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Reason"
+                }
+              },
+              "queryRef": "FactProfileEvent.Reason",
+              "nativeQueryRef": "Reason (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Profile context"
+                }
+              },
+              "queryRef": "FactProfileEvent.Profile context",
+              "nativeQueryRef": "Profile context (FactProfileEvent)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactProfileEvent"
+                    }
+                  },
+                  "Property": "Profiling Activities"
+                }
+              },
+              "queryRef": "FactProfileEvent.Profiling Activities",
+              "nativeQueryRef": "Profiling Activities (FactProfileEvent)"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Profiling activity journal'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "13L"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#19243A'"
+                    }
+                  }
+                }
+              }
+            },
+            "alignment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'left'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#FFFFFF'"
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0L"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#DDE3F3'"
+                    }
+                  }
+                }
+              }
+            },
+            "radius": {
+              "expr": {
+                "Literal": {
+                  "Value": "5L"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "padding": [
+        {
+          "properties": {
+            "top": {
+              "expr": {
+                "Literal": {
+                  "Value": "8L"
+                }
+              }
+            },
+            "bottom": {
+              "expr": {
+                "Literal": {
+                  "Value": "8L"
+                }
+              }
+            },
+            "left": {
+              "expr": {
+                "Literal": {
+                  "Value": "10L"
+                }
+              }
+            },
+            "right": {
+              "expr": {
+                "Literal": {
+                  "Value": "10L"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "Filterafbb5f1a3ba01096d22e3dd0",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "FactPipelineRun"
+              }
+            },
+            "Property": "Show Run Detail"
+          }
+        },
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "m",
+              "Entity": "FactPipelineRun",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Comparison": {
+                  "ComparisonKind": 0,
+                  "Left": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Source": "m"
+                        }
+                      },
+                      "Property": "Show Run Detail"
+                    }
+                  },
+                  "Right": {
+                    "Literal": {
+                      "Value": "1L"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User",
+        "isHiddenInViewMode": true,
+        "isLockedInViewMode": true
+      }
+    ]
+  }
+}

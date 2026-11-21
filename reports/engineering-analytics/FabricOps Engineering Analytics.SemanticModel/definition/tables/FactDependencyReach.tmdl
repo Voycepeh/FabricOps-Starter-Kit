@@ -1,0 +1,110 @@
+table FactDependencyReach
+	lineageTag: bc19ad4b-66de-5ade-abaf-8765bd4e1b98
+
+	measure 'Direct Downstream Tables' =
+			IF ( HASONEVALUE ( DimLineageRoot[Root key] ),
+			    COALESCE ( CALCULATE ( DISTINCTCOUNT ( FactDependencyReach[Node key] ), FactDependencyReach[Direction] = "Downstream", FactDependencyReach[Node type] = "Table", FactDependencyReach[Direct] = TRUE () ), 0 ) )
+		lineageTag: 0e5282f6-55cc-57aa-b66f-03f455ba115e
+		formatString: #,0
+
+	measure 'Total Downstream Tables' =
+			IF ( HASONEVALUE ( DimLineageRoot[Root key] ),
+			    COALESCE ( CALCULATE ( DISTINCTCOUNT ( FactDependencyReach[Node key] ), FactDependencyReach[Direction] = "Downstream", FactDependencyReach[Node type] = "Table" ), 0 ) )
+		lineageTag: 5d2d6d6c-bdea-5765-9d33-724a7befa819
+		formatString: #,0
+
+	measure 'Downstream Pipelines' =
+			IF ( HASONEVALUE ( DimLineageRoot[Root key] ),
+			    COALESCE ( CALCULATE ( DISTINCTCOUNT ( FactDependencyReach[Node key] ), FactDependencyReach[Direction] = "Downstream", FactDependencyReach[Node type] = "Pipeline" ), 0 ) )
+		lineageTag: b5fe3333-b8d6-57fb-9d2a-dc81353e1a78
+		formatString: #,0
+
+	measure 'Maximum Downstream Depth' =
+			IF ( HASONEVALUE ( DimLineageRoot[Root key] ),
+			    COALESCE ( CALCULATE ( MAX ( FactDependencyReach[Hop] ), FactDependencyReach[Direction] = "Downstream", FactDependencyReach[Node type] = "Table" ), 0 ) )
+		lineageTag: 497d739b-975a-503a-bca9-c7c5d70c8504
+		formatString: #,0
+
+	measure 'Dependency Rows' =
+			COUNTROWS ( FactDependencyReach )
+		lineageTag: 56007925-f3cf-5910-af72-87a6f7304911
+		formatString: #,0
+
+	measure 'Run Exposure Hops' =
+			VAR Root = SELECTEDVALUE ( DimLineageRoot[Root key] )
+			VAR Outputs = CALCULATETABLE ( VALUES ( FactRunOperation[Asset key] ), FactRunOperation[Role] = "Write", FactRunOperation[Started operation] = TRUE () )
+			RETURN
+			    IF ( HASONEVALUE ( FactPipelineRun[Run ID] ) && SELECTEDVALUE ( FactPipelineRun[Outcome] ) = "Failed" &&
+			        NOT ISBLANK ( Root ) && Root IN Outputs,
+			        CALCULATE ( MIN ( FactDependencyReach[Hop] ), FactDependencyReach[Direction] = "Downstream" ) )
+		lineageTag: a4a0d22d-5a48-558f-900b-979667e7afff
+		formatString: #,0
+
+	column 'Root key'
+		dataType: string
+		sourceColumn: RootKey
+		summarizeBy: none
+		lineageTag: 1db94d37-3089-517f-9d6d-ff36a823b87e
+		isHidden
+
+	column 'Direction'
+		dataType: string
+		sourceColumn: Direction
+		summarizeBy: none
+		lineageTag: e6882b71-53f7-5978-bdc8-ffd088d9a2b2
+
+	column 'Node key'
+		dataType: string
+		sourceColumn: NodeKey
+		summarizeBy: none
+		lineageTag: b9e17122-3f5c-5835-be7a-0a68b3704a72
+		isHidden
+
+	column 'Node type'
+		dataType: string
+		sourceColumn: NodeKind
+		summarizeBy: none
+		lineageTag: c6e54bba-a05a-5526-841c-2b681daa1c1f
+
+	column 'Dependency'
+		dataType: string
+		sourceColumn: Node
+		summarizeBy: none
+		lineageTag: 522efce6-f437-5813-9027-a54b683765fc
+
+	column 'Hop'
+		dataType: int64
+		sourceColumn: Hop
+		summarizeBy: none
+		lineageTag: d381fcae-eba2-5f22-a6e8-0d5369cb346d
+		formatString: #,0
+
+	column 'First observed UTC'
+		dataType: dateTime
+		sourceColumn: FirstUtc
+		summarizeBy: none
+		lineageTag: 45b1b39c-e0d3-532f-8a64-5359ee6082c5
+		formatString: yyyy-MM-dd HH:mm:ss
+
+	column 'Last observed UTC'
+		dataType: dateTime
+		sourceColumn: LastUtc
+		summarizeBy: none
+		lineageTag: c809b17b-a6ee-508e-9f94-2234a53b935f
+		formatString: yyyy-MM-dd HH:mm:ss
+
+	column 'Direct'
+		dataType: boolean
+		sourceColumn: Direct
+		summarizeBy: none
+		lineageTag: 4eac5c29-18dd-5f32-bbb5-ada3ceeae52b
+
+	partition FactDependencyReach = m
+		mode: import
+		source =
+			let
+			    Source = Reachability,
+			    Projected = Table.SelectColumns(Source, {"RootKey", "Direction", "NodeKey", "NodeKind", "Node", "Hop", "FirstUtc", "LastUtc", "Direct"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"RootKey", type text}, {"Direction", type text}, {"NodeKey", type text}, {"NodeKind", type text}, {"Node", type text}, {"Hop", Int64.Type}, {"FirstUtc", type datetime}, {"LastUtc", type datetime}, {"Direct", type logical}}, "en-US")
+			in
+			    Typed

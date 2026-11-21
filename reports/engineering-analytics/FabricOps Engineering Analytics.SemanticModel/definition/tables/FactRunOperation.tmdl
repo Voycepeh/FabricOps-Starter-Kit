@@ -1,0 +1,422 @@
+table FactRunOperation
+	lineageTag: e64ac77d-6a5f-5581-9d11-877ab54d586e
+
+	measure 'Rows Committed' =
+			VAR Compatible = HASONEVALUE ( FactRunOperation[Operation mode] ) && HASONEVALUE ( FactRunOperation[Asset type] )
+			RETURN
+			    IF ( Compatible, CALCULATE ( SUM ( FactRunOperation[Committed rows] ), KEEPFILTERS ( FactRunOperation[Role] = "Write" ), KEEPFILTERS ( FactRunOperation[Asset type] = "Table" ) ) )
+		lineageTag: 979eab4c-75c3-5e18-aa0e-30e6dcb42f96
+		formatString: #,0
+
+	measure 'Rows Inserted' =
+			VAR Compatible = HASONEVALUE ( FactRunOperation[Operation mode] ) && HASONEVALUE ( FactRunOperation[Asset type] )
+			RETURN
+			    IF ( Compatible, CALCULATE ( SUM ( FactRunOperation[Inserted rows] ), KEEPFILTERS ( FactRunOperation[Role] = "Write" ), KEEPFILTERS ( FactRunOperation[Asset type] = "Table" ) ) )
+		lineageTag: 5f7a70a2-b2ca-553e-954c-a2d88abdb58b
+		formatString: #,0
+
+	measure 'Rows Updated' =
+			VAR Compatible = HASONEVALUE ( FactRunOperation[Operation mode] ) && HASONEVALUE ( FactRunOperation[Asset type] )
+			RETURN
+			    IF ( Compatible, CALCULATE ( SUM ( FactRunOperation[Updated rows] ), KEEPFILTERS ( FactRunOperation[Role] = "Write" ), KEEPFILTERS ( FactRunOperation[Asset type] = "Table" ) ) )
+		lineageTag: 377663b1-fa84-5759-a7f7-431330991d33
+		formatString: #,0
+
+	measure 'Rows Unchanged' =
+			VAR Compatible = HASONEVALUE ( FactRunOperation[Operation mode] ) && HASONEVALUE ( FactRunOperation[Asset type] )
+			RETURN
+			    IF ( Compatible, CALCULATE ( SUM ( FactRunOperation[Unchanged rows] ), KEEPFILTERS ( FactRunOperation[Role] = "Write" ), KEEPFILTERS ( FactRunOperation[Asset type] = "Table" ) ) )
+		lineageTag: 63ea76d7-3ece-5c84-bfda-dda6a5b15644
+		formatString: #,0
+
+	measure 'Versions Inserted' =
+			VAR Compatible = HASONEVALUE ( FactRunOperation[Operation mode] ) && HASONEVALUE ( FactRunOperation[Asset type] )
+			RETURN
+			    IF ( Compatible, CALCULATE ( SUM ( FactRunOperation[Inserted versions] ), KEEPFILTERS ( FactRunOperation[Role] = "Write" ), KEEPFILTERS ( FactRunOperation[Asset type] = "Table" ) ) )
+		lineageTag: 12c136ab-e10f-5cdd-923c-412f11691179
+		formatString: #,0
+
+	measure 'Versions Expired' =
+			VAR Compatible = HASONEVALUE ( FactRunOperation[Operation mode] ) && HASONEVALUE ( FactRunOperation[Asset type] )
+			RETURN
+			    IF ( Compatible, CALCULATE ( SUM ( FactRunOperation[Expired versions] ), KEEPFILTERS ( FactRunOperation[Role] = "Write" ), KEEPFILTERS ( FactRunOperation[Asset type] = "Table" ) ) )
+		lineageTag: 8bc98087-f6bb-534e-acd8-fa3ebd5c4b66
+		formatString: #,0
+
+	measure 'Input Rows' =
+			VAR Compatible = HASONEVALUE ( FactRunOperation[Operation mode] ) && HASONEVALUE ( FactRunOperation[Asset type] )
+			RETURN
+			    IF ( Compatible, CALCULATE ( SUM ( FactRunOperation[Input row count] ), KEEPFILTERS ( FactRunOperation[Role] = "Write" ) ) )
+		lineageTag: bc514336-dab3-5ce5-baef-4f0855306911
+		formatString: #,0
+
+	measure 'Rows Read' =
+			IF ( HASONEVALUE ( FactRunOperation[Operation mode] ) && HASONEVALUE ( FactRunOperation[Asset type] ),
+			    CALCULATE ( SUM ( FactRunOperation[Read row count] ), KEEPFILTERS ( FactRunOperation[Role] = "Read" ) ) )
+		lineageTag: 20816350-1eaa-52fb-a47d-d137eddb8235
+		formatString: #,0
+
+	measure 'Started Operations' =
+			COALESCE ( CALCULATE ( COUNTROWS ( FactRunOperation ), FactRunOperation[Started operation] = TRUE () ), 0 )
+		lineageTag: d5e5dbe0-2d41-50b9-bdda-6061c9a53f23
+		formatString: #,0
+
+	measure 'Output Files' =
+			IF ( HASONEVALUE ( FactRunOperation[Run operation key] ), SELECTEDVALUE ( FactRunOperation[File count] ) )
+		lineageTag: c38f3ee3-225c-5632-8fec-d2a4a6c91f07
+		formatString: #,0
+
+	measure 'Output Bytes' =
+			IF ( HASONEVALUE ( FactRunOperation[Run operation key] ), SELECTEDVALUE ( FactRunOperation[Byte count] ) )
+		lineageTag: a4793c4f-f7ac-51f9-a057-6f2c0b354d6e
+		formatString: #,0
+
+	measure 'No Change Appends' =
+			COALESCE ( CALCULATE ( COUNTROWS ( FactRunOperation ), KEEPFILTERS ( FactRunOperation[Started operation] = TRUE () ),
+			    KEEPFILTERS ( FactRunOperation[Operation mode] = "append_new_only" ), FactRunOperation[Measurement source] = "no_unseen_hashes",
+			    FactRunOperation[Inserted rows] == 0, FactRunOperation[Committed rows] == 0 ), 0 )
+		lineageTag: e5431eb9-e82b-534a-919b-5af1a9f11463
+		formatString: #,0
+
+	measure 'Total Target Rows' =
+			VAR Recorded = SELECTEDVALUE ( FactRunOperation[Profile row count] )
+			VAR Asset = SELECTEDVALUE ( FactRunOperation[Asset key] )
+			VAR Id = SELECTEDVALUE ( FactRunOperation[Run ID] )
+			VAR Proof =
+			    CALCULATE ( COUNTROWS ( FactProfileEvent ), FactProfileEvent[Run ID] = Id, FactProfileEvent[Asset key] = Asset,
+			        FactProfileEvent[Activity] = "standard", FactProfileEvent[Trigger] = "write",
+			        FactProfileEvent[Profile status] = "passed", FactProfileEvent[Persisted] = TRUE (),
+			        FactProfileEvent[Profile scope] = "full_table", ISBLANK ( FactProfileEvent[Profile limit] ),
+			        FactProfileEvent[Profile rows] = Recorded )
+			RETURN IF ( HASONEVALUE ( FactRunOperation[Run operation key] ) && NOT ISBLANK ( Recorded ) && NOT ISBLANK ( Asset ) && Proof = 1, Recorded )
+		lineageTag: 159668e1-960b-5379-8758-4a92db666e67
+		formatString: #,0
+
+	measure 'SCD1 Inserted' =
+			VAR Input = SELECTEDVALUE ( FactRunOperation[Input row count] )
+			VAR Inserted = SELECTEDVALUE ( FactRunOperation[Inserted rows] )
+			VAR Updated = SELECTEDVALUE ( FactRunOperation[Updated rows] )
+			VAR Unchanged = SELECTEDVALUE ( FactRunOperation[Unchanged rows] )
+			VAR Measured = SELECTEDVALUE ( FactRunOperation[Measurement source] ) IN { "delta_merge", "warehouse_transaction", "delta_commit" }
+			RETURN
+			    IF ( HASONEVALUE ( FactRunOperation[Run operation key] ) && HASONEVALUE ( DimOperation[Series key] ) &&
+			        SELECTEDVALUE ( FactRunOperation[Operation mode] ) = "scd1" && Measured &&
+			        NOT ISBLANK ( Input ) && NOT ISBLANK ( Inserted ) && NOT ISBLANK ( Updated ) && NOT ISBLANK ( Unchanged ) &&
+			        Inserted + Updated + Unchanged = Input, Inserted )
+		lineageTag: 9acdf138-de61-5db6-a121-b0b1f9492ddd
+		formatString: #,0
+
+	measure 'SCD1 Updated' =
+			VAR Input = SELECTEDVALUE ( FactRunOperation[Input row count] )
+			VAR Inserted = SELECTEDVALUE ( FactRunOperation[Inserted rows] )
+			VAR Updated = SELECTEDVALUE ( FactRunOperation[Updated rows] )
+			VAR Unchanged = SELECTEDVALUE ( FactRunOperation[Unchanged rows] )
+			VAR Measured = SELECTEDVALUE ( FactRunOperation[Measurement source] ) IN { "delta_merge", "warehouse_transaction", "delta_commit" }
+			RETURN
+			    IF ( HASONEVALUE ( FactRunOperation[Run operation key] ) && HASONEVALUE ( DimOperation[Series key] ) &&
+			        SELECTEDVALUE ( FactRunOperation[Operation mode] ) = "scd1" && Measured &&
+			        NOT ISBLANK ( Input ) && NOT ISBLANK ( Inserted ) && NOT ISBLANK ( Updated ) && NOT ISBLANK ( Unchanged ) &&
+			        Inserted + Updated + Unchanged = Input, Updated )
+		lineageTag: c751b732-4303-58eb-9d3e-aa839176a06e
+		formatString: #,0
+
+	measure 'SCD1 Unchanged' =
+			VAR Input = SELECTEDVALUE ( FactRunOperation[Input row count] )
+			VAR Inserted = SELECTEDVALUE ( FactRunOperation[Inserted rows] )
+			VAR Updated = SELECTEDVALUE ( FactRunOperation[Updated rows] )
+			VAR Unchanged = SELECTEDVALUE ( FactRunOperation[Unchanged rows] )
+			VAR Measured = SELECTEDVALUE ( FactRunOperation[Measurement source] ) IN { "delta_merge", "warehouse_transaction", "delta_commit" }
+			RETURN
+			    IF ( HASONEVALUE ( FactRunOperation[Run operation key] ) && HASONEVALUE ( DimOperation[Series key] ) &&
+			        SELECTEDVALUE ( FactRunOperation[Operation mode] ) = "scd1" && Measured &&
+			        NOT ISBLANK ( Input ) && NOT ISBLANK ( Inserted ) && NOT ISBLANK ( Updated ) && NOT ISBLANK ( Unchanged ) &&
+			        Inserted + Updated + Unchanged = Input, Unchanged )
+		lineageTag: d38237a0-c5a1-5cab-9b57-9926bccc0e97
+		formatString: #,0
+
+	measure 'Operation Duration Seconds' =
+			IF ( HASONEVALUE ( FactRunOperation[Run operation key] ), SELECTEDVALUE ( FactRunOperation[Elapsed seconds] ) )
+		lineageTag: 995d778d-7476-5553-911d-6ff438feb186
+		formatString: #,0.00
+
+	measure 'Previous Operation Duration Seconds' =
+			VAR Cohort = SELECTEDVALUE ( FactRunOperation[Comparison cohort] )
+			VAR Point = SELECTEDVALUE ( FactRunOperation[Run order] )
+			VAR Dates = ALLSELECTED ( DimDate[UTC date] )
+			VAR Options =
+			    CALCULATETABLE (
+			        FILTER ( FactRunOperation, FactRunOperation[Comparison cohort] = Cohort && FactRunOperation[Run order] < Point && NOT ISBLANK ( FactRunOperation[Elapsed seconds] ) ),
+			        REMOVEFILTERS ( FactRunOperation ),
+			        TREATAS ( Dates, FactPipelineRun[UTC date] )
+			    )
+			RETURN
+			    IF ( NOT ISBLANK ( Cohort ) && NOT ISBLANK ( [Operation Duration Seconds] ),
+			        MAXX ( TOPN ( 1, Options, FactRunOperation[Run order], DESC ), FactRunOperation[Elapsed seconds] ) )
+		lineageTag: ac35cc05-8e6e-56f8-ac96-db5344560111
+		formatString: #,0.00
+
+	measure 'Operation Duration Change Seconds' =
+			VAR Previous = [Previous Operation Duration Seconds]
+			RETURN IF ( NOT ISBLANK ( Previous ), [Operation Duration Seconds] - Previous )
+		lineageTag: 05e288a9-cb17-5894-9d25-e23227aebd32
+		formatString: #,0.00
+
+	measure 'Selected Write Metric Title' =
+			IF ( HASONEVALUE ( WriteMetric[Metric field] ), "Write volume · " & MAX ( WriteMetric[Write metric] ), "Select one write metric" )
+		lineageTag: 289948cb-6396-579f-9491-fcbce17e6fe3
+
+	measure 'Operation Duration Change Percent' =
+			DIVIDE ( [Operation Duration Change Seconds], [Previous Operation Duration Seconds] )
+		lineageTag: d44ebaf1-92a5-53d2-a346-f18a27955b3a
+		formatString: +0.0%;-0.0%;0.0%
+
+	column 'Run operation key'
+		dataType: string
+		sourceColumn: OperationKey
+		summarizeBy: none
+		lineageTag: b21b4e5e-474f-5226-900b-783075c6081f
+		isHidden
+		isKey
+
+	column 'Run ID'
+		dataType: string
+		sourceColumn: RunId
+		summarizeBy: none
+		lineageTag: 3a0f2dc4-5421-5b5f-b682-c579f282e3e5
+
+	column 'Series key'
+		dataType: string
+		sourceColumn: SeriesKey
+		summarizeBy: none
+		lineageTag: 28c33a89-34be-56d6-96be-ebec08b28f41
+		isHidden
+
+	column 'Asset key'
+		dataType: string
+		sourceColumn: AssetKey
+		summarizeBy: none
+		lineageTag: 91dd8879-f5ad-55a4-8b3b-2a1092c360ea
+		isHidden
+
+	column 'Operation key'
+		dataType: string
+		sourceColumn: RecordedKey
+		summarizeBy: none
+		lineageTag: aaa56a16-58c9-5634-9ba7-4e9e2ef270c4
+
+	column 'Table ID'
+		dataType: string
+		sourceColumn: TableId
+		summarizeBy: none
+		lineageTag: e3c1b746-c4c7-54cb-84df-2d9de28d5030
+
+	column 'File Source ID'
+		dataType: string
+		sourceColumn: FileId
+		summarizeBy: none
+		lineageTag: 7601b7e4-26ba-5e8b-b4d5-331a8b3609ca
+
+	column 'Asset type'
+		dataType: string
+		sourceColumn: Kind
+		summarizeBy: none
+		lineageTag: 136dda3b-7b3c-5a31-96d1-4d2aaf4e0c3c
+
+	column 'File format'
+		dataType: string
+		sourceColumn: FileFormat
+		summarizeBy: none
+		lineageTag: c55f6062-be67-5f13-971e-3bd20c36b570
+
+	column 'Role'
+		dataType: string
+		sourceColumn: Role
+		summarizeBy: none
+		lineageTag: cccc7caa-2cbd-5502-a563-4968a60e369e
+
+	column 'Operation mode'
+		dataType: string
+		sourceColumn: OperationMode
+		summarizeBy: none
+		lineageTag: e8de60b8-a24f-5c07-8361-5a46ffe2ae86
+
+	column 'Operation status'
+		dataType: string
+		sourceColumn: Status
+		summarizeBy: none
+		lineageTag: d58ea7f0-2cbf-5b5e-9a12-f293a2ec0e43
+
+	column 'Operation start UTC'
+		dataType: dateTime
+		sourceColumn: Started
+		summarizeBy: none
+		lineageTag: a3e04adc-12e7-5f4e-b994-d3f17d81a29c
+		formatString: yyyy-MM-dd HH:mm:ss
+
+	column 'Operation completion UTC'
+		dataType: dateTime
+		sourceColumn: Completed
+		summarizeBy: none
+		lineageTag: 2b30be63-b290-5f64-b7bd-08042170da91
+		formatString: yyyy-MM-dd HH:mm:ss
+
+	column 'Elapsed seconds'
+		dataType: double
+		sourceColumn: Duration
+		summarizeBy: none
+		lineageTag: 3ce6b7ad-f9bf-5600-a445-1028fd349c28
+		formatString: #,0.00
+
+	column 'Data asset'
+		dataType: string
+		sourceColumn: AssetLabel
+		summarizeBy: none
+		lineageTag: bbebdd6f-5c2e-56d9-8491-bf9115e844d5
+
+	column 'Asset workspace ID'
+		dataType: string
+		sourceColumn: AssetWorkspace
+		summarizeBy: none
+		lineageTag: c582a08c-c74c-59c4-bc89-c1e2358eee48
+
+	column 'Contract ID'
+		dataType: string
+		sourceColumn: ContractId
+		summarizeBy: none
+		lineageTag: f2324ed4-5943-5daa-8655-426dc9ded6e3
+
+	column 'Contract version'
+		dataType: int64
+		sourceColumn: ContractVersion
+		summarizeBy: none
+		lineageTag: a73e0fc5-f869-5463-bc3e-8c717104e85f
+		formatString: #,0
+
+	column 'File publication status'
+		dataType: string
+		sourceColumn: Publication
+		summarizeBy: none
+		lineageTag: 6c905088-b858-5446-b27b-6bdc55548dbf
+
+	column 'Read row count'
+		dataType: int64
+		sourceColumn: RowsRead
+		summarizeBy: none
+		lineageTag: 7c5c53f0-8949-5552-91fb-347b19ea0116
+		formatString: #,0
+
+	column 'Read columns'
+		dataType: int64
+		sourceColumn: Columns
+		summarizeBy: none
+		lineageTag: 93bcfd1c-1110-50be-b607-451acbfea7ae
+		formatString: #,0
+
+	column 'Input row count'
+		dataType: int64
+		sourceColumn: InputRows
+		summarizeBy: none
+		lineageTag: cbe73b7e-e6e0-53a0-8cf5-fd0534887b89
+		formatString: #,0
+
+	column 'Committed rows'
+		dataType: int64
+		sourceColumn: Committed
+		summarizeBy: none
+		lineageTag: b0e616f2-a091-5224-98ca-aa39a93c37d2
+		formatString: #,0
+
+	column 'Inserted rows'
+		dataType: int64
+		sourceColumn: Inserted
+		summarizeBy: none
+		lineageTag: c01cdf5a-ff3f-5dc4-8835-33037ee11761
+		formatString: #,0
+
+	column 'Updated rows'
+		dataType: int64
+		sourceColumn: Updated
+		summarizeBy: none
+		lineageTag: 6e10ca65-9404-5e23-a18b-0e4c74bf6828
+		formatString: #,0
+
+	column 'Unchanged rows'
+		dataType: int64
+		sourceColumn: Unchanged
+		summarizeBy: none
+		lineageTag: e2d9eb17-6dde-53b3-bd59-100e78556503
+		formatString: #,0
+
+	column 'Inserted versions'
+		dataType: int64
+		sourceColumn: VersionsInserted
+		summarizeBy: none
+		lineageTag: d3655d27-1d53-5757-ab4a-1a7bc7059eec
+		formatString: #,0
+
+	column 'Expired versions'
+		dataType: int64
+		sourceColumn: VersionsExpired
+		summarizeBy: none
+		lineageTag: aad0fecf-e2b8-5013-8a50-6087fb815e30
+		formatString: #,0
+
+	column 'Profile row count'
+		dataType: int64
+		sourceColumn: TargetRows
+		summarizeBy: none
+		lineageTag: d1d07119-800c-5a89-b180-b094183d2824
+		isHidden
+		formatString: #,0
+
+	column 'File count'
+		dataType: int64
+		sourceColumn: OutputFiles
+		summarizeBy: none
+		lineageTag: 3df989b3-2991-5e47-9bb4-eb4971a3401c
+		formatString: #,0
+
+	column 'Byte count'
+		dataType: int64
+		sourceColumn: OutputBytes
+		summarizeBy: none
+		lineageTag: 285cef78-1d5c-5d7b-b8fc-26c9711dcdcf
+		formatString: #,0
+
+	column 'Measurement source'
+		dataType: string
+		sourceColumn: Measurement
+		summarizeBy: none
+		lineageTag: 7cab828a-686a-509e-8b41-1371c57b8c8a
+
+	column 'Comparison cohort'
+		dataType: string
+		sourceColumn: Cohort
+		summarizeBy: none
+		lineageTag: 95f321e2-13a5-50f8-9d8d-1f18beb77d57
+		isHidden
+
+	column 'Run order'
+		dataType: int64
+		sourceColumn: RunOrder
+		summarizeBy: none
+		lineageTag: 51052f66-a781-51a8-ab20-b069c71e711f
+		isHidden
+		formatString: #,0
+
+	column 'Started operation'
+		dataType: boolean
+		sourceColumn: WasStarted
+		summarizeBy: none
+		lineageTag: f6b02b28-9f65-57f2-9185-ef893278bee4
+		isHidden
+
+	partition FactRunOperation = m
+		mode: import
+		source =
+			let
+			    Source = Table.AddColumn(Operations, "WasStarted", each [Started] <> null, type logical),
+			    Projected = Table.SelectColumns(Source, {"OperationKey", "RunId", "SeriesKey", "AssetKey", "RecordedKey", "TableId", "FileId", "Kind", "FileFormat", "Role", "OperationMode", "Status", "Started", "Completed", "Duration", "AssetLabel", "AssetWorkspace", "ContractId", "ContractVersion", "Publication", "RowsRead", "Columns", "InputRows", "Committed", "Inserted", "Updated", "Unchanged", "VersionsInserted", "VersionsExpired", "TargetRows", "OutputFiles", "OutputBytes", "Measurement", "Cohort", "RunOrder", "WasStarted"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"OperationKey", type text}, {"RunId", type text}, {"SeriesKey", type text}, {"AssetKey", type text}, {"RecordedKey", type text}, {"TableId", type text}, {"FileId", type text}, {"Kind", type text}, {"FileFormat", type text}, {"Role", type text}, {"OperationMode", type text}, {"Status", type text}, {"Started", type datetime}, {"Completed", type datetime}, {"Duration", type number}, {"AssetLabel", type text}, {"AssetWorkspace", type text}, {"ContractId", type text}, {"ContractVersion", Int64.Type}, {"Publication", type text}, {"RowsRead", Int64.Type}, {"Columns", Int64.Type}, {"InputRows", Int64.Type}, {"Committed", Int64.Type}, {"Inserted", Int64.Type}, {"Updated", Int64.Type}, {"Unchanged", Int64.Type}, {"VersionsInserted", Int64.Type}, {"VersionsExpired", Int64.Type}, {"TargetRows", Int64.Type}, {"OutputFiles", Int64.Type}, {"OutputBytes", Int64.Type}, {"Measurement", type text}, {"Cohort", type text}, {"RunOrder", Int64.Type}, {"WasStarted", type logical}}, "en-US")
+			in
+			    Typed

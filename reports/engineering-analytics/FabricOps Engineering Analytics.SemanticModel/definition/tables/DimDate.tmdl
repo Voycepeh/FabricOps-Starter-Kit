@@ -1,0 +1,23 @@
+table DimDate
+	lineageTag: 849f2f7d-c8fe-54d7-9ac6-6c334cbeddc3
+	dataCategory: Time
+
+	column 'UTC date'
+		dataType: dateTime
+		sourceColumn: UtcDate
+		summarizeBy: none
+		lineageTag: 483ca2b8-3093-5a70-b886-98170cea8100
+		isKey
+		formatString: yyyy-MM-dd
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition DimDate = m
+		mode: import
+		source =
+			let
+			    Source = Calendar,
+			    Projected = Table.SelectColumns(Source, {"UtcDate"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"UtcDate", type date}}, "en-US")
+			in
+			    Typed

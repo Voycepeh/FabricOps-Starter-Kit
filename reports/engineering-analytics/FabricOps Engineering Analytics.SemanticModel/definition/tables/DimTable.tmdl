@@ -1,0 +1,92 @@
+table DimTable
+	lineageTag: 31b1481c-8c8a-5288-819f-2262df1ef8d3
+
+	column 'Asset key'
+		dataType: string
+		sourceColumn: AssetKey
+		summarizeBy: none
+		lineageTag: fe552bb7-b777-541e-80ec-d4ce3f9f1b19
+		isHidden
+		isKey
+
+	column 'Table ID'
+		dataType: string
+		sourceColumn: TableId
+		summarizeBy: none
+		lineageTag: 7d3b2f89-b78a-5763-a448-33a3d5c9ed39
+
+	column 'Physical workspace ID'
+		dataType: string
+		sourceColumn: WorkspaceId
+		summarizeBy: none
+		lineageTag: 437843ed-2661-5e05-8d3b-9312b4a560fb
+
+	column 'Fabric item ID'
+		dataType: string
+		sourceColumn: ItemId
+		summarizeBy: none
+		lineageTag: 78bc4cfa-9a2a-556c-9c74-48460e4f0af2
+
+	column 'Table'
+		dataType: string
+		sourceColumn: Label
+		summarizeBy: none
+		lineageTag: dcd42812-292b-5a26-816f-9bcf86fd6eb1
+
+	column 'Physical table'
+		dataType: string
+		sourceColumn: Name
+		summarizeBy: none
+		lineageTag: 41642488-088b-5fac-b90a-5ed689cdca13
+
+	column 'Physical workspace'
+		dataType: string
+		sourceColumn: Workspace
+		summarizeBy: none
+		lineageTag: 88db7ef4-1d44-5277-b565-eebb3c0b2576
+
+	column 'Store kind'
+		dataType: string
+		sourceColumn: Store
+		summarizeBy: none
+		lineageTag: e0fea122-279d-5763-a498-7d745b3ac966
+
+	column 'Layer'
+		dataType: string
+		sourceColumn: Layer
+		summarizeBy: none
+		lineageTag: c5fee3a9-825e-534c-9c54-f23de57bbf30
+
+	column 'Schema'
+		dataType: string
+		sourceColumn: SchemaName
+		summarizeBy: none
+		lineageTag: 3e83a5af-5164-5481-bfde-6a67b98b620a
+
+	column 'Table name'
+		dataType: string
+		sourceColumn: TableName
+		summarizeBy: none
+		lineageTag: 98b14b55-f8ea-5fd6-881a-9b795498605d
+
+	column 'Catalogue active'
+		dataType: boolean
+		sourceColumn: Active
+		summarizeBy: none
+		lineageTag: 4280a5db-ecf4-524d-80ca-40d4ccda4460
+
+	column 'Binding status'
+		dataType: string
+		sourceColumn: BindingState
+		summarizeBy: none
+		lineageTag: f144c322-239b-54e3-a264-4696b5e215bd
+
+	partition DimTable = m
+		mode: import
+		source =
+			let
+			    Source = AssetObservations,
+			    Projected = Table.SelectColumns(Source, {"AssetKey", "TableId", "WorkspaceId", "ItemId", "Label", "Name", "Workspace", "Store", "Layer", "SchemaName", "TableName", "Active", "BindingState"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"AssetKey", type text}, {"TableId", type text}, {"WorkspaceId", type text}, {"ItemId", type text}, {"Label", type text}, {"Name", type text}, {"Workspace", type text}, {"Store", type text}, {"Layer", type text}, {"SchemaName", type text}, {"TableName", type text}, {"Active", type logical}, {"BindingState", type text}}, "en-US")
+			in
+			    Typed

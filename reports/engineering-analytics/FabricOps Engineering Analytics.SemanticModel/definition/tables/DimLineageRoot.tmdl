@@ -1,0 +1,26 @@
+table DimLineageRoot
+	lineageTag: 452eda6e-804a-5cde-98f9-fa7c1c39a73f
+
+	column 'Root key'
+		dataType: string
+		sourceColumn: AssetKey
+		summarizeBy: none
+		lineageTag: 3536e6a5-bbed-5e24-8460-18842523bd34
+		isHidden
+		isKey
+
+	column 'Root table'
+		dataType: string
+		sourceColumn: Label
+		summarizeBy: none
+		lineageTag: 1997c5b7-af3d-57bd-bbc6-10494e5ceb45
+
+	partition DimLineageRoot = m
+		mode: import
+		source =
+			let
+			    Source = Table.SelectRows(AssetObservations, each [BindingState] = "Resolved physical binding"),
+			    Projected = Table.SelectColumns(Source, {"AssetKey", "Label"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"AssetKey", type text}, {"Label", type text}}, "en-US")
+			in
+			    Typed

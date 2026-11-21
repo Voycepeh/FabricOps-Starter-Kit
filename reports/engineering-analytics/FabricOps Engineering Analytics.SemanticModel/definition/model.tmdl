@@ -1,0 +1,25 @@
+model Model
+	culture: en-US
+	sourceQueryCulture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+ref table DimDate
+ref table DimWorkspace
+ref table DimMode
+ref table DimPipeline
+ref table FactPipelineRun
+ref table DimOperation
+ref table FactRunOperation
+ref table FactOperationStage
+ref table FactGuardrailResult
+ref table FactProfileEvent
+ref table FactRunFailure
+ref table DimTable
+ref table FactTableProfile
+ref table DimLineageRoot
+ref table BridgeLineage
+ref table FactDependencyReach
+ref table WriteMetric

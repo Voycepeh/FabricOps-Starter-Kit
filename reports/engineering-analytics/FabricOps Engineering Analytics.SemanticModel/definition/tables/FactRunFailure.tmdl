@@ -1,0 +1,37 @@
+table FactRunFailure
+	lineageTag: 0806ceb9-5915-5b50-bc16-7c3a4a98d09a
+
+	column 'Run ID'
+		dataType: string
+		sourceColumn: RunId
+		summarizeBy: none
+		lineageTag: 20a3ba62-0478-5259-8931-a31719162143
+
+	column 'Failure order'
+		dataType: int64
+		sourceColumn: Ordinal
+		summarizeBy: none
+		lineageTag: feb8b56f-bf70-504e-b5dd-f780e9a516f1
+		formatString: #,0
+
+	column 'Failure code'
+		dataType: string
+		sourceColumn: Code
+		summarizeBy: none
+		lineageTag: cce6a54d-e129-5a6d-957a-8d7cfae272fc
+
+	column 'Exception type'
+		dataType: string
+		sourceColumn: Exception
+		summarizeBy: none
+		lineageTag: 3e5da851-16c1-5841-b012-dc0db60ce539
+
+	partition FactRunFailure = m
+		mode: import
+		source =
+			let
+			    Source = Failures,
+			    Projected = Table.SelectColumns(Source, {"RunId", "Ordinal", "Code", "Exception"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"RunId", type text}, {"Ordinal", Int64.Type}, {"Code", type text}, {"Exception", type text}}, "en-US")
+			in
+			    Typed

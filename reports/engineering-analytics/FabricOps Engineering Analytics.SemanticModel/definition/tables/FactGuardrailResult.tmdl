@@ -1,0 +1,128 @@
+table FactGuardrailResult
+	lineageTag: b4a9770b-7ef1-52c2-904e-6ec866ee87ba
+
+	measure 'Checks Evaluated' =
+			COALESCE ( CALCULATE ( DISTINCTCOUNT ( FactGuardrailResult[Guardrail Result ID] ), FactGuardrailResult[Evaluated] = TRUE () ), 0 )
+		lineageTag: 3cf06c16-86fa-5dd4-a906-0d8a63bc9417
+		formatString: #,0
+
+	measure 'Checks Failed' =
+			CALCULATE ( [Checks Evaluated], KEEPFILTERS ( FactGuardrailResult[Status] = "failed" ) )
+		lineageTag: f34a8234-2680-51ef-a83a-9bf34bd1bc56
+		formatString: #,0
+
+	measure 'Checks Blocked' =
+			COALESCE ( CALCULATE ( DISTINCTCOUNT ( FactGuardrailResult[Guardrail Result ID] ), FactGuardrailResult[Can continue] = FALSE () ), 0 )
+		lineageTag: 9c5d765d-0311-5d8a-923c-2227604054d9
+		formatString: #,0
+
+	column 'Guardrail Result ID'
+		dataType: string
+		sourceColumn: ResultId
+		summarizeBy: none
+		lineageTag: 242bbea8-8bf6-578e-a3b1-10bb05b2a00e
+		isKey
+
+	column 'Run ID'
+		dataType: string
+		sourceColumn: RunId
+		summarizeBy: none
+		lineageTag: f689e480-1fb4-50bb-8e36-38fc4fb833e6
+
+	column 'Asset key'
+		dataType: string
+		sourceColumn: AssetKey
+		summarizeBy: none
+		lineageTag: 8a889f80-15b4-5a86-b0f9-93ca703a71fc
+		isHidden
+
+	column 'Data asset'
+		dataType: string
+		sourceColumn: AssetLabel
+		summarizeBy: none
+		lineageTag: 9b447df5-5280-5444-be64-28601b0160fb
+
+	column 'Guardrail rule ID'
+		dataType: string
+		sourceColumn: RuleId
+		summarizeBy: none
+		lineageTag: 5a55d40a-9cb2-5e03-a005-564c1c8a2372
+
+	column 'Guardrail version'
+		dataType: int64
+		sourceColumn: GuardrailVersion
+		summarizeBy: none
+		lineageTag: a6cd7d17-4c12-5b03-aeef-7e6a3b3fb380
+		formatString: #,0
+
+	column 'Contract ID'
+		dataType: string
+		sourceColumn: ContractId
+		summarizeBy: none
+		lineageTag: 0bb62275-42c1-5abf-a7c3-97eb6966f333
+
+	column 'Contract version'
+		dataType: int64
+		sourceColumn: ContractVersion
+		summarizeBy: none
+		lineageTag: 32f6c40f-d9e7-5c64-99a8-4d6972b9ca44
+		formatString: #,0
+
+	column 'Status'
+		dataType: string
+		sourceColumn: Status
+		summarizeBy: none
+		lineageTag: a42eaf55-55e2-555a-aeca-694314331efe
+
+	column 'Can continue'
+		dataType: boolean
+		sourceColumn: Continue
+		summarizeBy: none
+		lineageTag: 4ddb08fd-893c-5561-98a6-359889a0f8fd
+
+	column 'Severity'
+		dataType: string
+		sourceColumn: Severity
+		summarizeBy: none
+		lineageTag: efd0319b-9228-51f7-8b6a-b2499973a661
+
+	column 'Guardrail type'
+		dataType: string
+		sourceColumn: GuardrailType
+		summarizeBy: none
+		lineageTag: 94f541c8-f6a4-582b-994c-676711ebf9cb
+
+	column 'Rule type'
+		dataType: string
+		sourceColumn: RuleType
+		summarizeBy: none
+		lineageTag: 5a835a79-9ca6-5e36-8dec-e2752fac697d
+
+	column 'Action'
+		dataType: string
+		sourceColumn: Action
+		summarizeBy: none
+		lineageTag: d7ef0cc2-ace1-569f-8100-faefe42876c3
+
+	column 'Recorded reason'
+		dataType: string
+		sourceColumn: Reason
+		summarizeBy: none
+		lineageTag: 9843be86-e0d0-5bad-9718-dfd166a2f426
+
+	column 'Evaluated'
+		dataType: boolean
+		sourceColumn: Evaluated
+		summarizeBy: none
+		lineageTag: 139e0018-55bb-5be9-898f-86f8449f9da9
+		isHidden
+
+	partition FactGuardrailResult = m
+		mode: import
+		source =
+			let
+			    Source = Guardrails,
+			    Projected = Table.SelectColumns(Source, {"ResultId", "RunId", "AssetKey", "AssetLabel", "RuleId", "GuardrailVersion", "ContractId", "ContractVersion", "Status", "Continue", "Severity", "GuardrailType", "RuleType", "Action", "Reason", "Evaluated"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"ResultId", type text}, {"RunId", type text}, {"AssetKey", type text}, {"AssetLabel", type text}, {"RuleId", type text}, {"GuardrailVersion", Int64.Type}, {"ContractId", type text}, {"ContractVersion", Int64.Type}, {"Status", type text}, {"Continue", type logical}, {"Severity", type text}, {"GuardrailType", type text}, {"RuleType", type text}, {"Action", type text}, {"Reason", type text}, {"Evaluated", type logical}}, "en-US")
+			in
+			    Typed
