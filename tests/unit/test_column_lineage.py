@@ -367,3 +367,22 @@ def test_closed_session_can_retry_projection_without_replaying_run(runtime, spar
     assert result['lineage_projection']['status'] == 'published'
     assert len(writes) == before and attempts == [plan.plan_id, plan.plan_id]
     assert saved[plan.plan_id]['status'] == 'ungoverned_completed'
+
+
+def test_unknown_multi_column_boundary_has_distinct_gap_fact_ids(runtime, spark_session):
+    """A pandas boundary must retain every output gap as a separate reportable fact."""
+    pytest.importorskip('pandas')
+    make, operation, _, _, _ = runtime
+    plan = make(mode='ungoverned', roles=('source', 'target'))
+    source = spark_session.createDataFrame([(1, 12)], 'id long, amount long')
+    lineage.register_read_lineage(plan, {'table_id': 'table0', 'dataframe': source})
+    rebuilt = spark_session.createDataFrame(source.toPandas())
+    operation(plan, 0)
+    operation(plan, 1)
+    lineage.capture_write_lineage(rebuilt, context={'execution_plan': plan}, table_id='table1', write_mode='overwrite')
+    run = lineage.pipeline_run_row(plan, status='incomplete')
+    facts = lineage.column_lineage_rows(run)
+    assert {row['target_column_name'] for row in facts} == {'id', 'amount'}
+    assert all(row['record_type'] == 'GAP' and row['coverage'] == 'unknown' for row in facts)
+    assert all(row['source_column_id'] is None for row in facts)
+    assert len({row['lineage_id'] for row in facts}) == len(facts) == 2

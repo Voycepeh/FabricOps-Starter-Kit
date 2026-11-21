@@ -6765,7 +6765,7 @@ def column_lineage_rows(run):
                         "transformation_operations": ";".join(sorted(set(transformations))),
                         "transformation_count": len(output["transformation_node_ids"]),
                         "output_node_id": output["node_id"], "source_node_id": source["node_id"], "omitted_output_count": 0}
-                    row["lineage_id"] = _metadata_hash([run["run_id"], operation["operation_key"], output["node_id"],
+                    row["lineage_id"] = _metadata_hash([run["run_id"], operation["operation_key"], output["column_id"],
                                                         source["node_id"], dependency])
                     rows.append(row)
         if graph["gaps"] or graph["omitted_output_count"]:

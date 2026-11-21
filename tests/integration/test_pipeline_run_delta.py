@@ -325,3 +325,18 @@ def test_lineage_lost_append_acknowledgement_is_confirmed(runs_delta, monkeypatc
     shared.publish_column_lineage(r.rows()[0], context=r.context, spark_session=r.spark)
     rows = r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).collect()
     assert len(rows) == len({row.lineage_id for row in rows})
+
+
+def test_lineage_unknown_multi_column_outputs_publish_and_retry(runs_delta):
+    """Shared opaque boundaries still publish distinct output-column gap facts."""
+    r = runs_delta
+    plan = _lineage_plan(r)
+    rebuilt = r.spark.createDataFrame([(1, 12)], 'id long, amount long')
+    shared.capture_write_lineage(rebuilt, context={'execution_plan': plan}, table_id='table1', write_mode='overwrite')
+    shared.finalize_pipeline_run(plan, spark_session=r.spark)
+    shared.publish_column_lineage(r.rows()[0], context=r.context, spark_session=r.spark)
+    rows = r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).collect()
+    assert {row.target_column_name for row in rows} == {'id', 'amount'}
+    assert all(row.record_type == 'GAP' and row.coverage == 'unknown' for row in rows)
+    assert all(row.source_column_id is None for row in rows)
+    assert len({row.lineage_id for row in rows}) == len(rows) == 2
