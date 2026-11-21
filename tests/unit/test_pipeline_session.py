@@ -657,3 +657,19 @@ def test_incremental_read_never_selects_from_multiple_planned_targets(coordinate
     with pytest.raises(ValueError, match="target_store and target_table_name"):
         orchestrate_read(store="Bronze", schema=None, table_name="orders", read_mode="incremental")
     coordinate_runtime.reader.assert_not_called()
+
+
+def test_finalize_projects_once_and_closed_retry_does_not_republish_run(runtime, monkeypatch):
+    """Fresh finalization synchronizes once; a closed-session retry never repeats Run persistence."""
+    owner = importlib.import_module("fabricops_kit.pipeline.finalize_pipeline")
+    session = setup_pipeline(pipeline_mode="Ungoverned")
+    orchestrate_read(store="Bronze", table_name="orders")
+    synchronize = Mock(wraps=shared.sync_pipeline_lineage)
+    monkeypatch.setattr(shared, "sync_pipeline_lineage", synchronize)
+    monkeypatch.setattr(owner, "sync_pipeline_lineage", synchronize)
+    first = owner.finalize_pipeline(session)
+    assert synchronize.call_count == 1
+    committed = runtime.writes.call_count
+    assert owner.finalize_pipeline(session) == first
+    assert synchronize.call_count == 2
+    assert runtime.writes.call_count == committed

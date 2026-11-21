@@ -206,9 +206,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/orchestrate_write.py:32`
+`fabricops_kit/pipeline/orchestrate_write.py:41`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L32-L359">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L41-L370">View on GitHub</a>
 </div>
 
 
@@ -224,7 +224,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 297 |
+| Live-critical dependencies | 298 |
 
 ### Release history
 
@@ -362,6 +362,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.check_schema.check_schema</code></li>
 <li><code>fabricops_kit.pipeline.check_sensitive_data.check_sensitive_data</code></li>
 <li><code>fabricops_kit.pipeline.orchestrate_write._write_file</code></li>
+<li><code>fabricops_kit.pipeline.orchestrate_write._write_metrics</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._persist_target_processing</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._record_recovered_metrics</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._source_table_ids</code></li>
@@ -434,7 +435,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._replace_snapshot_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared._rule_review_status</code></li>
-<li><code>fabricops_kit.pipeline.shared._run_orchestration_stage</code></li>
 <li><code>fabricops_kit.pipeline.shared._scalar_frequency_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_rule</code></li>
 <li><code>fabricops_kit.pipeline.shared._select_table_guardrail_rule</code></li>
@@ -514,6 +514,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.resolve_scd2_tracked_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_target_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.row_hash_expression</code></li>
+<li><code>fabricops_kit.pipeline.shared.run_orchestration_stage</code></li>
 <li><code>fabricops_kit.pipeline.shared.schedule_file_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.schedule_table_profiling</code></li>
 <li><code>fabricops_kit.pipeline.shared.schema_check_core</code></li>

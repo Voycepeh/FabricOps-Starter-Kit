@@ -8,7 +8,6 @@ from fabricops_kit.pipeline.shared import (
     PipelineSession,
     current_pipeline_session,
     _ACTIVE_PIPELINE,
-    finalize_pipeline_run,
     sync_pipeline_lineage,
 )
 
@@ -328,7 +327,10 @@ def finalize_pipeline(pipeline=None, *, failed=False):
             pipeline.validate_current_context()
             pipeline.plan.evidence["boundary_completed"] = not failed
             pipeline.close(failed=failed)
-        sync_pipeline_lineage(pipeline.plan, spark_session=pipeline.spark)
+        else:
+            # close() already projects a newly finalized Run. Closed sessions
+            # retain the explicit projection retry without replaying the Run.
+            sync_pipeline_lineage(pipeline.plan, spark_session=pipeline.spark)
         result = pipeline.plan.run_result
         if "lineage_projection" in pipeline.plan.evidence:
             result = {**result, "lineage_projection": dict(pipeline.plan.evidence["lineage_projection"])}

@@ -944,7 +944,7 @@ def test_orchestration_failure_reports_root_cause_and_preserves_chain(capsys, ve
 
     for operation in ("READ", "WRITE"):
         with pytest.raises(RuntimeError, match="Root cause: NameError: name 'io_context' is not defined") as error:
-            shared_module._run_orchestration_stage(
+            shared_module.run_orchestration_stage(
                 operation=operation,
                 name="inventory_movements_incremental",
                 index=1,
@@ -965,7 +965,7 @@ def test_orchestration_failure_reports_root_cause_and_preserves_chain(capsys, ve
 
 
 def test_orchestration_success_stage_record_remains_unchanged(capsys):
-    result, record = shared_module._run_orchestration_stage(
+    result, record = shared_module.run_orchestration_stage(
         operation="READ",
         name="orders",
         index=1,

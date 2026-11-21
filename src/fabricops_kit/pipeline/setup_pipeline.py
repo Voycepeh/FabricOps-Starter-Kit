@@ -4,13 +4,6 @@ from __future__ import annotations
 
 import html
 import json
-from typing import Any
-
-from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema
-from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
-from fabricops_kit.io import read_lakehouse_table
-from fabricops_kit.io.shared import get_spark_session
-from fabricops_kit.pipeline.shared import build_pipeline_execution_plan, resolve_pipeline_participants
 
 
 def _value(value):
