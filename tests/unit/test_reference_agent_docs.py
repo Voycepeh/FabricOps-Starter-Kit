@@ -749,7 +749,8 @@ def test_metadata_reference_overview_renders_interactive_explorer() -> None:
     assert len(CANONICAL_METADATA_TABLES) == 13
     for name in CANONICAL_METADATA_TABLES:
         assert f'href="{name.lower()}/"' in text
-    assert text.startswith("# List of Metadata Tables\n\n## Metadata relationships\n")
+    assert text.startswith("# List of Metadata Tables\n\n")
+    assert "Composite keys apply to the complete combination" in text
     assert "## Workspace columns" not in text
     assert "profiling is configured by setup_pipeline" not in text
     script = (ROOT / "docs" / "javascripts" / "metadata-explorer.js").read_text(encoding="utf-8")

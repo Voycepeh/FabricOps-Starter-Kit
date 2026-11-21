@@ -486,6 +486,7 @@ def test_supplied_dataframe_with_warehouse_identity_stays_in_spark(spark_session
 def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
     """Keep table processing fields when structural profiling supplies null values."""
     module = importlib.import_module("fabricops_kit.pipeline.shared")
+    monkeypatch.setattr(module, "validate_metadata_merge", lambda *a, **kw: None)
     updates = []
 
     class Merge:

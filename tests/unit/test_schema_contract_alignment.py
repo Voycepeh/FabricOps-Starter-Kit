@@ -106,6 +106,7 @@ def test_required_is_presence_even_with_null_values():
 @pytest.mark.parametrize("required", [["col-id"], ["id"], []])
 def test_save_freeze_runtime_preserves_selections(monkeypatch, required):
     """Use real save/freeze/resolution code with mocked Delta and metadata transport."""
+    monkeypatch.setattr(contracts, "validate_metadata_merge", lambda *a, **kw: None)
     contract = frozen_contract(required)
     draft = {**contract, "status": "draft"}
     payload = json.loads(contract["contract_payload_json"])

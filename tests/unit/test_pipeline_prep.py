@@ -571,6 +571,7 @@ def test_target_processing_catalogue_row_contains_strategy_and_parameters(monkey
     import sys
     import types
 
+    monkeypatch.setattr("fabricops_kit.pipeline.shared.validate_metadata_merge", lambda *a, **kw: None)
     rows = []
     attempts = []
     targets = []

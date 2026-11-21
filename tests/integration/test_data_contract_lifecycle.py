@@ -171,6 +171,7 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         if module is None or not getattr(module, "__name__", "").startswith("fabricops_kit"):
             continue
         for name, replacement in (("read_lakehouse_table", read), ("write_lakehouse_table", write),
+                                  ("validate_metadata_merge", lambda *a, **kw: None),
                                   ("resolve_asset_workspace_name", lambda workspace, **_kw: workspace.title()),
                                   ("resolve_fabric_context", resolve), ("build_runtime_audit_fields", audit_fields),
                                   ("get_spark_session", lambda *a, **k: spark_session),

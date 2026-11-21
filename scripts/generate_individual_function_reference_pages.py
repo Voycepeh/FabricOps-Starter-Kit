@@ -4648,7 +4648,7 @@ def render_metadata_reference_index(
         "",
         "Every primary key shown below is a non-null, non-blank unique row identity enforced by FabricOps writers. Composite keys apply to the complete combination of fields; individual fields can repeat.",
         "",
-        "Run `setup_metadata_tables()` before using upgraded writers. Setup validates retained keys without deleting rows, enables Serializable Delta isolation and installs required-key constraints. Existing duplicate or missing keys must be reviewed before the table can be used. Uniqueness depends on the FabricOps transaction protocol; direct Spark or SQL writes must use an equivalent protocol.",
+        "Run [`setup_metadata_tables`](../api/reference/setup_metadata_tables.md) before using upgraded writers. Setup validates retained keys without deleting rows, enables Serializable Delta isolation and installs required-key constraints. Existing duplicate or missing keys must be reviewed before the table can be used. Uniqueness depends on the FabricOps transaction protocol; direct Spark or SQL writes must use an equivalent protocol.",
         "",
         "`METADATA_DATA_CONTRACT` retains one row per `contract_id` + `contract_version`. Steward edits update the current `steward_id` row; Agreement versions and activation history retain distinct keys.",
         "",
