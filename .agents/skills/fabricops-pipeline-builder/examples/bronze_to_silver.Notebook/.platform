@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "bronze_to_silver",
+    "description": "Keep the latest Bronze order per key and prepare a Silver SCD1 write."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "75d42f74-6b7c-4ec0-89ae-62e4de7dc163"
+  }
+}
