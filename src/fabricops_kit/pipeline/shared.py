@@ -1910,7 +1910,7 @@ def read_processing_state(*, context):
     except Exception as exc:
         raise RuntimeError(
             f"Unable to read {PROCESSING_STATE_SCHEMA}.{PROCESSING_STATE_TABLE}. Check access "
-            f"in the configured Lakehouse and run setup_processing_state() if needed. {exc}"
+            f"in the configured Lakehouse and run setup_metadata_tables() if needed. {exc}"
         ) from None
 
 

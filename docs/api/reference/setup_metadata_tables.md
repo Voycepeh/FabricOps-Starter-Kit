@@ -87,7 +87,8 @@ result["status"]
 dict[str, Any]
     Overall readiness, configured ownership schemas, canonical table names,
     created/evolved/validated/failed tables, per-table results, steward
-    readiness and advisory diagnostics for noncanonical metadata tables.
+    readiness, a separate processing_state result, and advisory diagnostics for
+    noncanonical metadata tables. Overall readiness includes Processing State.
 
 ### Return interpretation
 
@@ -116,7 +117,9 @@ RuntimeError
 
 Missing tables are created empty with error-if-exists semantics. Registry
 and Contract Activation use Serializable isolation. Processing State is
-managed separately by setup_processing_state.
+initialized at misc.PROCESSING_STATE in the configured Metadata Lakehouse,
+separately from the canonical METADATA_* tables. Its schema and Serializable
+isolation are validated on repeat setup; existing rows are preserved.
 Setup never manufactures
 approvals, populates business metadata or replaces business targets. Governance definitions and activation are independent workflows.
 
@@ -179,9 +182,9 @@ must use the same protocol. Re-run setup before using upgraded writers.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/setup_metadata_tables.py:604`
+`fabricops_kit/config/setup_metadata_tables.py:634`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L604-L919">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L634-L965">View on GitHub</a>
 </div>
 
 
@@ -197,7 +200,7 @@ must use the same protocol. Re-run setup before using upgraded writers.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 61 |
+| Live-critical dependencies | 67 |
 
 ### Release history
 
@@ -242,6 +245,7 @@ must use the same protocol. Re-run setup before using upgraded writers.
 <li><code>fabricops_kit.config.setup_metadata_tables._retired_preview_warnings</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._retired_table_is_missing</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._schema_fields_by_name</code></li>
+<li><code>fabricops_kit.config.setup_metadata_tables._setup_processing_state</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._table_column_names</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._upgrade_metadata_table</code></li>
 <li><code>fabricops_kit.config.setup_metadata_tables._validate_existing_metadata_schema</code></li>
@@ -267,6 +271,7 @@ must use the same protocol. Re-run setup before using upgraded writers.
 <li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
 <li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
 <li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.read_delta_path</code></li>
 <li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
 <li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.resolve_store</code></li>
@@ -275,7 +280,11 @@ must use the same protocol. Re-run setup before using upgraded writers.
 <li><code>fabricops_kit.io.shared.write_delta_path</code></li>
 <li><code>fabricops_kit.pipeline.shared.file_binding_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.processing_state_path</code></li>
+<li><code>fabricops_kit.pipeline.shared.processing_state_schema</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_run</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_processing_state_isolation</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_processing_state_schema</code></li>
 </ul>
 
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fabricops_kit.io.shared import get_spark_session, resolve_configured_lakehouse_table, write_delta_path, validate_metadata_primary_key, retry_delta_metadata
+from fabricops_kit.io.shared import get_spark_session, read_delta_path, resolve_configured_lakehouse_table, write_delta_path, validate_metadata_primary_key, retry_delta_metadata
 
 from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
 
@@ -601,6 +601,36 @@ def _print_setup_summary(
     print(f"Active steward present: {active_label}")
 
 
+def _setup_processing_state(*, spark: Any, context: dict[str, Any]) -> dict[str, Any]:
+    """Create or validate operational state without changing existing progress."""
+    from fabricops_kit.pipeline.shared import (
+        PROCESSING_STATE_SCHEMA,
+        PROCESSING_STATE_TABLE,
+        processing_state_path,
+        processing_state_schema,
+        validate_processing_state_isolation,
+        validate_processing_state_schema,
+    )
+
+    path = processing_state_path(context)
+    status = "validated"
+    try:
+        state = read_delta_path(spark, path)
+    except Exception as exc:
+        get_condition = getattr(exc, "getCondition", None) or getattr(exc, "getErrorClass", None)
+        if not callable(get_condition) or get_condition() not in {"PATH_NOT_FOUND", "DELTA_PATH_DOES_NOT_EXIST"}:
+            raise
+        empty = spark.createDataFrame([], processing_state_schema())
+        write_delta_path(empty, path, mode="errorifexists", options={"delta.isolationLevel": "Serializable"})
+        state = read_delta_path(spark, path)
+        status = "created"
+    validate_processing_state_schema(state.schema)
+    from delta.tables import DeltaTable
+
+    validate_processing_state_isolation(DeltaTable.forPath(spark, path))
+    return {"status": status, "path": f"Tables/{PROCESSING_STATE_SCHEMA}/{PROCESSING_STATE_TABLE}"}
+
+
 def setup_metadata_tables(
     *,
     config: FrameworkConfig | dict[str, Any],
@@ -630,7 +660,8 @@ def setup_metadata_tables(
     dict[str, Any]
         Overall readiness, configured ownership schemas, canonical table names,
         created/evolved/validated/failed tables, per-table results, steward
-        readiness and advisory diagnostics for noncanonical metadata tables.
+        readiness, a separate processing_state result, and advisory diagnostics for
+        noncanonical metadata tables. Overall readiness includes Processing State.
 
     Raises
     ------
@@ -644,7 +675,9 @@ def setup_metadata_tables(
     -----
     Missing tables are created empty with error-if-exists semantics. Registry
     and Contract Activation use Serializable isolation. Processing State is
-    managed separately by setup_processing_state.
+    initialized at misc.PROCESSING_STATE in the configured Metadata Lakehouse,
+    separately from the canonical METADATA_* tables. Its schema and Serializable
+    isolation are validated on repeat setup; existing rows are preserved.
     Setup never manufactures
     approvals, populates business metadata or replaces business targets. Governance definitions and activation are independent workflows.
 
@@ -841,7 +874,17 @@ def setup_metadata_tables(
     active_stewards = _active_steward_presence(steward_table)
 
     successful = created_tables + evolved_tables + validated_tables
-    status = "ready" if not failed_tables else ("partial_failure" if successful else "failed")
+    try:
+        processing_state = _setup_processing_state(spark=spark, context=context)
+        if verbose and processing_state["status"] == "created":
+            print(f"Processing State: {processing_state['status']} (misc.PROCESSING_STATE)")
+    except Exception as exc:
+        processing_state = {"status": "failed", "path": "Tables/misc/PROCESSING_STATE",
+                            "message": f"{type(exc).__name__}: {exc}"}
+        if verbose:
+            print(f"Processing State failed: {processing_state['message']}")
+    state_failed = processing_state["status"] == "failed"
+    status = "ready" if not failed_tables and not state_failed else ("partial_failure" if successful else "failed")
     data_agreement_tables = [
         "METADATA_DATA_STEWARD", "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT",
     ]
@@ -884,6 +927,7 @@ def setup_metadata_tables(
     fully_qualified_tables = [f"{metadata_table_physical_schema(normalized, table)}.{table}" for table in registry]
     result = {
         "status": status,
+        "processing_state": processing_state,
         "governed_execution": {"status": "blocked", "reason": "Trusted deployment verification is pending; activation candidates grant no publication authority."},
         "data_agreement": data_agreement,
         "governance": governance,
@@ -913,9 +957,11 @@ def setup_metadata_tables(
             table_results=table_results,
             active_stewards=active_stewards,
         )
-    if raise_on_failure and failed_tables:
+    if raise_on_failure and (failed_tables or state_failed):
         detail = "; ".join(f"{table}: {table_results[table]['message']}" for table in failed_tables)
-        raise RuntimeError(f"FabricOps metadata setup failed for {len(failed_tables)} table(s): {detail}")
+        if state_failed:
+            detail = "; ".join(filter(None, [detail, f"misc.PROCESSING_STATE: {processing_state['message']}"]))
+        raise RuntimeError(f"FabricOps metadata setup failed for {len(failed_tables) + int(state_failed)} table(s): {detail}")
     return result
 
 
