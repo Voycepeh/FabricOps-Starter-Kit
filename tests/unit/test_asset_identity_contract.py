@@ -182,3 +182,15 @@ def test_conflicting_physical_workspace_names_block_interpretation():
     with pytest.raises(ValueError, match='Conflicting physical asset workspace'):
         migrate_asset_references({'destination': {'workspace_id': 'old', 'asset_workspace_id': 'different',
                                                   'item_id': 'item', 'kind': 'lakehouse', 'table_name': 'orders'}})
+
+
+@pytest.mark.parametrize('asset_type', ['TABLE', 'FILE'])
+def test_profile_event_keeps_execution_workspace_separate_from_physical_asset(asset_type):
+    """Canonical cross-workspace profiling must survive metadata interpretation."""
+    from fabricops_kit.config.metadata_schemas import has_retained_asset_workspaces, migrate_asset_references
+    event = {'context_key': 'key', 'activity': 'standard', 'asset_type': asset_type,
+        'workspace_id': 'execution', 'asset_workspace_id': 'physical',
+        'physical': {'asset_workspace_id': 'physical', 'item_id': 'lakehouse',
+            'kind': 'lakehouse', 'schema': None, 'table_name': 'orders'}}
+    assert not has_retained_asset_workspaces(event)
+    assert migrate_asset_references(event) == event

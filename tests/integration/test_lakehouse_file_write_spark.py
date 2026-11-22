@@ -86,6 +86,8 @@ def test_orchestrated_overwrite_profiles_snapshot_after_publication(files, spark
     audit = {field.name: datetime(2026, 1, 1) if field.name == '_committed_at' else 'audit-' + field.name
              for field in metadata_table_schema_registry()['METADATA_DATA_PROFILED'] if field.name.startswith('_')}
     monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kw: dict(audit))
+    catalogue_updates = []
+    monkeypatch.setattr(shared, "merge_catalogue_asset", lambda row, **kw: catalogue_updates.append(row))
     snapshots = []
     monkeypatch.setattr(shared, '_replace_snapshot_rows', lambda **kw: snapshots.extend(kw['dataframe'].collect()))
 
@@ -115,6 +117,7 @@ def test_orchestrated_overwrite_profiles_snapshot_after_publication(files, spark
         write_mode='overwrite')
     assert result['published'] is True and result['profile_result']['row_count'] == 2
     assert result['profile_result']['results_persisted'] is True
+    assert catalogue_updates and catalogue_updates[0]["first_profiled_at"] == catalogue_updates[0]["last_profiled_at"]
     assert snapshots and all(row.asset_type == 'FILE' and row.table_id.startswith('file:') and row.column_id is not None for row in snapshots)
     assert result['profile_result']['profile'].select('ROW_COUNT').first()[0] == 2
     assert result['profile_result']['profile'].select('MIN_VALUE').first()[0] == '11'

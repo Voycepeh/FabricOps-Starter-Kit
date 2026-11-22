@@ -160,7 +160,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 103 |
+| Live-critical dependencies | 104 |
 
 ### Release history
 
@@ -205,6 +205,7 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.validate_submission</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_promotion_integrity</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_registry_approval</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._canonical_profiling_workspaces</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>

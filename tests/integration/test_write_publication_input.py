@@ -55,7 +55,7 @@ def publication_input_runtime(monkeypatch, spark_session):
     monkeypatch.setattr(writer, "resolve_target_audit_fields", lambda c: audit)
     monkeypatch.setattr(writer, "validated_processing", processing)
     monkeypatch.setattr(writer, "_persist_target_processing", lambda **kw: None)
-    monkeypatch.setattr(writer, "_writer_scheduled_refresh", lambda **kw: {})
+    monkeypatch.setattr(writer, "writer_scheduled_refresh", lambda **kw: {})
     monkeypatch.setattr(shared, "read_processing_state", lambda **kw: [])
     monkeypatch.setattr(shared, "_find_applied_publication", lambda *a, **kw: None)
     monkeypatch.setattr(shared, "_physical_target_has_publication", lambda *a, **kw: state.confirmed and state.fail != "confirmation")

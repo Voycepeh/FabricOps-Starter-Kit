@@ -179,7 +179,8 @@ def test_file_profile_respects_explicit_bound_and_stays_in_memory(files, spark_s
     assert result['row_count'] == 2 and result['profiling_max_rows'] == 2
     assert result['profile_scope'] == 'bounded_selection' and result['results_persisted'] is False
     assert presentations and 'Bounded selection' in presentations[0]['title']
-    assert shared.schedule_file_profiling(frame, source_id='file:test', context=context, presentations=[])['status'] == 'not_due'
+    assert shared.schedule_file_profiling(frame, source_id='file:test', context=context, presentations=[])['status'] == 'completed'
+    assert not session.plan.evidence['file_profiles']['file:test']['read']
     files.runtime.writes.assert_not_called()
 
 

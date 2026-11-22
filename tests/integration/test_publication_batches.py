@@ -85,7 +85,7 @@ def publication_runtime(monkeypatch, spark_session, tmp_path):
     monkeypatch.setattr(writer, 'validated_processing', lambda *a, **k: (
         state['processing'] if state.get('processing') else {'load_strategy': state['mode']} if state['mode'] in {'append_all', 'append_new_only'} else
         {'load_strategy': state['mode'], 'key_columns': ['id'], **({'effective_column': 'modified', 'tracked_columns': ['value']} if state['mode'] == 'scd2' else {})}))
-    monkeypatch.setattr(writer, '_writer_scheduled_refresh', lambda **kw: {'status': 'not_configured', 'schedules': []})
+    monkeypatch.setattr(writer, 'writer_scheduled_refresh', lambda **kw: {'status': 'not_configured', 'schedules': []})
     monkeypatch.setattr(writer, '_persist_target_processing', lambda **kw: None)
     reader = import_module('fabricops_kit.pipeline.pipeline_read')
     monkeypatch.setattr(reader, 'table_catalogue_observation', lambda *args, **kw: {})

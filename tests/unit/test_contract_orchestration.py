@@ -416,7 +416,7 @@ def test_empty_or_disabled_contract_checks_do_not_require_minimum_coverage(runti
         row["contract_payload_json"] = json.dumps(payload)
         originals.append(row["contract_payload_json"])
     plan = make(mode, contracted=True)
-    monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
+    monkeypatch.setattr(write_module, "writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
     orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
     if mode == "governed":
         monkeypatch.setattr(orchestrator, "schedule_table_profiling", lambda *args, **kw: {"row_count": 2})
@@ -461,7 +461,7 @@ def test_warn_failures_report_and_permit_configured_write(runtime, spark_session
         payload["guardrails"][1]["action"] = "Warn"
         row["contract_payload_json"] = json.dumps(payload)
     plan = make(mode, contracted=True)
-    monkeypatch.setattr(write_module, "_writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
+    monkeypatch.setattr(write_module, "writer_scheduled_refresh", lambda **kw: {"status": "not_configured", "schedules": []})
     orchestrator = importlib.import_module("fabricops_kit.pipeline.orchestrate_write")
     if mode == "governed":
         monkeypatch.setattr(orchestrator, "schedule_table_profiling", lambda *args, **kw: {"row_count": 1})

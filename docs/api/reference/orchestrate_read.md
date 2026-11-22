@@ -126,7 +126,9 @@ Alternatively select a Lakehouse file, folder or wildcard using relative_path,
 file_format and read_options. Files support full reads only and retain their
 stable identity in table_id with asset_type=FILE in the response and shared metadata. Foundational readers remain independent.
 Persistent reads register their physical asset and observed schema in
-METADATA_DATA_CATALOGUE independently of profiling. Query projections
+METADATA_DATA_CATALOGUE independently of profiling. Both asset types keep
+observed schemas in columns_json; new file Reads do not duplicate them in Run
+operations. Query projections
 leave the registered table schema intact. Run operations record participation
 and its physical asset workspace. Successful Reads also register trusted plan
 boundaries for automatic per-Write column lineage; this performs no row action. File profiles
@@ -173,7 +175,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:28`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L247">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L249">View on GitHub</a>
 </div>
 
 
@@ -189,7 +191,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 282 |
+| Live-critical dependencies | 284 |
 
 ### Release history
 
@@ -236,6 +238,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
 <li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._canonical_profiling_workspaces</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_field</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._require_catalogue_assets</code></li>
@@ -343,6 +346,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._dq_tagged_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._ensure_unambiguous_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared._evaluate_dq_rules</code></li>
+<li><code>fabricops_kit.pipeline.shared._file_profiling_event</code></li>
 <li><code>fabricops_kit.pipeline.shared._format_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._frequency_metadata_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._freshness_timestamp</code></li>

@@ -201,7 +201,7 @@ must use the same protocol. Re-run setup before using upgraded writers.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 67 |
+| Live-critical dependencies | 68 |
 
 ### Release history
 
@@ -221,6 +221,7 @@ must use the same protocol. Re-run setup before using upgraded writers.
 <ul class="reference-compact-list">
 <li><code>fabricops_kit.access_scanner.shared.fabric_access_token</code></li>
 <li><code>fabricops_kit.access_scanner.shared.request_fabric_json</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._canonical_profiling_workspaces</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>

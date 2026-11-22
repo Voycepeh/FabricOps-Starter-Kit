@@ -23,32 +23,8 @@ from fabricops_kit.pipeline.shared import (
     resolve_physical_table_identity,
     validated_processing,
     resolve_target_audit_fields,
+    writer_scheduled_refresh,
 )
-
-
-def _writer_scheduled_refresh(*, audit: dict[str, Any]) -> dict[str, Any]:
-    """Return the writer schedule, recording unavailable discovery without blocking writes."""
-    from fabricops_kit.data_contract.scheduled_refresh import discover_scheduled_refresh
-
-    try:
-        discovered = discover_scheduled_refresh(
-            context={
-                "workspace_id": audit.get("_workspace_id"),
-                "notebook_id": audit.get("_notebook_id"),
-            },
-            workspace_id=str(audit.get("_workspace_id") or "") or None,
-            item_id=str(audit.get("_notebook_id") or "") or None,
-        )
-        status = str(discovered.get("status") or "").strip().lower()
-        if status in {"configured", "not_configured"}:
-            return {
-                "status": status,
-                "schedules": list(discovered.get("schedules") or []),
-            }
-    except Exception:
-        # Schedule discovery is optional operational metadata, including runtime/auth failures.
-        pass
-    return {"status": "unavailable", "schedules": []}
 
 
 def _persist_target_processing(
@@ -739,7 +715,7 @@ def pipeline_write(
                 published_table = read_warehouse_query(
                     f"SELECT TOP (0) * FROM {schema_name}.{table_name}", store=identity["store"], context=schema_context,
                 )
-            scheduled_refresh = _writer_scheduled_refresh(audit=audit)
+            scheduled_refresh = writer_scheduled_refresh(audit=audit)
             _persist_target_processing(
                 identity=identity,
                 processing=processing,
