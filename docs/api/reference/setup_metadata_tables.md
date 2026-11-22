@@ -138,7 +138,8 @@ For legacy Catalogue rows, setup validates parent and column identities,
 resolves physical workspaces, preserves stored column IDs in columns_json,
 and retires the separate column records in the same Delta commit.
 Setup standardizes physical asset workspace columns when their scope is known.
-Historical workspace values without sufficient proof remain in legacy_workspace_id.
+Historical workspace values without sufficient proof remain in legacy_workspace_id
+extension columns on upgraded tables only; fresh tables omit this column.
 Contract activation destinations and notebook audit fields retain their original values.
 The per-table result returns the pre-upgrade version and recovery command.
 Migration starts at released v0.5.0 and ends at the current canonical schema.
@@ -156,7 +157,7 @@ targets. Incompatible identity layouts, incorrect types, malformed JSON and
 duplicate Run identities fail explicitly with the existing data preserved.
 A failure in one table does not prevent validation of the remaining tables.
 Unchanged fields retain their physical nullability and order. Renamed
-legacy_workspace_id fields are nullable so new physical observations can omit them.
+legacy_workspace_id extension fields are nullable so new physical observations can omit them.
 
 Governed admission remains blocked pending signed-in Fabric acceptance.
 Retirement presence diagnostics are advisory; unsupported tables are never
@@ -184,7 +185,7 @@ must use the same protocol. Re-run setup before using upgraded writers.
 
 `fabricops_kit/config/setup_metadata_tables.py:634`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L634-L965">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/setup_metadata_tables.py#L634-L966">View on GitHub</a>
 </div>
 
 

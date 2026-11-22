@@ -290,10 +290,10 @@ def test_run_schema_has_only_independent_lifecycle_fields():
     """Keep standard audit fields and avoid redundant activation/failure columns."""
     from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
     fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
-    assert len(fields) == 27
+    assert len(fields) == 25
     assert fields[0] == "run_id"
     assert {"record_id", "record_type", "snapshot_token", "operation_count", "operations_digest", "operation_summary_json"}.isdisjoint(fields)
-    assert {"operations", "approval_id", "profiling", "boundary_completed"} <= set(fields)
+    assert {"operations", "promotion_id", "profiling", "boundary_completed"} <= set(fields)
     assert fields[-8:] == [name for name, *_ in AUDIT_SCHEMA_FIELDS]
 
 
@@ -580,8 +580,8 @@ def test_original_schema_choice_is_retained_only_in_manual_journal(runtime, monk
     assert 'requested_schema' not in shared.validate_pipeline_run(row)['operations'][0]
 
 
-def test_governed_run_preserves_governance_decision_and_exact_contracts(runtime):
-    """Execution records keep approval identity distinct from deployment and per-operation Contracts."""
+def test_governed_run_keeps_promotion_and_exact_contracts_without_duplicate_approvals(runtime):
+    """Execution records link approval through the promotion and retain exact Contracts."""
     make, operation, _saved, _writes, _failure = runtime
     plan = make(roles=("source", "target"))
     plan.evidence["promotion"] = {"approval_id": "governance-decision"}
@@ -589,9 +589,9 @@ def test_governed_run_preserves_governance_decision_and_exact_contracts(runtime)
     operation(plan, 0)
     operation(plan, 1)
     row = shared.validate_pipeline_run(shared.pipeline_run_row(plan, status="running"))
-    assert row["approval_id"] == "governance-decision"
+    assert "approval_id" not in row
     assert row["promotion_id"] == "approved-release"
-    assert row["activation_revision"] == "7"
+    assert "activation_revision" not in row
     assert [(op["contract_id"], op["contract_version"]) for op in row["operations"]] == [("contract-table0", 1), ("contract-table1", 1)]
     assert all(len(op["payload_sha256"]) == 64 for op in row["operations"])
 

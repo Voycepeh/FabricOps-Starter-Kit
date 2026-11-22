@@ -1049,7 +1049,7 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
     assert (profiling_fields - {"data_type"}).isdisjoint(catalogue_names)
     assert {"asset_type", "table_id", "asset_workspace_name", "columns_json", "first_profiled_at", "last_profiled_at", "is_active"}.issubset(catalogue_names)
     assert profiling_fields.issubset(profiled_names)
-    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id", "asset_workspace_id", "legacy_workspace_id", "data_type"}.issubset(profiled_names)
+    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id", "asset_workspace_id", "data_type"}.issubset(profiled_names)
     assert len(catalogue_names) == len(set(catalogue_names))
     assert len(profiled_names) == len(set(profiled_names))
     audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
@@ -1414,13 +1414,12 @@ def test_metadata_audit_schema_nullability_contract():
         assert set(audit_names).issubset(fields)
 
     access_fields = [field.name for field in registry["METADATA_DATA_ACCESS"].fields]
-    assert access_fields[:10] == [
+    assert access_fields[:9] == [
         "access_id",
         "user_principal",
         "table_id",
         "table_name",
         "asset_workspace_id",
-        "legacy_workspace_id",
         "asset_type",
         "access_level",
         "access_value",

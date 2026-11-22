@@ -109,7 +109,6 @@ def _access_rows(mapped, *, access_snapshot_id: str, audit_fields: dict[str, Any
             F.col("_catalogue_table_id").alias("table_id"),
             F.col("_catalogue_table_name").alias("table_name"),
             F.col("_catalogue_workspace_id").alias("asset_workspace_id"),
-            F.lit(None).cast("string").alias("legacy_workspace_id"),
             F.lit("TABLE").alias("asset_type"),
             F.lit("ONELAKE_PATH").alias("access_level"),
             "access_value",

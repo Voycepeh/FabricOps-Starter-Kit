@@ -129,9 +129,9 @@ inspect the result without writing metadata.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_workspace_access.py:148`
+`fabricops_kit/access_scanner/scan_workspace_access.py:147`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_workspace_access.py#L148-L273">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_workspace_access.py#L147-L272">View on GitHub</a>
 </div>
 
 

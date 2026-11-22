@@ -104,14 +104,13 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
 def test_stage2_profile_schema_is_normalized():
     """Profile stores snapshot metrics and asset IDs without a duplicate event timestamp."""
     fields = metadata_table_schema_registry()["METADATA_DATA_PROFILED"].fieldNames()
-    assert fields[:25] == [
+    assert fields[:24] == [
         "asset_type", "run_id", "pipeline_role",
         "profile_id",
         "profile_snapshot_id",
         "table_id",
         "column_id",
         "asset_workspace_id",
-        "legacy_workspace_id",
         "data_type",
         "table_name",
         "column_name",
@@ -159,7 +158,6 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
         "column_name",
         "data_type",
         "asset_workspace_id",
-        "legacy_workspace_id",
         "value",
         "frequency_count",
         "frequency_percent",
@@ -239,7 +237,6 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
         "table_id",
         "table_name",
         "asset_workspace_id",
-        "legacy_workspace_id",
         "asset_type",
         "access_level",
         "access_value",
@@ -410,7 +407,7 @@ def test_explicit_column_retirements_exclude_live_audit_and_run_contracts():
     from fabricops_kit.config.metadata_schemas import RETIRED_METADATA_COLUMNS, AUDIT_SCHEMA_FIELDS
     registry = metadata_table_schema_registry()
     assert set(RETIRED_METADATA_COLUMNS) == set(registry)
-    assert RETIRED_METADATA_COLUMNS['METADATA_PIPELINE_RUN'] == {}
+    assert RETIRED_METADATA_COLUMNS['METADATA_PIPELINE_RUN'] == {'approval_id': None, 'activation_revision': None}
     audit = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
     for table, policies in RETIRED_METADATA_COLUMNS.items():
         canonical = set(registry[table].fieldNames())
@@ -462,3 +459,14 @@ def test_setup_does_not_upgrade_pre_050_run_provenance_layout():
     with pytest.raises(ValueError, match='Incompatible METADATA_PIPELINE_RUN'):
         setup._validate_existing_metadata_schema('METADATA_PIPELINE_RUN', partial,
             metadata_table_schema_registry()['METADATA_PIPELINE_RUN'], allow_missing=True)
+
+
+@pytest.mark.parametrize('table', [
+    'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY',
+    'METADATA_DATA_ACCESS', 'METADATA_GUARDRAIL_RESULTS',
+])
+def test_fresh_asset_schemas_exclude_historical_workspace_extensions(table):
+    """Fresh tables retain physical asset and audit scope without legacy placeholders."""
+    fields = metadata_table_schema_registry()[table].fieldNames()
+    assert 'legacy_workspace_id' not in fields
+    assert {'asset_workspace_id', '_workspace_id'} <= set(fields)

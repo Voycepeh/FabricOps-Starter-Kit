@@ -2700,7 +2700,6 @@ def _guardrail_workspace_fields(context, table_id, active_workspace_id):
     return {
         "asset_workspace_id": str(binding["asset_workspace_id"]).lower() if binding else None,
         "execution_workspace_id": None if binding else active_workspace_id,
-        "legacy_workspace_id": None,
     }
 
 
@@ -6616,10 +6615,9 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                 "source_assets": actual.get("source_assets", []),
                 "status": actual["status"], "stages": actual["stages"]})
     config = plan.runtime_context["config"]
-    row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id, "approval_id": plan.evidence.get("promotion", {}).get("approval_id") if plan.execution_mode == "governed" else None,
+    row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id,
         "execution_mode": plan.execution_mode, "workspace_id": plan.workspace_id,
         "started_at": plan.evidence["started_at"], "completed_at": completed_at, "status": status,
-        "activation_revision": str(plan.evidence["governance_approval"]["revision"]) if plan.execution_mode == "governed" and plan.evidence.get("governance_approval") else None,
         "pipeline_version": plan.pipeline_version,
         "promotion_id": plan.promotion_id or None, "governed_notebook_id": plan.governed_notebook_id or None,
         "execution_identity": plan.runtime_context.get("user_id") or plan.runtime_context.get("user_name") or None,
@@ -8394,7 +8392,6 @@ def _canonical_profiled_dataframe(
         F.lit(table_id).cast("string").alias("table_id"),
         column_id_udf(F.col("_column_name")).alias("column_id"),
         F.lit(workspace_id).cast("string").alias("asset_workspace_id"),
-        F.lit(None).cast("string").alias("legacy_workspace_id"),
         F.col("data_type").cast("string"),
         F.lit(str(runtime_context.get("table_name") or "")).cast("string").alias("table_name"),
         F.col("_column_name").cast("string").alias("column_name"),
@@ -8458,7 +8455,6 @@ def _frequency_metadata_dataframe(
         identities.column_name.cast("string").alias("column_name"),
         identities.data_type.cast("string").alias("data_type"),
         identities.asset_workspace_id.cast("string").alias("asset_workspace_id"),
-        F.lit(None).cast("string").alias("legacy_workspace_id"),
         F.lit((runtime_context.get("_profile_scope") or {}).get("profile_scope", "full_table")).alias("profile_scope"),
         F.lit((runtime_context.get("_profile_scope") or {}).get("profiling_max_rows")).cast("long").alias("profiling_max_rows"),
         F.col("VALUE").cast("string").alias("value"),

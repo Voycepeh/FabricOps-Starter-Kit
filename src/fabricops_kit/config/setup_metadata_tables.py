@@ -332,7 +332,7 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
     if not logical_fields and not retired:
         return table, None
     expected = _schema_fields_by_name(expected_schema)
-    if set(retirements) & set(expected) or (table_name == "METADATA_PIPELINE_RUN" and retirements):
+    if set(retirements) & set(expected):
         raise ValueError(f"Unsafe column retirement declaration for {table_name}.")
 
     def inspect(frame):
@@ -696,7 +696,8 @@ def setup_metadata_tables(
     resolves physical workspaces, preserves stored column IDs in columns_json,
     and retires the separate column records in the same Delta commit.
     Setup standardizes physical asset workspace columns when their scope is known.
-    Historical workspace values without sufficient proof remain in legacy_workspace_id.
+    Historical workspace values without sufficient proof remain in legacy_workspace_id
+    extension columns on upgraded tables only; fresh tables omit this column.
     Contract activation destinations and notebook audit fields retain their original values.
     The per-table result returns the pre-upgrade version and recovery command.
     Migration starts at released v0.5.0 and ends at the current canonical schema.
@@ -714,7 +715,7 @@ def setup_metadata_tables(
     duplicate Run identities fail explicitly with the existing data preserved.
     A failure in one table does not prevent validation of the remaining tables.
     Unchanged fields retain their physical nullability and order. Renamed
-    legacy_workspace_id fields are nullable so new physical observations can omit them.
+    legacy_workspace_id extension fields are nullable so new physical observations can omit them.
 
     Governed admission remains blocked pending signed-in Fabric acceptance.
     Retirement presence diagnostics are advisory; unsupported tables are never

@@ -219,7 +219,6 @@ def _access_rows(
             F.col("_catalogue_table_id").alias("table_id"),
             F.col("_catalogue_table_name").alias("table_name"),
             F.col("_catalogue_workspace_id").alias("asset_workspace_id"),
-            F.lit(None).cast("string").alias("legacy_workspace_id"),
             F.lit("TABLE").alias("asset_type"),
             F.col("class_desc").alias("access_level"),
             F.col("permission_name").alias("access_value"),

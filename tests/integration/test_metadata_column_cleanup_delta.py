@@ -126,7 +126,7 @@ def test_released_conflicting_ids_abort_without_modification(release_delta, tabl
     assert state.version() == version and state.read().collect() == before
 
 
-def test_released_run_json_and_provenance_require_no_rewrite(release_delta):
+def test_released_run_cleanup_preserves_exact_json_and_provenance(release_delta):
     """v0.5.0 already stores JSON strings and provenance; retain their exact bytes."""
     state = release_delta.seed('METADATA_PIPELINE_RUN', {'run_id': 'released-run', 'pipeline_id': 'pipeline',
         'execution_mode': 'ungoverned', 'status': 'incomplete', 'boundary_completed': False,
@@ -134,5 +134,38 @@ def test_released_run_json_and_provenance_require_no_rewrite(release_delta):
         'failures': '[  ]', 'warnings_json': '[ ]'})
     before, version = state.read().collect(), state.version()
     frame, info = state.upgrade()
-    assert info is None and frame.collect() == before
-    assert state.version() == version
+    assert info["removed_columns"] == ["activation_revision", "approval_id"]
+    kept = [name for name in state.read().columns]
+    assert frame.collect() == [type(row)(*[row[name] for name in kept]) for row in before]
+    assert state.version() == version + 1
+
+
+def test_released_run_null_approval_cleanup_preserves_history_and_repeats(release_delta):
+    """Retire duplicate null approval fields without changing retained Run facts."""
+    rt = release_delta
+    state = rt.seed('METADATA_PIPELINE_RUN', {
+        'run_id': 'retained-run', 'status': 'running', 'execution_mode': 'ungoverned',
+        'operations': '[]', 'profiling': '[]', 'failures': '[]', 'warnings_json': '[]',
+    })
+    before, version = state.read().first().asDict(), state.version()
+    frame, info = state.upgrade()
+    assert info['removed_columns'] == ['activation_revision', 'approval_id']
+    assert frame.first().asDict() == {key: value for key, value in before.items()
+                                    if key not in {'approval_id', 'activation_revision'}}
+    assert rt.spark.read.format('delta').option('versionAsOf', version).load(state.path).first().asDict() == before
+    assert state.upgrade()[1] is None
+    assert state.version() == version + 1
+
+
+@pytest.mark.parametrize('column', ['approval_id', 'activation_revision'])
+def test_released_run_populated_approval_fields_are_never_discarded(release_delta, column):
+    """Preserve historical decisions when their redundancy cannot be established."""
+    state = release_delta.seed('METADATA_PIPELINE_RUN', {
+        'run_id': 'retained-run', 'status': 'running', 'execution_mode': 'ungoverned',
+        'operations': '[]', 'profiling': '[]', 'failures': '[]', 'warnings_json': '[]',
+        column: 'historical-decision',
+    })
+    before, version = state.read().collect(), state.version()
+    with pytest.raises(ValueError, match='not provably redundant'):
+        state.upgrade()
+    assert state.version() == version and state.read().collect() == before

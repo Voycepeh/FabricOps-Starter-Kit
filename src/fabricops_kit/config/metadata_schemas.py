@@ -42,8 +42,8 @@ CANONICAL_METADATA_TABLES = [
 # Explicit column retirements, never inferred from a schema difference. Values
 # name a canonical replacement that must equal every non-null retired value;
 # None permits removal only when the retired column is entirely SQL NULL.
-# These fields are absent from current writers. Retained Run fields are excluded:
-# even a duplicate field can participate in released execution content hashes.
+# These fields are absent from current writers. Populated historical approval
+# references are never discarded by automatic cleanup.
 RETIRED_METADATA_COLUMNS = {
     table: {} for table in CANONICAL_METADATA_TABLES
 }
@@ -55,6 +55,8 @@ RETIRED_METADATA_COLUMNS.update({
         "METADATA_GUARDRAIL_RESULTS",
     )
 })
+
+RETIRED_METADATA_COLUMNS["METADATA_PIPELINE_RUN"] = {"approval_id": None, "activation_revision": None}
 
 
 def has_retained_asset_workspaces(value, *, physical=False):
@@ -517,7 +519,6 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("table_id", "string"),
                 ("column_id", "string"),
                 ("asset_workspace_id", "string"),
-                ("legacy_workspace_id", "string"),
                 ("data_type", "string"),
                 ("table_name", "string"),
                 ("column_name", "string"),
@@ -553,7 +554,6 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("column_name", "string"),
                 ("data_type", "string"),
                 ("asset_workspace_id", "string"),
-                ("legacy_workspace_id", "string"),
                 ("value", "string"),
                 ("frequency_count", "long"),
                 ("frequency_percent", "double"),
@@ -573,7 +573,6 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("table_id", "string", False),
                 ("table_name", "string"),
                 ("asset_workspace_id", "string"),
-                ("legacy_workspace_id", "string"),
                 ("asset_type", "string"),
                 ("access_level", "string", False),
                 ("access_value", "string", False),
@@ -626,11 +625,11 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
         ),
         "METADATA_PIPELINE_RUN": build_metadata_schema(
             "METADATA_PIPELINE_RUN",
-            [("run_id", "string", False), ("approval_id", "string"),
+            [("run_id", "string", False),
              ("pipeline_id", "string", False),
              ("execution_mode", "string", False), ("workspace_id", "string", False),
              ("started_at", "timestamp", False), ("completed_at", "timestamp"),
-             ("status", "string", False), ("activation_revision", "string"),
+             ("status", "string", False),
              ("boundary_completed", "boolean", False),
              ("pipeline_version", "integer"),
              ("promotion_id", "string"), ("governed_notebook_id", "string"), ("execution_identity", "string"),
@@ -701,7 +700,6 @@ def metadata_table_schema_registry(*, logical: bool = False) -> dict[str, Any]:
                 ("run_id", "string", False),
                 ("asset_workspace_id", "string"),
                 ("execution_workspace_id", "string"),
-                ("legacy_workspace_id", "string"),
                 ("status", "string", False),
                 ("can_continue", "boolean", False),
                 ("severity", "string", False),
