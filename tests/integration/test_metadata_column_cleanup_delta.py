@@ -126,7 +126,7 @@ def test_released_conflicting_ids_abort_without_modification(release_delta, tabl
     assert state.version() == version and state.read().collect() == before
 
 
-def test_released_run_json_and_provenance_require_no_rewrite(release_delta):
+def test_released_run_cleanup_preserves_exact_json_and_provenance(release_delta):
     """v0.5.0 already stores JSON strings and provenance; retain their exact bytes."""
     state = release_delta.seed('METADATA_PIPELINE_RUN', {'run_id': 'released-run', 'pipeline_id': 'pipeline',
         'execution_mode': 'ungoverned', 'status': 'incomplete', 'boundary_completed': False,
@@ -134,8 +134,10 @@ def test_released_run_json_and_provenance_require_no_rewrite(release_delta):
         'failures': '[  ]', 'warnings_json': '[ ]'})
     before, version = state.read().collect(), state.version()
     frame, info = state.upgrade()
-    assert info is None and frame.collect() == before
-    assert state.version() == version
+    assert info["removed_columns"] == ["activation_revision", "approval_id"]
+    kept = [name for name in state.read().columns]
+    assert frame.collect() == [type(row)(*[row[name] for name in kept]) for row in before]
+    assert state.version() == version + 1
 
 
 def test_released_run_null_approval_cleanup_preserves_history_and_repeats(release_delta):
