@@ -40,8 +40,8 @@ via `operations`
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">27</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">19</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">25</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">17</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">0</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
@@ -53,14 +53,12 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
 <tr class="metadata-column--engineering"><td><code>run_id</code></td><td><code>string</code></td><td>Unique execution attempt and physical merge key; one authoritative row contains every Read/Write.</td></tr>
-<tr class="metadata-column--engineering"><td><code>approval_id</code></td><td><code>string</code></td><td>Exact Governance approval ID authorizing the selected Pipeline Promotion; captured by governed Runs. Historical Run values are preserved.</td></tr>
 <tr class="metadata-column--engineering"><td><code>pipeline_id</code></td><td><code>string</code></td><td>Identifier stored for <code>pipeline_id</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>execution_mode</code></td><td><code>string</code></td><td>Metadata Pipeline Run field <code>execution_mode</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
 <tr class="metadata-column--engineering"><td><code>started_at</code></td><td><code>timestamp</code></td><td>Pipeline bootstrap timestamp captured when the pipeline context is initialized.</td></tr>
 <tr class="metadata-column--engineering"><td><code>completed_at</code></td><td><code>timestamp</code></td><td>Timestamp captured when the pipeline run summary is written. Pipeline duration is derived from the difference between <code>started_at</code> and <code>completed_at</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>status</code></td><td><code>string</code></td><td>Whole-run outcome: incomplete, failed, succeeded or ungoverned_completed; operation success alone never completes a run.</td></tr>
-<tr class="metadata-column--engineering"><td><code>activation_revision</code></td><td><code>string</code></td><td>Governance approval revision captured as a string for a governed Run; absent when no governed approval is captured. Historical Run values are preserved.</td></tr>
 <tr class="metadata-column--engineering"><td><code>boundary_completed</code></td><td><code>boolean</code></td><td>Whether the explicit whole-run completion boundary finished; independent of operation success.</td></tr>
 <tr class="metadata-column--engineering"><td><code>pipeline_version</code></td><td><code>integer</code></td><td>Frozen per-workspace Pipeline version captured at Governed admission.</td></tr>
 <tr class="metadata-column--engineering"><td><code>promotion_id</code></td><td><code>string</code></td><td>Exact immutable promotion ID captured at admission; superseded versions remain retained.</td></tr>
@@ -120,3 +118,14 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--audit"><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
 </tbody></table>
 </div>
+
+## Automatic column cleanup
+
+`setup_metadata_tables()` removes only the explicitly retired columns below. It preserves canonical rows, all eight audit columns and other extension columns. If a populated value cannot be proved redundant, setup fails for this table with data preserved.
+
+| Retired column | Removal condition |
+| --- | --- |
+| `approval_id` | Every value is SQL NULL |
+| `activation_revision` | Every value is SQL NULL |
+
+See [`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md) for transaction results and the Delta recovery boundary.

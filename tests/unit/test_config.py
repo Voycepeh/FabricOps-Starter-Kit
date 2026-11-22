@@ -1032,7 +1032,7 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
     assert (profiling_fields - {"data_type"}).isdisjoint(catalogue_names)
     assert {"metadata_level", "table_id", "column_id", "column_name", "first_profiled_at", "last_profiled_at", "is_active"}.issubset(catalogue_names)
     assert profiling_fields.issubset(profiled_names)
-    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id", "workspace_id", "data_type"}.issubset(profiled_names)
+    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id", "_workspace_id", "data_type"}.issubset(profiled_names)
     assert len(catalogue_names) == len(set(catalogue_names))
     assert len(profiled_names) == len(set(profiled_names))
     audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}

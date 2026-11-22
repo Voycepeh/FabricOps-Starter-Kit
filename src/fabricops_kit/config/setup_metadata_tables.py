@@ -201,7 +201,7 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
     if not logical_fields and not retired:
         return table, None
     expected = _schema_fields_by_name(expected_schema)
-    if set(retirements) & set(expected) or (table_name == "METADATA_PIPELINE_RUN" and retirements):
+    if set(retirements) & set(expected):
         raise ValueError(f"Unsafe column retirement declaration for {table_name}.")
 
     def inspect(frame):
@@ -215,7 +215,7 @@ def _upgrade_metadata_table(*, spark, table, table_name, expected_schema, metada
                 converted.add(name)
             elif physical != "string":
                 raise ValueError(f"Unsupported {table_name} physical type for {name}: {physical}.")
-        compatible = frame.schema.__class__([expected[f.name] if f.name in converted else f for f in frame.schema.fields])
+        compatible = frame.schema.__class__([expected[f.name] if f.name in converted else f for f in frame.schema.fields if f.name not in retirements])
         _validate_existing_metadata_schema(table_name, compatible, expected_schema, allow_missing=True)
         return converted
 

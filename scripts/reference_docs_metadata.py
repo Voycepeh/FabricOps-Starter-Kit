@@ -437,7 +437,6 @@ METADATA_COLUMN_OWNERS = {
         "table_name": ["fabricops_kit.pipeline.shared._frequency_metadata_dataframe"],
         "column_name": ["fabricops_kit.pipeline.shared._frequency_metadata_dataframe"],
         "data_type": ["fabricops_kit.pipeline.shared._frequency_metadata_dataframe"],
-        "workspace_id": ["fabricops_kit.pipeline.shared._frequency_metadata_dataframe"],
         "schema_fingerprint": [
             "fabricops_kit.pipeline.shared._canonical_profiled_dataframe",
         ],

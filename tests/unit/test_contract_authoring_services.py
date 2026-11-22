@@ -420,7 +420,7 @@ def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):
     """Hydrate top values from the canonical profiled-frequency schema."""
     profiled = [{
         "profile_id": "profile-1", "profile_snapshot_id": "snapshot-1",
-        "table_id": "orders", "column_id": "amount", "workspace_id": "dev",
+        "table_id": "orders", "column_id": "amount", "_workspace_id": "dev",
         "data_type": "double", "row_count": 120, "non_null_count": 120,
         "null_count": 0, "null_percent": 0.0, "distinct_count": 3,
         "distinct_percent": 2.5, "mean_value": 109.95, "stddev_value": 3.1,
@@ -467,13 +467,13 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
     profiled = [
         {
             "profile_id": "profile-dev", "profile_snapshot_id": "snapshot-dev",
-            "table_id": "orders", "column_id": "amount", "workspace_id": "DEV",
+            "table_id": "orders", "column_id": "amount", "_workspace_id": "DEV",
             "_notebook_name": "02_pipeline", "_committed_by": "dev@example.com",
             "_committed_at": "2026-09-26T01:00:00", "_activity_id": "dev-profile",
         },
         {
             "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
-            "table_id": "orders", "column_id": "amount", "workspace_id": "PROD",
+            "table_id": "orders", "column_id": "amount", "_workspace_id": "PROD",
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 8, "distinct_percent": 6.667,
             "min_value": "29.9", "max_value": "438.6", "example_value": "109.95",
@@ -482,7 +482,7 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
         },
         {
             "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
-            "table_id": "orders", "column_id": "customer_id", "workspace_id": "PROD",
+            "table_id": "orders", "column_id": "customer_id", "_workspace_id": "PROD",
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 120, "distinct_percent": 100.0,
             "_notebook_name": "02_pipeline", "_committed_by": "prod@example.com",
@@ -514,11 +514,11 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
 
     frequency = [
         {
-            "workspace_id": "PROD", "table_id": "orders", "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
+            "_workspace_id": "PROD", "table_id": "orders", "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
             "value": "109.95", "frequency_count": 50, "frequency_rank": 1,
         },
         {
-            "workspace_id": "PROD", "table_id": "orders", "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
+            "_workspace_id": "PROD", "table_id": "orders", "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
             "value": "C001", "frequency_count": 1, "frequency_rank": 1,
         },
     ]
@@ -620,17 +620,17 @@ def test_new_freeze_omits_profiling_and_preserves_historical_record():
 def test_runtime_context_bulk_profiles_match_column_reads(monkeypatch):
     """A wide table needs one read per metadata table, including older column snapshots."""
     profiles = [{"profile_id": f"p-{index}", "profile_snapshot_id": f"s-{index}",
-                 "table_id": "orders", "workspace_id": "dev", "column_id": f"c-{index}",
+                 "table_id": "orders", "_workspace_id": "dev", "column_id": f"c-{index}",
                  "_committed_at": "2026-09-26T01:00:00Z", "row_count": 10}
                 for index in range(60)]
     profiles.append({**profiles[0], "profile_id": "failed", "status": "failed",
                      "_committed_at": "2026-09-27T01:00:00Z"})
     frequency = [{"profile_id": f"p-{index}", "profile_snapshot_id": f"s-{index}",
-                  "table_id": "orders", "workspace_id": "dev", "column_id": f"c-{index}",
+                  "table_id": "orders", "_workspace_id": "dev", "column_id": f"c-{index}",
                   "value": f"v-{rank}", "frequency_count": 10 - rank,
                   "frequency_rank": rank, "frequency_percent": 10}
                  for index in range(60) for rank in (4, 2, 1, 3)]
-    frequency.extend([{**frequency[0], "workspace_id": "other", "value": "foreign"},
+    frequency.extend([{**frequency[0], "_workspace_id": "other", "value": "foreign"},
                       {**frequency[0], "profile_id": "old", "profile_snapshot_id": "old", "value": "old"}])
     reads = []
     def read(name, **_kwargs):

@@ -6183,10 +6183,9 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
                 "source_table_ids": actual.get("source_table_ids", []),
                 "status": actual["status"], "stages": actual["stages"]})
     config = plan.runtime_context["config"]
-    row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id, "approval_id": plan.evidence.get("promotion", {}).get("approval_id") if plan.execution_mode == "governed" else None,
+    row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id,
         "execution_mode": plan.execution_mode, "workspace_id": plan.workspace_id,
         "started_at": plan.evidence["started_at"], "completed_at": completed_at, "status": status,
-        "activation_revision": str(plan.evidence["governance_approval"]["revision"]) if plan.execution_mode == "governed" and plan.evidence.get("governance_approval") else None,
         "pipeline_version": plan.pipeline_version,
         "promotion_id": plan.promotion_id or None, "governed_notebook_id": plan.governed_notebook_id or None,
         "execution_identity": plan.runtime_context.get("user_id") or plan.runtime_context.get("user_name") or None,
@@ -7198,7 +7197,7 @@ def _show_previous_table_profile(table_id, previous, *, context, spark_session, 
             schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
             context={**context, "_spark_session": spark_session, "_fabricops_suppress_io_log": True},
         ).filter(
-            (F.col("workspace_id") == context["scope_workspace_id"])
+            (F.col("_workspace_id") == context["scope_workspace_id"])
             & (F.col("table_id") == table_id)
             & (F.col("profile_snapshot_id") == snapshot_id)
         )
@@ -8019,7 +8018,6 @@ def _canonical_profiled_dataframe(
     config: Any,
     active_workspace_id: str,
     runtime_context: dict[str, Any],
-    workspace_id: str,
     table_id: str,
     profile_snapshot_id: str,
 ):
@@ -8055,7 +8053,6 @@ def _canonical_profiled_dataframe(
         F.lit(profile_snapshot_id).cast("string").alias("profile_snapshot_id"),
         F.lit(table_id).cast("string").alias("table_id"),
         column_id_udf(F.col("_column_name")).alias("column_id"),
-        F.lit(workspace_id).cast("string").alias("workspace_id"),
         F.col("data_type").cast("string"),
         F.lit(str(runtime_context.get("table_name") or "")).cast("string").alias("table_name"),
         F.col("_column_name").cast("string").alias("column_name"),
@@ -8094,7 +8091,7 @@ def _frequency_metadata_dataframe(
     column_id_udf = F.udf(lambda column_name: build_column_id(table_id, column_name), T.StringType())
     identities = profiled_df.select(
         "column_id", "column_name", "table_id", "table_name", "data_type",
-        "workspace_id", "profile_id", "profile_snapshot_id",
+        "profile_id", "profile_snapshot_id",
     )
     joined = frequency_df.withColumn("_column_id", column_id_udf(F.col("COLUMN_NAME"))).join(
         identities,
@@ -8115,7 +8112,6 @@ def _frequency_metadata_dataframe(
         identities.table_name.cast("string").alias("table_name"),
         identities.column_name.cast("string").alias("column_name"),
         identities.data_type.cast("string").alias("data_type"),
-        identities.workspace_id.cast("string").alias("workspace_id"),
         F.lit((runtime_context.get("_profile_scope") or {}).get("profile_scope", "full_table")).alias("profile_scope"),
         F.lit((runtime_context.get("_profile_scope") or {}).get("profiling_max_rows")).cast("long").alias("profiling_max_rows"),
         F.col("VALUE").cast("string").alias("value"),
@@ -8640,7 +8636,6 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
         config=config,
         active_workspace_id=active_workspace_id,
         runtime_context={**context, "table_name": identity.get("table_name")},
-        workspace_id=active_workspace_id,
         table_id=identity["table_id"],
         profile_snapshot_id=profile_snapshot_id,
     ).cache()

@@ -1141,14 +1141,15 @@ def get_table_runtime_context(
             ):
                 return []
             raise
+        workspace_field = "_workspace_id" if table_name == "METADATA_DATA_PROFILED" else "workspace_id"
         return [
             row for row in _scoped_rows(
                 frame, f"table_id = {_sql_literal(table_identity)}",
                 "" if table_name == "METADATA_DATA_LINEAGE"
-                else f"workspace_id = {_sql_literal(active_workspace_id)}",
+                else f"{workspace_field} = {_sql_literal(active_workspace_id)}",
             )
             if str(row.get("table_id") or "") == table_identity
-            and (table_name == "METADATA_DATA_LINEAGE" or str(row.get("workspace_id") or "") == active_workspace_id)
+            and (table_name == "METADATA_DATA_LINEAGE" or str(row.get(workspace_field) or "") == active_workspace_id)
         ]
 
     profiled = table_rows("METADATA_DATA_PROFILED")
@@ -1177,7 +1178,7 @@ def get_table_runtime_context(
         latest_profile = {
             **{key: latest_profile_row[key] for key in ("profile_scope", "profiling_max_rows") if latest_profile_row.get(key) is not None},
             "profile_snapshot_id": str(latest_profile_row.get("profile_snapshot_id") or ""),
-            "workspace_id": str(latest_profile_row.get("workspace_id") or ""),
+            "workspace_id": str(latest_profile_row.get("_workspace_id") or ""),
             "workspace_name": str(latest_profile_row.get("_workspace_name") or ""),
             "pipeline_name": str(
                 latest_profile_row.get("_notebook_name")
@@ -1198,8 +1199,8 @@ def get_table_runtime_context(
         else:
             latest_profile_rows = [
                 row for row in profiled
-                if str(row.get("workspace_id") or "")
-                == str(latest_profile_row.get("workspace_id") or "")
+                if str(row.get("_workspace_id") or "")
+                == str(latest_profile_row.get("_workspace_id") or "")
                 and metadata_timestamp_sort_key(row.get("_committed_at"))
                 == metadata_timestamp_sort_key(latest_profile_row.get("_committed_at"))
                 and str(row.get("_activity_id") or "")
@@ -1244,7 +1245,7 @@ def get_table_runtime_context(
             frequency_rows = row_dicts(_scoped_rows(
                 frequency_frame,
                 frequency_predicate,
-                f"workspace_id = {_sql_literal(active_workspace_id)}",
+                f"_workspace_id = {_sql_literal(active_workspace_id)}",
                 f"table_id = {_sql_literal(table_identity)}",
             ))
         except Exception as exc:
@@ -1257,14 +1258,14 @@ def get_table_runtime_context(
                 raise
         frequency_rows = [
             row for row in frequency_rows
-            if str(row.get("workspace_id") or "") == active_workspace_id
+            if str(row.get("_workspace_id") or "") == active_workspace_id
             and str(row.get("table_id") or "") == table_identity
         ]
         summary_frequency_rows = [
             row for row in frequency_rows
             if str(row.get("profile_snapshot_id") or "") == latest_snapshot_id
             and str(row.get("profile_id") or "") in profile_columns
-            and str(row.get("workspace_id") or "") == active_workspace_id
+            and str(row.get("_workspace_id") or "") == active_workspace_id
             and str(row.get("table_id") or "") == table_identity
         ]
         summary_frequency_rows.sort(
@@ -1375,13 +1376,13 @@ def get_column_profile_context(
         ),
         f"table_id = {_sql_literal(table_id)}",
         f"column_id = {_sql_literal(column_id)}",
-        f"workspace_id = {_sql_literal(active_workspace_id)}",
+        f"_workspace_id = {_sql_literal(active_workspace_id)}",
     )
     candidates = [
         row for row in profiled
         if str(row.get("table_id") or "") == str(table_id)
         and str(row.get("column_id") or "") == str(column_id)
-        and str(row.get("workspace_id") or "") == active_workspace_id
+        and str(row.get("_workspace_id") or "") == active_workspace_id
         and str(row.get("status") or "completed").lower() == "completed"
     ]
     if not candidates:
@@ -1403,7 +1404,7 @@ def get_column_profile_context(
                 context={**(context or {}), "_spark_session": spark_session},
             ),
             *frequency_filters,
-            f"workspace_id = {_sql_literal(active_workspace_id)}",
+            f"_workspace_id = {_sql_literal(active_workspace_id)}",
             f"table_id = {_sql_literal(table_id)}",
             f"column_id = {_sql_literal(column_id)}",
         )

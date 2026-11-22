@@ -496,7 +496,7 @@ def test_bounded_selection_limits_real_computation_and_labels_saved_metrics(kind
         assert {row.VALUE for row in observation['frequency_profile'].collect()} == {'A'}
         assert all(candidate['row_count'] == 2 for candidate in observation['grain_candidates'])
         canonical = module._canonical_profiled_dataframe(observation['profile'], config={}, active_workspace_id='dev',
-            runtime_context={**context, 'table_name': 'orders'}, workspace_id='dev', table_id='orders', profile_snapshot_id='bounded')
+            runtime_context={**context, 'table_name': 'orders'}, table_id='orders', profile_snapshot_id='bounded')
         rows = canonical.collect()
         assert all(row.profile_scope == 'bounded_selection' and row.profiling_max_rows == 2 and row.row_count == 2 for row in rows)
         frequencies = module._frequency_metadata_dataframe(observation['frequency_profile'], profiled_df=canonical,

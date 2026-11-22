@@ -54,16 +54,22 @@ def cleanup_delta(spark_session, monkeypatch, tmp_path):
         fields = [StructField(f.name, f.dataType, True, {'comment': f.name}) for f in canonical if f.name != missing]
         for name, replacement in RETIRED_METADATA_COLUMNS[table].items():
             fields.append(StructField(name, canonical[replacement].dataType if replacement else StringType(), True))
-        fields.append(StructField('consumer_extension', StringType(), True, {'comment': 'preserve'}))
+        if table != 'METADATA_PIPELINE_RUN':
+            fields.append(StructField('consumer_extension', StringType(), True, {'comment': 'preserve'}))
         row = {f.name: None for f in fields}
         row.update({name: datetime(2020, 1, 2, 3, 4, 5, 123456) if kind == 'timestamp' else 'original'
                     for name, kind, _ in AUDIT_SCHEMA_FIELDS})
-        row['consumer_extension'] = ' keep exact bytes \n '
+        if table != 'METADATA_PIPELINE_RUN':
+            row['consumer_extension'] = ' keep exact bytes \n '
+        else:
+            row.update(run_id='historical-run', pipeline_id='pipeline', execution_mode='ungoverned',
+                       workspace_id='original', started_at=datetime(2020, 1, 2), status='running',
+                       boundary_completed=False, operations='[]', profiling='[]', failures='[]', warnings_json='[]')
         for name, replacement in RETIRED_METADATA_COLUMNS[table].items():
             row[name] = row[replacement] if replacement else None
         if bad:
             row[bad] = datetime(2021, 1, 1) if RETIRED_METADATA_COLUMNS[table][bad] else 'unique historical data'
-        writer = spark_session.createDataFrame([] if empty else [row, row], StructType(fields)).write.format('delta')
+        writer = spark_session.createDataFrame([] if empty else ([row] if table == 'METADATA_PIPELINE_RUN' else [row, row]), StructType(fields)).write.format('delta')
         if layout == 'partition':
             writer = writer.partitionBy('lineage_event_id')
         if layout == 'mapping':
@@ -111,7 +117,8 @@ def test_setup_removes_only_declared_redundant_columns(cleanup_delta, table, emp
     assert state.read().select(*kept).collect() == expected
     current = state.delta.detail().first().asDict()
     assert current['id'] == detail['id'] and current['properties'] == detail['properties']
-    assert state.read().schema['consumer_extension'].metadata == {'comment': 'preserve'}
+    if table != 'METADATA_PIPELINE_RUN':
+        assert state.read().schema['consumer_extension'].metadata == {'comment': 'preserve'}
     # The old version remains available as the rollback boundary, including retired values.
     assert rt.spark.read.format('delta').option('versionAsOf', version).load(state.path).collect() == historical_rows
     again = rt.run()

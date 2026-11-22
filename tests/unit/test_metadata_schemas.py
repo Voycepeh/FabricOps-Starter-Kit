@@ -105,12 +105,11 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
 def test_stage2_profile_schema_is_normalized():
     """Profile stores snapshot metrics and asset IDs without a duplicate event timestamp."""
     fields = metadata_table_schema_registry()["METADATA_DATA_PROFILED"].fieldNames()
-    assert fields[:21] == [
+    assert fields[:20] == [
         "profile_id",
         "profile_snapshot_id",
         "table_id",
         "column_id",
-        "workspace_id",
         "data_type",
         "table_name",
         "column_name",
@@ -129,6 +128,7 @@ def test_stage2_profile_schema_is_normalized():
         "max_value",
     ]
     assert {
+        "workspace_id",
         "profiled_at",
         "metadata_table_key",
         "metadata_column_key",
@@ -156,7 +156,6 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
         "table_name",
         "column_name",
         "data_type",
-        "workspace_id",
         "value",
         "frequency_count",
         "frequency_percent",
@@ -415,7 +414,7 @@ def test_explicit_column_retirements_exclude_live_audit_and_run_contracts():
     from fabricops_kit.config.metadata_schemas import RETIRED_METADATA_COLUMNS, AUDIT_SCHEMA_FIELDS
     registry = metadata_table_schema_registry()
     assert set(RETIRED_METADATA_COLUMNS) == set(registry)
-    assert RETIRED_METADATA_COLUMNS['METADATA_PIPELINE_RUN'] == {}
+    assert RETIRED_METADATA_COLUMNS['METADATA_PIPELINE_RUN'] == {'approval_id': None, 'activation_revision': None}
     audit = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
     for table, policies in RETIRED_METADATA_COLUMNS.items():
         canonical = set(registry[table].fieldNames())
