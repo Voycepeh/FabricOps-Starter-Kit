@@ -677,13 +677,13 @@ def test_durable_checkpoint_recovery_preserves_exact_progress(durable_processing
 
 def test_fresh_processing_state_is_created_once_in_misc_schema(publication_runtime, monkeypatch):
     run = publication_runtime
-    setup = import_module("fabricops_kit.config.setup_processing_state")
+    setup = import_module("fabricops_kit.config.setup_metadata_tables")
     from tests.helpers import framework_config
 
     monkeypatch.setattr(setup, "get_spark_session", lambda: run.spark)
     config = framework_config()
-    assert setup.setup_processing_state(config=config, workspace_id="dev")["status"] == "created"
-    assert setup.setup_processing_state(config=config, workspace_id="dev")["status"] == "validated"
+    assert setup._setup_processing_state(spark=run.spark, context={"config": config, "scope_workspace_id": "dev"})["status"] == "created"
+    assert setup._setup_processing_state(spark=run.spark, context={"config": config, "scope_workspace_id": "dev"})["status"] == "validated"
     assert not run.spark.read.format("delta").load(str(run.path / PROCESSING_STATE_PATH)).take(1)
     assert run.delta.forPath(run.spark, str(run.path / PROCESSING_STATE_PATH)).history().count() == 1
 

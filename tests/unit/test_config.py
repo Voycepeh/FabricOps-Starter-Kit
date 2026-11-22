@@ -41,6 +41,9 @@ def metadata_transaction_boundary(monkeypatch):
 
     setup = import_module("fabricops_kit.config.setup_metadata_tables")
     monkeypatch.setattr(setup, "_enforce_metadata_primary_key", lambda **kwargs: None)
+    monkeypatch.setattr(import_module("fabricops_kit.config.setup_metadata_tables"), "_setup_processing_state",
+        lambda **kwargs: {"status": "validated", "path": "Tables/misc/PROCESSING_STATE"})
+
     # Existing setup doubles record physical appends through their table writer.
     monkeypatch.setattr(setup, "write_delta_path", lambda frame, path, **kwargs:
         setup.write_lakehouse_table(frame, path.rsplit("/", 1)[-1], store="Metadata", **kwargs))

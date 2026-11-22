@@ -100,6 +100,8 @@ def test_retirement_alerts_are_presence_only_and_nonblocking(monkeypatch, capsys
         tables[name] = frame.schema
 
     monkeypatch.setattr(setup, '_enforce_metadata_primary_key', lambda **kw: None)
+    monkeypatch.setattr(setup, '_setup_processing_state', lambda **kw: {
+        'status': 'validated', 'path': 'Tables/misc/PROCESSING_STATE'})
     monkeypatch.setattr(setup, 'read_lakehouse_table', read)
     monkeypatch.setattr(setup, 'write_lakehouse_table', write)
     result = call_with_spark(SimpleNamespace(createDataFrame=lambda rows, schema: Frame(schema)), setup.setup_metadata_tables,

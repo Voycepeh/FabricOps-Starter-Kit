@@ -77,7 +77,8 @@ def test_metadata_reference_generation_uses_model_and_is_deterministic(tmp_path,
     assert '<nav class="metadata-explorer-fallback"' in first_landing
     assert first_landing.startswith("# List of Metadata Tables\n\n")
     assert "Composite keys apply to the complete combination" in first_landing
-    assert "without deleting rows" in first_landing
+    assert "before using upgraded writers" not in first_landing
+    assert "retains one row per" not in first_landing
     assert "## Workspace columns" not in first_landing
     assert "Look up the physical workspace display name" not in first_landing
     assert "profiling is configured by setup_pipeline" not in first_landing

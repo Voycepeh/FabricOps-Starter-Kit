@@ -18,6 +18,9 @@ def key_enforcement_calls(monkeypatch):
     """Isolate routing/schema tests from the separately tested Delta key protocol."""
     from importlib import import_module
     calls = []
+    monkeypatch.setattr(import_module("fabricops_kit.config.setup_metadata_tables"), "_setup_processing_state",
+        lambda **kwargs: {"status": "validated", "path": "Tables/misc/PROCESSING_STATE"})
+
     monkeypatch.setattr(import_module("fabricops_kit.config.setup_metadata_tables"), "_enforce_metadata_primary_key",
         lambda **kw: calls.append(kw["table_name"]))
     return calls

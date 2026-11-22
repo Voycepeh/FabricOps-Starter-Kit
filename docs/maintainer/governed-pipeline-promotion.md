@@ -19,7 +19,7 @@ Grant Engineering basic **Read on the Metadata item**, with granular OneLake rol
 
 Microsoft documents [granular ReadWrite roles](https://learn.microsoft.com/en-us/fabric/onelake/security/data-access-control-model) for Lakehouse tables/folders and Spark writes. Elevated workspace roles bypass those restrictions. Tenant availability, runtime support, inherited groups, direct paths, default roles and permission propagation must be tested under the actual two identities. If granular writes cannot be enforced in the tenant, this arrangement cannot provide the Engineering write restriction: leave Governed admission blocked. Application checks and confirmation boxes cannot substitute for Fabric permissions.
 
-Bootstrap `setup_metadata_tables()` and `setup_processing_state()` run under the Metadata owner's identity. Engineering notebooks do not need permission to create Governance tables. Configuration-driven cross-workspace business source reads and target writes retain their existing authorized routing; metadata restrictions do not prohibit them.
+Bootstrap `setup_metadata_tables()` initializes canonical metadata and `misc.PROCESSING_STATE` under the Metadata owner's identity. Engineering notebooks do not need permission to create Governance tables. Configuration-driven cross-workspace business source reads and target writes retain their existing authorized routing; metadata restrictions do not prohibit them.
 
 ## Canonical records
 

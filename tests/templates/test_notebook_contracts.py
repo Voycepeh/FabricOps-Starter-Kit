@@ -91,12 +91,12 @@ def _fabricops_attribute_references(tree: ast.Module) -> set[str]:
 
 @pytest.mark.parametrize(
     "initialize,caller_workspace_id,expected",
-    [(True, "", ["metadata", "state"]), (True, "dev", []), (False, "", [])],
+    [(True, "", ["metadata"]), (True, "dev", []), (False, "", [])],
 )
 def test_lakehouse_bootstrap_initializes_processing_state_only_on_direct_runs(
     initialize: bool, caller_workspace_id: str, expected: list[str],
 ) -> None:
-    """Only the direct Lakehouse bootstrap provisions the two stores."""
+    """Only the direct Lakehouse bootstrap provisions metadata and operational state."""
     cell = _cell_by_id("00_env_config.ipynb", "f56e6cc7-6ef8-4562-b6e6-99a50996d735")
     tree = ast.parse(cell.source)
     calls = []
@@ -106,7 +106,6 @@ def test_lakehouse_bootstrap_initializes_processing_state_only_on_direct_runs(
         "caller_workspace_id": caller_workspace_id,
         "INITIALIZE_METADATA": initialize,
         "setup_metadata_tables": lambda **kwargs: calls.append("metadata"),
-        "setup_processing_state": lambda **kwargs: calls.append("state"),
     }
     assert isinstance(tree.body[0], ast.Assign)
     assert isinstance(tree.body[0].targets[0], ast.Name)

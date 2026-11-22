@@ -8,7 +8,7 @@ import pytest
 from fabricops_kit.pipeline import shared as processing_state
 from tests.helpers import framework_config
 
-setup = import_module("fabricops_kit.config.setup_processing_state")
+setup = import_module("fabricops_kit.config.setup_metadata_tables")
 
 
 class MissingPath(Exception):
@@ -58,10 +58,10 @@ def test_setup_creates_empty_state_once(monkeypatch):
     monkeypatch.setattr(setup, "read_delta_path", read)
     monkeypatch.setattr(setup, "write_delta_path", write)
 
-    assert setup.setup_processing_state(config=config, workspace_id="dev") == {
+    assert setup._setup_processing_state(spark=setup.get_spark_session(), context={"config": config, "scope_workspace_id": "dev"}) == {
         "status": "created", "path": "Tables/misc/PROCESSING_STATE",
     }
-    assert setup.setup_processing_state(config=config, workspace_id="dev")["status"] == "validated"
+    assert setup._setup_processing_state(spark=setup.get_spark_session(), context={"config": config, "scope_workspace_id": "dev"})["status"] == "validated"
     assert tables == {destination: frame}
 
 
@@ -76,7 +76,7 @@ def test_setup_rejects_existing_store_without_serializable_isolation(monkeypatch
     monkeypatch.setattr(setup, "read_delta_path", lambda spark, path: frame)
     monkeypatch.setattr(setup, "write_delta_path", lambda *a, **kw: pytest.fail("must not write"))
     with pytest.raises(RuntimeError, match="requires Serializable Delta isolation"):
-        setup.setup_processing_state(config=config, workspace_id="dev")
+        setup._setup_processing_state(spark=setup.get_spark_session(), context={"config": config, "scope_workspace_id": "dev"})
 
 
 def test_missing_state_fails_runtime_read_with_setup_guidance(monkeypatch):
@@ -86,7 +86,7 @@ def test_missing_state_fails_runtime_read_with_setup_guidance(monkeypatch):
 
     monkeypatch.setattr(processing_state, "get_spark_session", lambda **kwargs: object())
     monkeypatch.setattr(processing_state, "read_delta_path", missing)
-    with pytest.raises(RuntimeError, match=r"run setup_processing_state\(\)"):
+    with pytest.raises(RuntimeError, match=r"run setup_metadata_tables\(\)"):
         processing_state.read_processing_state(context={"config": framework_config(), "scope_workspace_id": "dev"})
 
 
@@ -99,4 +99,39 @@ def test_permission_failure_does_not_create_an_empty_store(monkeypatch):
     monkeypatch.setattr(setup, "read_delta_path", deny)
     monkeypatch.setattr(setup, "write_delta_path", lambda *a, **kw: pytest.fail("must not write"))
     with pytest.raises(PermissionError, match="Read forbidden"):
-        setup.setup_processing_state(config=framework_config(), workspace_id="dev")
+        setup._setup_processing_state(spark=setup.get_spark_session(), context={"config": framework_config(), "scope_workspace_id": "dev"})
+
+
+@pytest.mark.parametrize("fails", [False, True])
+@pytest.mark.parametrize("raise_on_failure", [False, True])
+def test_metadata_setup_includes_operational_state(monkeypatch, fails, raise_on_failure):
+    """Bootstrap uses the configured context and includes state failure in readiness."""
+    config = framework_config()
+    spark = object()
+    monkeypatch.setattr(setup, "get_spark_session", lambda: spark)
+    monkeypatch.setattr(setup, "metadata_table_schema_registry", lambda: {})
+    monkeypatch.setattr(setup, "_retired_preview_warnings", lambda **kwargs: [])
+    monkeypatch.setattr(setup, "_historical_table_warnings", lambda **kwargs: [])
+    calls = []
+
+    def initialize(*, spark, context):
+        calls.append(context)
+        assert spark is not None
+        assert context["scope_workspace_id"] == "dev"
+        assert context["config"] == config
+        if fails:
+            raise PermissionError("State access denied")
+        return {"status": "created", "path": "Tables/misc/PROCESSING_STATE"}
+
+    monkeypatch.setattr(setup, "_setup_processing_state", initialize)
+    kwargs = dict(config=config, workspace_id="dev", verbose=False, raise_on_failure=raise_on_failure)
+    if fails and raise_on_failure:
+        with pytest.raises(RuntimeError, match="misc.PROCESSING_STATE: PermissionError: State access denied"):
+            setup.setup_metadata_tables(**kwargs)
+    else:
+        result = setup.setup_metadata_tables(**kwargs)
+        assert result["status"] == ("failed" if fails else "ready")
+        assert result["processing_state"]["status"] == ("failed" if fails else "created")
+        assert result["tables"] == []
+        assert result["active_metadata_table_count"] == 0
+    assert len(calls) == 1
