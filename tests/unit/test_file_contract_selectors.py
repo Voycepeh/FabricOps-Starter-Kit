@@ -29,7 +29,11 @@ def test_file_selector_uses_catalogue_schema_and_retained_reader_options(widget_
                               "table_id": source["table_id"], "columns_json": [
                                   {"column_id": "original-id", "column_name": "order_id", "data_type": "long"}]}]})
     state = module.widget_data_contract()
-    labels = {value: label for label, value in state["_controls"]["table"].options}
+    controls = state["_controls"]
+    assert controls["table"].disabled
+    controls["workspace_select"].value = "dev"
+    controls["store_select"].value = "Bronze"
+    labels = {value: label for label, value in controls["table"].options}
     assert source["table_id"] in labels
     assert "demo/orders.csv" in labels[source["table_id"]]
     assert "select_file" not in state["_controls"]
