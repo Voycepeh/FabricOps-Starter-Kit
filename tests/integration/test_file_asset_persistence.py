@@ -17,6 +17,9 @@ from tests.unit.test_pipeline_session import runtime  # noqa: F401
 from tests.unit.test_unified_file_read import files  # noqa: F401
 
 
+CATALOGUE_MERGER = shared.merge_catalogue_asset
+
+
 @pytest.fixture
 def profile_runtime(spark_session, monkeypatch):
     config = {}
@@ -29,12 +32,15 @@ def profile_runtime(spark_session, monkeypatch):
     monkeypatch.setattr(shared, "build_runtime_audit_fields", lambda **kw: dict(audit))
     monkeypatch.setattr(shared, "get_spark_session", lambda **kw: spark_session)
     rows = {}
+    catalogue = Mock()
+    monkeypatch.setattr(shared, "merge_catalogue_asset", catalogue)
+    context["_pipeline_bindings"] = {identity["table_id"]: identity}
     def capture(*, dataframe, table_name, **kw):
         rows[table_name] = [row.asDict(recursive=True) for row in dataframe.collect()]
     monkeypatch.setattr(shared, "_replace_snapshot_rows", capture)
     monkeypatch.setattr(shared, "_require_catalogue_assets", Mock())
     plan.evidence["profiling_configuration"] = {"frequency_enabled": True, "grain_discovery_enabled": True}
-    return SimpleNamespace(spark=spark_session, context=context, plan=plan, identity=identity, rows=rows)
+    return SimpleNamespace(spark=spark_session, context=context, plan=plan, identity=identity, rows=rows, catalogue=catalogue)
 
 
 @pytest.mark.parametrize("operation", ["read", "write"])
@@ -53,10 +59,17 @@ def test_file_profile_and_frequency_use_common_ids_and_commit_only_after_success
                and row["column_id"] is not None and "source_id" not in row for row in [*profiles, *frequency])
     assert {row["profile_id"] for row in frequency} <= {row["profile_id"] for row in profiles}
     assert summary["grain_candidates"] and result["results_persisted"] is True
+    marker = r.catalogue.call_args.args[0]
+    assert marker["first_profiled_at"] == marker["last_profiled_at"]
+    assert marker["asset_type"] == "FILE" and marker["table_id"] == source
+    events = [event for event in r.plan.evidence["profiling"] if event["status"] == "passed"]
+    assert len(events) == 3
+    assert all(event["executed_at"] and event["completed_at"] and "empty_result" in event for event in events)
+    assert all(event["physical"]["item_id"] == "lakehouse" and event["asset_workspace_id"] == "physical" for event in events)
     original_ids = {row["profile_id"] for row in profiles}
     shared._persist_file_profile(r.identity, operation=operation, context=r.context)
     assert {row["profile_id"] for row in r.rows["METADATA_DATA_PROFILED"]} == original_ids
-    assert len(r.plan.evidence["profiling"]) == 3
+    assert len(r.plan.evidence["profiling"]) == 6  # One running and one completion event per activity.
 
 
 def test_real_delta_file_catalogue_merges_are_idempotent(catalogue_delta, monkeypatch):
@@ -138,6 +151,7 @@ REPLACE_SNAPSHOT_WRITER = shared._replace_snapshot_rows
 
 def test_real_delta_file_profiles_and_frequencies_commit_idempotently(catalogue_delta, profile_runtime, monkeypatch):
     r = profile_runtime
+    monkeypatch.setattr(shared, "merge_catalogue_asset", CATALOGUE_MERGER)
     registry = metadata_table_schema_registry()
     paths = {table: catalogue_delta.path + '-profiles-' + table for table in
              ('METADATA_DATA_CATALOGUE', 'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY')}
@@ -194,3 +208,18 @@ def test_file_columns_keep_ids_across_schema_changes_and_reappearance(catalogue_
     assert observe([]) == {}
     assert r.read().first()['columns_json'] == '[]'
     assert r.read().count() == 1
+
+
+def test_frequency_only_file_completion_does_not_claim_statistical_profile(profile_runtime, monkeypatch):
+    r = profile_runtime
+    r.plan.evidence['profiling_configuration'] = {'profiling_enabled': False, 'frequency_enabled': True}
+    # Every value is distinct, so no frequency column meets the configured threshold.
+    frame = r.spark.createDataFrame([(1,), (2,)], 'id int')
+    monkeypatch.setattr(shared, '_replace_frequency_rows', Mock())
+    shared.schedule_file_profiling(frame, source_id=r.identity['table_id'], context=r.context, presentations=[])
+    shared._persist_file_profile(r.identity, operation='read', context=r.context)
+    r.catalogue.assert_not_called()
+    passed = [event for event in r.plan.evidence['profiling'] if event['status'] == 'passed']
+    assert len(passed) == 1 and passed[0]['activity'] == 'frequency'
+    assert passed[0]['empty_result'] is True and passed[0]['profile_snapshot_id'] is None
+    assert passed[0]['completed_at'] and passed[0]['executed_at']

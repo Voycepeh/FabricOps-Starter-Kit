@@ -587,3 +587,15 @@ def test_newer_sample_does_not_replace_latest_full_completion_for_history(metada
     assert {value['last_success'] for value in history.values()} == {earlier}
     assert shared.profiling_due(shared.pipeline_profiling_policy(context=metadata.context)['standard'],
         history['standard'], 'read', datetime.now(UTC))
+
+
+@pytest.mark.parametrize("operation,role", [("read", "source"), ("write", "target")])
+def test_table_profile_passes_run_and_role_and_typed_asset_fields(metadata, operation, role):
+    shared.schedule_table_profiling("orders", operation, context=metadata.context)
+    for call in metadata.profiler.call_args_list:
+        context = call.kwargs["context"]
+        assert context["_profile_run_id"] == metadata.context["execution_plan"].plan_id
+        assert context["_profile_role"] == role
+    passed = [event for event in metadata.context["execution_plan"].evidence["profiling"]
+              if event["status"] == "passed"]
+    assert passed and all(event["asset_type"] == "TABLE" and event["asset_workspace_id"] == "workspace" for event in passed)

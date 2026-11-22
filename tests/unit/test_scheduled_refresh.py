@@ -144,7 +144,7 @@ def test_writer_preserves_discovery_status_without_blocking(monkeypatch, status)
     monkeypatch.setattr(scheduled_refresh, "discover_scheduled_refresh", lambda **kwargs: {
         "status": status, "schedules": schedules if status == "configured" else [],
     })
-    captured = writer._writer_scheduled_refresh(audit={})
+    captured = writer.writer_scheduled_refresh(audit={})
     assert captured == {
         "status": status if status in {"configured", "not_configured"} else "unavailable",
         "schedules": schedules if status == "configured" else [],
@@ -161,4 +161,4 @@ def test_writer_records_unavailable_when_discovery_raises(monkeypatch, error):
 
     writer = import_module("fabricops_kit.pipeline.pipeline_write")
     monkeypatch.setattr(scheduled_refresh, "discover_scheduled_refresh", fail)
-    assert writer._writer_scheduled_refresh(audit={}) == {"status": "unavailable", "schedules": []}
+    assert writer.writer_scheduled_refresh(audit={}) == {"status": "unavailable", "schedules": []}

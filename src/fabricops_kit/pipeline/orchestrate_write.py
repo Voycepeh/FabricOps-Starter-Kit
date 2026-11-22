@@ -146,7 +146,9 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
         Final prepared Write input under ``dataframe``, selected contract, execution identity, validation results,
         write metrics, publication state and profiling outcome. File writes report
         the full profiled input count as rows committed after successful publication;
-        bounded or unavailable profiles leave it unknown. Per-source
+        bounded or unavailable profiles leave it unknown. Successful file writes
+        register their write mode, writer notebook and discovered schedule in
+        METADATA_DATA_CATALOGUE. Per-source
         Source Drift results remain under ``source_drift_results``; the independent
         pipeline decision is under ``source_drift_decision``. Dry Run returns
         processing diagnostics without publication; persistent modes return the

@@ -161,7 +161,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 135 |
+| Live-critical dependencies | 136 |
 
 ### Release history
 
@@ -224,6 +224,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
 <li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._canonical_profiling_workspaces</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_field</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>

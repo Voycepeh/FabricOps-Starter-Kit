@@ -59,6 +59,14 @@ RETIRED_METADATA_COLUMNS.update({
 RETIRED_METADATA_COLUMNS["METADATA_PIPELINE_RUN"] = {"approval_id": None, "activation_revision": None}
 
 
+def _canonical_profiling_workspaces(value):
+    """Recognize typed profile events with separate asset and execution workspaces."""
+    binding = value.get("physical")
+    return ("context_key" in value and "activity" in value and value.get("asset_type") in {"TABLE", "FILE"}
+            and value.get("asset_workspace_id") is not None and isinstance(binding, dict)
+            and binding.get("asset_workspace_id") == value["asset_workspace_id"])
+
+
 def has_retained_asset_workspaces(value, *, physical=False):
     """Detect historical physical workspace keys without inspecting authored options."""
     if isinstance(value, list):
@@ -67,7 +75,7 @@ def has_retained_asset_workspaces(value, *, physical=False):
         return False
     if "operation_key" in value and isinstance(value.get("destination"), dict) and "asset_workspace_id" in value["destination"]:
         return True
-    if value.get("workspace_id") is not None and (physical or value.get("asset_type") == "FILE"
+    if value.get("workspace_id") is not None and (physical or value.get("asset_type") == "FILE" and not _canonical_profiling_workspaces(value)
             or "item_id" in value and ("kind" in value or "relative_path" in value)):
         return True
     return any(has_retained_asset_workspaces(value.get(key), physical=key in {"destination", "source", "physical"}) for key in
@@ -112,7 +120,7 @@ def migrate_asset_references(value, *, physical=False):
         if result.get("asset_type") not in (None, kind):
             raise ValueError("Asset identity conflicts with asset_type.")
         result["asset_type"] = kind
-    if has_retained_asset_workspaces({key: item for key, item in result.items()
+    if not _canonical_profiling_workspaces(result) and has_retained_asset_workspaces({key: item for key, item in result.items()
                                       if key not in containers}, physical=physical) and "workspace_id" in result:
         old_workspace = result.pop("workspace_id")
         if result.get("asset_workspace_id") not in (None, old_workspace):

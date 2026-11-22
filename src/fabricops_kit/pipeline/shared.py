@@ -4676,7 +4676,8 @@ def check_dq_runtime(
             "execution_type": execution_mode,
             "result_id": str(uuid4()),
             "run_id": resolved_run_id,
-            "rule_key": rule["rule_key"],
+            "rule_id": rule["rule_id"],
+            "action": "Warn" if rule["severity"] == "warning" else "Block",
             **result_workspace,
             "dataset_name": dataset_name,
             "table_name": table_name,
@@ -5638,7 +5639,32 @@ def resolve_file_write_participant(*, store, relative_path, file_format, context
     return resolve_file_participant(store=store, relative_path=relative_path, file_format=file_format, context=context)
 
 
-def persist_file_catalogue(identity, *, context, profile_summary=None, columns=None):
+def writer_scheduled_refresh(*, audit: dict[str, Any]) -> dict[str, Any]:
+    """Return the writer schedule, recording unavailable discovery without blocking writes."""
+    from fabricops_kit.data_contract.scheduled_refresh import discover_scheduled_refresh
+
+    try:
+        discovered = discover_scheduled_refresh(
+            context={
+                "workspace_id": audit.get("_workspace_id"),
+                "notebook_id": audit.get("_notebook_id"),
+            },
+            workspace_id=str(audit.get("_workspace_id") or "") or None,
+            item_id=str(audit.get("_notebook_id") or "") or None,
+        )
+        status = str(discovered.get("status") or "").strip().lower()
+        if status in {"configured", "not_configured"}:
+            return {
+                "status": status,
+                "schedules": list(discovered.get("schedules") or []),
+            }
+    except Exception:
+        # Schedule discovery is optional operational metadata, including runtime/auth failures.
+        pass
+    return {"status": "unavailable", "schedules": []}
+
+
+def persist_file_catalogue(identity, *, context, profile_summary=None, columns=None, write_mode=None):
     """Upsert the current FILE asset and its latest observed schema."""
     if not persistence_permitted(context):
         raise RuntimeError("Dry Run cannot commit Catalogue.")
@@ -5661,6 +5687,11 @@ def persist_file_catalogue(identity, *, context, profile_summary=None, columns=N
         "first_observed_at": audit["_committed_at"],
         "last_observed_at": audit["_committed_at"], **audit,
     }
+    if write_mode is not None:
+        asset.update(load_strategy=write_mode, load_strategy_parameters_json={},
+            writer_workspace_id=audit["_workspace_id"], writer_notebook_id=audit["_notebook_id"],
+            writer_notebook_name=audit["_notebook_name"],
+            scheduled_refresh_json=writer_scheduled_refresh(audit=audit))
     if profile_summary and "grain" in profile_summary.get("activities", []):
         asset["profile_key_candidates_json"] = {"status": "resolved", "max_combination_width": 3,
             **profile_summary["scope"], "candidates": profile_summary["grain_candidates"]}
@@ -5685,6 +5716,18 @@ def read_file_participant(identity, *, context, spark_session):
             "read_metrics": {"rows_read": None, "columns": len(frame.columns), "measurement_source": None}}
 
 
+def _file_profiling_event(plan, source_id, operation, activity, *, executed_at, **outcome):
+    binding = plan.runtime_context.get("_pipeline_bindings", {}).get(source_id)
+    physical = ({"asset_workspace_id": binding["asset_workspace_id"], "item_id": binding["item_id"],
+                 "kind": "lakehouse", "schema": None, "table_name": binding["relative_path"]}
+                if binding else None)
+    return {"context_key": source_id, "table_id": source_id, "asset_type": "FILE",
+            "asset_workspace_id": binding["asset_workspace_id"] if binding else None,
+            "workspace_id": plan.workspace_id, "physical": physical,
+            "activity": activity, "trigger": operation, "pipeline_run_id": plan.plan_id,
+            "executed_at": executed_at, **outcome}
+
+
 def schedule_file_profiling(dataframe, *, source_id, context, presentations, operation="read"):
     """Calculate typed file snapshots; commit them only after operation success.
 
@@ -5695,16 +5738,25 @@ def schedule_file_profiling(dataframe, *, source_id, context, presentations, ope
     settings = validate_pipeline_profiling(plan.evidence.get("profiling_configuration"))
     history = plan.evidence.setdefault("file_profiles", {}).setdefault(source_id, {}).setdefault(operation, {})
     policy = pipeline_profiling_policy(context=context)
+    executed_at = datetime.now(UTC).isoformat()
+    journal = plan.evidence.setdefault("profiling", [])
     due = {activity for activity in PROFILING_ACTIVITIES
            if profiling_due(policy[activity], history.get(activity, {}), operation, datetime.now(UTC))}
+    for activity in PROFILING_ACTIVITIES:
+        enabled = policy[activity]["enabled"] and policy[activity]["trigger"] in {operation, "read_or_write"}
+        journal.append(_file_profiling_event(plan, source_id, operation, activity, executed_at=executed_at,
+            status="running" if activity in due else "skipped",
+            **({"results_persisted": False} if activity in due else
+               {"reason": "Not due for this operation" if enabled else "disabled"})))
     if not due:
         return {"status": "not_due" if any(policy[name]["enabled"] for name in policy) else "disabled",
                 "table_id": source_id, "results_persisted": False}
     limit = settings["profiling_max_rows"]
     scope = {"profile_scope": "bounded_selection" if limit is not None else "supplied_dataframe", "profiling_max_rows": limit}
     selected = dataframe.limit(limit) if limit is not None else dataframe
-    profile = build_profile_dataframe(selected).cache()
+    profile = None
     try:
+        profile = build_profile_dataframe(selected).cache()
         row = profile.select("ROW_COUNT").first()
         row_count = int(row["ROW_COUNT"]) if row is not None else 0
         candidates = (_spark_profile_key_candidates(selected, profile, max_columns=3, max_candidates=8)
@@ -5725,10 +5777,8 @@ def schedule_file_profiling(dataframe, *, source_id, context, presentations, ope
                                   if frequency is not None else None)
             plan.evidence.setdefault("pending_file_profiles", {})[(source_id, operation)] = {
                 "profile": captured, "frequency": captured_frequency, "activities": sorted(due),
-                "grain_candidates": candidates, "scope": scope,
+                "grain_candidates": candidates, "scope": scope, "executed_at": executed_at,
             }
-        for activity in due:
-            history[activity] = {"last_success": datetime.now(UTC).isoformat()}
         result = {"status": "completed", "table_id": source_id,
                 "profile": captured if plan.permits_persistence else profile, "row_count": row_count,
                 "results_persisted": False, **scope, "grain_candidates": candidates,
@@ -5737,14 +5787,22 @@ def schedule_file_profiling(dataframe, *, source_id, context, presentations, ope
         if plan.permits_persistence:
             plan.evidence["pending_file_profiles"][(source_id, operation)]["result"] = result
         else:
+            completed_at = datetime.now(UTC).isoformat()
             for activity in sorted(due):
-                plan.evidence.setdefault("profiling", []).append({
-                    "context_key": source_id, "table_id": source_id, "asset_type": "FILE",
-                    "activity": activity, "status": "passed", "results_persisted": False,
-                    "trigger": operation, "pipeline_run_id": plan.plan_id, "row_count": row_count, **scope})
+                journal.append(_file_profiling_event(plan, source_id, operation, activity,
+                    executed_at=executed_at, status="passed", results_persisted=False,
+                    reason="read_only_diagnostic", completed_at=completed_at,
+                    empty_result=activity == "frequency" and frequency is None,
+                    row_count=row_count, **scope))
         return result
+    except BaseException as exc:
+        for activity in sorted(due):
+            journal.append(_file_profiling_event(plan, source_id, operation, activity,
+                executed_at=executed_at, status="failed", results_persisted=False, reason=type(exc).__name__))
+        raise
     finally:
-        profile.unpersist()
+        if profile is not None:
+            profile.unpersist()
 
 
 def _persist_file_profile(identity, *, operation, context):
@@ -5754,39 +5812,56 @@ def _persist_file_profile(identity, *, operation, context):
         return None
     if not persistence_permitted(context):
         raise RuntimeError("Dry Run cannot commit file profiles.")
-    role = "source" if operation == "read" else "target"
-    snapshot = str(uuid5(NAMESPACE_URL, f"fabricops-file-profile|{plan.workspace_id}|{plan.plan_id}|{identity['table_id']}|{role}"))
-    runtime = {**context, "_profile_scope": pending["scope"], "_profile_run_id": plan.plan_id,
-               "_profile_role": role, "table_name": identity["relative_path"]}
-    spark = pending["profile"].sparkSession
-    profiled = _canonical_profiled_dataframe(pending["profile"], config=context["config"],
-        active_workspace_id=plan.workspace_id, runtime_context=runtime, workspace_id=identity["asset_workspace_id"],
-        table_id=identity["table_id"], asset_type="FILE", profile_snapshot_id=snapshot)
-    _require_catalogue_assets(profiled, context=context, table_name="FILE profiling")
-    if "standard" in pending["activities"]:
-        _replace_snapshot_rows(dataframe=profiled, table_name=PROFILED_TABLE, row_id="profile_id",
-            config=context["config"], active_workspace_id=plan.workspace_id, spark_session=spark)
-    if "frequency" in pending["activities"]:
-        frequency = (_frequency_metadata_dataframe(pending["frequency"], profiled_df=profiled, table_id=identity["table_id"], config=context["config"], active_workspace_id=plan.workspace_id,
-            runtime_context=runtime) if pending["frequency"] is not None else None)
-        if frequency is not None and "standard" not in pending["activities"]:
-            from pyspark.sql import functions as F
-            frequency = frequency.withColumn("profile_id", F.lit(None).cast("string"))
-        _replace_frequency_rows(frequency_df=frequency, profiled_df=profiled, config=context["config"],
-            active_workspace_id=plan.workspace_id, spark_session=spark)
-    pending["profile_snapshot_id"] = snapshot
-    pending["result"].update(results_persisted=True, profile_snapshot_id=snapshot)
-    for activity in pending["activities"]:
-        event = {"context_key": identity["table_id"], "table_id": identity["table_id"], "asset_type": "FILE",
-            "activity": activity, "status": "passed", "results_persisted": True,
-            "profile_snapshot_id": snapshot if activity != "grain" else None,
-            "trigger": operation, "pipeline_run_id": plan.plan_id,
-            "asset_workspace_id": identity["asset_workspace_id"], "row_count": pending["result"]["row_count"],
-            **pending["scope"]}
-        journal = plan.evidence.setdefault("profiling", [])
-        if event not in journal:
-            journal.append(event)
-    return pending
+    if pending.get("completed"):
+        return pending
+    try:
+        role = "source" if operation == "read" else "target"
+        snapshot = str(uuid5(NAMESPACE_URL, f"fabricops-file-profile|{plan.workspace_id}|{plan.plan_id}|{identity['table_id']}|{role}"))
+        runtime = {**context, "_profile_scope": pending["scope"], "_profile_run_id": plan.plan_id,
+                   "_profile_role": role, "table_name": identity["relative_path"]}
+        spark = pending["profile"].sparkSession
+        profiled = _canonical_profiled_dataframe(pending["profile"], config=context["config"],
+            active_workspace_id=plan.workspace_id, runtime_context=runtime, workspace_id=identity["asset_workspace_id"],
+            table_id=identity["table_id"], asset_type="FILE", profile_snapshot_id=snapshot)
+        _require_catalogue_assets(profiled, context=context, table_name="FILE profiling")
+        if "standard" in pending["activities"]:
+            _replace_snapshot_rows(dataframe=profiled, table_name=PROFILED_TABLE, row_id="profile_id",
+                config=context["config"], active_workspace_id=plan.workspace_id, spark_session=spark)
+        if "frequency" in pending["activities"]:
+            frequency = (_frequency_metadata_dataframe(pending["frequency"], profiled_df=profiled, table_id=identity["table_id"], config=context["config"], active_workspace_id=plan.workspace_id,
+                runtime_context=runtime) if pending["frequency"] is not None else None)
+            if frequency is not None and "standard" not in pending["activities"]:
+                from pyspark.sql import functions as F
+                frequency = frequency.withColumn("profile_id", F.lit(None).cast("string"))
+            _replace_frequency_rows(frequency_df=frequency, profiled_df=profiled, config=context["config"],
+                active_workspace_id=plan.workspace_id, spark_session=spark)
+        completed_at = datetime.now(UTC).isoformat()
+        if "standard" in pending["activities"]:
+            audit = build_pipeline_audit_fields(config=context["config"], active_workspace_id=plan.workspace_id,
+                                                runtime_context=context)
+            merge_catalogue_asset({"asset_type": "FILE", "asset_workspace_id": identity["asset_workspace_id"],
+                "table_id": identity["table_id"], "first_profiled_at": audit["_committed_at"],
+                "last_profiled_at": audit["_committed_at"], **audit}, context=context, spark_session=spark)
+        pending["profile_snapshot_id"] = snapshot
+        pending["result"].update(results_persisted=True, profile_snapshot_id=snapshot)
+        history = plan.evidence.setdefault("file_profiles", {}).setdefault(identity["table_id"], {}).setdefault(operation, {})
+        for activity in pending["activities"]:
+            empty = activity == "frequency" and pending["frequency"] is None
+            event = _file_profiling_event(plan, identity["table_id"], operation, activity,
+                executed_at=pending["executed_at"], status="passed", results_persisted=True,
+                profile_snapshot_id=snapshot if activity != "grain" and not empty else None,
+                completed_at=completed_at, empty_result=empty,
+                row_count=pending["result"]["row_count"], **pending["scope"])
+            plan.evidence.setdefault("profiling", []).append(event)
+            history[activity] = {"last_success": completed_at}
+        pending["completed"] = True
+        return pending
+    except BaseException as exc:
+        for activity in pending["activities"]:
+            plan.evidence.setdefault("profiling", []).append(_file_profiling_event(
+                plan, identity["table_id"], operation, activity, executed_at=pending["executed_at"],
+                status="failed", reason=type(exc).__name__, results_persisted=None))
+        raise
 
 
 def file_participant_source(identity):
@@ -6721,6 +6796,7 @@ class PipelineOperation:
         """Capture bound parameters without retaining data or credentials in metadata."""
         self.plan, self.role, self.arguments = plan, role, arguments
         self.record = None
+        self.observed_columns = None
 
     def __enter__(self):
         """Reserve the operation before iterating inputs or executing any stage."""
@@ -6859,11 +6935,11 @@ class PipelineOperation:
                 profile = self.plan.evidence.get("pending_file_profiles", {}).get(
                     (self.physical_identity["table_id"], operation)
                 )
-                columns = (json.loads(self.record["observed_columns_json"]) if self.role == "source" and self.record.get("observed_columns_json") is not None
-                           else None if self.role == "source"
-                           else [{"column_name": field.name, "data_type": field.dataType.simpleString()}
-                                 for field in getattr(getattr(self.arguments.get("dataframe"), "schema", None), "fields", [])])
-                persist_file_catalogue(self.physical_identity, context=context, profile_summary=profile, columns=columns)
+                columns = (self.observed_columns if self.role == "source" else
+                    [{"column_name": field.name, "data_type": field.dataType.simpleString()}
+                     for field in getattr(getattr(self.arguments.get("dataframe"), "schema", None), "fields", [])])
+                persist_file_catalogue(self.physical_identity, context=context, profile_summary=profile, columns=columns,
+                    write_mode=self.record.get("write_mode") if self.role == "target" else None)
                 _persist_file_profile(self.physical_identity, operation=operation, context=context)
             except Exception as exc:
                 error = RuntimeError("File Catalogue persistence failed after successful file IO.")
@@ -7392,7 +7468,10 @@ def profiling_context_key(table_id, *, context, spark_session=None):
     # Preserve released context hashes so the rename does not reset accepted history.
     hash_physical = {"workspace_id": physical["asset_workspace_id"],
                      **{key: value for key, value in physical.items() if key != "asset_workspace_id"}}
-    return _metadata_hash({**descriptor, "physical": hash_physical}), descriptor
+    key = _metadata_hash({**descriptor, "physical": hash_physical})
+    descriptor.update(asset_type=identity.get("asset_type", "TABLE"),
+                      asset_workspace_id=physical["asset_workspace_id"])
+    return key, descriptor
 
 
 def profiling_completion_history(table_id, *, context, spark_session=None, activity=None):
@@ -7684,6 +7763,8 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
     max_rows = configuration["profiling_max_rows"]
     scope = "bounded_selection" if max_rows is not None else ("supplied_dataframe" if dataframe is not None and operation == "write" and not persistence_permitted(context) else "full_table")
     profile_scope = {"profile_scope": scope, "profiling_max_rows": max_rows}
+    context = {**context, "_profile_run_id": context["execution_plan"].plan_id,
+               "_profile_role": "source" if operation == "read" else "target"}
     scope_message = (f"bounded selection of at most {max_rows} rows; physical reads may exceed the limit."
         if max_rows is not None else "prepared Dry Run DataFrame; no physical target publication or complete-table coverage asserted."
         if scope == "supplied_dataframe" else "complete physical table when due; may scan all physical source rows, including rows outside the SQL query.")

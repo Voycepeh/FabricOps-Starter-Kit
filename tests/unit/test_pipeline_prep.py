@@ -300,7 +300,7 @@ def _patch_write(monkeypatch, *, store_type="lakehouse", strategy="append_all", 
     monkeypatch.setattr(write_module, "validate_target_row_hash", lambda *a, **kw: None)
     monkeypatch.setattr(
         write_module,
-        "_writer_scheduled_refresh",
+        "writer_scheduled_refresh",
         lambda **_kwargs: {"status": "not_configured", "schedules": []},
     )
     monkeypatch.setattr(write_module, "_persist_target_processing", lambda **_kwargs: None)
@@ -1087,7 +1087,7 @@ def test_publication_outcome_survives_metadata_finalization_failure(monkeypatch)
     monkeypatch.setattr(io_package, "write_lakehouse_table", lambda *args, **kwargs: published.append(True))
     def fail(**kwargs):
         raise ValueError("schedule lookup failed after publication")
-    monkeypatch.setattr(write_module, "_writer_scheduled_refresh", fail)
+    monkeypatch.setattr(write_module, "writer_scheduled_refresh", fail)
     with pytest.raises(ValueError, match="schedule lookup") as raised:
         write_module.pipeline_write(object(), store="Silver", schema="dbo", table_name="students", source_table_ids=[])
     assert published == [True]

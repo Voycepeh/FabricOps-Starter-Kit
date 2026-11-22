@@ -564,3 +564,31 @@ def test_custom_expression_rejects_invalid_signatures(expression):
                 expression=expression,
             )
         ])
+
+
+@pytest.mark.parametrize("table_id", ["table:orders", "file:orders"])
+@pytest.mark.parametrize("severity,action", [("warning", "Warn"), ("error", "Block")])
+def test_dq_persists_canonical_rule_id_and_action(monkeypatch, table_id, severity, action):
+    """Both asset types retain the authored identity and continuation action."""
+    from types import SimpleNamespace
+    from unittest.mock import Mock
+    spark = Mock()
+    dataframe = SimpleNamespace(sparkSession=spark, columns=["id"])
+    rule = {"guardrail_rule_id": "guardrail", "guardrail_version": 2, "rule_id": "required-id",
+            "rule_key": "internal-key", "rule_type": "completeness", "severity": severity, "columns": ["id"]}
+    check = {"status": "passed", "passed": True, "failed_count": 0, "failed_percent": 0.0,
+             "applicable_count": 1, "total_count": 1}
+    monkeypatch.setattr(governance, "_load_active_dq_rules", lambda *a, **kw: [rule])
+    monkeypatch.setattr(governance, "_evaluate_dq_rules", lambda *a, **kw: {
+        "checks": [check], "total_count": 1, "failed_row_count": 0, "applicable_row_count": 1})
+    monkeypatch.setattr(governance, "_dq_tagged_dataframe", lambda *a, **kw: dataframe)
+    monkeypatch.setattr(governance, "_dq_empty_failed_values", lambda *a: None)
+    monkeypatch.setattr(governance, "build_pipeline_audit_fields", lambda **kw: {"_activity_id": "run"})
+    monkeypatch.setattr(governance, "get_current_audit_timestamp", lambda **kw: "now")
+    monkeypatch.setattr(governance, "metadata_table_physical_schema", lambda *a: "engineering")
+    monkeypatch.setattr(governance, "write_lakehouse_table", Mock())
+    governance.check_dq_runtime(dataframe, {}, "execution", "orders", table_id=table_id,
+        store="Silver", store_type="lakehouse", schema_name=None, rules_df=[rule], diagnostics="none")
+    row = spark.createDataFrame.call_args.args[0][0]
+    assert row["rule_id"] == "required-id" and row["action"] == action
+    assert row["asset_type"] == ("FILE" if table_id.startswith("file:") else "TABLE")

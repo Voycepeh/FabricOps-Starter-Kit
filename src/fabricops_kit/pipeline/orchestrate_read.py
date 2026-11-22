@@ -33,7 +33,9 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
     file_format and read_options. Files support full reads only and retain their
     stable identity in table_id with asset_type=FILE in the response and shared metadata. Foundational readers remain independent.
     Persistent reads register their physical asset and observed schema in
-    METADATA_DATA_CATALOGUE independently of profiling. Query projections
+    METADATA_DATA_CATALOGUE independently of profiling. Both asset types keep
+    observed schemas in columns_json; new file Reads do not duplicate them in Run
+    operations. Query projections
     leave the registered table schema intact. Run operations record participation
     and its physical asset workspace. Successful Reads also register trusted plan
     boundaries for automatic per-Write column lineage; this performs no row action. File profiles
@@ -209,10 +211,10 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
         if is_file and getattr(getattr(source["dataframe"], "schema", None), "fields", None) is not None:
             # Persist schema only, not rows or sensitive values, for Governance authoring.
             # This is the schema returned by the successful Engineering reader.
-            operation.record["observed_columns_json"] = json.dumps([
+            operation.observed_columns = [
                 {"column_name": field.name, "data_type": field.dataType.simpleString()}
                 for field in source["dataframe"].schema.fields
-            ], separators=(",", ":"))
+            ]
         # Spark reads are lazy, so the orchestration display must not imply that
         # row materialization happened at the physical Read boundary.
         summary.details([("Physical reader", reader_name), ("Columns", metrics["columns"])])

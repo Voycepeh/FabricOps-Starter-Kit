@@ -105,7 +105,9 @@ dict
     Final prepared Write input under ``dataframe``, selected contract, execution identity, validation results,
     write metrics, publication state and profiling outcome. File writes report
     the full profiled input count as rows committed after successful publication;
-    bounded or unavailable profiles leave it unknown. Per-source
+    bounded or unavailable profiles leave it unknown. Successful file writes
+    register their write mode, writer notebook and discovered schedule in
+    METADATA_DATA_CATALOGUE. Per-source
     Source Drift results remain under ``source_drift_results``; the independent
     pipeline decision is under ``source_drift_decision``. Dry Run returns
     processing diagnostics without publication; persistent modes return the
@@ -210,7 +212,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:41`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L41-L372">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L41-L374">View on GitHub</a>
 </div>
 
 
@@ -226,7 +228,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 300 |
+| Live-critical dependencies | 302 |
 
 ### Release history
 
@@ -273,6 +275,7 @@ No related guides documented.
 <li><code>fabricops_kit.config.audit._require_audit_values</code></li>
 <li><code>fabricops_kit.config.audit._valid_audit_value</code></li>
 <li><code>fabricops_kit.config.audit.build_runtime_audit_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas._canonical_profiling_workspaces</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_field</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._coerce_metadata_value</code></li>
 <li><code>fabricops_kit.config.metadata_schemas._require_catalogue_assets</code></li>
@@ -371,7 +374,6 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.pipeline_write._target_has_rows</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._warehouse_target_exists</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write._write_scope</code></li>
-<li><code>fabricops_kit.pipeline.pipeline_write._writer_scheduled_refresh</code></li>
 <li><code>fabricops_kit.pipeline.pipeline_write.pipeline_write</code></li>
 <li><code>fabricops_kit.pipeline.resolve_table_id.resolve_table_id</code></li>
 <li><code>fabricops_kit.pipeline.shared._actual_schema</code></li>
@@ -400,6 +402,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._dq_sample_record</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_tagged_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._evaluate_dq_rules</code></li>
+<li><code>fabricops_kit.pipeline.shared._file_profiling_event</code></li>
 <li><code>fabricops_kit.pipeline.shared._format_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._frequency_metadata_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._guardrail_schema_check_base</code></li>
@@ -542,6 +545,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.validated_pipeline_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.validated_processing</code></li>
 <li><code>fabricops_kit.pipeline.shared.write_guardrail_result_row</code></li>
+<li><code>fabricops_kit.pipeline.shared.writer_scheduled_refresh</code></li>
 </ul>
 
 
