@@ -31,7 +31,7 @@ Run `setup_notebook()` to load the existing `00_env_config`.
 
 **Run the reset cell before the file-reading examples.** Install/publish the package being validated, start fresh notebook sessions and confirm its version in `setup_notebook()` output.
 
-The notebook uses the public `orchestrate_demo_reset()` Preview API, with one switch:
+The notebook uses the public `orchestrate_demo_reset()` API, with one switch:
 
 ```python
 RESET_DEMO = False  # Preview only. Set True to reset the dedicated demo environment.
@@ -45,15 +45,15 @@ orchestrate_demo_reset(reset=RESET_DEMO)
 2. Stop all demo schedules and executions, including earlier promoted copies. Set `True` and run the cell to reset.
 3. Continue only when the cell prints **`RESET COMPLETE`**. The remaining cells demonstrate all eleven foundational I/O functions: four file readers, Lakehouse Files and table writers, Warehouse table writing, table readers, and SQL query readers. The guarded write examples repeat the same Products and Order History Day 1 fixture writes, then check persisted row counts and display five-row SQL samples. Run them immediately after reset, before starting the scenario days; `RESET_DEMO = False` skips the table writes and reads.
 
-!!! warning "Dedicated demo environment only"
+!!! warning "Demo business tables only"
 
-    `True` deletes **current rows in the 13 canonical metadata tables**, including Contracts, activations and history, plus `misc.PROCESSING_STATE` and saved lifecycle artifacts in dedicated `demo_metadata`. It restores four Day 1 source tables, validates and retains Orders CSV, and removes six outputs plus any obsolete Bronze `demo.orders` table. Historical `METADATA_DATA_LINEAGE` rows are retained; only `lineage_version=1` dependency facts are cleared. Stop demo jobs first. Never use shared or production assets.
+    `True` resets the reserved demo business tables and deletes only matching demo rows from `misc.PROCESSING_STATE`, `METADATA_DATA_PROFILED` and `METADATA_DATA_PROFILED_FREQUENCY`. It preserves Contracts, activations, Catalogue, Runs, Lineage, Guardrail results and saved lifecycle artifacts, including demo history. Other pipelines' processing records and profile snapshots remain. Stop all jobs using the demo tables first; never use this reset for production recovery.
 
 ??? info "Checks before deletion and reset scope"
 
-    The orchestrator checks the configured and actual Metadata item name (`demo_metadata`), store separation, installed metadata schemas, exact demo table/workspace references, lifecycle artifact contents, active notebook jobs and all five fixture row counts. Unexpected references or unreadable evidence block deletion. A lakehouse name alone does not prove ownership: reserve this item and the eleven business tables exclusively for the walkthrough. Do not share it with production or unrelated projects.
+    The business-table list is fixed. The configured Metadata item ID, store separation, required schemas, fixture counts and catalog locations are checked before deletion. Metadata selection uses exact identities and workspace scope, rather than parsing every historical Run or Contract. Execution mappings pointing at different physical stores are excluded. A processing record linking a demo table to a non-demo table blocks reset before mutation and identifies the record and both endpoints.
 
-    All current metadata tables are cleared together, with dependent records before their parents; schemas remain in place. The orchestrator reports rows removed per table, including zero, and checks that tables and lifecycle artifact folders are empty afterward. Missing/incompatible metadata tables require the existing 00B metadata setup first; the orchestrator does not migrate schemas. If a future package changes the metadata inventory, the reset stops for review.
+    Preview reports only matching rows to remove. Deletion and verification use the same predicates, so unrelated metadata and future unrelated metadata tables do not block a reset. Profile snapshots for the demo assets are removed so standard profiling can run again. Historical grain and empty-frequency completion markers remain in retained Runs; set `profiling_interval_days=0` if those activities must run again immediately. Existing Contracts and approvals remain active: a fresh governance-authoring walkthrough requires a separate environment. The reset does not migrate schemas.
 
     | Restore from Day 1 fixtures | Rows |
     | --- | --- |
@@ -72,9 +72,9 @@ orchestrate_demo_reset(reset=RESET_DEMO)
     | `demo.product_master_scd1` | Silver |
     | `demo.product_master_scd2` | Silver |
 
-    The reset clears saved submissions, Dry Run evidence and notebook snapshots. Source files and other business tables are preserved. Deployed notebooks and schedules are not deleted; stop or retire old copies before restarting.
+    The reset preserves saved submissions, Dry Run evidence, notebook snapshots, source files and other business tables. Deployed notebooks and schedules remain; stop or retire old copies before restarting.
 
-    Verification compares full source content with the fixtures and checks all six outputs are absent. Missing outputs are OK. If preparation fails partway, fix the reported cause and rerun the same reset cell. Repeated resets return to the same Day 1 state. To retain old Contracts/history, use a separate demo environment instead of clearing this one.
+    Verification compares full source content with fixtures, checks Lakehouse outputs are absent and the Warehouse output has zero rows, and confirms scoped progress/profile rows are gone. Missing outputs are OK. The reset is not atomic across stores: after a partial failure, keep writers stopped, fix the cause and rerun. Repeated resets return to Day 1. Start fresh scenario notebook sessions after `RESET COMPLETE`.
 
 <div class="fabricops-section-banner" markdown="1">
 <img src="/FabricOps-Starter-Kit/assets/mascots/robot-carrying.png" alt="" loading="lazy">

@@ -23,7 +23,7 @@ Import the three reusable notebook templates:
 | `00_env_config.ipynb` | Import into each workspace that runs FabricOps notebooks |
 | `01_governance.ipynb` | Governance workspace |
 | `02_pipeline.ipynb` | Engineering workspace |
-| `00C_demo_setup.ipynb`, `02A_full_refresh_demo.ipynb`, `02B_incremental_append_demo.ipynb`, `02C_scd_demo.ipynb` | Engineering workspace; keep the original demo notebook names for 00C live-job checks |
+| `00C_demo_setup.ipynb`, `02A_full_refresh_demo.ipynb`, `02B_incremental_append_demo.ipynb`, `02C_scd_demo.ipynb` | Engineering workspace; stop all demo executions before resetting |
 
 In Fabric, open the target workspace, choose **Import notebook**, and upload the downloaded `.ipynb` file.
 
@@ -83,7 +83,7 @@ GOVERNANCE_METADATA_LAKEHOUSE_ID = "<item-id-of-your-manually-created-demo-lakeh
 GOVERNANCE_METADATA_LAKEHOUSE_NAME = "demo_metadata"
 ```
 
-Keep the existing logical store key `Metadata`; the physical item is named `demo_metadata`. Neither `00_env_config` nor 00C creates a Lakehouse item. `INITIALIZE_METADATA` provisions canonical metadata tables and `misc.PROCESSING_STATE` inside the configured item. 00C previews counts with `RESET_DEMO = False`; `True` clears all metadata in this dedicated item and restores Day 1.
+Keep the existing logical store key `Metadata`; the physical item is named `demo_metadata`. Neither `00_env_config` nor 00C creates a Lakehouse item. `INITIALIZE_METADATA` provisions canonical metadata tables and `misc.PROCESSING_STATE` inside the configured item. 00C previews counts with `RESET_DEMO = False`; `True` restores Day 1 and clears only demo processing progress and profile snapshots, preserving governance and execution history.
 
 By default, `setup_notebook()` loads `00_env_config` from the current workspace. Advanced callers can pass `config_workspace_id="<configuration-workspace-id>"` to `setup_notebook()` to load a shared deployment. The remote config must register the caller workspace, and cross-workspace execution and store permissions are required. See [Workspace configuration](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#workspace-configuration).
 
@@ -140,7 +140,7 @@ In the Governance workspace, run `00_env_config` directly with `INITIALIZE_METAD
 
 This initializes empty governance and engineering schemas in the dedicated demo lakehouse before `01_governance` creates Stewards and Agreements. Contract Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`.
 
-`setup_metadata_tables()` initializes missing tables and applies compatible schema evolution while preserving existing rows. It is not a reset. For this walkthrough, use the dedicated `demo_metadata` lakehouse. Run 00C with `RESET_DEMO = True` before Step 1 creates Stewards and Agreements. For a complete restart, stop earlier demo/promoted copies and repeat that reset; it discards all metadata, including old Contracts and activations. The same bootstrap initializes `misc.PROCESSING_STATE`. [Processing State setup](../maintainer/processing-state.md)
+`setup_metadata_tables()` initializes missing tables and applies compatible schema evolution while preserving existing rows. It is not a reset. For this walkthrough, use the dedicated `demo_metadata` lakehouse. Run 00C with `RESET_DEMO = True` before Step 1 creates Stewards and Agreements. For a data restart, stop earlier demo/promoted copies and repeat that reset; it preserves existing Contracts, activations and history. Use a separate environment for a fresh governance-authoring walkthrough. The same bootstrap initializes `misc.PROCESSING_STATE`. [Processing State setup](../maintainer/processing-state.md)
 
 ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 

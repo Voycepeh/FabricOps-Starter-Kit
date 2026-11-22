@@ -1722,7 +1722,7 @@ PUBLIC_SYMBOL_DOCS.append({'kind': 'function', 'module': 'pipeline.finalize_pipe
 PUBLIC_SYMBOL_DOCS.append({
     'kind': 'function', 'module': 'config.orchestrate_demo_reset',
     'function_type': 'callable', 'symbol_name': 'orchestrate_demo_reset',
-    'summary_override': 'Preview or reset the dedicated Guided Demo to Day 1.',
+    'summary_override': 'Preview or reset Guided Demo data and processing progress to Day 1.',
     'template_notebook': '00C_demo_setup', 'template_segment': 'Reset demo',
     'use_when': 'Use after setup_notebook to preview or restart the disposable seven-step Guided Demo.',
     'do_not_use_when': 'Never use against shared or production Metadata, or while demo writers are active.',
