@@ -79,7 +79,7 @@ def test_overwrite_finishes_lazy_input_before_replacing_destination(spark_sessio
 
 
 @pytest.mark.parametrize('single', [False, True])
-def test_orchestrated_overwrite_profiles_lazy_source_before_publication(files, spark_session, monkeypatch, tmp_path, single):  # noqa: F811
+def test_orchestrated_overwrite_profiles_snapshot_after_publication(files, spark_session, monkeypatch, tmp_path, single):  # noqa: F811
     from datetime import datetime
     from fabricops_kit.pipeline import shared
     from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
@@ -118,9 +118,12 @@ def test_orchestrated_overwrite_profiles_lazy_source_before_publication(files, s
     assert snapshots and all(row.asset_type == 'FILE' and row.table_id.startswith('file:') and row.column_id is not None for row in snapshots)
     assert result['profile_result']['profile'].select('ROW_COUNT').first()[0] == 2
     assert result['profile_result']['profile'].select('MIN_VALUE').first()[0] == '11'
-    assert [stage['stage'] for stage in result['orchestration_stages']] == ['Profile', 'Write']
+    assert [stage['stage'] for stage in result['orchestration_stages']] == ['Write', 'Profile']
+    assert result['write_metrics']['rows_committed'] == 2
+    assert sorted(row.id for row in result['dataframe'].collect()) == [11, 12]
     assert sorted(row.id for row in spark_session.read.parquet(result['resolved_path']).collect()) == [11, 12]
     assert finalize_pipeline(session)['status'] == 'ungoverned_completed'
+    result['dataframe'].unpersist()
 
 
 @pytest.mark.parametrize('fmt', ['csv', 'json', 'parquet'])

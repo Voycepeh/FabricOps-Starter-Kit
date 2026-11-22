@@ -103,7 +103,9 @@ result = orchestrate_write(summary_df, store="Gold", schema="demo",
 
 dict
     Final prepared Write input under ``dataframe``, selected contract, execution identity, validation results,
-    write metrics, publication state and profiling outcome. Per-source
+    write metrics, publication state and profiling outcome. File writes report
+    the full profiled input count as rows committed after successful publication;
+    bounded or unavailable profiles leave it unknown. Per-source
     Source Drift results remain under ``source_drift_results``; the independent
     pipeline decision is under ``source_drift_decision``. Dry Run returns
     processing diagnostics without publication; persistent modes return the
@@ -208,7 +210,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:41`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L41-L370">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L41-L372">View on GitHub</a>
 </div>
 
 
@@ -224,7 +226,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 298 |
+| Live-critical dependencies | 300 |
 
 ### Release history
 
@@ -460,6 +462,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._watermark_timestamp</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_row_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared.add_target_audit_fields</code></li>
+<li><code>fabricops_kit.pipeline.shared.bridge_write_snapshot</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_frequency_distribution_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_pipeline_audit_fields</code></li>
 <li><code>fabricops_kit.pipeline.shared.build_profile_dataframe</code></li>
@@ -484,6 +487,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared.filter_unpublished_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.incremental_publication_scopes</code></li>
 <li><code>fabricops_kit.pipeline.shared.load_table_guardrail_rules</code></li>
+<li><code>fabricops_kit.pipeline.shared.materialize_pipeline_write_snapshot</code></li>
 <li><code>fabricops_kit.pipeline.shared.merge_catalogue_asset</code></li>
 <li><code>fabricops_kit.pipeline.shared.observation_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.participant_id</code></li>

@@ -49,6 +49,8 @@ def runtime(monkeypatch):
         monkeypatch.setattr(module, 'resolve_table_id', lambda **kwargs: kwargs['table_name'])
         monkeypatch.setattr(module, 'schedule_table_profiling', lambda *args, **kwargs: {'row_count': 2})
     frame = SimpleNamespace(columns=['id'])
+    frame.localCheckpoint = Mock(side_effect=lambda **kwargs: SimpleNamespace(
+        columns=frame.columns, _jdf=Mock(), unpersist=Mock()))
     monkeypatch.setattr(read, 'pipeline_read', lambda **kwargs: {'dataframe': frame, 'table_id': kwargs['table_name']})
     publication = Mock(return_value={'published': False, 'table_id': 'target', 'status': 'passed'})
     monkeypatch.setattr(write, 'pipeline_write', publication)

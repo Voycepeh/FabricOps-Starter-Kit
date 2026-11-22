@@ -78,6 +78,7 @@ def output(monkeypatch):
     owner = importlib.import_module('fabricops_kit.io.write_lakehouse_file')
     fs = Filesystem()
     frame = Mock(columns=['id'])
+    frame.localCheckpoint.return_value = frame
     frame.schema = SimpleNamespace(fields=[SimpleNamespace(name='id', dataType=SimpleNamespace(simpleString=lambda: 'bigint'))])
     frame.repartition.return_value = frame
     frame.coalesce.return_value = frame
@@ -375,16 +376,19 @@ def test_backup_cleanup_failure_retains_published_outcome_in_run(files, output, 
     assert outcome['overflow_reason'] == (None if layout == 'default' else layout)
 
 
-def test_overwrite_profiles_lazy_source_before_publication(files, monkeypatch):
+def test_overwrite_profile_failure_retains_publication_and_releases_snapshot(files, monkeypatch):
     io = importlib.import_module('fabricops_kit.io')
-    writer = Mock()
+    writer = Mock(return_value={'resolved_path': 'physical/output', 'published': True,
+        'publication_status': 'published', 'write_metrics': {'rows_committed': None}})
     monkeypatch.setattr(io, 'write_lakehouse_file', writer)
     monkeypatch.setattr(shared, 'schedule_file_profiling', Mock(side_effect=RuntimeError('profile failed')))
     setup_pipeline(pipeline_mode='Ungoverned')
     with pytest.raises(RuntimeError) as caught:
         orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv', file_format='csv', write_mode='overwrite')
-    assert caught.value.published is False
-    writer.assert_not_called()
+    assert caught.value.published is True
+    snapshot = writer.call_args.args[0]
+    snapshot._jdf.logicalPlan().rdd().unpersist.assert_called_once_with(False)
+    writer.assert_called_once()
 
 
 def test_append_all_accepts_extensionless_path(files, output, monkeypatch):
@@ -503,9 +507,46 @@ def test_file_orchestration_preserves_read_and_write_stage_sequences(files, outp
         assert events == prefix + ["Write Profile"]
         assert [stage["stage"] for stage in result["orchestration_stages"]] == ["Processing", "Profile"]
         assert result["published"] is False
-    elif write_mode == "overwrite":
-        assert events == prefix + ["Write Profile", "Write"]
-        assert [stage["stage"] for stage in result["orchestration_stages"]] == ["Profile", "Write"]
     else:
         assert events == prefix + ["Write", "Write Profile"]
         assert [stage["stage"] for stage in result["orchestration_stages"]] == ["Write", "Profile"]
+
+
+@pytest.mark.parametrize('mode,published,profile,expected', [
+    ('overwrite', True, {'row_count': 120}, 120),
+    ('append_all', True, {'row_count': 120}, 120),
+    ('overwrite', True, {'row_count': 0}, 0),
+    ('overwrite', True, {'row_count': 10, 'profiling_max_rows': 10}, None),
+    ('overwrite', True, {'status': 'disabled'}, None),
+])
+def test_file_rows_written_follow_published_full_input(files, monkeypatch, mode, published, profile, expected):
+    monkeypatch.setattr(importlib.import_module('fabricops_kit.io'), 'write_lakehouse_file', Mock(return_value={
+        'resolved_path': 'physical/output', 'published': published,
+        'publication_status': 'published' if published else 'ignored',
+        'write_metrics': {'rows_committed': None, 'measurement_source': 'filesystem'},
+    }))
+    monkeypatch.setattr(shared, 'schedule_file_profiling', lambda *a, **kw: profile)
+    session = setup_pipeline(pipeline_mode='Ungoverned')
+    result = orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv',
+        file_format='csv', write_mode=mode)
+    assert result['write_metrics']['rows_committed'] == expected
+    if expected is not None:
+        assert result['write_metrics']['measurement_source'] == 'published_input_dataframe'
+    run = finalize_pipeline(session)
+    target = next(op for op in run['operations'] if op['pipeline_role'] == 'target')
+    assert target.get('rows_written') == expected
+    summary = importlib.import_module('fabricops_kit.pipeline.finalize_pipeline')
+    row = next(row for row in summary._operation_summary_rows(run, pipeline=session) if row[0] == 'Write')
+    assert row[6] == (str(expected) if expected is not None else 'Not captured')
+
+
+def test_file_snapshot_failure_prevents_publication(files, monkeypatch):
+    writer = Mock()
+    monkeypatch.setattr(importlib.import_module('fabricops_kit.io'), 'write_lakehouse_file', writer)
+    files.runtime.frame.localCheckpoint.side_effect = RuntimeError('snapshot failed')
+    session = setup_pipeline(pipeline_mode='Ungoverned')
+    with pytest.raises(RuntimeError, match='snapshot failed'):
+        orchestrate_write(files.runtime.frame, store='Silver', relative_path='orders.csv',
+            file_format='csv', write_mode='overwrite')
+    writer.assert_not_called()
+    assert session.closed
