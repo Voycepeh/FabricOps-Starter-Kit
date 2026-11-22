@@ -4754,16 +4754,37 @@ def test_rule_creation_modes_retain_unsaved_manual_input(widget_runtime, monkeyp
     assert controls["manual_pattern"].value == "^keep_this$"
 
 
-def test_rule_filter_preserves_selected_rule_and_pending_parameters(widget_runtime):
+@pytest.mark.parametrize("real_widgets", [False, True])
+def test_rule_filter_preserves_selected_rule_and_pending_parameters(widget_runtime, monkeypatch, real_widgets):
     """Searching the collection does not rehydrate or erase the active rule editor."""
+    if real_widgets:
+        import ipywidgets as widgets
+        monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: widgets)
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["top_nav"].value = "Data Quality"
     selected = controls["business_saved"].options[2][1]
     controls["business_saved"].value = selected
-    controls["business_tolerance"].value = 3.5
+    controls["business_tolerance"].value = "3.5"
     controls["rule_search"].value = "no other matching rules"
     assert controls["business_saved"].value == selected
-    assert controls["business_tolerance"].value == 3.5
+    assert controls["business_tolerance"].value == "3.5"
     assert len(controls["business_saved"].options) == 2
+    controls["top_nav"].value = "Table"
+    controls["top_nav"].value = "Data Quality"
+    assert controls["business_saved"].value == selected
+    assert controls["business_tolerance"].value == "3.5"
     assert widget_runtime["calls"]["draft"] == []
+
+
+def test_constructor_hints_are_consumed_before_later_upstream_changes(widget_runtime):
+    """Constructor defaults cannot resurrect a cleared dataset or contract version."""
+    controls = widget_runtime["start"]()["_controls"]
+    controls["workspace_select"].value = "dev"
+    controls["store_select"].value = "Silver"
+    assert controls["table"].value == "orders"
+    assert controls["contract"].value == "1"
+    controls["store_select"].value = ""
+    controls["store_select"].value = "Silver"
+    assert controls["table"].value == controls["contract"].value == ""
+    assert controls["open"].disabled

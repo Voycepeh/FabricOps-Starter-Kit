@@ -242,6 +242,8 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
     contracts.save_contract_draft(draft=draft, payload=payload, config=state.config, active_workspace_id="dev", spark_session=state.spark)
     widget_module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
     widget = call_with_spark(state.spark, widget_module.widget_data_contract, table_id=table_id, contract_version=1,  context=state.context)
+    widget["_controls"]["workspace_select"].value = "dev"
+    widget["_controls"]["store_select"].value = payload["table"]["layer"]
     widget["_controls"]["open"].click()
     assert widget["current"] is not None, widget.get("message")
     assert widget["_controls"]["grain_enabled"].value is (not schema_only)
@@ -251,6 +253,8 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
     widget["_controls"]["table_description"].value = "Authored and hydrated"
     widget["save_data_contract"](return_to_selector_after=False)
     widget = call_with_spark(state.spark, widget_module.widget_data_contract, table_id=table_id, contract_version=1,  context=state.context)
+    widget["_controls"]["workspace_select"].value = "dev"
+    widget["_controls"]["store_select"].value = payload["table"]["layer"]
     widget["_controls"]["open"].click()
     assert widget["current"] is not None, widget.get("message")
     assert widget["_controls"]["table_description"].value == "Authored and hydrated"

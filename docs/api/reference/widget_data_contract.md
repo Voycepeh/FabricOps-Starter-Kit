@@ -196,7 +196,7 @@ No related guides documented.
 
 `fabricops_kit/widgets/widget_data_contract.py:1004`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1004-L7504">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1004-L7511">View on GitHub</a>
 </div>
 
 

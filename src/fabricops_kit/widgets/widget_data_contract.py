@@ -5758,12 +5758,17 @@ def widget_data_contract(
                 for index, proposal in enumerate(business_resolved)
             )
             rule_options[:] = options
-            business_saved.options = options
             option_values = {str(value) for _label, value in options}
             requested = selected if selected is not None else previous
-            business_saved.value = (
-                requested if requested in option_values else new_rule_option
-            )
+            preserve_editor = requested == previous and previous in option_values
+            rule_filtering["active"] = preserve_editor
+            try:
+                business_saved.options = options
+                business_saved.value = (
+                    requested if requested in option_values else new_rule_option
+                )
+            finally:
+                rule_filtering["active"] = False
             filter_rule_options()
 
         def refresh_resolved_options(selected: int = 0) -> None:
@@ -7358,6 +7363,8 @@ def widget_data_contract(
         state["pending_store"] = str(change.get("new") or "") or None
         state["pending_dataset_id"] = state.get("requested_dataset_id")
         state["pending_contract_version"] = state.get("requested_contract_version")
+        state["requested_dataset_id"] = None
+        state["requested_contract_version"] = None
         refresh_table_options()
 
     def workspace_changed(change: dict[str, Any]) -> None:
