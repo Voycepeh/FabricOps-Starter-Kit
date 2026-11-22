@@ -144,7 +144,9 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
     -------
     dict
         Final prepared Write input under ``dataframe``, selected contract, execution identity, validation results,
-        write metrics, publication state and profiling outcome. Per-source
+        write metrics, publication state and profiling outcome. File writes report
+        the full profiled input count as rows committed after successful publication;
+        bounded or unavailable profiles leave it unknown. Per-source
         Source Drift results remain under ``source_drift_results``; the independent
         pipeline decision is under ``source_drift_decision``. Dry Run returns
         processing diagnostics without publication; persistent modes return the
@@ -375,7 +377,7 @@ def _write_file(dataframe, *, operation, execution_plan, sources, store, relativ
     """Publish an admitted exact file destination under the existing run boundary."""
     from fabricops_kit.io import write_lakehouse_file
     from fabricops_kit.io.shared import resolve_configured_file_path
-    from fabricops_kit.pipeline.shared import resolve_file_write_participant, schedule_file_profiling
+    from fabricops_kit.pipeline.shared import materialize_pipeline_write_snapshot, resolve_file_write_participant, schedule_file_profiling, bridge_write_snapshot
     identity = resolve_file_write_participant(store=store, relative_path=relative_path,
         file_format=file_format, context=execution_plan.runtime_context)
     target_id = identity["table_id"]
@@ -402,45 +404,41 @@ def _write_file(dataframe, *, operation, execution_plan, sources, store, relativ
         stages.append(record)
         return result
     from fabricops_kit.pipeline.shared import capture_write_lineage
-    capture_write_lineage(dataframe, context=context, table_id=target_id, write_mode=write_mode)
+    fragment = capture_write_lineage(dataframe, context=context, table_id=target_id, write_mode=write_mode)
     _, _, path = resolve_configured_file_path(store, relative_path, context=context)
-    profile = None
-    if execution_plan.permits_persistence and write_mode == "overwrite":
-        # The supplied input may lazily read files that publication replaces.
-        try:
-            profile = run("Profile", lambda: schedule_file_profiling(dataframe, source_id=target_id, context=context,
-                presentations=presentations, operation="write"))
-        except RuntimeError as exc:
-            exc.published = False
-            exc.failed_stage = "Profile"
-            raise
-    if execution_plan.permits_persistence:
-        try:
-            result = run("Write", lambda: write_lakehouse_file(dataframe, relative_path, store=store,
-                file_format=file_format, mode=write_mode, write_options=write_options,
-                repartition_by=repartition_by,
-                verbose=False, context=context))
-        except RuntimeError as exc:
-            if getattr(exc, "published", False):
-                parameters = json.loads(operation.record["file_write_parameters_json"])
-                parameters.update({key: getattr(exc, key, None) for key in ("output_layout", "overflow_occurred", "overflow_reason")})
-                operation.record["file_write_parameters_json"] = json.dumps(parameters, sort_keys=True)
-            raise
-    else:
-        result = run("Processing", lambda: {"published": False, "publication_status": "not_published",
-            "resolved_path": path, "relative_path": relative_path, "write_metrics": {"rows_committed": None,
-            "measurement_source": "dry_run", "file_count": None, "output_bytes": None},
-            "output_layout": None, "overflow_occurred": None, "overflow_reason": None,
-            "file_count": None, "output_bytes": None,
-            "dry_run": {"status": "passed",
-            "not_verified": ["destination permissions, collisions, size limits and publication"]}})
-    operation.record.update(output_path=result["resolved_path"], publication_status=result["publication_status"])
-    parameters = json.loads(operation.record["file_write_parameters_json"])
-    parameters.update({key: result.get(key) for key in ("output_layout", "overflow_occurred", "overflow_reason")})
-    operation.record["file_write_parameters_json"] = json.dumps(parameters, sort_keys=True)
-    metrics = {**result["write_metrics"], "input_columns": len(dataframe.columns)}
-    operation.capture_metrics(metrics)
-    if profile is None:
+    snapshot = None
+    def publish():
+        nonlocal snapshot, dataframe
+        snapshot = materialize_pipeline_write_snapshot(dataframe)
+        dataframe = snapshot
+        bridge_write_snapshot(snapshot, fragment, context=context)
+        return write_lakehouse_file(dataframe, relative_path, store=store,
+            file_format=file_format, mode=write_mode, write_options=write_options,
+            repartition_by=repartition_by, verbose=False, context=context)
+    try:
+        if execution_plan.permits_persistence:
+            try:
+                result = run("Write", publish)
+            except RuntimeError as exc:
+                if getattr(exc, "published", False):
+                    parameters = json.loads(operation.record["file_write_parameters_json"])
+                    parameters.update({key: getattr(exc, key, None) for key in ("output_layout", "overflow_occurred", "overflow_reason")})
+                    operation.record["file_write_parameters_json"] = json.dumps(parameters, sort_keys=True)
+                raise
+        else:
+            result = run("Processing", lambda: {"published": False, "publication_status": "not_published",
+                "resolved_path": path, "relative_path": relative_path, "write_metrics": {"rows_committed": None,
+                "measurement_source": "dry_run", "file_count": None, "output_bytes": None},
+                "output_layout": None, "overflow_occurred": None, "overflow_reason": None,
+                "file_count": None, "output_bytes": None,
+                "dry_run": {"status": "passed",
+                "not_verified": ["destination permissions, collisions, size limits and publication"]}})
+        operation.record.update(output_path=result["resolved_path"], publication_status=result["publication_status"])
+        parameters = json.loads(operation.record["file_write_parameters_json"])
+        parameters.update({key: result.get(key) for key in ("output_layout", "overflow_occurred", "overflow_reason")})
+        operation.record["file_write_parameters_json"] = json.dumps(parameters, sort_keys=True)
+        metrics = {**result["write_metrics"], "input_columns": len(dataframe.columns)}
+        operation.capture_metrics(metrics)
         try:
             profile = run("Profile", lambda: schedule_file_profiling(dataframe, source_id=target_id, context=context,
                 presentations=presentations, operation="write"))
@@ -449,22 +447,29 @@ def _write_file(dataframe, *, operation, execution_plan, sources, store, relativ
             exc.write_metrics = dict(metrics)
             exc.failed_stage = "Profile"
             raise
-    if profile.get("profiling_max_rows") is None:
-        metrics["input_rows"] = profile.get("row_count")
-    operation.complete(stages, metrics=metrics)
-    duration = summary.finish([("Target", f"{store}/Files/{relative_path}"),
-        ("Mode", PIPELINE_MODE_NAMES[execution_plan.execution_mode]), ("Published", result["published"])])
-    display_profile_presentations(presentations)
-    return {**execution_result(context, target_id, stages=stages), **result, "asset_type": "FILE",
-        "table_id": target_id, "dataframe": dataframe, "write_mode": write_mode,
-        "file_format": file_format,
-        "validation_passed": all(row["can_continue"] for row in checks) and drift.get("can_continue", True)
-            and all(stage.get("status") != "blocked" for source in sources for stage in source.get("orchestration_stages", [])),
-        "tested_contracts": tested_contract_identities(context, [participant_id(source) for source in sources]),
-        **({"testing_completed_at": datetime.now(UTC).isoformat()} if not execution_plan.permits_persistence else {}),
-        "source_drift_results": [row for row in drift.get("sources", []) if row.get("table_id") in
-            {source.get("table_id") for source in sources if source.get("table_id")}],
-        "source_assets": [{"table_id": source["table_id"], "asset_type": source.get("asset_type", "TABLE")} for source in sources],
-        "source_association": "pipeline_participation", "source_guardrail_results": checks,
-        "source_drift_decision": drift, "profile_result": profile, "write_metrics": metrics,
-        "orchestration_stages": stages, "total_duration_seconds": duration}
+        if profile.get("profiling_max_rows") is None:
+            metrics["input_rows"] = profile.get("row_count")
+            if result["published"] and metrics["input_rows"] is not None:
+                metrics["rows_committed"] = metrics["input_rows"]
+                metrics["measurement_source"] = "published_input_dataframe"
+        operation.complete(stages, metrics=metrics)
+        duration = summary.finish([("Target", f"{store}/Files/{relative_path}"),
+            ("Mode", PIPELINE_MODE_NAMES[execution_plan.execution_mode]), ("Published", result["published"])])
+        display_profile_presentations(presentations)
+        return {**execution_result(context, target_id, stages=stages), **result, "asset_type": "FILE",
+            "table_id": target_id, "dataframe": dataframe, "write_mode": write_mode,
+            "file_format": file_format,
+            "validation_passed": all(row["can_continue"] for row in checks) and drift.get("can_continue", True)
+                and all(stage.get("status") != "blocked" for source in sources for stage in source.get("orchestration_stages", [])),
+            "tested_contracts": tested_contract_identities(context, [participant_id(source) for source in sources]),
+            **({"testing_completed_at": datetime.now(UTC).isoformat()} if not execution_plan.permits_persistence else {}),
+            "source_drift_results": [row for row in drift.get("sources", []) if row.get("table_id") in
+                {source.get("table_id") for source in sources if source.get("table_id")}],
+            "source_assets": [{"table_id": source["table_id"], "asset_type": source.get("asset_type", "TABLE")} for source in sources],
+            "source_association": "pipeline_participation", "source_guardrail_results": checks,
+            "source_drift_decision": drift, "profile_result": profile, "write_metrics": metrics,
+            "orchestration_stages": stages, "total_duration_seconds": duration}
+    except BaseException:
+        if snapshot is not None:
+            snapshot.unpersist()
+        raise

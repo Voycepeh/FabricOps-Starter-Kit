@@ -1534,6 +1534,24 @@ def accept_pipeline_source_snapshots(plan, *, spark_session=None):
     plan.evidence["source_snapshot_acceptance"] = {"status": "accepted", "source_ids": sorted(candidates)}
 
 
+def materialize_pipeline_write_snapshot(dataframe):
+    """Detach writer input and release both SQL and checkpoint caches on unpersist."""
+    snapshot = dataframe.localCheckpoint(eager=True)
+    checkpoint_rdd = snapshot._jdf.logicalPlan().rdd()
+    dataframe_unpersist = snapshot.unpersist
+
+    def release_snapshot(blocking=False):
+        dataframe_unpersist(blocking)
+        checkpoint_rdd.unpersist(blocking)
+        return snapshot
+
+    # DataFrame.unpersist() only addresses SQL cache-manager entries; a local
+    # checkpoint owns a separate persisted RDD. Keep the native caller-facing
+    # cleanup method while extending this snapshot instance to release both.
+    snapshot.unpersist = release_snapshot
+    return snapshot
+
+
 class PublicationBatch:
     """Bind an immutable prepared batch to a durable, exact target-write marker.
 
@@ -1695,20 +1713,8 @@ class PublicationBatch:
         """Detach the exact writer input and retain it until caller hand-off."""
         fragment = capture_write_lineage(dataframe, context=self.context,
             table_id=self.identity["table_id"], write_mode=self.processing["load_strategy"])
-        snapshot = dataframe.localCheckpoint(eager=True)
+        snapshot = materialize_pipeline_write_snapshot(dataframe)
         bridge_write_snapshot(snapshot, fragment, context=self.context)
-        checkpoint_rdd = snapshot._jdf.logicalPlan().rdd()
-        dataframe_unpersist = snapshot.unpersist
-
-        def release_snapshot(blocking=False):
-            dataframe_unpersist(blocking)
-            checkpoint_rdd.unpersist(blocking)
-            return snapshot
-
-        # DataFrame.unpersist() only addresses SQL cache-manager entries; a local
-        # checkpoint owns a separate persisted RDD. Keep the native caller-facing
-        # cleanup method while extending this snapshot instance to release both.
-        snapshot.unpersist = release_snapshot
         self._pending_caller_snapshot = snapshot
         return self._pending_caller_snapshot
 
