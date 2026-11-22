@@ -1,10 +1,11 @@
 # `orchestrate_demo_reset`
 
 <p class="reference-catalogue-item-meta reference-catalogue-item-badges reference-lifecycle-badges">
-<span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span>
+<span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live since 0.5.0</span>
 </p>
 
-> This function is available for evaluation but is not part of the supported Live release contract. It may change without backward-compatibility guarantees.
+> This function is part of the supported FabricOps public contract. Changes to its signature, behaviour, public export, or Live-critical dependencies require Live-contract review.
 
 Preview or reset the dedicated Guided Demo to Day 1.
 
@@ -93,10 +94,11 @@ RuntimeError
 <div class="reference-docstring-notes" markdown="1">
 
 True clears all current canonical metadata rows in the dedicated item,
-including frozen Contracts, activations, approvals, promotion history,
-Runs and Processing State. Saved submissions, Dry Run evidence and notebook
+including frozen Contracts, activations, approvals, promotion history and
+Runs. It also clears the dedicated Processing State table. Saved submissions, Dry Run evidence and notebook
 snapshots in its three native lifecycle folders are removed too. Table
-definitions remain; no metadata migration is performed.
+definitions remain; no metadata migration is performed. Historical Lineage
+activity rows remain intact; only lineage_version=1 dependency facts are cleared.
 
 Four Day 1 tables are overwritten, Orders CSV is validated and retained,
 and five Silver outputs plus the obsolete Bronze Orders table are removed in the reserved
@@ -132,9 +134,9 @@ this walkthrough. Stop all demo executions and schedules before resetting.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/config/orchestrate_demo_reset.py:240`
+`fabricops_kit/config/orchestrate_demo_reset.py:258`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L240-L444">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/config/orchestrate_demo_reset.py#L258-L465">View on GitHub</a>
 </div>
 
 
@@ -145,12 +147,69 @@ this walkthrough. Stop all demo executions and schedules before resetting.
 
 | Property | Value |
 | --- | --- |
-| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview">Preview</span> |
-| Live since | — |
+| Lifecycle | <span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live</span> |
+| Live since | 0.5.0 |
 | Discontinued in | — |
-| Contract classification | Preview public function |
-| Contract risk | Preview |
-| Live-critical dependencies | 0 |
+| Contract classification | Live public function |
+| Contract risk | Live |
+| Live-critical dependencies | 46 |
+
+### Release history
+
+| Status | Version |
+| --- | --- |
+| Live | 0.5.0 |
+
+### Live-critical dependencies
+
+<ul class="reference-compact-list">
+<li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.orchestrate_demo_reset._demo_assert_source</code></li>
+<li><code>fabricops_kit.config.orchestrate_demo_reset._demo_check_metadata_scope</code></li>
+<li><code>fabricops_kit.config.orchestrate_demo_reset._demo_clear_gold_output</code></li>
+<li><code>fabricops_kit.config.orchestrate_demo_reset._demo_clear_metadata</code></li>
+<li><code>fabricops_kit.config.orchestrate_demo_reset._demo_gold_output_exists</code></li>
+<li><code>fabricops_kit.config.orchestrate_demo_reset._demo_metadata_counts</code></li>
+<li><code>fabricops_kit.config.orchestrate_demo_reset._demo_metadata_files</code></li>
+<li><code>fabricops_kit.config.orchestrate_demo_reset._demo_prepare_gold_empty_output</code></li>
+<li><code>fabricops_kit.config.orchestrate_demo_reset._demo_remove_outputs</code></li>
+<li><code>fabricops_kit.config.orchestrate_demo_reset._demo_verify_outputs</code></li>
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
+<li><code>fabricops_kit.config.shared._get_fabric_runtime_metadata</code></li>
+<li><code>fabricops_kit.config.shared._normalize_path_config</code></li>
+<li><code>fabricops_kit.config.shared.build_table_id</code></li>
+<li><code>fabricops_kit.config.shared.get_default_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.get_store</code></li>
+<li><code>fabricops_kit.config.shared.resolve_fabric_context</code></li>
+<li><code>fabricops_kit.config.shared.stable_metadata_id</code></li>
+<li><code>fabricops_kit.data_contract.shared.file_source_identity</code></li>
+<li><code>fabricops_kit.io.shared._build_warehouse_object_name</code></li>
+<li><code>fabricops_kit.io.shared._join_lakehouse_area_path</code></li>
+<li><code>fabricops_kit.io.shared._normalize_schema_name</code></li>
+<li><code>fabricops_kit.io.shared._normalize_table_name</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_schema</code></li>
+<li><code>fabricops_kit.io.shared._resolve_lakehouse_table_path</code></li>
+<li><code>fabricops_kit.io.shared._validate_lakehouse_store</code></li>
+<li><code>fabricops_kit.io.shared._validate_warehouse_store</code></li>
+<li><code>fabricops_kit.io.shared.get_spark_session</code></li>
+<li><code>fabricops_kit.io.shared.read_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.resolve_configured_lakehouse_table</code></li>
+<li><code>fabricops_kit.io.shared.resolve_lakehouse_table_location</code></li>
+<li><code>fabricops_kit.io.shared.resolve_store</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
+<li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
+<li><code>fabricops_kit.pipeline.shared.processing_state_path</code></li>
+<li><code>fabricops_kit.pipeline.shared.processing_state_schema</code></li>
+<li><code>fabricops_kit.pipeline.shared.read_processing_state</code></li>
+<li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.validate_processing_state_schema</code></li>
+</ul>
 
 
 </details>

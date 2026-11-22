@@ -21,6 +21,7 @@ from fabricops_kit.io.shared import (
     configured_lakehouse_schema,
     resolve_configured_lakehouse_table,
     retry_delta_metadata,
+    write_metadata_frame,
 )
 from fabricops_kit.config.audit import _audit_timestamp_value, _resolve_action_by, build_runtime_audit_fields
 from fabricops_kit.config.metadata_keys import _build_dq_rule_key
@@ -89,10 +90,49 @@ _FORM_STYLE = """<style>
     border-radius:5px; padding:7px 10px; background:#fff; color:var(--form-text);
     font:13px/1.5 'Segoe UI',Arial,sans-serif;
 }
-.fabricops-form .fabricops-searchable-selector,
-.fabricops-form .fabricops-searchable-selector .widget-combobox-container,
-.fabricops-form .fabricops-searchable-selector .widget-combobox-container input {
+.fabricops-form .fabricops-searchable-selector-v2,
+.fabricops-form .fabricops-searchable-selector-v2 .widget-combobox-container,
+.fabricops-form .fabricops-searchable-selector-v2 .widget-combobox-container input {
     width:100% !important; min-width:0 !important; max-width:100% !important;
+}
+.fabricops-form .fabricops-searchable-selector-v2 { position:relative; }
+.fabricops-form .fabricops-searchable-selector-v2::after {
+    content:"▾"; position:absolute; right:12px; bottom:9px; pointer-events:none; color:#526477;
+}
+.fabricops-form .fabricops-searchable-selector-v2 input { padding-right:30px; }
+.fabricops-form .fabricops-searchable-selector-v2 input::-webkit-calendar-picker-indicator { display:none !important; }
+.fabricops-form .fabricops-searchable-selector-v2.fabricops-selector-wrapped input {
+    grid-area:2 / 1; height:100%;
+}
+.fabricops-form .fabricops-selector-value {
+    grid-area:2 / 1; align-self:center; z-index:1; min-width:0;
+    padding:8px 30px 8px 11px; pointer-events:none; white-space:normal; overflow-wrap:anywhere;
+}
+.fabricops-form .fabricops-selector-value[data-empty=true] { color:#657587; }
+.fabricops-form .fabricops-selector-wrapped:focus-within .fabricops-selector-value { visibility:hidden; }
+.fabricops-form .fabricops-selector-wrapped:not(:focus-within) input,
+.fabricops-form .fabricops-selector-wrapped:not(:focus-within) input::placeholder { color:transparent; }
+/* Portalled to body so notebook panes cannot clip the open menu. */
+.fabricops-selector-popup {
+    position:fixed; z-index:10000; box-sizing:border-box; overflow-y:auto; overflow-x:hidden;
+    background:#fff; color:#243449; border:1px solid #b8c5d3; border-radius:5px;
+    padding:4px; font:13px/1.5 'Segoe UI',Arial,sans-serif;
+    box-shadow:0 4px 12px #19243a1a; overscroll-behavior:contain;
+}
+.fabricops-selector-popup [role=option] {
+    padding:8px 10px; cursor:pointer; white-space:normal; overflow-wrap:anywhere;
+}
+.fabricops-selector-popup [role=option]:hover,
+.fabricops-selector-popup [aria-selected=true] { background:#eaf3fb; outline:1px solid #0f6cbd; outline-offset:-1px; }
+.fabricops-form .fabricops-inline-selector-trigger,
+.fabricops-form .fabricops-inline-selector-option {
+    white-space:normal; overflow-wrap:anywhere; text-align:left; line-height:1.5;
+    padding:8px 12px; max-width:100%;
+}
+.fabricops-form .fabricops-inline-selector-pagination .widget-html { width:auto !important; flex:1 1 80px; text-align:center; }
+.fabricops-form .fabricops-inline-selector-pagination .widget-button { min-width:0; }
+.fabricops-form .fabricops-inline-selector-panel {
+    padding:8px; border:1px solid var(--form-border); background:#fff; gap:4px;
 }
 .fabricops-form .widget-textarea textarea { height:110px; min-height:96px; resize:vertical; }
 .fabricops-form .widget-select select { height:130px; padding:5px; }
@@ -535,6 +575,108 @@ def _html_escape(value: Any) -> str:
     return html.escape(str(value or ""))
 
 
+def render_inline_selector(*, widgets: Any, label: str, placeholder: str) -> dict[str, Any]:
+    """Select stable IDs using wrapping, paginated native controls without browser popups."""
+    selector = widgets.Select(options=[("", "")], value="")
+    trigger = widgets.Button(description=placeholder, tooltip=label,
+                             layout=widgets.Layout(width="100%", height="auto", min_height="36px"))
+    trigger.add_class("fabricops-inline-selector-trigger")
+    search = widgets.Text(value="", placeholder="Filter " + label.lower(),
+                          **widget_common(widgets, label))
+    results = widgets.VBox(layout=widgets.Layout(width="100%", min_width="0"))
+    previous = widgets.Button(description="Previous", layout=widgets.Layout(width="auto"))
+    following = widgets.Button(description="Next", layout=widgets.Layout(width="auto"))
+    count = widgets.HTML()
+    pagination = widgets.HBox([previous, count, following], layout=widgets.Layout(width="100%"))
+    pagination.add_class("fabricops-inline-selector-pagination")
+    panel = widgets.VBox([search, results, pagination],
+                         layout=widgets.Layout(width="100%", min_width="0", display="none"))
+    panel.add_class("fabricops-inline-selector-panel")
+    container = widgets.VBox([trigger, panel], layout=widgets.Layout(width="100%", min_width="0"))
+    labels: dict[str, str] = {}
+    cursor = 0
+    page_size = 5
+
+    def draw(*_args: Any) -> None:
+        nonlocal cursor
+        matches = [(key, text) for key, text in labels.items()
+                   if str(search.value or "").casefold() in text.casefold()]
+        cursor = min(cursor, max(0, (len(matches) - 1) // page_size))
+        old = results.children
+        buttons = []
+        for key, text in matches[cursor * page_size:(cursor + 1) * page_size]:
+            button = widgets.Button(description=text, tooltip=text,
+                                    layout=widgets.Layout(width="100%", height="auto", min_height="36px"))
+            button.add_class("fabricops-inline-selector-option")
+
+            def choose(_button: Any, value: str = key) -> None:
+                selector.value = value
+                panel.layout.display = "none"
+
+            button.on_click(choose)
+            buttons.append(button)
+        results.children = tuple(buttons) or (widgets.HTML("No matches. Try another search."),)
+        for node in old:
+            node.layout.close()
+            style_close = getattr(getattr(node, "style", None), "close", None)
+            if callable(style_close):
+                style_close()
+            node.close()
+        previous.disabled = cursor == 0
+        following.disabled = (cursor + 1) * page_size >= len(matches)
+        count.value = f"<span role='status' aria-live='polite'>{len(matches)} matches · page {cursor + 1}</span>"
+
+    def selected(change: dict[str, Any]) -> None:
+        if change.get("name") != "value":
+            return
+        trigger.description = labels.get(str(selector.value or ""), placeholder)
+        panel.layout.display = "none"
+
+    def disabled(change: dict[str, Any]) -> None:
+        if change.get("name") != "disabled":
+            return
+        trigger.disabled = selector.disabled
+        search.disabled = selector.disabled
+        if selector.disabled:
+            panel.layout.display = "none"
+
+    def toggle(_button: Any) -> None:
+        panel.layout.display = "" if panel.layout.display == "none" else "none"
+        if panel.layout.display != "none":
+            draw()
+
+    def filter_changed(_change: Any) -> None:
+        nonlocal cursor
+        cursor = 0
+        draw()
+
+    def move(delta: int) -> None:
+        nonlocal cursor
+        cursor += delta
+        draw()
+
+    def refresh_rows(rows: list[dict[str, Any]], selected_value: str | None = None) -> None:
+        nonlocal cursor
+        labels.clear()
+        labels.update((str(row["value"]), str(row["label"])) for row in rows)
+        selector.options = [("", ""), *((text, key) for key, text in labels.items())]
+        selector.value = selected_value if selected_value in labels else ""
+        cursor = 0
+        search.value = ""
+        selected({"name": "value"})
+        draw()
+
+    selector.observe(selected, names="value")
+    selector.observe(disabled, names="disabled")
+    search.observe(filter_changed, names="value")
+    trigger.on_click(toggle)
+    previous.on_click(lambda _button: move(-1))
+    following.on_click(lambda _button: move(1))
+    selector.refresh_rows = refresh_rows
+    return {"container": container, "selector": selector, "search": search,
+            "trigger": trigger, "results": results, "panel": panel}
+
+
 def render_searchable_selector(
     *,
     widgets: Any,
@@ -562,7 +704,7 @@ def render_searchable_selector(
     )
     add_class = getattr(combobox, "add_class", None)
     if callable(add_class):
-        add_class("fabricops-searchable-selector")
+        add_class("fabricops-searchable-selector-v2")
     selector = widgets.Select(options=[])
     context = widgets.HTML(value="")
     lookup: dict[str, dict[str, Any]] = {}
@@ -749,9 +891,8 @@ CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 GUARDRAIL_TYPES = ["schema", "freshness", "profile_behavior", "dq"]
-LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 DATA_ACCESS_TABLE = "METADATA_DATA_ACCESS"
-CLASSIFICATION_LEVELS = ["Public", "Restricted", "Confidential", "Highly Sensitive"]
+CLASSIFICATION_LEVELS = list(config_shared.DEFAULT_CLASSIFICATION_LEVELS)
 
 
 @dataclass
@@ -942,7 +1083,7 @@ def active_steward(row: dict[str, Any], config: Any = None) -> bool:
 
 
 def list_data_stewards(config: Any, active_workspace_id: str, *, spark_session: Any = None, active_only: bool = True, missing_ok: bool = False, metadata_schema: str | None = None) -> list[dict[str, Any]]:
-    """List latest append-only steward rows from the metadata lakehouse."""
+    """List current steward rows from the metadata lakehouse."""
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     try:
         rows = read_lakehouse_table(str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)), store="Metadata", schema=metadata_schema, context={"config": config, "scope_workspace_id": active_workspace_id, "_spark_session": spark_session})
@@ -954,7 +1095,7 @@ def list_data_stewards(config: Any, active_workspace_id: str, *, spark_session: 
     return [row for row in latest if active_steward(row, config)] if active_only else latest
 
 def write_widget_metadata_row(*, spark: Any, config: Any, active_workspace_id: str, table: str, row: dict[str, Any]) -> None:
-    """Append one widget metadata row to the configured metadata target."""
+    """Update one current Steward or insert one unique Agreement version."""
     metadata_tables = config_value(config, "metadata_tables", {}) or {}
     canonical_table = {
         str(metadata_tables.get("data_steward", DATA_STEWARD_TABLE)): DATA_STEWARD_TABLE,
@@ -965,13 +1106,11 @@ def write_widget_metadata_row(*, spark: Any, config: Any, active_workspace_id: s
     frame = spark.createDataFrame([typed_row], schema=canonical_schema)
     write_options = {"store": "Metadata", "schema": metadata_table_physical_schema(config, canonical_table),
                      "context": {"config": config, "scope_workspace_id": active_workspace_id}, "mode": "append"}
-    if table.strip() in CANONICAL_METADATA_TABLES:
-        # Foundational I/O already retries canonical appends; keep one budget.
-        write_lakehouse_table(frame, table, **write_options)
+    if canonical_table == DATA_STEWARD_TABLE:
+        _, _, _, path = resolve_configured_lakehouse_table("Metadata", table, write_options["schema"], context=write_options["context"])
+        write_metadata_frame(frame, path, canonical_table, mode="upsert")
     else:
-        # Configured Steward/Agreement aliases are known metadata even though
-        # their physical names cannot be recognized by the generic writer.
-        retry_delta_metadata(lambda: write_lakehouse_table(frame, table, **write_options))
+        write_lakehouse_table(frame, table, **write_options)
 
 def parse_iso_date(value: Any, field_name: str, *, required: bool = False) -> date | None:
     """Return a date object or raise a clear intake validation error."""

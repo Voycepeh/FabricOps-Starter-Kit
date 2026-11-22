@@ -10,7 +10,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from fabricops_kit.config.shared import build_table_id
+from fabricops_kit.config.shared import build_table_id, FabricStore
 
 
 AUDIT_FIELDS = {
@@ -33,44 +33,48 @@ def test_scan_sql_access_is_exposed_from_access_scanner_package():
     assert scan_sql_access.__module__ == "fabricops_kit.access_scanner.scan_sql_access"
 
 
-def _catalogue(spark_session):
+def _catalogue(spark_session, workspace_id="dev"):
     return spark_session.createDataFrame(
         [
             {
-                "metadata_level": "table",
+                "asset_type": "TABLE",
                 "table_id": build_table_id("warehouse", "warehouse", "sales", "orders"),
-                "workspace_id": "dev",
+                "asset_workspace_id": workspace_id,
                 "store_type": "Warehouse",
+                "item_id": "warehouse-item",
                 "layer": "Gold",
                 "schema_name": "sales",
                 "table_name": "orders",
                 "is_active": True,
             },
             {
-                "metadata_level": "table",
+                "asset_type": "TABLE",
                 "table_id": build_table_id("warehouse", "warehouse", "sales", "customers"),
-                "workspace_id": "dev",
+                "asset_workspace_id": workspace_id,
                 "store_type": "Warehouse",
+                "item_id": "warehouse-item",
                 "layer": "Gold",
                 "schema_name": "sales",
                 "table_name": "customers",
                 "is_active": True,
             },
             {
-                "metadata_level": "table",
+                "asset_type": "TABLE",
                 "table_id": build_table_id("warehouse", "warehouse", "archive", "orders_archive"),
-                "workspace_id": "dev",
+                "asset_workspace_id": workspace_id,
                 "store_type": "Warehouse",
+                "item_id": "warehouse-item",
                 "layer": "Gold",
                 "schema_name": "archive",
                 "table_name": "orders_archive",
                 "is_active": False,
             },
             {
-                "metadata_level": "table",
+                "asset_type": "TABLE",
                 "table_id": build_table_id("lakehouse", "curated_lakehouse", "sales", "orders"),
-                "workspace_id": "dev",
+                "asset_workspace_id": workspace_id,
                 "store_type": "Lakehouse",
+                "item_id": "lakehouse-item",
                 "layer": "Silver",
                 "schema_name": "sales",
                 "table_name": "orders",
@@ -181,6 +185,10 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     """Map object, schema, and database permissions to governed tables."""
     module = importlib.import_module("fabricops_kit.access_scanner.scan_sql_access")
     calls = []
+    config = {"paths": {"dev": {
+        "warehouse": FabricStore("remote", "warehouse-item", "warehouse"),
+        "curated_lakehouse": FabricStore("remote", "lakehouse-item", "lakehouse"),
+    }}}
 
     def fake_read(query, *, store, spark_session=None, context=None, **options):
         calls.append((query, store, context))
@@ -190,13 +198,13 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
-        lambda **kwargs: ({"config": "test"}, "dev", {"config": {"config": "test"}, "scope_workspace_id": "dev"}),
+        lambda **kwargs: (config, "dev", {"config": config, "scope_workspace_id": "dev"}),
     )
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: dict(AUDIT_FIELDS))
     monkeypatch.setattr(module, "target_store_kinds", lambda *args: {"warehouse": "warehouse"})
 
     result = call_with_spark(spark_session, module.scan_sql_access,
-        _catalogue(spark_session),
+        _catalogue(spark_session, workspace_id="remote"),
         targets="warehouse",
         access_snapshot_id="snapshot-1",
         context={"scope_workspace_id": "dev"},
@@ -225,7 +233,9 @@ def test_scan_sql_access_maps_table_schema_and_database_scopes(monkeypatch, spar
     assert principal_types["fabricops-application"] == "EXTERNAL_LOGIN"
 
     assert {row["access_snapshot_id"] for row in access_rows} == {"snapshot-1"}
-    assert {row["workspace_id"] for row in access_rows} == {"dev"}
+    assert {row["asset_workspace_id"] for row in access_rows} == {"remote"}
+    assert {row["_workspace_id"] for row in access_rows} == {AUDIT_FIELDS["_workspace_id"]}
+    assert {row["asset_type"] for row in access_rows} == {"TABLE"}
     assert all(row["access_id"] for row in access_rows)
     assert all(row["_committed_by"] == "tester@example.com" for row in access_rows)
 
@@ -250,6 +260,10 @@ def test_scan_sql_access_scans_each_unique_target(monkeypatch, spark_session):
     """Scan each unique configured workspace data item target once."""
     module = importlib.import_module("fabricops_kit.access_scanner.scan_sql_access")
     calls = []
+    config = {"paths": {"dev": {
+        "warehouse": FabricStore("dev", "warehouse-item", "warehouse"),
+        "curated_lakehouse": FabricStore("dev", "lakehouse-item", "lakehouse"),
+    }}}
 
     empty = _observations(spark_session).limit(0)
 
@@ -261,7 +275,7 @@ def test_scan_sql_access_scans_each_unique_target(monkeypatch, spark_session):
     monkeypatch.setattr(
         module,
         "resolve_fabric_context",
-        lambda **kwargs: ({}, "dev", {"config": {}, "scope_workspace_id": "dev"}),
+        lambda **kwargs: (config, "dev", {"config": config, "scope_workspace_id": "dev"}),
     )
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kwargs: dict(AUDIT_FIELDS))
     monkeypatch.setattr(
@@ -311,7 +325,7 @@ def test_scan_sql_access_uses_environment_override_for_targets_and_catalogue(mon
 
     monkeypatch.setattr(module, "_scan_targets", fake_scan_targets)
 
-    def fakecatalogue_tables(frame, *, workspace_id, target_store_kinds):
+    def fakecatalogue_tables(frame, *, config, workspace_id, target_store_kinds):
         calls["catalogue"] = (frame, workspace_id, target_store_kinds)
         return "catalogue_tables"
 
@@ -356,7 +370,7 @@ def test_scan_sql_access_uses_environment_override_for_targets_and_catalogue(mon
         "active_workspace_id": "requested-active_workspace_id",
         "runtime_context": expected_context,
     }
-    assert calls["access"]["workspace_id"] == "requested-active_workspace_id"
+    assert calls["access"]["access_snapshot_id"] == "snapshot"
     assert result == {"access": "access_df", "unmatched": "unmatched_df"}
 
 
@@ -434,6 +448,10 @@ def test_catalogue_includes_registered_lakehouse_sql_endpoint_tables(spark_sessi
 
     tables = module.catalogue_tables(
         _catalogue(spark_session),
+        config={"paths": {"dev": {
+            "warehouse": FabricStore("dev", "warehouse-item", "warehouse"),
+            "curated_lakehouse": FabricStore("dev", "lakehouse-item", "lakehouse"),
+        }}},
         workspace_id="dev",
         target_store_kinds={"curated_lakehouse": "lakehouse"},
     )
@@ -449,6 +467,10 @@ def test_catalogue_relates_mixed_targets_by_canonical_physical_identity(spark_se
 
     tables = module.catalogue_tables(
         _catalogue(spark_session),
+        config={"paths": {"dev": {
+            "warehouse": FabricStore("dev", "warehouse-item", "warehouse"),
+            "curated_lakehouse": FabricStore("dev", "lakehouse-item", "lakehouse"),
+        }}},
         workspace_id="dev",
         target_store_kinds={"warehouse": "warehouse", "curated_lakehouse": "lakehouse"},
     )

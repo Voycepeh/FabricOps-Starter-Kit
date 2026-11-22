@@ -42,7 +42,7 @@ def consumer_context(config: Any, table_id: str, *, workspace_id: str, spark_ses
         raise ValueError(f"Data Agent source type {store.kind!r} is unsupported.")
     if store.kind != _text(identity.get("store_type")).casefold():
         raise ValueError("Configured workspace store type does not match the governed Catalogue asset.")
-    destination = {"workspace_id": store.workspace_id, "item_id": store.item_id, "kind": store.kind,
+    destination = {"asset_workspace_id": store.workspace_id, "item_id": store.item_id, "kind": store.kind,
         "schema": _text(identity.get("schema")) or None, "table_name": _text(identity.get("table_name"))}
     contract = resolve_active_consumer_contract(config, workspace_id, table_id,
         spark_session=spark_session, destination=destination)
@@ -94,7 +94,7 @@ def consumer_context(config: Any, table_id: str, *, workspace_id: str, spark_ses
         },
         "source": {
             "type": store.kind,
-            "workspace_id": store.workspace_id,
+            "asset_workspace_id": store.workspace_id,
             "item_id": store.item_id,
             "schema": _text(identity.get("schema")) or None,
             "table": _text(identity.get("table_name")),
@@ -245,7 +245,7 @@ def provision_data_agent(
     source = context["source"]
     reference = {
         "referenceType": "ById",
-        "workspaceId": source.get("workspace_id"),
+        "workspaceId": source.get("asset_workspace_id"),
         "itemId": source.get("item_id"),
     }
     source_type = _text(source.get("type")).casefold()

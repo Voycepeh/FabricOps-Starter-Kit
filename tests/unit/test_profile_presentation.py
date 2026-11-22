@@ -241,7 +241,7 @@ def test_skipped_profile_shows_confirmed_snapshot_in_audit_timezone(spark_sessio
     persisted = spark_session.createDataFrame(
         [("workspace-1", "orders", "snapshot-1", "amount", "double", 2, 2, 0,
           0.0, 2, 100.0, 1.5, 0.5, "1", 1.25, 1.5, 1.75, "2")],
-        ["_workspace_id", "table_id", "profile_snapshot_id", "column_name", "data_type",
+        ["workspace_id", "table_id", "profile_snapshot_id", "column_name", "data_type",
          "row_count", "non_null_count", "null_count", "null_percent", "distinct_count",
          "distinct_percent", "mean_value", "stddev_value", "min_value",
          "percentile_25_value", "median_value", "percentile_75_value", "max_value"],

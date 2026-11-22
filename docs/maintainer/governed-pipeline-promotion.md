@@ -13,16 +13,17 @@ Engineering submits a complete immutable notebook candidate, Governance independ
 | Engineering workspace | Read/write | No access required |
 | Governance notebook workspace | No workspace role; explicit Metadata item access only | Read/write |
 | `Files/fabricops/engineering/` | Read/write | Read/write as owner |
+| `misc.PROCESSING_STATE` | Read/write | Read/write as owner |
 
-Grant Engineering basic **Read on the Metadata item**, with granular OneLake roles for its schema, Governance policy reads and the explicitly listed Files paths. Do not grant Engineering a Contributor, Member or Admin role in the Governance workspace, item-wide Write, Reshare, or unrestricted parent-folder access. Review/remove broad DefaultReader assignments where they exceed intended reads. Table/schema permissions do not grant Files permissions. Runtime publication does not require a Files coordination ledger.
+Grant Engineering basic **Read on the Metadata item**, with granular OneLake roles for its schema, `misc.PROCESSING_STATE`, Governance policy reads and the explicitly listed Files paths. Do not grant Engineering a Contributor, Member or Admin role in the Governance workspace, item-wide Write, Reshare, or unrestricted parent-folder access. Review/remove broad DefaultReader assignments where they exceed intended reads. Table/schema permissions do not grant Files permissions. Pipeline publication uses the operational table `misc.PROCESSING_STATE`.
 
 Microsoft documents [granular ReadWrite roles](https://learn.microsoft.com/en-us/fabric/onelake/security/data-access-control-model) for Lakehouse tables/folders and Spark writes. Elevated workspace roles bypass those restrictions. Tenant availability, runtime support, inherited groups, direct paths, default roles and permission propagation must be tested under the actual two identities. If granular writes cannot be enforced in the tenant, this arrangement cannot provide the Engineering write restriction: leave Governed admission blocked. Application checks and confirmation boxes cannot substitute for Fabric permissions.
 
-Bootstrap `setup_metadata_tables()` runs under the Metadata owner's identity. Engineering notebooks do not need permission to create Governance tables. Configuration-driven cross-workspace business source reads and target writes retain their existing authorized routing; metadata restrictions do not prohibit them.
+Bootstrap `setup_metadata_tables()` initializes canonical metadata and `misc.PROCESSING_STATE` under the Metadata owner's identity. Engineering notebooks do not need permission to create Governance tables. Configuration-driven cross-workspace business source reads and target writes retain their existing authorized routing; metadata restrictions do not prohibit them.
 
 ## Canonical records
 
-The canonical inventory contains **14 tables**. The only added table is `governance.METADATA_PIPELINE_ACTIVATION`; no existing table is removed.
+The canonical inventory contains **13 tables**, including `governance.METADATA_PIPELINE_ACTIVATION`.
 
 | Table or path | Grain and responsibility |
 | --- | --- |
@@ -35,7 +36,7 @@ The canonical inventory contains **14 tables**. The only added table is `governa
 | `Files/fabricops/engineering/submissions/` | Complete canonical packages saved automatically by Engineering Finalize; Governance reads them directly |
 | `Files/fabricops/engineering/pipeline_snapshots/` | Write-once source/promoted snapshots and preserved modified copies during recovery |
 
-Catalogue, Profiled, Profiled Frequency, Lineage, Data Access, Guardrail Results and Processing State retain their processing responsibilities. Released v0.3.1 records and content/hash projections are preserved. This change adds no adapters or migration machinery for the unreleased promotion model. Incompatible Preview layouts fail explicitly while retaining their contents; normal setup never deletes metadata or business data.
+Catalogue, Profiled, Profiled Frequency, Lineage, Data Access and Guardrail Results retain their processing responsibilities. [Processing State](processing-state.md) uses the operational table `misc.PROCESSING_STATE`. Released v0.3.1 records and content/hash projections are preserved. This change adds no adapters or migration machinery for the unreleased promotion model. Incompatible Preview layouts fail explicitly while retaining their contents; normal setup never deletes metadata or business data.
 
 ## Saved definition, execution claims and submission identity
 

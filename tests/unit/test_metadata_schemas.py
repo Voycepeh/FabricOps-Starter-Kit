@@ -27,13 +27,12 @@ def test_canonical_tables_have_one_authoritative_writer_class():
         "METADATA_DATA_CATALOGUE": "engineering",
         "METADATA_DATA_PROFILED": "engineering",
         "METADATA_DATA_PROFILED_FREQUENCY": "engineering",
-        "METADATA_DATA_LINEAGE": "engineering",
         "METADATA_DATA_ACCESS": "engineering",
+        "METADATA_DATA_LINEAGE": "engineering",
         "METADATA_GUARDRAIL_RESULTS": "engineering",
         "METADATA_PIPELINE_RUN": "engineering",
         "METADATA_PIPELINE_REGISTRY": "engineering",
         "METADATA_PIPELINE_ACTIVATION": "governance",
-        "METADATA_PROCESSING_STATE": "engineering",
     }
     assert set(GOVERNANCE_METADATA_TABLES).isdisjoint(ENGINEERING_METADATA_TABLES)
     assert set(GOVERNANCE_METADATA_TABLES) | set(ENGINEERING_METADATA_TABLES) == set(CANONICAL_METADATA_TABLES)
@@ -47,7 +46,7 @@ def test_physical_schema_resolution_uses_framework_ownership_config():
         engineering_metadata_schema = "observed"
 
     assert metadata_table_physical_schema(Config(), "METADATA_DATA_CONTRACT") == "approved"
-    assert metadata_table_physical_schema(Config(), "METADATA_PROCESSING_STATE") == "observed"
+    assert metadata_table_physical_schema(Config(), "METADATA_PIPELINE_RUN") == "observed"
 
 
 def test_data_contract_uses_versioned_table_or_file_schema():
@@ -59,15 +58,15 @@ def test_data_contract_uses_versioned_table_or_file_schema():
     assert "METADATA_DATA_CONTRACT_SNAPSHOT" not in CANONICAL_METADATA_TABLES
     assert schema.fieldNames() == [
         "contract_id", "contract_version",
-        "table_id", "source_id", "table_name", "evidence_workspace_id", "contract_payload_json", "status", *audit_names,
+        "table_id", "asset_type", "table_name", "asset_workspace_id", "contract_payload_json", "status", *audit_names,
     ]
     assert "provider_steward_name" in metadata_table_schema_registry()["METADATA_DATA_AGREEMENT"].fieldNames()
     assert "recipient_steward_name" in metadata_table_schema_registry()["METADATA_DATA_AGREEMENT"].fieldNames()
     assert {"metadata_table_key", "schema_fingerprint", "approved_usage_json"}.isdisjoint(schema.fieldNames())
     assert [(field.name, type(field.dataType).__name__, field.nullable) for field in schema.fields[:8]] == [
         ("contract_id", "StringType", False), ("contract_version", "IntegerType", False),
-        ("table_id", "StringType", True), ("source_id", "StringType", True), ("table_name", "StringType", True),
-        ("evidence_workspace_id", "StringType", False),
+        ("table_id", "StringType", True), ("asset_type", "StringType", True), ("table_name", "StringType", True),
+        ("asset_workspace_id", "StringType", False),
         ("contract_payload_json", "StringType", True),
         ("status", "StringType", False),
     ]
@@ -77,16 +76,16 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
     """Catalogue owns the physical table/column identity for one workspace_id."""
     fields = metadata_table_schema_registry()["METADATA_DATA_CATALOGUE"].fieldNames()
     assert fields == [
-        "metadata_level",
+        "asset_type", "item_id", "relative_path", "file_format",
+        "first_observed_at", "last_observed_at",
         "table_id",
-        "column_id",
-        "workspace_id",
+        "asset_workspace_id",
+        "asset_workspace_name",
+        "columns_json",
         "store_type",
         "layer",
         "schema_name",
         "table_name",
-        "column_name",
-        "data_type",
         "load_strategy",
         "load_strategy_parameters_json",
         "writer_workspace_id",
@@ -105,11 +104,13 @@ def test_stage2_catalogue_schema_uses_environment_aware_asset_ids():
 def test_stage2_profile_schema_is_normalized():
     """Profile stores snapshot metrics and asset IDs without a duplicate event timestamp."""
     fields = metadata_table_schema_registry()["METADATA_DATA_PROFILED"].fieldNames()
-    assert fields[:20] == [
+    assert fields[:24] == [
+        "asset_type", "run_id", "pipeline_role",
         "profile_id",
         "profile_snapshot_id",
         "table_id",
         "column_id",
+        "asset_workspace_id",
         "data_type",
         "table_name",
         "column_name",
@@ -128,7 +129,6 @@ def test_stage2_profile_schema_is_normalized():
         "max_value",
     ]
     assert {
-        "workspace_id",
         "profiled_at",
         "metadata_table_key",
         "metadata_column_key",
@@ -148,6 +148,7 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
     assert "frequency_json" not in registry["METADATA_DATA_PROFILED"].fieldNames()
     fields = registry["METADATA_DATA_PROFILED_FREQUENCY"].fieldNames()
     assert fields == [
+        "asset_type", "run_id", "pipeline_role",
         "frequency_id",
         "profile_id",
         "profile_snapshot_id",
@@ -156,6 +157,7 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
         "table_name",
         "column_name",
         "data_type",
+        "asset_workspace_id",
         "value",
         "frequency_count",
         "frequency_percent",
@@ -169,24 +171,18 @@ def test_profiled_frequency_schema_is_flattened_detail_for_profile():
     assert {"metadata_column_key", "profiled_at"}.isdisjoint(fields)
 
 
-def test_stage2_lineage_schema_uses_pipeline_language():
-    """Lineage describes pipeline participation and uses the standard commit timestamp."""
-    fields = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"].fieldNames()
-    assert fields == [
-        "lineage_id",
-        "table_id",
-        "table_name",
-        "workspace_id",
-        "pipeline_role",
-        *[name for name, _kind, _nullable in audit_schema_fields()],
-    ]
-    assert {"lineage_event_id", "profile_role", "profiled_at", "recorded_at"}.isdisjoint(fields)
-    assert "_committed_at" in fields
+def test_participation_is_nested_in_run_operations():
+    """Participation has a Run ID through its existing operation records."""
+    registry = metadata_table_schema_registry()
+    assert "METADATA_DATA_LINEAGE" in registry
+    assert {"run_id", "operations"} <= set(registry["METADATA_PIPELINE_RUN"].fieldNames())
 
 
 def test_stage2_source_observation_schema_is_guardrail_independent():
     """Persist reusable source evidence with the standard commit timestamp only."""
-    fields = metadata_table_schema_registry()["METADATA_PROCESSING_STATE"].fieldNames()
+    from fabricops_kit.pipeline.shared import processing_state_schema
+
+    fields = processing_state_schema().fieldNames()
     assert fields == [
         "record_id",
         "record_type",
@@ -240,7 +236,8 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
         "user_principal",
         "table_id",
         "table_name",
-        "workspace_id",
+        "asset_workspace_id",
+        "asset_type",
         "access_level",
         "access_value",
         "access_state",
@@ -261,7 +258,6 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
             "access_id",
             "user_principal",
             "table_id",
-            "workspace_id",
             "access_level",
             "access_value",
             "access_state",
@@ -271,7 +267,7 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
             "database_name",
         }
     )
-    assert all(field_by_name[name].nullable for name in {"role_name", "schema_name", "object_name", "object_type"})
+    assert all(field_by_name[name].nullable for name in {"asset_type", "role_name", "schema_name", "object_name", "object_type"})
     assert {
         "access_purpose",
         "approval_status",
@@ -300,17 +296,15 @@ def test_definition_tables_are_retired_but_results_remain():
 
 
 def test_incompatible_processing_state_is_rejected_without_changing_progress():
-    """Even an empty old table must not be evolved into accepted v2 progress."""
-    import importlib
-    import pytest
+    """Reject the legacy Preview layout at the Processing State boundary."""
     from pyspark.sql.types import StructType, StructField, StringType
-    setup = importlib.import_module("fabricops_kit.config.setup_metadata_tables")
-    schema = metadata_table_schema_registry()["METADATA_PROCESSING_STATE"]
+
+    from fabricops_kit.pipeline.shared import processing_state_schema, validate_processing_state_schema
+
     legacy = StructType([StructField("observation_id", StringType()), StructField("observation_status", StringType())])
-    for allow_missing in (True, False):
-        with pytest.raises(ValueError, match="Incompatible.*Existing checkpoints"):
-            setup._validate_existing_metadata_schema("METADATA_PROCESSING_STATE", legacy, schema, allow_missing=allow_missing)
-    assert setup._validate_existing_metadata_schema("METADATA_PROCESSING_STATE", schema, schema) == []
+    with pytest.raises(RuntimeError, match="Incompatible.*Existing checkpoints"):
+        validate_processing_state_schema(legacy)
+    validate_processing_state_schema(processing_state_schema())
 
 
 def test_incompatible_metadata_schema_reports_missing_and_unexpected_fields():
@@ -321,18 +315,18 @@ def test_incompatible_metadata_schema_reports_missing_and_unexpected_fields():
 
     setup = import_module("fabricops_kit.config.setup_metadata_tables")
     registry = metadata_table_schema_registry()
-    for table in ("METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PROCESSING_STATE"):
-        expected = registry[table]
-        existing = StructType([
-            *expected.fields[1:],
-            StructField("outdated_column", StringType()),
-        ])
-        with pytest.raises(ValueError) as error:
-            setup._validate_existing_metadata_schema(table, existing, expected)
-        message = str(error.value)
-        assert f"Missing columns: {expected.fields[0].name}" in message
-        assert "Unexpected columns: outdated_column" in message
-        assert "preserved" in message
+    table = "METADATA_DATA_CONTRACT_ACTIVATION"
+    expected = registry[table]
+    existing = StructType([
+        *expected.fields[1:],
+        StructField("outdated_column", StringType()),
+    ])
+    with pytest.raises(ValueError) as error:
+        setup._validate_existing_metadata_schema(table, existing, expected)
+    message = str(error.value)
+    assert f"Missing columns: {expected.fields[0].name}" in message
+    assert "Unexpected columns: outdated_column" in message
+    assert "preserved" in message
 
 
 def test_incompatible_metadata_schema_reports_wrong_column_types():
@@ -344,17 +338,17 @@ def test_incompatible_metadata_schema_reports_wrong_column_types():
     setup = import_module("fabricops_kit.config.setup_metadata_tables")
     expected = metadata_table_schema_registry()["METADATA_DATA_CONTRACT_ACTIVATION"]
     existing = StructType([
-        StructField(field.name, IntegerType() if field.name == "workspace_id" else field.dataType)
+        StructField(field.name, IntegerType() if field.name == "asset_workspace_id" else field.dataType)
         for field in expected.fields
     ])
-    with pytest.raises(ValueError, match="workspace_id: expected string, found integer"):
+    with pytest.raises(ValueError, match="asset_workspace_id: expected string, found integer"):
         setup._validate_existing_metadata_schema("METADATA_DATA_CONTRACT_ACTIVATION", existing, expected)
 
 
 def test_processing_state_table_has_no_legacy_alias():
-    """Only the renamed table is canonical; release history does not grant an alias."""
+    """Neither legacy name is a canonical table."""
     registry = metadata_table_schema_registry()
-    assert "METADATA_PROCESSING_STATE" in registry
+    assert "METADATA_PROCESSING_STATE" not in registry
     assert "METADATA_SOURCE_OBSERVATION" not in registry
 
 
@@ -401,10 +395,9 @@ def test_nested_pipeline_run_schema_documentation_matches_without_pyspark():
 def test_incomplete_pipeline_identity_schema_is_rejected(table):
     """Incomplete required identity fields are unsafe to infer for existing pipeline metadata."""
     from importlib import import_module
-    from pyspark.sql.types import StructType
     setup = import_module('fabricops_kit.config.setup_metadata_tables')
     expected = metadata_table_schema_registry()[table]
-    for existing in (StructType([]), StructType(expected.fields[:-1])):
+    for existing in (expected.__class__([]), expected.__class__(expected.fields[:-1])):
         with pytest.raises(ValueError, match='Existing data has been preserved'):
             setup._validate_existing_metadata_schema(table, existing, expected, allow_missing=True)
 
@@ -438,3 +431,42 @@ def test_setup_rejects_unsafe_retirement_declarations(monkeypatch, table, column
     with pytest.raises(ValueError, match='Unsafe column retirement declaration'):
         setup._upgrade_metadata_table(spark=None, table=SimpleNamespace(schema=schema),
             table_name=table, expected_schema=schema, metadata_schema='engineering', context={})
+
+
+def test_migration_declarations_start_at_frozen_050():
+    """Retirements and workspace renames must name columns actually shipped in v0.5.0."""
+    from tests.helpers import metadata_schema_050
+    from fabricops_kit.config.metadata_schemas import RETIRED_METADATA_COLUMNS, PHYSICAL_WORKSPACE_COLUMNS, LEGACY_WORKSPACE_TABLES
+
+    for table, columns in RETIRED_METADATA_COLUMNS.items():
+        assert set(columns) <= set(metadata_schema_050(table).fieldNames())
+    for table, aliases in PHYSICAL_WORKSPACE_COLUMNS.items():
+        assert set(aliases) <= set(metadata_schema_050(table).fieldNames())
+    for table in LEGACY_WORKSPACE_TABLES:
+        assert 'workspace_id' in metadata_schema_050(table).fieldNames()
+    from importlib import import_module
+    setup = import_module('fabricops_kit.config.setup_metadata_tables')
+    assert setup._LEGACY_CATALOGUE_FIELDS <= set(metadata_schema_050('METADATA_DATA_CATALOGUE').fieldNames())
+
+
+def test_setup_does_not_upgrade_pre_050_run_provenance_layout():
+    """v0.5.0 already shipped provenance fields; missing ones are not an additive upgrade."""
+    import importlib
+    from tests.helpers import metadata_schema_050
+    setup = importlib.import_module('fabricops_kit.config.setup_metadata_tables')
+    released = metadata_schema_050('METADATA_PIPELINE_RUN')
+    partial = released.__class__([field for field in released if field.name != 'promotion_id'])
+    with pytest.raises(ValueError, match='Incompatible METADATA_PIPELINE_RUN'):
+        setup._validate_existing_metadata_schema('METADATA_PIPELINE_RUN', partial,
+            metadata_table_schema_registry()['METADATA_PIPELINE_RUN'], allow_missing=True)
+
+
+@pytest.mark.parametrize('table', [
+    'METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY',
+    'METADATA_DATA_ACCESS', 'METADATA_GUARDRAIL_RESULTS',
+])
+def test_fresh_asset_schemas_exclude_historical_workspace_extensions(table):
+    """Fresh tables retain physical asset and audit scope without legacy placeholders."""
+    fields = metadata_table_schema_registry()[table].fieldNames()
+    assert 'legacy_workspace_id' not in fields
+    assert {'asset_workspace_id', '_workspace_id'} <= set(fields)

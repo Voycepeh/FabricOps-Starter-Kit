@@ -121,8 +121,11 @@ def test_lakehouse_read_and_write_helpers_route_to_configured_paths():
     assert ("partitionBy", ("status",)) in frame.write.calls
 
 
-def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tables():
+def test_metadata_lakehouse_table_helpers_use_abfss_paths_without_registered_tables(monkeypatch):
     """Verify metadata lakehouse table helpers use abfss paths without registered tables."""
+    from importlib import import_module
+    writer = import_module("fabricops_kit.io.write_lakehouse_table")
+    monkeypatch.setattr(writer, "write_metadata_frame", lambda df, path, table, **kw: io_shared.write_delta_path(df, path, **kw))
     config = framework_config()
     context = {"config": config, "scope_workspace_id": "dev"}
     spark = _Spark()

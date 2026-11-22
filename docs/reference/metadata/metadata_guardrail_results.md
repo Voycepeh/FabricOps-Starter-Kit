@@ -30,13 +30,13 @@ via `run_id`
 `METADATA_DATA_CONTRACT` **(N → 1)**
 via `contract_id` + `contract_version`
 
-**Implementation details:** Store aggregate Guardrail summaries for exact participating contract versions, canonical table_id or distinct file source_id, captured source name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. Captured context does not follow later table or rule changes.
+**Implementation details:** Store aggregate Guardrail summaries for exact participating contract versions, common table_id, explicit asset_type, captured source name, readable rule context, and continuation decisions; caller-owned failed business rows are not persisted here. New planned asset results use the resolved physical workspace. Pipeline-wide outcomes and results without a resolved binding retain execution scope. Catalogue registration is checked when creating the Contract draft. Results reference the exact Contract and Run without a separate Catalogue parent check. Captured context remains as observed at evaluation.
 
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">28</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">20</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">29</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">21</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">0</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
@@ -50,14 +50,15 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>guardrail_result_id</code></td><td><code>string</code></td><td>Stable identifier for the aggregate Guardrail result row.</td></tr>
 <tr class="metadata-column--engineering"><td><code>guardrail_rule_id</code></td><td><code>string</code></td><td>Stable authored Guardrail identifier, or the synthetic completion-record identifier when rule_type is contract_validation.</td></tr>
 <tr class="metadata-column--engineering"><td><code>guardrail_version</code></td><td><code>integer</code></td><td>Metadata Guardrail Results field <code>guardrail_version</code>.</td></tr>
-<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across workspace, dataset, and table context.</td></tr>
-<tr class="metadata-column--engineering"><td><code>source_id</code></td><td><code>string</code></td><td>Stable file Source ID based on physical workspace, Lakehouse item and normalized Files selector; file records have no Table ID.</td></tr>
+<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Common operational asset key for TABLE or FILE assets across workspace, dataset, and table context.</td></tr>
+<tr class="metadata-column--engineering"><td><code>asset_type</code></td><td><code>string</code></td><td>Explicit asset discriminator: TABLE or FILE. Historical null values with table_id are TABLE.</td></tr>
 <tr class="metadata-column--engineering"><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
-<tr class="metadata-column--engineering"><td><code>contract_id</code></td><td><code>string</code></td><td>Stable identifier for the contract row.</td></tr>
+<tr class="metadata-column--engineering"><td><code>contract_id</code></td><td><code>string</code></td><td>Stable identifier for the Contract lifecycle; combine with contract_version to identify one row.</td></tr>
 <tr class="metadata-column--engineering"><td><code>contract_version</code></td><td><code>integer</code></td><td>Version recorded for the contract row.</td></tr>
 <tr class="metadata-column--engineering"><td><code>execution_type</code></td><td><code>string</code></td><td>Whether the runtime record came from Testing or Live contract execution. Testing results remain in memory; Live appends Guardrail Results. Historical validate records remain readable.</td></tr>
 <tr class="metadata-column--engineering"><td><code>run_id</code></td><td><code>string</code></td><td>Identifier stored for <code>run_id</code>.</td></tr>
-<tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
+<tr class="metadata-column--engineering"><td><code>asset_workspace_id</code></td><td><code>string</code></td><td>ID of the physical asset workspace for planned asset checks with a resolved binding.</td></tr>
+<tr class="metadata-column--engineering"><td><code>execution_workspace_id</code></td><td><code>string</code></td><td>ID of the execution workspace for pipeline-wide results and results without a resolved physical binding.</td></tr>
 <tr class="metadata-column--engineering"><td><code>status</code></td><td><code>string</code></td><td>Pipeline run status recorded with the run summary.</td></tr>
 <tr class="metadata-column--engineering"><td><code>can_continue</code></td><td><code>boolean</code></td><td>Metadata Guardrail Results field <code>can_continue</code>.</td></tr>
 <tr class="metadata-column--engineering"><td><code>severity</code></td><td><code>string</code></td><td>Severity recorded for a Guardrail result.</td></tr>
@@ -69,11 +70,21 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <tr class="metadata-column--engineering"><td><code>result_payload_json</code></td><td><code>string</code></td><td>Serialized aggregate result payload written for the Guardrail outcome.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
-<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
-<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>ID of the executing notebook’s Fabric workspace, captured when the metadata row was written.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Display name of the executing notebook’s Fabric workspace, captured when the metadata row was written.</td></tr>
 <tr class="metadata-column--audit"><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
 <tr class="metadata-column--audit"><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
 <tr class="metadata-column--audit"><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
 <tr class="metadata-column--audit"><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
 </tbody></table>
 </div>
+
+## Automatic column cleanup
+
+`setup_metadata_tables()` removes only the explicitly retired columns below. It preserves canonical rows, all eight audit columns and other extension columns. If a populated value cannot be proved redundant, setup fails for this table with data preserved.
+
+| Retired column | Removal condition |
+| --- | --- |
+| `source_id` | SQL NULL or equal to `table_id` |
+
+See [`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md) for transaction results and the Delta recovery boundary.

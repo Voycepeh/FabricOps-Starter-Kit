@@ -25,6 +25,9 @@ def runtime(monkeypatch):
     config = {}
     context = {'config': config, 'scope_workspace_id': 'dev', 'notebook_id': '00000000-0000-4000-8000-000000000001'}
     monkeypatch.setattr(shared, 'get_default_fabric_context', lambda **kwargs: context)
+    monkeypatch.setattr(shared, "publish_column_lineage", lambda run, **kw: {
+        "status": "published", "row_count": len(shared.column_lineage_rows(run)),
+        "source_run_sha256": shared._metadata_hash(shared._column_lineage_snapshot(run))})
     spark = SimpleNamespace(conf=SimpleNamespace(get=lambda key: 'test'))
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (config, 'dev', context or {'config': config, 'scope_workspace_id': 'dev'}))
     monkeypatch.setattr(shared, 'get_spark_session', lambda *args, **_kwargs: spark)
@@ -32,7 +35,7 @@ def runtime(monkeypatch):
     monkeypatch.setattr(activation_identity, 'resolve_pipeline_identity', lambda **kwargs: (context['notebook_id'], {'role': 'source', 'row': None}))
     monkeypatch.setattr(shared, 'build_runtime_audit_fields', lambda **kwargs: {'_workspace_id': 'workspace', '_notebook_id': 'notebook'})
     monkeypatch.setattr(shared, 'resolve_physical_table_identity', lambda config, active_workspace_id, **kwargs: {**kwargs, 'table_id': kwargs['table_name']})
-    monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, **kwargs: {key: {'workspace_id': 'dev', 'item_id': value['store'], 'kind': 'lakehouse', 'schema': value.get('schema'), 'table_name': value['table_name']} for key, value in identities.items()})
+    monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, **kwargs: {key: {'asset_workspace_id': 'dev', 'item_id': value['store'], 'kind': 'lakehouse', 'schema': value.get('schema'), 'table_name': value['table_name']} for key, value in identities.items()})
     monkeypatch.setattr(shared, 'load_table_guardrail_rules', lambda *args, **kwargs: [])
     monkeypatch.setattr(shared, 'read_lakehouse_table', Mock(side_effect=AssertionError('unexpected metadata read')))
     writes = Mock()
@@ -46,6 +49,8 @@ def runtime(monkeypatch):
         monkeypatch.setattr(module, 'resolve_table_id', lambda **kwargs: kwargs['table_name'])
         monkeypatch.setattr(module, 'schedule_table_profiling', lambda *args, **kwargs: {'row_count': 2})
     frame = SimpleNamespace(columns=['id'])
+    frame.localCheckpoint = Mock(side_effect=lambda **kwargs: SimpleNamespace(
+        columns=frame.columns, _jdf=Mock(), unpersist=Mock()))
     monkeypatch.setattr(read, 'pipeline_read', lambda **kwargs: {'dataframe': frame, 'table_id': kwargs['table_name']})
     publication = Mock(return_value={'published': False, 'table_id': 'target', 'status': 'passed'})
     monkeypatch.setattr(write, 'pipeline_write', publication)
@@ -597,8 +602,8 @@ def test_incremental_coordinates_register_new_target_and_preserve_routing(coordi
     assert identities[target_id]["schema"] == ("demo" if store == "Silver" else None)
     assert coordinate_runtime.reader.call_args.kwargs["target_table_id"] == target_id
     bindings = session.plan.runtime_context["_pipeline_bindings"]
-    assert bindings[source_id]["workspace_id"] == "dev"
-    assert bindings[target_id]["workspace_id"] == ("remote-target-workspace" if store == "Silver" else "dev")
+    assert bindings[source_id]["asset_workspace_id"] == "dev"
+    assert bindings[target_id]["asset_workspace_id"] == ("remote-target-workspace" if store == "Silver" else "dev")
     assert session.plan.evidence["operations"]["source:Bronze/orders"]["incremental_target_table_id"] == target_id
     runtime_context = coordinate_runtime.reader.call_args.kwargs["context"]
     assert runtime_context["scope_workspace_id"] == "dev"
@@ -654,3 +659,19 @@ def test_incremental_read_never_selects_from_multiple_planned_targets(coordinate
     with pytest.raises(ValueError, match="target_store and target_table_name"):
         orchestrate_read(store="Bronze", schema=None, table_name="orders", read_mode="incremental")
     coordinate_runtime.reader.assert_not_called()
+
+
+def test_finalize_projects_once_and_closed_retry_does_not_republish_run(runtime, monkeypatch):
+    """Fresh finalization synchronizes once; a closed-session retry never repeats Run persistence."""
+    owner = importlib.import_module("fabricops_kit.pipeline.finalize_pipeline")
+    session = setup_pipeline(pipeline_mode="Ungoverned")
+    orchestrate_read(store="Bronze", table_name="orders")
+    synchronize = Mock(wraps=shared.sync_pipeline_lineage)
+    monkeypatch.setattr(shared, "sync_pipeline_lineage", synchronize)
+    monkeypatch.setattr(owner, "sync_pipeline_lineage", synchronize)
+    first = owner.finalize_pipeline(session)
+    assert synchronize.call_count == 1
+    committed = runtime.writes.call_count
+    assert owner.finalize_pipeline(session) == first
+    assert synchronize.call_count == 2
+    assert runtime.writes.call_count == committed

@@ -2,26 +2,21 @@
 
 from __future__ import annotations
 
-from fabricops_kit.io.shared import get_spark_session, retry_delta_metadata
+from fabricops_kit.io.shared import get_spark_session
 
 import json
 from typing import Any
 
 from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_schemas import (
-    coerce_metadata_row_types,
-    encode_metadata_row,
-    metadata_table_physical_schema,
-    metadata_table_schema_registry,
-)
 from fabricops_kit.config.shared import is_table_not_found_error, resolve_fabric_context
-from fabricops_kit.io.shared import resolve_configured_lakehouse_table
 from fabricops_kit.pipeline.shared import (
     add_target_audit_fields,
     add_row_hash,
     filter_unpublished_rows,
     validate_target_row_hash,
     catalogue_authored_processing,
+    merge_catalogue_asset,
+    table_catalogue_observation,
     incremental_publication_scopes,
     record_pipeline_publication,
     resolve_catalogue_table_identity,
@@ -29,8 +24,6 @@ from fabricops_kit.pipeline.shared import (
     validated_processing,
     resolve_target_audit_fields,
 )
-
-CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 
 
 def _writer_scheduled_refresh(*, audit: dict[str, Any]) -> dict[str, Any]:
@@ -71,11 +64,6 @@ def _persist_target_processing(
     spark_session=None,
 ) -> None:
     """Persist the resolved target processing definition on its Catalogue table row."""
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
-        raise RuntimeError("Delta Lake merge support is required to persist target processing metadata.") from exc
-
     parameter_names = {
         "watermark_column",
         "key_columns",
@@ -85,6 +73,8 @@ def _persist_target_processing(
     parameters = {name: processing[name] for name in parameter_names if name in processing}
     runtime_context = {
         **dict(context or {}),
+        "config": config,
+        "scope_workspace_id": active_workspace_id,
         "activity_id": audit["_activity_id"],
         "workspace_id": audit["_workspace_id"],
         "notebook_id": audit["_notebook_id"],
@@ -97,76 +87,16 @@ def _persist_target_processing(
         committed_at=audit["_committed_at"],
         runtime_context=runtime_context,
     )
-    row = coerce_metadata_row_types(
-        CATALOGUE_TABLE,
-        {
-            "metadata_level": "table",
-            "table_id": str(identity["table_id"]),
-            "column_id": None,
-            "workspace_id": active_workspace_id,
-            "store_type": str(identity.get("store_type") or identity.get("store_kind") or "").lower(),
-            "layer": str(identity["store"]),
-            "schema_name": identity.get("schema"),
-            "table_name": str(identity["table_name"]),
-            "column_name": None,
-            "data_type": None,
-            "load_strategy": str(processing["load_strategy"]),
-            "load_strategy_parameters_json": parameters,
-            "writer_workspace_id": audit["_workspace_id"],
-            "writer_notebook_id": audit["_notebook_id"],
-            "writer_notebook_name": audit["_notebook_name"],
-            "scheduled_refresh_json": scheduled_refresh,
-            "profile_key_candidates_json": None,
-            "first_profiled_at": None,
-            "last_profiled_at": None,
-            "is_active": True,
-            **metadata_audit,
-        },
+    row = table_catalogue_observation(identity, context=runtime_context, dataframe=dataframe, audit=metadata_audit)
+    row.update(
+        load_strategy=str(processing["load_strategy"]),
+        load_strategy_parameters_json=parameters,
+        writer_workspace_id=audit["_workspace_id"],
+        writer_notebook_id=audit["_notebook_id"],
+        writer_notebook_name=audit["_notebook_name"],
+        scheduled_refresh_json=scheduled_refresh,
     )
-    spark_session = spark_session or dataframe.sparkSession
-    source = spark_session.createDataFrame([encode_metadata_row(CATALOGUE_TABLE, row)],
-        schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "Metadata",
-        CATALOGUE_TABLE,
-        metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        context={"config": config, "scope_workspace_id": active_workspace_id},
-    )
-    retry_delta_metadata(lambda: (
-        DeltaTable.forPath(spark_session, path).alias("target")
-        .merge(
-            source.alias("source"),
-            "target.workspace_id = source.workspace_id "
-            "AND target.metadata_level = 'table' "
-            "AND target.table_id = source.table_id "
-            "AND target.column_id IS NULL",
-        )
-        .whenMatchedUpdate(
-            set={
-                "store_type": "source.store_type",
-                "layer": "source.layer",
-                "schema_name": "source.schema_name",
-                "table_name": "source.table_name",
-                "load_strategy": "source.load_strategy",
-                "load_strategy_parameters_json": "source.load_strategy_parameters_json",
-                "writer_workspace_id": "source.writer_workspace_id",
-                "writer_notebook_id": "source.writer_notebook_id",
-                "writer_notebook_name": "source.writer_notebook_name",
-                "scheduled_refresh_json": "source.scheduled_refresh_json",
-                "is_active": "true",
-                "_committed_by": "source._committed_by",
-                "_committed_at": "source._committed_at",
-                "_workspace_id": "source._workspace_id",
-                "_workspace_name": "source._workspace_name",
-                "_notebook_id": "source._notebook_id",
-                "_notebook_name": "source._notebook_name",
-                "_metadata_lakehouse_name": "source._metadata_lakehouse_name",
-                "_activity_id": "source._activity_id",
-            }
-        )
-        .whenNotMatchedInsert(values={name: f"source.{name}" for name in row})
-        .execute()
-    ))
+    merge_catalogue_asset(row, context=runtime_context, spark_session=spark_session or dataframe.sparkSession)
 
 
 def _write_scope() -> dict[str, Any]:
@@ -239,11 +169,11 @@ def _target_has_rows(
 
 
 def _source_table_ids(values: list[str] | tuple[str, ...] | None) -> list[str]:
-    """Return unique canonical source identities explicitly owned by this target."""
+    """Return unique source participant identities associated with this target."""
     if not isinstance(values, list | tuple):
         raise ValueError(
-            "source_table_ids must identify the governed sources that feed this target. "
-            "FabricOps does not infer source ownership from activity-wide reads or Spark plans."
+            "source_table_ids must identify registered source participants for this target. "
+            "Use [] for a source-free publication; participation does not prove transformation dependencies."
         )
     source_ids: list[str] = []
     for value in values:
@@ -253,6 +183,17 @@ def _source_table_ids(values: list[str] | tuple[str, ...] | None) -> list[str]:
         if source_id not in source_ids:
             source_ids.append(source_id)
     return source_ids
+
+
+def _record_recovered_metrics(metrics, strategy):
+    """Report zero new business mutations for a verified previously published batch."""
+    metrics.update(rows_committed=0, measurement_source="already_applied")
+    if strategy == "scd1":
+        metrics.update(rows_inserted=0, rows_updated=0)
+    elif strategy == "scd2":
+        metrics.update(versions_inserted=0, versions_expired=0)
+    else:
+        metrics["rows_inserted"] = 0
 
 
 def pipeline_write(
@@ -281,7 +222,8 @@ def pipeline_write(
     the governed target once; FabricOps resolves its canonical identity and
     configured store, validates Engineering processing parameters independently
     of Data Contracts, and selects the physical publication path. It commits
-    Lineage and Source Observation metadata only after publication succeeds.
+    publication receipts and Source Observation metadata only after publication succeeds.
+    Orchestration records participation in METADATA_PIPELINE_RUN.operations.
 
     Parameters
     ----------
@@ -307,11 +249,10 @@ def pipeline_write(
         ``effective_column`` and may specify ``tracked_columns``.
     source_table_ids : list[str] or tuple[str, ...], optional
         Required for every call despite its None default. Use [] only for a
-        source-free target. Canonical identities of the exact sources that feed this
-        target publication. Supply identities returned by ``pipeline_read``.
-        FabricOps requires this explicit association because activity-wide
-        reads and Spark transformation plans cannot reliably identify which
-        source subset produced a particular target DataFrame.
+        source-free target. Canonical source participant identities associated with
+        this publication. Orchestration supplies successful Reads registered
+        so far. This association does not prove which sources contributed to
+        the target DataFrame; no transformation dependency is inferred.
     repartition_by : int or str or list[str] or tuple[str, ...], optional
         Optional Spark repartitioning passed to simple physical writes.
     options : dict, optional
@@ -391,17 +332,17 @@ def pipeline_write(
     8. Identify the exact prepared publication batch and its durable receipt.
     9. Perform physical processing unless the exact batch is verified in the target.
     10. Persist the resolved target load strategy and parameters on the
-        table-level ``METADATA_DATA_CATALOGUE`` row.
+        physical asset's ``METADATA_DATA_CATALOGUE`` row alongside its observed schema.
     11. Only after physical and Catalogue success, idempotently commit target
-        Lineage and accepted Source Observation/write-success metadata.
+        publication receipts and accepted Source Observation/write-success metadata.
     12. Return a small publication result with no hidden profiling state.
 
     Callers do not provide a store type, manually resolve ``table_id``, choose
     a Lakehouse versus Warehouse writer, construct processing scope or success
-    context, or manually commit Lineage or Source Observation metadata. Callers
-    provide only the canonical identities of the sources that actually feed
-    this target, rather than internal read or preparation dictionaries. This
-    keeps multiple target writes in one activity exact and independent.
+    context, or manually commit Run participation or Source Observation metadata. Callers
+    provide canonical source participant identities associated with this target,
+    rather than internal read or preparation dictionaries. Publication receipts
+    and accepted checkpoints remain target-specific.
 
     Overwrite replaces the entire target and Append All appends every incoming row,
     including duplicates. Identical content in a new full-read execution publishes
@@ -434,7 +375,7 @@ def pipeline_write(
     suppress a newly requested keyed merge. Warehouse writes also stage target-only
     publication receipts when no incremental or Source Drift observations exist;
     these receipt records never establish or advance a source watermark.
-    ``METADATA_PROCESSING_STATE.record_type`` distinguishes source observations,
+    Processing State’s ``record_type`` distinguishes source observations,
     incremental checkpoints, drift baselines and publication receipts. Checkpoints
     and baselines link to one typed receipt through publication_id; staged members
     and their receipt are acknowledged in one Delta merge.
@@ -588,6 +529,8 @@ def pipeline_write(
         from fabricops_kit.io.shared import repartition_dataframe_for_write
         prepared_df = repartition_dataframe_for_write(prepared_df, repartition_by)
         validate_processing_input(prepared_df, processing)
+        from fabricops_kit.pipeline.shared import capture_write_lineage
+        capture_write_lineage(prepared_df, context=context, table_id=target_table_id, write_mode=strategy)
         write_metrics.update(rows_committed=None, measurement_source="dry_run")
         return {
             "table_id": target_table_id, "strategy": strategy, "published": False,
@@ -707,13 +650,7 @@ def pipeline_write(
         )
 
         if batch.already_applied:
-            write_metrics.update(rows_committed=0, measurement_source="already_applied")
-            if strategy == "scd1":
-                write_metrics.update(rows_inserted=0, rows_updated=0)
-            elif strategy == "scd2":
-                write_metrics.update(versions_inserted=0, versions_expired=0)
-            else:
-                write_metrics["rows_inserted"] = 0
+            _record_recovered_metrics(write_metrics, strategy)
             if verbose:
                 label = "metadata-finalization recovery" if batch.finalization_recovery else "already-applied exact batch"
                 print(f"5. Physical publication → {label}; exact batch verified")
@@ -777,13 +714,8 @@ def pipeline_write(
                 physical_options["userMetadata"] = json.dumps(batch.receipt, sort_keys=True)
             success_context["publication_snapshot"] = batch.publication_snapshot
             stage_pipeline_write_observations(success_context)
-            write_metrics.update(rows_committed=0, measurement_source="already_applied")
-            if strategy == "scd1":
-                write_metrics.update(rows_inserted=0, rows_updated=0)
-            elif strategy == "scd2":
-                write_metrics.update(versions_inserted=0, versions_expired=0)
-            else:
-                write_metrics["rows_inserted"] = 0
+            _record_recovered_metrics(write_metrics, strategy)
+        record_pipeline_publication(target_table_id, "published", receipt=batch.receipt, context=context)
         # Receipt counts become committed metrics only after physical confirmation.
         # Keyed merges cannot infer business changes from their input cardinality.
         if (store_kind == "warehouse" and strategy in {"overwrite", "append_all", "append_new_only"}
@@ -794,6 +726,19 @@ def pipeline_write(
                 if strategy in {"append_all", "append_new_only"}:
                     write_metrics["rows_inserted"] = committed_rows
         try:
+            from fabricops_kit.io import read_lakehouse_table, read_warehouse_query
+            from fabricops_kit.io.shared import _quoted_warehouse_identifier
+
+            schema_context = {**io_context, "_spark_session": spark_session}
+            if store_kind == "lakehouse":
+                published_table = read_lakehouse_table(identity["table_name"], store=identity["store"],
+                    schema=identity.get("schema"), context=schema_context)
+            else:
+                schema_name = _quoted_warehouse_identifier(identity["schema"])
+                table_name = _quoted_warehouse_identifier(identity["table_name"])
+                published_table = read_warehouse_query(
+                    f"SELECT TOP (0) * FROM {schema_name}.{table_name}", store=identity["store"], context=schema_context,
+                )
             scheduled_refresh = _writer_scheduled_refresh(audit=audit)
             _persist_target_processing(
                 identity=identity,
@@ -802,7 +747,7 @@ def pipeline_write(
                 audit=audit,
                 config=config,
                 active_workspace_id=active_workspace_id,
-                dataframe=df,
+                dataframe=published_table,
                 context=context,
                 spark_session=spark_session,
             )
@@ -811,7 +756,7 @@ def pipeline_write(
 
             commit_pipeline_write_success(success_context)
             if verbose:
-                print("7. Success metadata → Lineage and accepted Source Observation state committed")
+                print("7. Success metadata → publication receipt and accepted Source Observation state committed")
                 print("Result → target published; checks and profiling remain explicit notebook steps.")
 
         except Exception as exc:

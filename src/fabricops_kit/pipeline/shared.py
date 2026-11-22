@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from fabricops_kit.io.shared import retry_delta_metadata
+from fabricops_kit.config.metadata_schemas import migrate_asset_references, has_retained_asset_workspaces, operation_physical_binding
+
+from fabricops_kit.io.shared import retry_delta_metadata, validate_metadata_merge, write_metadata_frame
 
 import hashlib
 import json
@@ -44,6 +46,7 @@ class PipelineExecutionPlan:
     evidence: dict = dataclass_field(default_factory=dict, repr=False, compare=False)
     results: list = dataclass_field(default_factory=list, repr=False, compare=False)
     simulations: list = dataclass_field(default_factory=list, repr=False, compare=False)
+    lineage: dict = dataclass_field(default_factory=dict, repr=False, compare=False)
 
     def __post_init__(self):
         """Reject unsupported execution authority at construction."""
@@ -108,7 +111,7 @@ def execution_result(context, table_id, *, stages=()):
     return {
         "execution_mode": plan.execution_mode, "execution_plan_id": plan.plan_id,
         "execution_workspace_id": plan.workspace_id,
-        "guardrail_outcomes": [dict(row) for row in plan.results if (row.get("source_id") or row.get("table_id")) == table_id],
+        "guardrail_outcomes": [dict(row) for row in plan.results if row.get("table_id") == table_id],
         "simulation_outcomes": list(plan.simulations),
         "selected_contract": ({"contract_id": contract["contract_id"],
                                "contract_version": contract["contract_version"]} if contract else None),
@@ -152,7 +155,7 @@ def _orchestration_status(result: Any) -> str:
     return "passed"
 
 
-def _run_orchestration_stage(*, operation: str, name: str, index: int, total: int, stage: str, function, verbose: bool, allow_blocked: bool = False):
+def run_orchestration_stage(*, operation: str, name: str, index: int, total: int, stage: str, function, verbose: bool, allow_blocked: bool = False):
     """Run one visible stage while retaining its original exception as the cause."""
     started = time.perf_counter()
     if verbose:
@@ -223,7 +226,7 @@ def _run_orchestration_stage(*, operation: str, name: str, index: int, total: in
             print(f"{operation} {name!r} stopped at {stage}. Later stages did not run.")
         failure = RuntimeError(f"{operation} {name!r} failed during {stage}. Root cause: {reason}{location}")
         for field_name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status",
-                           "recovery_paths", "resolved_path", "publication_status"):
+                           "recovery_paths", "resolved_path", "publication_status", "output_layout", "overflow_occurred", "overflow_reason"):
             if hasattr(exc, field_name):
                 setattr(failure, field_name, getattr(exc, field_name))
         raise failure from exc
@@ -256,13 +259,20 @@ from fabricops_kit.config.shared import (
 from fabricops_kit.io import read_lakehouse_table, read_warehouse_query, write_lakehouse_table
 from ..io.shared import (
     get_spark_session,
+    read_delta_path,
     resolve_configured_lakehouse_table,
+    write_delta_path,
     resolve_lakehouse_table_location,
     resolve_warehouse_table_location,
 )
 from ..config.audit import _audit_timestamp_value, build_runtime_audit_fields
-from ..config.shared import build_column_id, build_table_id, get_store
+from ..config.shared import build_column_id, build_table_id, get_store, resolve_asset_workspace_name
 from ..config.metadata_schemas import (
+    _require_catalogue_assets,
+    audit_schema_fields,
+    build_metadata_schema,
+    coerce_schema_row_types,
+    metadata_schema_type_name,
     coerce_metadata_row_types,
     encode_metadata_row,
     decode_metadata_row,
@@ -323,8 +333,8 @@ _TARGET_TECHNICAL_COLUMNS = {
 }
 
 
-_LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
-_PROCESSING_STATE_TABLE = "METADATA_PROCESSING_STATE"
+PROCESSING_STATE_SCHEMA = "misc"
+PROCESSING_STATE_TABLE = "PROCESSING_STATE"
 _CURRENT_FRESHNESS_EVIDENCE: dict[tuple[str, str, str], dict[str, Any]] = {}
 _PENDING_SOURCE_OBSERVATIONS: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
 _INCREMENTAL_SOURCE_SCOPES: dict[tuple[str, str, str, str], dict[str, Any]] = {}
@@ -459,7 +469,7 @@ def collect_freshness_evidence(parameters, *, dataframe=None, source=None, spark
                 "observed_at": datetime.now(UTC).isoformat(), "source": source,
                 "outcome": "unavailable", "latest_value": None}
     try:
-        if source.get("source_type") == "file":
+        if source.get("asset_type") == "FILE":
             selection_options = {"pathGlobFilter", "modifiedBefore", "modifiedAfter", "recursiveFileLookup", "ignoreMissingFiles", "ignoreCorruptFiles"}
             if selection_options.intersection(source.get("reader_options") or {}):
                 return {**evidence, "reason": "Reader selection options require reader-resolved file membership; metadata evidence is unavailable."}
@@ -564,79 +574,6 @@ def get_current_freshness_evidence(
     return _CURRENT_FRESHNESS_EVIDENCE[key]
 
 
-def lineage_id(*, activity_id: str, table_id: str, pipeline_role: str) -> str:
-    """Return the deterministic identity for pipeline participation."""
-    values = {
-        "activity_id": str(activity_id or "").strip(),
-        "table_id": str(table_id or "").strip(),
-        "pipeline_role": str(pipeline_role or "").strip().lower(),
-    }
-    if not values["activity_id"] or not values["table_id"]:
-        raise ValueError("activity_id and table_id must be non-empty strings.")
-    if values["pipeline_role"] not in {"source", "target"}:
-        raise ValueError("pipeline_role must be source or target.")
-    return hashlib.sha256(
-        json.dumps(values, separators=(",", ":"), sort_keys=True).encode("utf-8")
-    ).hexdigest()
-
-
-def persist_lineage_participation(
-    *,
-    table_id: str,
-    pipeline_role: str,
-    activity_id: str | None = None,
-    context: dict[str, Any] | None = None,
-) -> str:
-    """Upsert one canonical source or target participant for an activity."""
-    if not persistence_permitted(context):
-        raise RuntimeError("Dry Run cannot commit Lineage.")
-    config, active_workspace_id, resolved_context = resolve_fabric_context(context=context)
-    audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=resolved_context)
-    effective_activity_id = str(activity_id or audit["_activity_id"]).strip()
-    audit["_activity_id"] = effective_activity_id
-    identifier = lineage_id(
-        activity_id=effective_activity_id,
-        table_id=table_id,
-        pipeline_role=pipeline_role,
-    )
-    record = coerce_metadata_row_types(
-        _LINEAGE_TABLE,
-        {
-            "lineage_id": identifier,
-            "table_id": str(table_id).strip(),
-            "table_name": _CURRENT_TABLE_IDENTITIES.get(str(table_id), {}).get("table_name") or resolve_catalogue_table_identity(config, active_workspace_id, table_id, context=resolved_context).get("table_name"),
-            "workspace_id": active_workspace_id,
-            "pipeline_role": str(pipeline_role).strip().lower(),
-            **audit,
-        },
-    )
-    from ..config.metadata_schemas import metadata_table_schema_registry
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - Fabric/Delta runtime dependency
-        raise RuntimeError("Delta Lake merge support is required for idempotent METADATA_DATA_LINEAGE writes.") from exc
-    spark = get_spark_session(context=resolved_context)
-    frame = spark.createDataFrame([record], schema=metadata_table_schema_registry()[_LINEAGE_TABLE])
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "Metadata",
-        _LINEAGE_TABLE,
-        metadata_table_physical_schema(config, _LINEAGE_TABLE),
-        context=resolved_context,
-    )
-    (
-        retry_delta_metadata(lambda: DeltaTable.forPath(spark, path)
-        .alias("target")
-        .merge(
-            frame.alias("source"),
-            "target.workspace_id = source.workspace_id AND target.lineage_id = source.lineage_id",
-        )
-        .whenMatchedUpdateAll()
-        .whenNotMatchedInsertAll()
-        .execute())
-    )
-    return identifier
-
-
 def resolve_physical_table_identity(
     config: Any,
     active_workspace_id: str,
@@ -686,6 +623,7 @@ def resolve_physical_table_identity(
         )
     identity = {
         "table_id": build_table_id(store_kind, store_key, normalized_schema, normalized_table),
+        "asset_type": "TABLE",
         "store": store_key,
         "schema": normalized_schema,
         "table_name": normalized_table,
@@ -905,11 +843,8 @@ def build_profile_dataframe(df, *, exclude_columns=None):
 
 PROFILED_TABLE = "METADATA_DATA_PROFILED"
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
-LINEAGE_TABLE = "METADATA_DATA_LINEAGE"
 GUARDRAIL_RESULTS_TABLE = "METADATA_GUARDRAIL_RESULTS"
 DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
-
-
 
 
 # ---------------------------------------------------------------------------
@@ -917,34 +852,6 @@ DATA_CONTRACT_TABLE = "METADATA_DATA_CONTRACT"
 # ---------------------------------------------------------------------------
 
 
-
-
-
-
-
-
-def _result_status(result: Mapping[str, Any] | None) -> str:
-    """Return a normalized guardrail result status."""
-    return str(
-        (result or {}).get("status")
-        or (result or {}).get("freshness_status")
-        or (result or {}).get("stability_status")
-        or "not_run"
-    ).lower()
-
-
-
-def _result_reason(result: Mapping[str, Any] | None) -> str:
-    """Return the clearest human-readable reason from a result."""
-    if not result:
-        return ""
-    return str(
-        result.get("reason")
-        or result.get("message")
-        or result.get("freshness_message")
-        or result.get("stability_message")
-        or ""
-    )
 def observation_rows(dataframe: Any) -> list[dict[str, Any]]:
     """Return canonical observation rows as dictionaries."""
     values = dataframe.collect() if hasattr(dataframe, "collect") else dataframe
@@ -961,7 +868,7 @@ def _latest_source_target_observation(
     """Return the latest committed baseline for one source-to-target relationship."""
     candidates = [
         row
-        for row in _processing_state_rows(history)
+        for row in _processing_state_rows(history, workspace_id=workspace_id, target_table_id=target_table_id)
         if str(row.get("source_table_id") or "") == source_table_id
         and str(row.get("target_table_id") or "") == target_table_id
         and str(row.get("workspace_id") or "") == workspace_id
@@ -995,16 +902,6 @@ def _progress_key(value: Any, *, timestamp: bool = False) -> tuple[int, Any]:
                 )
             return (1, text)
         return (1, parsed.astimezone(UTC))
-
-
-def _looks_like_naive_timestamp(value: Any) -> bool:
-    """Recognize timestamp-shaped strings without assigning them a timezone."""
-    text = str(value or "")
-    try:
-        parsed = datetime.fromisoformat(text)
-    except ValueError:
-        return False
-    return parsed.tzinfo is None and ("T" in text or (len(text) >= 19 and text[10] == " "))
 
 
 def _watermark_timestamp(value: Any) -> str:
@@ -1192,20 +1089,16 @@ def source_snapshot_context(identity, *, context):
     physical = pipeline_physical_bindings({identity["table_id"]: identity},
         config=context["config"], workspace_id=plan.workspace_id)[identity["table_id"]]
     descriptor = {"workspace_id": plan.workspace_id, "table_id": identity["table_id"], "physical": physical}
-    return _metadata_hash(descriptor), descriptor
+    # Preserve released context hashes so the rename does not reset accepted history.
+    hash_physical = {"workspace_id": physical["asset_workspace_id"],
+                     **{key: value for key, value in physical.items() if key != "asset_workspace_id"}}
+    return _metadata_hash({**descriptor, "physical": hash_physical}), descriptor
 
 
 def _source_snapshot_state(context):
     """Keep source hash rows distributed and history independent of Pipeline ID."""
     from pyspark.sql import functions as F
-    try:
-        return read_lakehouse_table(_PROCESSING_STATE_TABLE, store="Metadata",
-            schema=metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE), context=context).where(
-                F.col("workspace_id") == context["execution_plan"].workspace_id)
-    except Exception as exc:
-        if not is_table_not_found_error(exc):
-            raise
-        return get_spark_session(context=context).createDataFrame([], metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
+    return read_processing_state(context=context).where(F.col("workspace_id") == context["execution_plan"].workspace_id)
 
 
 def _source_snapshot_keys(identity, context):
@@ -1214,7 +1107,7 @@ def _source_snapshot_keys(identity, context):
     contract = json.loads(plan.contracts_json).get(identity["table_id"])
     payload = (contract or {}).get("contract_payload") or {}
     if not payload and (contract or {}).get("contract_payload_json"):
-        payload = json.loads(contract["contract_payload_json"])
+        payload = migrate_asset_references(json.loads(contract["contract_payload_json"]))
     names = {column["column_id"]: column["column_name"] for column in payload.get("table", {}).get("columns", [])}
     for rule in payload.get("guardrails", []):
         if rule.get("guardrail_type") == "grain" and rule.get("is_active", True):
@@ -1321,17 +1214,16 @@ def compare_source_snapshot_evidence(current, previous, *, keyed):
 def _persist_source_snapshot(evidence, header, *, context):
     """Append immutable distributed row evidence, then its completeness manifest."""
     from pyspark.sql import functions as F
-    schema = metadata_table_schema_registry()[_PROCESSING_STATE_TABLE]
+    schema = processing_state_schema()
     row_fields = {**header, "record_type": "source_row_evidence", "snapshot_payload_json": None}
     identity = F.sha2(F.concat_ws(":", F.lit(header["observation_id"]), F.col("partition_value"), F.col("content_fingerprint")), 256)
     frame = evidence.select(*[
         (identity if field.name == "record_id" else F.col(field.name) if field.name in evidence.columns else
          F.lit(row_fields.get(field.name))).cast(field.dataType).alias(field.name) for field in schema])
-    write_lakehouse_table(frame, _PROCESSING_STATE_TABLE, store="Metadata",
-        schema=metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE), context=context, mode="append", options={"mergeSchema": "true"})
-    write_lakehouse_table(get_spark_session(context=context).createDataFrame([header], schema),
-        _PROCESSING_STATE_TABLE, store="Metadata", schema=metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE),
-        context=context, mode="append")
+    path = processing_state_path(context)
+    retry_delta_metadata(lambda: write_delta_path(frame, path, mode="append"))
+    manifest = get_spark_session(context=context).createDataFrame([header], schema)
+    retry_delta_metadata(lambda: write_delta_path(manifest, path, mode="append"))
 
 
 def _validated_source_snapshot(state, observation_id, *, context_key):
@@ -1490,8 +1382,7 @@ def source_drift_investigation_query(plan, source_id, *, evaluation_id=None):
     return ("from fabricops_kit import read_lakehouse_table\nfrom pyspark.sql import functions as F\n"
             f"diagnostics = read_lakehouse_table('METADATA_GUARDRAIL_RESULTS', store='Metadata', schema={schema!r})\n"
             "display(diagnostics.where(\n"
-            f"    (F.col('workspace_id') == {plan.workspace_id!r})\n"
-            f"    & (F.col('run_id') == {plan.plan_id!r})\n"
+            f"    (F.col('run_id') == {plan.plan_id!r})\n"
             f"    & ((F.col('table_id') == {source_id!r}) | (F.col('rule_type') == 'pipeline_observation'))\n"
             "    & (F.col('guardrail_type') == 'source_drift')\n"
             f"    & (F.get_json_object('result_payload_json', '$.pipeline_id') == {plan.pipeline_id!r})\n"
@@ -1512,7 +1403,7 @@ def evaluate_pipeline_source_drift(plan, *, verbose=False, spark_session=None):
             raise error
         return decision
     identities = json.loads(plan.participants_json)
-    source_ids = {tid for tid, identity in identities.items() if "source" in identity["roles"] and identity.get("source_type") != "file"}
+    source_ids = {tid for tid, identity in identities.items() if "source" in identity["roles"] and identity.get("asset_type") != "FILE"}
     observations = plan.evidence.get("source_drift_observations", {})
     missing = source_ids - set(observations)
     results = [observations[tid] for tid in sorted(source_ids & set(observations))]
@@ -1582,7 +1473,7 @@ def accept_pipeline_source_snapshots(plan, *, spark_session=None):
     identities = json.loads(plan.participants_json)
     observations = plan.evidence.get("source_drift_observations", {})
     expected_sources = {tid for tid, identity in identities.items()
-                        if "source" in identity["roles"] and identity.get("source_type") != "file"}
+                        if "source" in identity["roles"] and identity.get("asset_type") != "FILE"}
     expected_candidates = {tid for tid, row in observations.items() if row["status"] != "not_due"}
     if (set(observations) != expected_sources or expected_candidates != set(candidates)
             or any(not row.get("can_continue", True) or row["status"] == "observation_failed" for row in observations.values())):
@@ -1614,12 +1505,10 @@ def accept_pipeline_source_snapshots(plan, *, spark_session=None):
         records.extend([head, {**head, "record_id": _processing_state_id(head["record_id"], header["observation_id"], "acceptance"),
             "record_type": "source_snapshot_acceptance"}])
     spark = get_spark_session(spark_session, context=context)
-    frame = spark.createDataFrame(records, metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
-    _, _, _, path = resolve_configured_lakehouse_table("Metadata", _PROCESSING_STATE_TABLE,
-        metadata_table_physical_schema(context["config"], _PROCESSING_STATE_TABLE), context=context)
+    frame = spark.createDataFrame(records, processing_state_schema())
+    path = processing_state_path(context)
     target = DeltaTable.forPath(spark, path)
-    if target.detail().select("properties").first()["properties"].get("delta.isolationLevel") != "Serializable":
-        raise RuntimeError("Source baseline acceptance requires Serializable Processing State; run metadata setup before enabling Source Drift.")
+    validate_processing_state_isolation(target)
     parent = "get_json_object(source.snapshot_payload_json, '$.parent_observation_id')"
     same = f"target.observation_id <=> {parent}"
     values = {name: f"source.`{name}`" for name in frame.columns}
@@ -1643,6 +1532,24 @@ def accept_pipeline_source_snapshots(plan, *, spark_session=None):
         if len(accepted) != len(expected) or {row["record_id"]: row["observation_id"] for row in accepted} != expected:
             raise
     plan.evidence["source_snapshot_acceptance"] = {"status": "accepted", "source_ids": sorted(candidates)}
+
+
+def materialize_pipeline_write_snapshot(dataframe):
+    """Detach writer input and release both SQL and checkpoint caches on unpersist."""
+    snapshot = dataframe.localCheckpoint(eager=True)
+    checkpoint_rdd = snapshot._jdf.logicalPlan().rdd()
+    dataframe_unpersist = snapshot.unpersist
+
+    def release_snapshot(blocking=False):
+        dataframe_unpersist(blocking)
+        checkpoint_rdd.unpersist(blocking)
+        return snapshot
+
+    # DataFrame.unpersist() only addresses SQL cache-manager entries; a local
+    # checkpoint owns a separate persisted RDD. Keep the native caller-facing
+    # cleanup method while extending this snapshot instance to release both.
+    snapshot.unpersist = release_snapshot
+    return snapshot
 
 
 class PublicationBatch:
@@ -1714,7 +1621,6 @@ class PublicationBatch:
                             "committed_at": self.audit["_committed_at"].isoformat(), "input_rows": self.input_rows,
                             "run_id": source_observation_run_id(self.context),
                             "strategy": self.processing["load_strategy"]}
-            history_rows = []
             execution_id = source_observation_run_id(self.context) or str(self.audit["_activity_id"])
             journal = getattr(self.context.get("execution_plan"), "evidence", self.context)
             recoveries = journal.setdefault("publication_recoveries", {})
@@ -1722,33 +1628,26 @@ class PublicationBatch:
             alias = recoveries.get(alias_key)
             if alias and _accepts_publication_receipt(self, alias):
                 self.receipt, self.already_applied = alias, True
-            try:
-                history = read_lakehouse_table(
-                    _PROCESSING_STATE_TABLE, store="Metadata",
-                    schema=metadata_table_physical_schema(self.context["config"], _PROCESSING_STATE_TABLE),
-                    context=self.context,
-                )
-                receipts = []
-                history_rows = _processing_state_rows(history)
-                for row in history_rows:
-                    if (row.get("record_type") != "publication_receipt" or row.get("workspace_id") != self.context["scope_workspace_id"]
-                            or row.get("target_table_id") != self.identity["table_id"]):
-                        continue
-                    receipt = _publication_receipt(row, history_rows)
-                    if (receipt.get("batch_id") == batch_id or (
-                            self.execution_scoped
-                            and row.get("status") == "staged"
-                            and str(receipt.get("batch_id", "")).split(":", 1)[0] == content_id
-                        )) and receipt not in receipts:
-                        receipts.append(receipt)
-                for receipt in receipts:
-                    if _accepts_publication_receipt(self, receipt):
-                        self.receipt = receipt
-                        self.already_applied = True
-                        break
-            except Exception as exc:
-                if not is_table_not_found_error(exc):
-                    raise
+            history = read_processing_state(context=self.context)
+            receipts = []
+            history_rows = _processing_state_rows(history,
+                workspace_id=self.context["scope_workspace_id"], target_table_id=self.identity["table_id"])
+            for row in history_rows:
+                if (row.get("record_type") != "publication_receipt" or row.get("workspace_id") != self.context["scope_workspace_id"]
+                        or row.get("target_table_id") != self.identity["table_id"]):
+                    continue
+                receipt = _publication_receipt(row, history_rows)
+                if (receipt.get("batch_id") == batch_id or (
+                        self.execution_scoped
+                        and row.get("status") == "staged"
+                        and str(receipt.get("batch_id", "")).split(":", 1)[0] == content_id
+                    )) and receipt not in receipts:
+                    receipts.append(receipt)
+            for receipt in receipts:
+                if _accepts_publication_receipt(self, receipt):
+                    self.receipt = receipt
+                    self.already_applied = True
+                    break
             if not self.already_applied:
                 receipt = _find_applied_publication(
                     self.identity, batch_id, context=self.context, spark_session=self.dataframe.sparkSession,
@@ -1801,11 +1700,9 @@ class PublicationBatch:
             if receipt:
                 self.receipt = receipt
                 self.already_applied = True
-                history = read_lakehouse_table(
-                    _PROCESSING_STATE_TABLE, store="Metadata",
-                    schema=metadata_table_physical_schema(self.context["config"], _PROCESSING_STATE_TABLE), context=self.context,
-                )
-                self._freeze_publication_snapshot(_processing_state_rows(history))
+                history = read_processing_state(context=self.context)
+                self._freeze_publication_snapshot(_processing_state_rows(history,
+                    workspace_id=self.context["scope_workspace_id"], target_table_id=self.identity["table_id"]))
                 return
             raise RuntimeError(
                 "Physical publication did not establish the exact batch receipt; "
@@ -1814,19 +1711,10 @@ class PublicationBatch:
 
     def materialize_caller_snapshot(self, dataframe):
         """Detach the exact writer input and retain it until caller hand-off."""
-        snapshot = dataframe.localCheckpoint(eager=True)
-        checkpoint_rdd = snapshot._jdf.logicalPlan().rdd()
-        dataframe_unpersist = snapshot.unpersist
-
-        def release_snapshot(blocking=False):
-            dataframe_unpersist(blocking)
-            checkpoint_rdd.unpersist(blocking)
-            return snapshot
-
-        # DataFrame.unpersist() only addresses SQL cache-manager entries; a local
-        # checkpoint owns a separate persisted RDD. Keep the native caller-facing
-        # cleanup method while extending this snapshot instance to release both.
-        snapshot.unpersist = release_snapshot
+        fragment = capture_write_lineage(dataframe, context=self.context,
+            table_id=self.identity["table_id"], write_mode=self.processing["load_strategy"])
+        snapshot = materialize_pipeline_write_snapshot(dataframe)
+        bridge_write_snapshot(snapshot, fragment, context=self.context)
         self._pending_caller_snapshot = snapshot
         return self._pending_caller_snapshot
 
@@ -1950,24 +1838,112 @@ def _find_applied_publication(identity, batch_id, *, context, spark_session):
     return None
 
 
-def _processing_state_rows(history):
-    """Reject unsupported Preview layouts before interpreting any persisted progress."""
-    required = set(metadata_table_schema_registry()[_PROCESSING_STATE_TABLE].fieldNames()) - {"snapshot_payload_json"}
+def processing_state_schema():
+    """Build the physical schema shared by runtime and operator setup."""
+    return build_metadata_schema(
+        "Processing State",
+        [
+            ("record_id", "string", False),
+            ("record_type", "string", False),
+            ("status", "string", False),
+            ("observation_id", "string"),
+            ("run_id", "string"),
+            ("pipeline_id", "string"),
+            ("source_table_id", "string"),
+            ("source_table_name", "string"),
+            ("target_table_id", "string"),
+            ("target_table_name", "string"),
+            ("workspace_id", "string", False),
+            ("observed_at", "timestamp"),
+            ("accepted_at", "timestamp"),
+            ("partition_column", "string"),
+            ("change_column", "string"),
+            ("watermark_type", "string"),
+            ("partition_value", "string"),
+            ("row_count", "long"),
+            ("min_change_value", "string"),
+            ("max_change_value", "string"),
+            ("content_fingerprint", "string"),
+            ("is_present", "boolean"),
+            ("publication_id", "string"),
+            ("publication_batch_id", "string"),
+            ("publication_activity_id", "string"),
+            ("publication_at", "timestamp"),
+            ("publication_input_rows", "long"),
+            ("publication_strategy", "string"),
+            ("snapshot_payload_json", "string"),
+            *audit_schema_fields(),
+        ],
+    )
+
+
+def validate_processing_state_schema(schema):
+    """Check exact field names and types independently of Delta nullability."""
+    def fields_by_type(value):
+        return {field.name: metadata_schema_type_name(field.dataType) for field in value.fields}
+
+    if fields_by_type(schema) != fields_by_type(processing_state_schema()):
+        raise RuntimeError(
+            "Incompatible Processing State schema. Existing checkpoints and publication receipts are preserved."
+        )
+
+
+def validate_processing_state_isolation(target):
+    """Require Serializable isolation for concurrent Source Drift baseline acceptance."""
+    properties = target.detail().select("properties").first()["properties"]
+    if properties.get("delta.isolationLevel") != "Serializable":
+        raise RuntimeError(
+            "Processing State requires Serializable Delta isolation. "
+            "Set the existing store's delta.isolationLevel property to Serializable and rerun setup."
+        )
+
+
+def processing_state_path(context):
+    """Resolve the operational Delta table in the configured shared Lakehouse."""
+    store, _, _, path = resolve_configured_lakehouse_table(
+        "Metadata", PROCESSING_STATE_TABLE, PROCESSING_STATE_SCHEMA, context=context,
+    )
+    if not store.schema_enabled:
+        raise ValueError("The Processing State Lakehouse must be schema-enabled.")
+    return path
+
+
+def read_processing_state(*, context):
+    """Read Processing State, surfacing missing or inaccessible storage."""
+    path = processing_state_path(context)
+    try:
+        return read_delta_path(get_spark_session(context=context), path)
+    except Exception as exc:
+        raise RuntimeError(
+            f"Unable to read {PROCESSING_STATE_SCHEMA}.{PROCESSING_STATE_TABLE}. Check access "
+            f"in the configured Lakehouse and run setup_metadata_tables() if needed. {exc}"
+        ) from None
+
+
+def _processing_state_rows(history, *, workspace_id=None, target_table_id=None):
+    """Collect only one publication scope, retaining all its source and receipt members."""
+    required = set(processing_state_schema().fieldNames()) - {"snapshot_payload_json"}
     if hasattr(history, "columns") and (
         required - set(history.columns) or {"observation_status", "publication_payload_json"} & set(history.columns)
     ):
-        raise RuntimeError("Incompatible METADATA_PROCESSING_STATE schema; existing progress is preserved and cannot be inferred safely.")
+        raise RuntimeError("Incompatible Processing State schema; existing progress is preserved and cannot be inferred safely.")
     snapshot_types = {"source_snapshot", "source_row_evidence", "source_drift_baseline", "source_snapshot_acceptance"}
     if hasattr(history, "where"):
         from pyspark.sql import functions as F
+        if workspace_id is not None:
+            history = history.where(F.col("workspace_id") == workspace_id)
+        if target_table_id is not None:
+            history = history.where(F.col("target_table_id") == target_table_id)
         history = history.where(F.col("record_type").isNull() | ~F.col("record_type").isin(*snapshot_types))
-    rows = [row for row in observation_rows(history) if row.get("record_type") not in snapshot_types]
+    rows = [row for row in observation_rows(history) if row.get("record_type") not in snapshot_types
+            and (workspace_id is None or row.get("workspace_id") == workspace_id)
+            and (target_table_id is None or row.get("target_table_id") == target_table_id)]
     for row in rows:
         if ("observation_status" in row or "publication_payload_json" in row
                 or row.get("record_type") not in {"source_observation", "incremental_checkpoint", "drift_baseline", "full_source_baseline", "publication_receipt"}
                 or row.get("status") not in ({"observed"} if row.get("record_type") == "source_observation" else {"staged", "committed"})
                 or not row.get("record_id")):
-            raise RuntimeError("Incompatible or invalid METADATA_PROCESSING_STATE record; existing progress is preserved and cannot be inferred safely.")
+            raise RuntimeError("Incompatible or invalid Processing State record; existing progress is preserved and cannot be inferred safely.")
     return rows
 
 
@@ -2061,9 +2037,9 @@ def _physical_target_has_publication(
 
 
 def _merge_source_observation_records(
-    records: list[dict[str, Any]], *, config: Any, context: Mapping[str, Any]
+    records: list[dict[str, Any]], *, context: Mapping[str, Any]
 ) -> None:
-    """Idempotently merge typed Processing State records at the configured metadata target."""
+    """Idempotently merge typed Processing State records at the configured Lakehouse table path."""
     if not records or not persistence_permitted(context):
         return
     try:
@@ -2073,11 +2049,8 @@ def _merge_source_observation_records(
             "Delta Lake merge support is required for idempotent Source Observation commits."
         ) from exc
     spark = get_spark_session(context=context)
-    frame = spark.createDataFrame(records, schema=metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
-    _store, _table, _schema, path = resolve_configured_lakehouse_table(
-        "Metadata", _PROCESSING_STATE_TABLE,
-        metadata_table_physical_schema(config, _PROCESSING_STATE_TABLE), context=context,
-    )
+    frame = spark.createDataFrame(records, schema=processing_state_schema())
+    path = processing_state_path(context)
     target = DeltaTable.forPath(spark, path)
     _processing_state_rows(target.toDF().limit(0))
     _processing_state_rows(records)
@@ -2097,7 +2070,7 @@ def _recover_completed_source_observations(
     source_table_id: str, target_table_id: str,
 ) -> list[dict[str, Any]]:
     """Accept an entire staged publication in one Delta transaction after verification."""
-    rows = _processing_state_rows(history)
+    rows = _processing_state_rows(history, workspace_id=active_workspace_id, target_table_id=target_table_id)
     publication_ids = {row.get("publication_id") for row in rows
                        if row.get("workspace_id") == active_workspace_id and row.get("source_table_id") == source_table_id
                        and row.get("target_table_id") == target_table_id and row.get("status") == "staged"}
@@ -2119,7 +2092,7 @@ def _recover_completed_source_observations(
     if recovered and not persistence_permitted(context):
         context["execution_plan"].simulations.append({"check": "Source Observation recovery", "outcome": "simulated",
                                                     "source_table_id": source_table_id, "target_table_id": target_table_id})
-    _merge_source_observation_records(recovered, config=config, context=context)
+    _merge_source_observation_records(recovered, context=context)
     if recovered:
         context.setdefault("_fabricops_source_observation_recovery", []).append({
             "source_table_id": source_table_id, "target_table_id": target_table_id,
@@ -2165,33 +2138,21 @@ def resolve_incremental_source_scope(
     current = observation_rows(observation)
     if not current:
         raise ValueError(f"Current source observation for {source_table_id!r} is empty.")
-    try:
-        history = read_lakehouse_table(
-            _PROCESSING_STATE_TABLE,
-            store="Metadata",
-            schema=metadata_table_physical_schema(config, _PROCESSING_STATE_TABLE),
-            context=context,
-        )
-        history = _recover_completed_source_observations(
-            history,
-            config=config,
-            active_workspace_id=active_workspace_id,
-            context=context,
-            source_table_id=source_table_id,
-            target_table_id=target_table_id,
-        )
-        previous = _latest_source_target_observation(
-            history,
-            source_table_id=source_table_id,
-            target_table_id=target_table_id,
-            workspace_id=active_workspace_id,
-        )
-    except Exception as exc:
-        if not is_table_not_found_error(exc):
-            raise RuntimeError(
-                f"Unable to load Source Observation history for {source_table_id!r}: {exc}"
-            ) from exc
-        previous = []
+    history = read_processing_state(context=context)
+    history = _recover_completed_source_observations(
+        history,
+        config=config,
+        active_workspace_id=active_workspace_id,
+        context=context,
+        source_table_id=source_table_id,
+        target_table_id=target_table_id,
+    )
+    previous = _latest_source_target_observation(
+        history,
+        source_table_id=source_table_id,
+        target_table_id=target_table_id,
+        workspace_id=active_workspace_id,
+    )
 
     first = current[0]
     partition_column = str(first.get("partition_column") or "").strip()
@@ -2308,8 +2269,6 @@ def incremental_publication_scopes(
     }
 
 
-
-
 def snapshot_pipeline_write_observations(*, workspace_id, activity_id, target_table_id, source_table_ids, context=None):
     """Freeze source evidence so later reads cannot change a publication's checkpoint."""
     return {
@@ -2361,11 +2320,11 @@ def _pipeline_write_state_records(success_context, *, audit, active_workspace_id
                     "source_table_id": source_id, "source_table_name": source_name,
                     "run_id": source_observation_run_id(context),
                     "observed_at": row.get("observed_at") or row.get("_committed_at")})
-    return [coerce_metadata_row_types(_PROCESSING_STATE_TABLE, row) for row in records]
+    return [coerce_schema_row_types(processing_state_schema(), row) for row in records]
 
 
 def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[dict[str, Any]]:
-    """Commit target Lineage and acknowledge the publication's original source members."""
+    """Acknowledge the publication's original source members; Run owns participation."""
     if not isinstance(success_context, Mapping):
         raise ValueError("success_context must be returned by write_pipeline_prep().")
     target_table_id = str(success_context.get("target_table_id") or "").strip()
@@ -2380,20 +2339,7 @@ def commit_pipeline_write_success(success_context: Mapping[str, Any]) -> list[di
     audit["_activity_id"] = activity_id
     snapshot = success_context["observation_snapshot"]
     records = _pipeline_write_state_records(success_context, audit=audit, active_workspace_id=active_workspace_id, status="committed")
-    for source_table_id in source_table_ids:
-        persist_lineage_participation(
-            table_id=source_table_id,
-            pipeline_role="source",
-            activity_id=activity_id,
-            context=context,
-        )
-    persist_lineage_participation(
-        table_id=target_table_id,
-        pipeline_role="target",
-        activity_id=activity_id,
-        context=context,
-    )
-    _merge_source_observation_records(records, config=config, context=context)
+    _merge_source_observation_records(records, context=context)
     record_pipeline_publication(target_table_id, "committed", receipt=success_context.get("publication"), context=context)
     for source_table_id in source_table_ids:
         key = (active_workspace_id, source_observation_run_id(context) or activity_id, source_table_id, target_table_id)
@@ -2415,7 +2361,7 @@ def stage_pipeline_write_observations(success_context: Mapping[str, Any]) -> lis
     audit = build_pipeline_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)
     audit["_activity_id"] = activity_id
     records = _pipeline_write_state_records(success_context, audit=audit, active_workspace_id=active_workspace_id, status="staged")
-    _merge_source_observation_records(records, config=config, context=context)
+    _merge_source_observation_records(records, context=context)
     return records
 
 
@@ -2620,7 +2566,6 @@ def _bucket_column(dataframe, *, column_name, parameters):
     return dataframe.withColumn(column_name, F.when(value.isNull(), F.lit(None)).otherwise(bucket))
 
 
-
 def check_sensitive_data_rules(
     dataframe,
     *,
@@ -2750,6 +2695,14 @@ def check_sensitive_data_rules(
         raise
 
 
+def _guardrail_workspace_fields(context, table_id, active_workspace_id):
+    binding = ((context or {}).get("_pipeline_bindings") or {}).get(table_id)
+    return {
+        "asset_workspace_id": str(binding["asset_workspace_id"]).lower() if binding else None,
+        "execution_workspace_id": None if binding else active_workspace_id,
+    }
+
+
 def write_guardrail_result_row(
     *,
     spark_session: Any,
@@ -2809,18 +2762,19 @@ def write_guardrail_result_row(
                     break
         except Exception:
             rule_context = {}
+    asset_identity = str(table_id or result.get("table_id") or "").strip()
     row = {
         "guardrail_result_id": str(uuid4()),
         "guardrail_rule_id": guardrail_rule_id,
         "guardrail_version": guardrail_version,
-        "table_id": None if str(table_id).startswith("file:") else str(table_id or result.get("table_id") or "").strip(),
-        "source_id": table_id if str(table_id).startswith("file:") else None,
+        "table_id": asset_identity,
+        "asset_type": "FILE" if asset_identity.startswith("file:") else "TABLE",
         "table_name": str(table_name or "").strip(),
         "contract_id": str(contract_id or result.get("contract_id") or "").strip(),
         "contract_version": int(contract_version or result.get("contract_version") or 0),
         "execution_type": resolved_execution_type,
         "run_id": resolved_run_id,
-        "workspace_id": active_workspace_id,
+        **_guardrail_workspace_fields(context, asset_identity, active_workspace_id),
         "status": str(result.get("status") or "not_run"),
         "can_continue": bool(result.get("can_continue", True)),
         "severity": str(result.get("severity") or "blocking"),
@@ -2864,8 +2818,6 @@ _ACTIVE_RULE_REVIEW_STATUSES = {"authored", "self_approved", "governance_approve
 _BYPASS_POST_REVIEW_WARNING = "Rule is active through approval bypass and requires governance post-review."
 
 
-
-
 STANDARD_DQ_RULE_TYPES = ("completeness", "uniqueness", "value_set", "range", "pattern")
 TABLE_DQ_RULE_TYPES = (
     "column_relationship", "conditional_completeness", "conditional_values",
@@ -2891,220 +2843,6 @@ def dq_tolerance_parameter(rule_type: str, mode: str = "") -> str | None:
     return None
 
 DQ_COMPARISON_OPERATORS = ("=", "!=", ">", ">=", "<", "<=")
-
-_COMPARISON_SCOPES = {"complete", "partitions", "partial"}
-
-def _is_spark_dataframe(dataframe) -> bool:
-    """Return whether a value exposes the Spark DataFrame contract used here."""
-    return dataframe is not None and hasattr(dataframe, "sparkSession") and hasattr(dataframe, "schema")
-
-def _local_source_rows(dataframe) -> list[dict]:
-    """Return local row mappings without accepting Spark DataFrames."""
-    if _is_spark_dataframe(dataframe):
-        raise TypeError("Spark DataFrames must use the distributed changes implementation")
-    if dataframe is None:
-        return []
-    rows = [dataframe] if isinstance(dataframe, dict) else dataframe
-    return [_row_to_dict(row) for row in rows]
-
-def _stable_source_value(value):
-    if isinstance(value, datetime | date):
-        return value.isoformat()
-    if isinstance(value, Decimal):
-        return str(value)
-    if isinstance(value, dict):
-        return {str(key): _stable_source_value(value[key]) for key in sorted(value, key=str)}
-    if isinstance(value, (list, tuple)):
-        return [_stable_source_value(item) for item in value]
-    return value
-
-def _source_hash(payload) -> str:
-    encoded = json.dumps(_stable_source_value(payload), sort_keys=True, separators=(",", ":"), default=str)
-    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
-
-def _validate_changes_configuration(comparison_scope, refresh_days):
-    scope = str(comparison_scope).strip().lower()
-    if scope not in _COMPARISON_SCOPES:
-        raise ValueError("comparison_scope must be one of: complete, partitions, partial")
-    if isinstance(refresh_days, bool):
-        raise ValueError("refresh_days must be a non-negative integer")
-    try:
-        window_days = int(refresh_days)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("refresh_days must be a non-negative integer") from exc
-    if window_days < 0:
-        raise ValueError("refresh_days must be a non-negative integer")
-    return scope, window_days
-
-def _partition_identity(row, partitions):
-    return tuple(row.get(column) for column in partitions) if partitions else ("__FULL_SOURCE__",)
-
-def _validate_local_logical_keys(rows, keys):
-    seen = set()
-    for row in rows:
-        identity = tuple(row.get(column) for column in keys)
-        if any(value is None for value in identity):
-            raise ValueError("logical key columns must not contain null values")
-        key_hash = _source_hash(identity)
-        if key_hash in seen:
-            raise ValueError("logical key columns must uniquely identify rows")
-        seen.add(key_hash)
-
-def _local_partition_observations(rows, partitions, range_column, all_columns):
-    grouped = {}
-    for row in rows:
-        grouped.setdefault(_partition_identity(row, partitions), []).append(row)
-    observations = []
-    for partition, members in sorted(grouped.items(), key=lambda item: str(item[0])):
-        values = [row.get(range_column) for row in members if range_column and row.get(range_column) is not None]
-        row_hashes = sorted(_source_hash([(column, row.get(column)) for column in all_columns]) for row in members)
-        observations.append({
-            "partition": dict(zip(partitions, partition, strict=True)) if partitions else {},
-            "row_count": len(members),
-            "min_value": _stable_source_value(min(values)) if values else None,
-            "max_value": _stable_source_value(max(values)) if values else None,
-            "fingerprint": _source_hash(row_hashes),
-            "_partition_id": _source_hash(partition),
-        })
-    return observations
-
-def _changed_partition_sets(current_observations, previous_observations, scope):
-    current = {item["_partition_id"]: item for item in current_observations}
-    previous = {item["_partition_id"]: item for item in previous_observations}
-    changed = {key for key in current.keys() & previous.keys() if current[key]["fingerprint"] != previous[key]["fingerprint"]}
-    new = current.keys() - previous.keys()
-    missing = previous.keys() - current.keys() if scope == "complete" else set()
-    return changed, set(new), set(missing)
-
-def _classify_change_date(value, recent_start):
-    observed = _coerce_date(value)
-    return "recent" if observed is not None and observed >= recent_start else "historical"
-
-def _local_row_comparison(current, previous, *, relevant_current_partitions, relevant_previous_partitions,
-                          partitions, keys, content_columns, range_column, scope, recent_start):
-    current = [row for row in current if _source_hash(_partition_identity(row, partitions)) in relevant_current_partitions]
-    previous = [row for row in previous if _source_hash(_partition_identity(row, partitions)) in relevant_previous_partitions]
-
-    def keyed(rows):
-        output = {}
-        for row in rows:
-            identity = tuple(row.get(column) for column in keys)
-            if any(value is None for value in identity):
-                raise ValueError("logical key columns must not contain null values")
-            key_hash = _source_hash(identity)
-            if key_hash in output:
-                raise ValueError("logical key columns must uniquely identify rows")
-            output[key_hash] = (row, _source_hash([(column, row.get(column)) for column in content_columns]))
-        return output
-
-    current_by_key, previous_by_key = keyed(current), keyed(previous)
-    inserted = sorted(set(current_by_key) - set(previous_by_key))
-    shared = set(current_by_key) & set(previous_by_key)
-    updated = sorted(key for key in shared if current_by_key[key][1] != previous_by_key[key][1])
-    deletion_allowed = scope in {"complete", "partitions"}
-    deleted = sorted(set(previous_by_key) - set(current_by_key)) if deletion_allowed else []
-    changes = {"inserted": inserted, "updated": updated, "deleted": deleted}
-    recent, historical = [], []
-    for change_type, hashes in changes.items():
-        source = previous_by_key if change_type == "deleted" else current_by_key
-        for key_hash in hashes:
-            classified = {"key_hash": key_hash, "change_type": change_type}
-            if range_column:
-                target = recent if _classify_change_date(source[key_hash][0].get(range_column), recent_start) == "recent" else historical
-                target.append(classified)
-    return changes, recent, historical
-
-def _spark_column(name):
-    from pyspark.sql import functions as F
-    return F.col(f"`{str(name).replace('`', '``')}`")
-
-def _spark_canonical_hash(columns):
-    from pyspark.sql import functions as F
-    struct = F.struct(*[_spark_column(column).alias(str(column)) for column in columns])
-    return F.sha2(F.to_json(struct, {"ignoreNullFields": "false"}), 256)
-
-def _validate_spark_logical_keys(dataframe, keys):
-    from functools import reduce
-    from pyspark.sql import functions as F
-    null_key = reduce(lambda left, right: left | right, [_spark_column(column).isNull() for column in keys])
-    if dataframe.filter(null_key).limit(1).count():
-        raise ValueError("logical key columns must not contain null values")
-    if dataframe.groupBy(*keys).count().filter(F.col("count") > 1).limit(1).count():
-        raise ValueError("logical key columns must uniquely identify rows")
-
-def _spark_partition_frame(dataframe, partitions, range_column, all_columns):
-    from pyspark.sql import functions as F
-    partition_id = _spark_canonical_hash(partitions) if partitions else F.lit(_source_hash(("__FULL_SOURCE__",)))
-    row_hash = _spark_canonical_hash(all_columns)
-    prepared = dataframe.withColumn("__fabricops_partition_id", partition_id).withColumn("__fabricops_row_hash", row_hash)
-    grouping = ["__fabricops_partition_id", *partitions]
-    aggregates = [
-        F.count(F.lit(1)).alias("row_count"),
-        F.min("__fabricops_row_hash").alias("__min_hash"),
-        F.max("__fabricops_row_hash").alias("__max_hash"),
-        F.sum(F.xxhash64("__fabricops_row_hash").cast("decimal(38,0)")).alias("__hash_sum"),
-    ]
-    if range_column:
-        aggregates.extend([F.min(_spark_column(range_column)).alias("min_value"), F.max(_spark_column(range_column)).alias("max_value")])
-    grouped = prepared.groupBy(*grouping).agg(*aggregates)
-    grouped = grouped.withColumn(
-        "fingerprint",
-        F.sha2(F.concat_ws("|", F.col("row_count"), F.col("__min_hash"), F.col("__max_hash"), F.col("__hash_sum")), 256),
-    )
-    return prepared.drop("__fabricops_row_hash"), grouped
-
-def _collect_spark_observations(grouped, partitions):
-    from pyspark.sql import functions as F
-    rows = grouped.select("__fabricops_partition_id", *partitions, "row_count", "min_value" if "min_value" in grouped.columns else F.lit(None).alias("min_value"), "max_value" if "max_value" in grouped.columns else F.lit(None).alias("max_value"), "fingerprint").collect()
-    return [{
-        "partition": {column: _stable_source_value(row[column]) for column in partitions},
-        "row_count": row["row_count"],
-        "min_value": _stable_source_value(row["min_value"]),
-        "max_value": _stable_source_value(row["max_value"]),
-        "fingerprint": row["fingerprint"],
-        "_partition_id": row["__fabricops_partition_id"],
-    } for row in rows]
-
-def _spark_row_comparison(current, previous, *, relevant_current_partitions, relevant_previous_partitions,
-                          keys, content_columns, range_column, scope, recent_start, include_row_changes):
-    from pyspark.sql import functions as F
-    current = current.filter(F.col("__fabricops_partition_id").isin(sorted(relevant_current_partitions)))
-    previous = previous.filter(F.col("__fabricops_partition_id").isin(sorted(relevant_previous_partitions)))
-    current = current.withColumn("key_hash", _spark_canonical_hash(keys)).withColumn("non_key_hash", _spark_canonical_hash(content_columns))
-    previous = previous.withColumn("key_hash", _spark_canonical_hash(keys)).withColumn("non_key_hash", _spark_canonical_hash(content_columns))
-    for dataframe in (current, previous):
-        if dataframe.groupBy("key_hash").count().filter(F.col("count") > 1).limit(1).count():
-            raise ValueError("logical key columns must uniquely identify rows")
-    current_rows = current.select("key_hash", "non_key_hash", *([_spark_column(range_column).alias("range_value")] if range_column else [F.lit(None).alias("range_value")]))
-    previous_rows = previous.select("key_hash", "non_key_hash", *([_spark_column(range_column).alias("range_value")] if range_column else [F.lit(None).alias("range_value")]))
-    joined = current_rows.alias("c").join(previous_rows.alias("p"), "key_hash", "full_outer")
-    deletion_allowed = scope in {"complete", "partitions"}
-    classified = joined.withColumn("change_type", F.when(F.col("p.non_key_hash").isNull(), "inserted").when(F.col("c.non_key_hash").isNull() & F.lit(deletion_allowed), "deleted").when(F.col("c.non_key_hash") != F.col("p.non_key_hash"), "updated"))
-    classified = classified.filter(F.col("change_type").isNotNull())
-    change_date = F.coalesce(F.col("c.range_value"), F.col("p.range_value")).cast("date")
-    classified = classified.withColumn("age_class", F.when(change_date >= F.lit(recent_start), "recent").otherwise("historical") if range_column else F.lit(None).cast("string"))
-    counts = {row["change_type"]: row["count"] for row in classified.groupBy("change_type").count().collect()}
-    ages = {row["age_class"]: row["count"] for row in classified.filter(F.col("age_class").isNotNull()).groupBy("age_class").count().collect()}
-    row_changes = {"inserted": [], "updated": [], "deleted": [], "recent": [], "historical": []}
-    if include_row_changes:
-        for row in classified.select("key_hash", "change_type", "age_class").collect():
-            row_changes[row["change_type"]].append(row["key_hash"])
-            if row["age_class"]:
-                row_changes[row["age_class"]].append({"key_hash": row["key_hash"], "change_type": row["change_type"]})
-    return counts, ages, row_changes
-
-def _strip_internal_observation_fields(observations):
-    return [{key: value for key, value in item.items() if not key.startswith("_")} for item in observations]
-
-def _changes_content_columns(columns, keys, non_key_columns):
-    """Resolve the business content columns used for comparison."""
-    if non_key_columns is not None:
-        return tuple(non_key_columns)
-    return tuple(
-        column
-        for column in columns
-        if column not in keys
-    )
 
 
 def _rule_review_status(row: dict) -> str:
@@ -3157,7 +2895,7 @@ def _select_table_guardrail_rule(rules_df, *, guardrail_type: str, dataset_name:
 def _contract_payload(row: dict[str, Any]) -> dict[str, Any]:
     """Return and minimally validate one frozen Data Contract payload."""
     try:
-        payload = json.loads(str(row.get("contract_payload_json") or ""))
+        payload = migrate_asset_references(json.loads(str(row.get("contract_payload_json") or "")))
     except (TypeError, json.JSONDecodeError) as exc:
         raise ValueError("Active Data Contract contract_payload_json is invalid JSON.") from exc
     contract = payload.get("contract") if isinstance(payload, dict) else None
@@ -3171,7 +2909,6 @@ def _contract_payload(row: dict[str, Any]) -> dict[str, Any]:
     if str(table.get("table_id") or "") != str(row.get("table_id") or ""):
         raise ValueError("Active Data Contract payload table_id does not match its version row.")
     return payload
-
 
 
 def resolve_data_contract_version(
@@ -3217,7 +2954,7 @@ def resolve_data_contract_version(
             f"Data Contract integrity error: {contract_id!r} version {requested_version} has duplicate version rows."
         )
     row = dict(matches[0])
-    if (row.get("source_id") or str(row.get("table_id") or "")) != table_id:
+    if (row.get("table_id") or str(row.get("table_id") or "")) != table_id:
         raise ValueError(
             f"Data Contract {contract_id!r} version {requested_version} does not belong to table_id {table_id!r}."
         )
@@ -3250,7 +2987,7 @@ def prepare_pipeline_execution(table_ids, *, execution_plan, spark_session=None)
         verify_governed_plan(plan, spark_session=spark_session)
     for table_id in identities:
         contract = context["_pipeline_contracts"].get(table_id)
-        if identities[table_id].get("source_type") == "file" and contract is not None:
+        if identities[table_id].get("asset_type") == "FILE" and contract is not None:
             payload = contract.get("contract_payload") or _contract_payload(contract)
             if payload.get("source") != file_participant_source(identities[table_id]):
                 raise ValueError("File source or reader options differ from the exact frozen contract.")
@@ -3279,7 +3016,7 @@ def source_guardrail_results(context, sources):
     outcomes = []
     for source in sources:
         table_id = participant_id(source)
-        identity_field = "source_id" if source.get("source_type") == "file" else "table_id"
+        identity_field = "table_id"
         contract = context["_pipeline_contracts"].get(table_id)
         if contract is None:
             continue
@@ -3297,8 +3034,8 @@ def source_guardrail_results(context, sources):
                         return False
                     if scope not in {"read_full", "read_incremental_batch"}:
                         return False
-                return all(row.get(key) == value for key, value in {
-                    identity_field: table_id, "contract_id": contract["contract_id"],
+                return (row.get("table_id")) == table_id and all(row.get(key) == value for key, value in {
+                    "contract_id": contract["contract_id"],
                     "contract_version": contract["contract_version"], "guardrail_type": kind,
                     "guardrail_rule_id": rule["guardrail_rule_id"],
                     "guardrail_version": rule.get("guardrail_version", 1),
@@ -3375,13 +3112,14 @@ def resolve_catalogue_table_id(
         context={"config": config, "scope_workspace_id": active_workspace_id, "_spark_session": spark_session},
     )
     expected = tuple(str(value or "").strip().lower() for value in (store_type, layer, schema_name, table_name))
+    physical_workspace_id = get_store(config, active_workspace_id, layer).workspace_id.lower()
     matches = []
     for raw in frame.collect():
         row = _row_to_dict(raw)
         actual = tuple(str(row.get(name) or "").strip().lower() for name in ("store_type", "layer", "schema_name", "table_name"))
         if (
-            str(row.get("workspace_id") or "") == active_workspace_id
-            and (str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id"))
+            str(row.get("asset_workspace_id") or "").lower() == physical_workspace_id
+            and row.get("asset_type") == "TABLE"
             and row.get("is_active") is not False
             and actual == expected
         ):
@@ -3404,13 +3142,14 @@ def resolve_catalogue_table_identity(
     *,
     spark_session=None,
     context: Mapping[str, Any] | None = None,
+    physical_workspace_id: str | None = None,
 ) -> dict[str, Any]:
     """Resolve one active registered Catalogue table by canonical table identity."""
     canonical_id = str(table_id or "").strip()
     if not canonical_id:
         raise ValueError("table_id must be a non-empty canonical FabricOps table identity.")
     cache = (context or {}).get("_pipeline_identities")
-    if cache is not None and canonical_id in cache:
+    if physical_workspace_id is None and cache is not None and canonical_id in cache:
         return cache[canonical_id]
     frame = read_lakehouse_table(
         CATALOGUE_TABLE,
@@ -3423,19 +3162,26 @@ def resolve_catalogue_table_identity(
         },
     )
     matches = []
+    scope = str((context or {}).get("scope_workspace_id") or active_workspace_id)
     if hasattr(frame, "where"):
         from pyspark.sql import functions as F
-        frame = frame.where((F.col("table_id") == canonical_id) & (F.col("workspace_id") == active_workspace_id) & (F.col("metadata_level") == "table"))
+        frame = frame.where((F.col("table_id") == canonical_id) & (F.col("asset_type") == "TABLE"))
     for raw in frame.collect():
-        row = decode_metadata_row(CATALOGUE_TABLE, _row_to_dict(raw))
-        if (
-            str(row.get("workspace_id") or "") == active_workspace_id
-            and str(row.get("table_id") or "").strip() == canonical_id
-            and str(row.get("metadata_level") or "").strip().lower() == "table"
-            and not str(row.get("column_id") or "").strip()
-            and row.get("is_active") is not False
-        ):
-            matches.append(row)
+        row = _row_to_dict(raw)
+        if row.get("asset_type") != "TABLE" or row.get("table_id") != canonical_id or row.get("is_active") is False:
+            continue
+        if physical_workspace_id is not None:
+            physical = physical_workspace_id
+        else:
+            try:
+                store = get_store(config, scope, str(row.get("layer") or ""))
+                physical = store.workspace_id
+            except ValueError:
+                continue
+        if str(row.get("asset_workspace_id") or "").lower() == physical.lower():
+            if physical_workspace_id is None and row.get("item_id") not in (None, store.item_id):
+                raise ValueError(f"Configured store item disagrees with Catalogue TABLE {canonical_id!r} in {physical!r}.")
+            matches.append(decode_metadata_row(CATALOGUE_TABLE, row))
     if not matches:
         raise ValueError(
             f"No active registered Catalogue table exists for table_id {canonical_id!r} "
@@ -3468,7 +3214,7 @@ def resolve_catalogue_table_identity(
         "table_name": str(row["table_name"]).strip(),
     }
 
-    if cache is not None:
+    if physical_workspace_id is None and cache is not None:
         cache[canonical_id] = identity
     return identity
 
@@ -3931,7 +3677,6 @@ def select_table_guardrail_rule(rules_df, *, guardrail_type: str, table_id: str,
     )
 
 
-
 def _apply_bypass_post_review_warning(result: dict, rule: dict | None) -> dict:
     if rule and _rule_review_status(rule) == "active_pending_governance_review":
         reason = str(result.get("reason") or result.get("message") or "")
@@ -4015,11 +3760,6 @@ def _actual_schema(df) -> tuple[list[str], dict[str, str]]:
 
     columns = [str(column) for column in getattr(df, "columns", [])]
     return columns, {}
-
-
-
-
-
 
 
 _SCHEMA_PRESETS = {"strict", "allow_new_columns", "monitor_only"}
@@ -4179,7 +3919,6 @@ def _row_to_dict(row) -> dict:
     if hasattr(row, "asDict"):
         return row.asDict(recursive=True)
     return {name: getattr(row, name) for name in dir(row) if not name.startswith("_")}
-
 
 
 def _max_column_value(dataframe, column_name: str, *, config=None):
@@ -4439,7 +4178,6 @@ def _catalogue_value(row: dict, *names: str):
 
 def _string_value(value) -> str:
     return "" if value is None else str(value)
-
 
 
 def stop_if_failed(result) -> None:
@@ -4924,21 +4662,22 @@ def check_dq_runtime(
     if plan is not None:
         resolved_run_id = plan.plan_id
     result["run_id"] = resolved_run_id
+    result_workspace = _guardrail_workspace_fields(context, table_id, active_workspace_id)
     summary_rows = []
     for rule, check in zip(rules, checks, strict=True):
         summary_rows.append({
             "guardrail_result_id": str(uuid4()),
             "guardrail_rule_id": rule["guardrail_rule_id"],
             "guardrail_version": rule["guardrail_version"],
-            "table_id": None if str(table_id).startswith("file:") else table_id,
-            "source_id": table_id if str(table_id).startswith("file:") else None,
+            "table_id": table_id,
+            "asset_type": "FILE" if str(table_id).startswith("file:") else "TABLE",
             "contract_id": str(contract_id or ""),
             "contract_version": int(contract_version or 0),
             "execution_type": execution_mode,
             "result_id": str(uuid4()),
             "run_id": resolved_run_id,
             "rule_key": rule["rule_key"],
-            "workspace_id": active_workspace_id,
+            **result_workspace,
             "dataset_name": dataset_name,
             "table_name": table_name,
             "column_name": ",".join(rule["columns"]),
@@ -5451,7 +5190,7 @@ def _select_rule(
         row = _row_to_dict(raw)
         if str(row.get("guardrail_type") or "").lower() != guardrail_type.lower():
             continue
-        if (row.get("source_id") or str(row.get("table_id") or "")) != table_id:
+        if (row.get("table_id") or str(row.get("table_id") or "")) != table_id:
             continue
         rule_workspace_id = str(row.get("workspace_id") or "")
         if workspace_id and rule_workspace_id != workspace_id:
@@ -5763,7 +5502,7 @@ def capture_source_observation(
         # Batch scope is evaluated after the incremental filter by check_freshness.
         if parameters["evaluation_scope"] == "full_dataset":
             evidence = collect_freshness_evidence(parameters,
-                source={"source_type": "table", "table_id": governed_table_id, "store_type": source_type,
+                source={"asset_type": "TABLE", "table_id": governed_table_id, "store_type": source_type,
                         "resolved_path": _path if source_type == "lakehouse" else warehouse_history_path}, spark_session=spark)
             _CURRENT_FRESHNESS_EVIDENCE[
                 (active_workspace_id, source_observation_run_id(context) or str(audit["_activity_id"]), governed_table_id)
@@ -5801,8 +5540,8 @@ def capture_source_observation(
         observation_id = str(uuid4())
         values = [
             {
-                **coerce_metadata_row_types(
-                    _PROCESSING_STATE_TABLE,
+                **coerce_schema_row_types(
+                    processing_state_schema(),
                     {
                         **row,
                         "observation_id": observation_id,
@@ -5823,8 +5562,8 @@ def capture_source_observation(
             }
             for row in current
         ]
-        _merge_source_observation_records(values, config=config, context=context)
-        return spark.createDataFrame(values, schema=metadata_table_schema_registry()[_PROCESSING_STATE_TABLE])
+        _merge_source_observation_records(values, context=context)
+        return spark.createDataFrame(values, schema=processing_state_schema())
 
     if incremental_columns is not None:
         return capture_columns(*incremental_columns, watermark_only=True)
@@ -5871,7 +5610,7 @@ class ExecutionSummary:
 
 def participant_id(participant):
     """Return a typed participant's canonical Table ID or distinct file Source ID."""
-    return participant.get("source_id") or participant["table_id"]
+    return participant["table_id"]
 
 
 def resolve_file_participant(*, store, relative_path, file_format, read_options=None, context):
@@ -5879,7 +5618,7 @@ def resolve_file_participant(*, store, relative_path, file_format, read_options=
     from fabricops_kit.io.shared import resolve_configured_file_path
     from fabricops_kit.data_contract.shared import file_source_identity
     # Validate before path resolution, including traversal that a path normalizer could hide.
-    file_source_identity(workspace_id="validation", item_id="validation", relative_path=relative_path,
+    file_source_identity(asset_workspace_id="validation", item_id="validation", relative_path=relative_path,
                          file_format=file_format, reader_options=read_options)
     options = dict(read_options or {})
     if any(str(key).lower() in {"path", "paths", "context", "store", "relative_path"} for key in options):
@@ -5887,7 +5626,7 @@ def resolve_file_participant(*, store, relative_path, file_format, read_options=
     configured, path, _ = resolve_configured_file_path(store, relative_path, context=context)
     if str(configured.kind).lower() != "lakehouse":
         raise ValueError("File reads require a Lakehouse store; Warehouse file routing is unsupported.")
-    source = file_source_identity(workspace_id=configured.workspace_id, item_id=configured.item_id,
+    source = file_source_identity(asset_workspace_id=configured.workspace_id, item_id=configured.item_id,
         relative_path=path, file_format=file_format, reader_options=options)
     return {**source, "store": store, "logical_id": f"{store}/Files/{source['relative_path']}"}
 
@@ -5895,8 +5634,38 @@ def resolve_file_participant(*, store, relative_path, file_format, read_options=
 def resolve_file_write_participant(*, store, relative_path, file_format, context):
     """Resolve exact file target identity independently of writer options."""
     from fabricops_kit.io.shared import validate_file_write
-    validate_file_write(relative_path, file_format, "errorifexists")
+    validate_file_write(relative_path, file_format, "append_all")
     return resolve_file_participant(store=store, relative_path=relative_path, file_format=file_format, context=context)
+
+
+def persist_file_catalogue(identity, *, context, profile_summary=None, columns=None):
+    """Upsert the current FILE asset and its latest observed schema."""
+    if not persistence_permitted(context):
+        raise RuntimeError("Dry Run cannot commit Catalogue.")
+    from fabricops_kit.data_contract.shared import file_source_identity
+    expected = file_source_identity(**{key: identity.get(key) for key in
+        ("asset_workspace_id", "item_id", "relative_path", "file_format")})
+    table_id = expected["table_id"]
+    if table_id != identity.get("table_id") or not identity.get("store"):
+        raise ValueError("File Catalogue requires a resolved file participant.")
+    config, workspace_id, runtime = resolve_fabric_context(context=context)
+    audit = build_pipeline_audit_fields(config=config, active_workspace_id=workspace_id, runtime_context=runtime)
+    asset = {
+        "asset_type": "FILE", "table_id": table_id,
+        "asset_workspace_id": expected["asset_workspace_id"], "item_id": expected["item_id"],
+        "asset_workspace_name": resolve_asset_workspace_name(expected["asset_workspace_id"], context=runtime),
+        "columns_json": _catalogue_columns(table_id, None if columns is None else
+            [(column.get("column_name"), column.get("data_type")) for column in columns]),
+        "layer": identity["store"], "store_type": "lakehouse", "table_name": expected["relative_path"],
+        "relative_path": expected["relative_path"], "file_format": expected["file_format"], "is_active": True,
+        "first_observed_at": audit["_committed_at"],
+        "last_observed_at": audit["_committed_at"], **audit,
+    }
+    if profile_summary and "grain" in profile_summary.get("activities", []):
+        asset["profile_key_candidates_json"] = {"status": "resolved", "max_combination_width": 3,
+            **profile_summary["scope"], "candidates": profile_summary["grain_candidates"]}
+    merge_catalogue_asset(asset, context=runtime, spark_session=get_spark_session(context=runtime))
+    return table_id
 
 
 def read_file_participant(identity, *, context, spark_session):
@@ -5909,7 +5678,7 @@ def read_file_participant(identity, *, context, spark_session):
     frame = readers[identity["file_format"]](identity["relative_path"], store=identity["store"],
         context={**context, "_spark_session": spark_session, "_fabricops_suppress_io_log": True}, **identity["reader_options"])
     return {**file_participant_source(identity), "store": identity["store"], "dataframe": frame,
-            "source_location": {"workspace_id": identity["workspace_id"], "item_id": identity["item_id"],
+            "source_location": {"asset_workspace_id": identity["asset_workspace_id"], "item_id": identity["item_id"],
                                 "relative_path": identity["relative_path"]},
             "resolved_path": path, "read_mode": "full", "is_query": False,
             "_reader_name": readers[identity["file_format"]].__name__,
@@ -5917,7 +5686,7 @@ def read_file_participant(identity, *, context, spark_session):
 
 
 def schedule_file_profiling(dataframe, *, source_id, context, presentations, operation="read"):
-    """Run pipeline-owned profiling activities without creating table snapshots.
+    """Calculate typed file snapshots; commit them only after operation success.
 
     File completion history is session-local. No durable interval is consumed;
     each new execution reevaluates eligibility because files may be replaced.
@@ -5930,7 +5699,7 @@ def schedule_file_profiling(dataframe, *, source_id, context, presentations, ope
            if profiling_due(policy[activity], history.get(activity, {}), operation, datetime.now(UTC))}
     if not due:
         return {"status": "not_due" if any(policy[name]["enabled"] for name in policy) else "disabled",
-                "source_id": source_id, "results_persisted": False}
+                "table_id": source_id, "results_persisted": False}
     limit = settings["profiling_max_rows"]
     scope = {"profile_scope": "bounded_selection" if limit is not None else "supplied_dataframe", "profiling_max_rows": limit}
     selected = dataframe.limit(limit) if limit is not None else dataframe
@@ -5945,20 +5714,84 @@ def schedule_file_profiling(dataframe, *, source_id, context, presentations, ope
         if "standard" in due:
             presentation = capture_profile_presentation(profile, scope=scope, dry_run=not plan.permits_persistence)
             if presentation:
-                presentation["title"] += " · File selection (session only)"
+                presentation["title"] += " · File selection"
                 presentations.append(presentation)
+        # Materialize only bounded per-column aggregates, never business rows.
+        # File overwrite may replace a lazy source before operation completion.
+        if plan.permits_persistence:
+            spark = dataframe.sparkSession
+            captured = spark.createDataFrame(profile.collect(), profile.schema)
+            captured_frequency = (spark.createDataFrame(frequency.collect(), frequency.schema)
+                                  if frequency is not None else None)
+            plan.evidence.setdefault("pending_file_profiles", {})[(source_id, operation)] = {
+                "profile": captured, "frequency": captured_frequency, "activities": sorted(due),
+                "grain_candidates": candidates, "scope": scope,
+            }
         for activity in due:
             history[activity] = {"last_success": datetime.now(UTC).isoformat()}
-        return {"status": "completed", "source_id": source_id, "profile": profile, "row_count": row_count,
-                "results_persisted": False, **scope, "grain_candidates": candidates, "frequency_profile": frequency,
+        result = {"status": "completed", "table_id": source_id,
+                "profile": captured if plan.permits_persistence else profile, "row_count": row_count,
+                "results_persisted": False, **scope, "grain_candidates": candidates,
+                "frequency_profile": captured_frequency if plan.permits_persistence else frequency,
                 "activities": sorted(due)}
+        if plan.permits_persistence:
+            plan.evidence["pending_file_profiles"][(source_id, operation)]["result"] = result
+        else:
+            for activity in sorted(due):
+                plan.evidence.setdefault("profiling", []).append({
+                    "context_key": source_id, "table_id": source_id, "asset_type": "FILE",
+                    "activity": activity, "status": "passed", "results_persisted": False,
+                    "trigger": operation, "pipeline_run_id": plan.plan_id, "row_count": row_count, **scope})
+        return result
     finally:
         profile.unpersist()
 
 
+def _persist_file_profile(identity, *, operation, context):
+    plan = context["execution_plan"]
+    pending = plan.evidence.get("pending_file_profiles", {}).get((identity["table_id"], operation))
+    if pending is None:
+        return None
+    if not persistence_permitted(context):
+        raise RuntimeError("Dry Run cannot commit file profiles.")
+    role = "source" if operation == "read" else "target"
+    snapshot = str(uuid5(NAMESPACE_URL, f"fabricops-file-profile|{plan.workspace_id}|{plan.plan_id}|{identity['table_id']}|{role}"))
+    runtime = {**context, "_profile_scope": pending["scope"], "_profile_run_id": plan.plan_id,
+               "_profile_role": role, "table_name": identity["relative_path"]}
+    spark = pending["profile"].sparkSession
+    profiled = _canonical_profiled_dataframe(pending["profile"], config=context["config"],
+        active_workspace_id=plan.workspace_id, runtime_context=runtime, workspace_id=identity["asset_workspace_id"],
+        table_id=identity["table_id"], asset_type="FILE", profile_snapshot_id=snapshot)
+    _require_catalogue_assets(profiled, context=context, table_name="FILE profiling")
+    if "standard" in pending["activities"]:
+        _replace_snapshot_rows(dataframe=profiled, table_name=PROFILED_TABLE, row_id="profile_id",
+            config=context["config"], active_workspace_id=plan.workspace_id, spark_session=spark)
+    if "frequency" in pending["activities"]:
+        frequency = (_frequency_metadata_dataframe(pending["frequency"], profiled_df=profiled, table_id=identity["table_id"], config=context["config"], active_workspace_id=plan.workspace_id,
+            runtime_context=runtime) if pending["frequency"] is not None else None)
+        if frequency is not None and "standard" not in pending["activities"]:
+            from pyspark.sql import functions as F
+            frequency = frequency.withColumn("profile_id", F.lit(None).cast("string"))
+        _replace_frequency_rows(frequency_df=frequency, profiled_df=profiled, config=context["config"],
+            active_workspace_id=plan.workspace_id, spark_session=spark)
+    pending["profile_snapshot_id"] = snapshot
+    pending["result"].update(results_persisted=True, profile_snapshot_id=snapshot)
+    for activity in pending["activities"]:
+        event = {"context_key": identity["table_id"], "table_id": identity["table_id"], "asset_type": "FILE",
+            "activity": activity, "status": "passed", "results_persisted": True,
+            "profile_snapshot_id": snapshot if activity != "grain" else None,
+            "trigger": operation, "pipeline_run_id": plan.plan_id,
+            "asset_workspace_id": identity["asset_workspace_id"], "row_count": pending["result"]["row_count"],
+            **pending["scope"]}
+        journal = plan.evidence.setdefault("profiling", [])
+        if event not in journal:
+            journal.append(event)
+    return pending
+
+
 def file_participant_source(identity):
-    """Extract the exact PR #1818 source descriptor for approval comparison."""
-    return {key: identity[key] for key in ("source_type", "source_id", "workspace_id", "item_id",
+    """Extract the common asset identity and physical file selector for approval comparison."""
+    return {key: identity[key] for key in ("asset_type", "table_id", "asset_workspace_id", "item_id",
                                          "relative_path", "file_format", "reader_options")}
 
 
@@ -5974,13 +5807,17 @@ def pipeline_physical_bindings(identities, *, config, workspace_id):
     """Capture each participant's configured physical destination independently of execution scope."""
     bindings = {}
     for table_id, item in identities.items():
-        store = get_store(config, workspace_id, item["store"])
-        if item.get("source_type") == "file":
+        if item.get("asset_type") == "FILE":
             source = file_participant_source(item)
             bindings[table_id] = {**{key: value for key, value in source.items() if key != "reader_options"},
                                   "reader_options_json": canonical_pipeline_json(source["reader_options"])}
             continue
-        bindings[table_id] = {"workspace_id": store.workspace_id, "item_id": store.item_id,
+        if item.get("asset_type") == "TABLE" and item.get("item_id"):
+            bindings[table_id] = {"asset_workspace_id": item["asset_workspace_id"], "item_id": item["item_id"],
+                                  "kind": item["store_type"], "schema": item.get("schema"), "table_name": item["table_name"]}
+            continue
+        store = get_store(config, workspace_id, item["store"])
+        bindings[table_id] = {"asset_workspace_id": store.workspace_id, "item_id": store.item_id,
                               "kind": store.kind, "schema": item.get("schema"), "table_name": item["table_name"]}
     return bindings
 
@@ -6102,13 +5939,15 @@ def pipeline_record_content(value):
 
 def validate_pipeline_run(row):
     """Validate native operation facts without a configuration snapshot or definition join."""
-    row = decode_metadata_row("METADATA_PIPELINE_RUN", row)
+    retained = decode_metadata_row("METADATA_PIPELINE_RUN", row)
+    row = migrate_asset_references(retained)
     provenance = ("pipeline_version", "promotion_id", "governed_notebook_id", "execution_identity", "run_schema_version")
     if row.get("run_schema_version") is None:
         if any(row.get(key) is not None for key in provenance):
             raise ValueError("Legacy Run has unexpected new provenance; retained evidence cannot be reinterpreted.")
         row = {key: value for key, value in row.items() if key not in provenance}
-    elif row["run_schema_version"] != 3:
+        retained = {key: value for key, value in retained.items() if key not in provenance}
+    elif row["run_schema_version"] not in {3, 4}:
         raise ValueError("Unsupported Pipeline Run schema version.")
     elif row.get("execution_mode") == "governed" and any(row.get(key) in (None, "") for key in provenance):
         raise ValueError("Governed Run requires exact Pipeline Promotion and execution identity provenance.")
@@ -6119,12 +5958,12 @@ def validate_pipeline_run(row):
     for item in operations:
         if item["pipeline_role"] not in {"source", "target"} or not participant_id(item) or not item["destination"]:
             raise ValueError("Pipeline Run requires exact participant roles and destinations.")
-        if item.get("source_type") == "file":
+        if item.get("asset_type") == "FILE":
             from fabricops_kit.data_contract.shared import validate_contract_source
-            source = file_binding_source(item["destination"])
+            source = file_binding_source(operation_physical_binding(item))
             validate_contract_source({"source": source, "table": {}})
-            if item.get("table_id") or item["source_id"] != source["source_id"]:
-                raise ValueError("File operations require a distinct file Source ID without a Table ID.")
+            if item["table_id"] != source["table_id"]:
+                raise ValueError("File operation table_id must match its physical selector identity.")
             if item["pipeline_role"] == "source" and item["read_mode"] != "full" and item["status"] != "not_started":
                 raise ValueError("File source operations require a full Read.")
             if item["pipeline_role"] == "target":
@@ -6132,21 +5971,22 @@ def validate_pipeline_run(row):
                     raise ValueError("Governed file target authorization is unsupported.")
                 if item.get("contract_id") is not None:
                     raise ValueError("File targets cannot use table contracts.")
-                if item["status"] == "succeeded" and item["write_mode"] not in {"overwrite", "append", "errorifexists", "ignore"}:
+                if item["status"] == "succeeded" and item["write_mode"] not in {"overwrite", "append_all", "append", "errorifexists", "ignore"}:
                     raise ValueError("Unsupported file write mode.")
-        elif item.get("source_id") is not None or str(item["table_id"]).startswith("file:"):
-            raise ValueError("Table operations cannot use a file Source ID as a Table ID.")
+        elif item.get("asset_type") != "TABLE" or str(item["table_id"]).startswith("file:"):
+            raise ValueError("Table operations require asset_type TABLE and a table identity.")
         refs = [item.get(key) for key in ("contract_id", "contract_version", "payload_sha256")]
         if any(value is not None for value in refs) and not all(value is not None for value in refs):
             raise ValueError("Incomplete Pipeline Run contract reference.")
-        if len(set(item["source_table_ids"])) != len(item["source_table_ids"]):
+        refs = item["source_assets"]
+        if len({(ref["table_id"], ref["asset_type"]) for ref in refs}) != len(refs):
             raise ValueError("Duplicate Pipeline Run source association.")
         if item["status"] == "succeeded":
             mode = item["read_mode"] if item["pipeline_role"] == "source" else item["write_mode"]
             # Run records retain historical strategy facts; execution validates the five current choices.
             allowed = {"full", "incremental"} if item["pipeline_role"] == "source" else {"overwrite", "append", "append_all", "append_new_only", "scd1", "scd2"}
-            if item.get("source_type") == "file" and item["pipeline_role"] == "target":
-                allowed = {"overwrite", "append", "errorifexists", "ignore"}
+            if item.get("asset_type") == "FILE" and item["pipeline_role"] == "target":
+                allowed = {"overwrite", "append_all", "append", "errorifexists", "ignore"}
             if mode not in allowed:
                 raise ValueError("Successful Pipeline Run operation requires its execution mode.")
     if row["status"] == "succeeded" and (not row.get("completed_at") or row["boundary_completed"] is not True
@@ -6156,7 +5996,594 @@ def validate_pipeline_run(row):
                    or stage.get("evaluation_status") == "not_fully_evaluated" for stage in item["stages"])
             for item in operations)):
         raise ValueError("Pipeline Run success requires complete whole-run operation results.")
-    return row
+    return retained if retained.get("run_schema_version") != 4 or has_retained_asset_workspaces(retained) else row
+
+
+def pipeline_participation(runs):
+    """Project persisted Run operations into queryable participant rows in Spark.
+
+    Declared but unstarted operations are excluded. Failed attempts remain visible;
+    neither overall Run success nor source associations imply data dependencies.
+    Each operation’s asset_workspace_id identifies the physical participant, independently of
+    the execution workspace. Files reuse their existing Source ID as the common Catalogue asset key.
+    Released Run descriptors keep their original source_id/table_id fields.
+    """
+    from pyspark.sql import functions as F
+
+    decoded = decode_metadata_dataframe("METADATA_PIPELINE_RUN", runs)
+    operations = decoded.select("*", F.explode("operations").alias("operation"))
+    return operations.filter(F.col("operation.status") != "not_started").select(
+        "run_id", "pipeline_id", F.col("workspace_id").alias("execution_workspace_id"),
+        F.col("status").alias("run_status"), "execution_mode",
+        F.col("started_at").alias("run_started_at"),
+        F.col("completed_at").alias("run_completed_at"),
+        "_activity_id", "_notebook_id", "_notebook_name", "_workspace_name",
+        F.col("operation.operation_key").alias("operation_key"),
+        F.col("operation.table_id").alias("table_id"),
+        F.col("operation.asset_type").alias("asset_type"),
+        F.col("operation.pipeline_role").alias("pipeline_role"),
+        F.col("operation.status").alias("operation_status"),
+        F.col("operation.publication_status").alias("publication_status"),
+        F.col("operation.started_at").alias("operation_started_at"),
+        F.col("operation.completed_at").alias("operation_completed_at"),
+        F.col("operation.destination").alias("destination"),
+        F.lower(F.col("operation.asset_workspace_id")).alias("asset_workspace_id"),
+    )
+
+
+def reconcile_pipeline_participation(legacy, runs):
+    """Classify archived activity participation without modifying either input.
+
+    A match requires the activity, execution workspace, physical notebook, Table
+    ID and role. More than one candidate Run is ambiguous; no Run ID is invented.
+    This is a migration report, never a runtime fallback or a dependency graph.
+    """
+    from pyspark.sql import functions as F
+
+    candidates = pipeline_participation(runs).filter(F.col("table_id").isNotNull()).alias("run")
+    historical = legacy.alias("legacy")
+    legacy_asset_id = (F.coalesce(F.col("legacy.table_id"), F.col("legacy.source_id"))
+                       if "source_id" in legacy.columns else F.col("legacy.table_id"))
+    condition = (
+        (F.col("legacy._activity_id") == F.col("run._activity_id"))
+        & (F.col("legacy.workspace_id") == F.col("run.execution_workspace_id"))
+        & (F.col("legacy._notebook_id") == F.col("run._notebook_id"))
+        & (F.length(F.trim(F.col("legacy._activity_id"))) > 0)
+        & (F.length(F.trim(F.col("legacy._notebook_id"))) > 0)
+        & (legacy_asset_id == F.col("run.table_id"))
+        & (F.col("legacy.pipeline_role") == F.col("run.pipeline_role"))
+    )
+    matches = historical.join(candidates, condition, "left").groupBy(
+        F.col("legacy.workspace_id").alias("workspace_id"),
+        F.col("legacy.lineage_id").alias("lineage_id"),
+    ).agg(F.countDistinct("run.run_id").alias("candidate_run_count"), F.min("run.run_id").alias("candidate_run_id"))
+    return legacy.join(matches, ["workspace_id", "lineage_id"], "left").withColumn(
+        "match_status", F.when(F.col("candidate_run_count") == 1, "matched")
+        .when(F.col("candidate_run_count") > 1, "ambiguous").otherwise("unmatched")
+    ).withColumn("run_id", F.when(F.col("candidate_run_count") == 1, F.col("candidate_run_id"))).drop("candidate_run_id")
+
+
+# Run-scoped Catalyst dependency graphs describe Write input, not retained target rows.
+_LINEAGE_MAX_NODES = 10000
+_LINEAGE_MAX_EDGES = 30000
+_LINEAGE_MAX_BYTES = 1000000
+_LINEAGE_MAX_OUTPUTS = 1000
+_LINEAGE_PASSTHROUGH = {"SubqueryAlias", "View", "Filter", "Sort", "GlobalLimit", "LocalLimit",
+    "Distinct", "Deduplicate", "Repartition", "RepartitionByExpression", "ResolvedHint", "CollectMetrics"}
+_LINEAGE_KNOWN_EXPRESSIONS = set("""Alias AttributeReference Literal Cast Add Subtract Multiply Divide IntegralDivide
+Remainder UnaryMinus UnaryPositive Abs Round BRound Ceil Floor Pmod Pow Sqrt Exp Log Greatest Least
+EqualTo EqualNullSafe LessThan LessThanOrEqual GreaterThan GreaterThanOrEqual And Or Not IsNull
+IsNotNull In InSet Coalesce CaseWhen If Upper Lower Concat ConcatWs Substring StringTrim
+StringTrimLeft StringTrimRight Length StringLength RegExpReplace RegExpExtract StringReplace
+Contains StartsWith EndsWith Like RLike StringLocate StringTranslate StringLPad StringRPad
+AggregateExpression Sum Count Average Min Max First Last CollectList CollectSet
+ApproxCountDistinct HyperLogLogPlusPlus VariancePop VarianceSamp StddevPop StddevSamp
+SortOrder WindowExpression RowNumber Rank DenseRank PercentRank CumeDist NTile Lead Lag
+GetStructField GetArrayItem GetMapValue CreateNamedStruct CreateArray CreateMap ArrayJoin
+ArrayDistinct ArraySort SortArray ArrayContains Size ElementAt GetArrayStructFields
+ToJson StructsToJson JsonToStructs FromJson Sha2 Md5 XxHash64 Murmur3Hash Crc32
+Year Month DayOfMonth DayOfWeek Hour Minute Second DateAdd DateSub DateDiff AddMonths
+TruncDate TruncTimestamp ParseToDate ParseToTimestamp UnixTimestamp FromUnixTime
+DateFormatClass CurrentDate CurrentTimestamp Uuid Rand Randn KnownNotNull PromotePrecision
+CheckOverflow NormalizeNaNAndZero IsNaN NaNvl IfNull NullIf NullIfZero TryEval TryCast
+Explode PosExplode Inline Stack UnresolvedSeed""".split())
+
+
+def _lineage_seq(value):
+    return [value.apply(i) for i in range(value.size())]
+
+
+def _lineage_option(value):
+    return value.get() if value.isDefined() else None
+
+
+def _lineage_key(attribute):
+    expr = attribute.exprId()
+    return f"{expr.jvmId()}:{expr.id()}"
+
+
+def _lineage_plan(dataframe):
+    return dataframe._jdf.queryExecution().analyzed()
+
+
+def _lineage_digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+@dataclass
+class LineageTracker:
+    """Session-owned trusted boundaries; JVM references never enter persisted Runs."""
+
+    reads: list = dataclass_field(default_factory=list)
+    bridges: list = dataclass_field(default_factory=list)
+    serial: int = 0
+    source_limit_reached: bool = False
+
+    def register(self, dataframe, asset, *, opaque=False):
+        """Bind physical Read leaves, or retain an explicit opaque query boundary."""
+        root = _lineage_plan(dataframe)
+        pending = [root]
+        leaves, visited = [], 0
+        while pending:
+            visited += 1
+            if visited > _LINEAGE_MAX_NODES:
+                self.source_limit_reached = True
+                raise ValueError("lineage_limit")
+            node = pending.pop()
+            children = _lineage_seq(node.children())
+            if children:
+                pending.extend(children)
+            else:
+                leaves.append(node)
+            if len(leaves) + len(pending) > 128:
+                self.source_limit_reached = True
+                raise ValueError("Read plan exceeds the bounded source registry.")
+        if len(self.reads) + len(leaves) > 128:
+            # Eviction could hide a conflicting identity for an equivalent plan.
+            self.source_limit_reached = True
+            raise ValueError("lineage_limit")
+        for node in leaves:
+            self.reads.append((node, dict(asset), opaque))
+
+    def analyse(self, dataframe):
+        """Build a bounded expression graph without evaluating business rows."""
+        if self.source_limit_reached:
+            raise ValueError("lineage_limit")
+        return _ColumnLineageBuilder(self).analyse(_lineage_plan(dataframe))
+
+    def bridge(self, dataframe, fragment):
+        """Retain a proven FabricOps-owned snapshot boundary, never a user conversion."""
+        self.bridges.append((_lineage_plan(dataframe), fragment))
+        self.bridges[:] = self.bridges[-32:]
+
+
+class _ColumnLineageBuilder:
+    def __init__(self, tracker):
+        self.tracker = tracker
+        self.nodes = {}
+        self.edges = set()
+        self.depth = 0
+
+    def node(self, kind, operation, *, stable=None, **fields):
+        if len(self.nodes) >= _LINEAGE_MAX_NODES:
+            raise ValueError("lineage_limit")
+        self.tracker.serial += 1
+        key = f"source:{_lineage_digest(stable)}" if stable is not None else f"n{self.tracker.serial}"
+        self.nodes[key] = {"node_id": key, "node_type": kind, "operation": operation, **fields}
+        return key
+
+    def edge(self, source, target, role="VALUE"):
+        if len(self.edges) >= _LINEAGE_MAX_EDGES:
+            raise ValueError("lineage_limit")
+        if source != target:
+            self.edges.add((source, target, role))
+
+    def unknown(self, operation, code):
+        return self.node("UNKNOWN", operation, gap_code=code)
+
+    def expression(self, expr, inputs):
+        kind = expr.getClass().getSimpleName()
+        if kind == "AttributeReference":
+            return inputs.get(_lineage_key(expr)) or self.unknown(kind, "unresolved_attribute")
+        fields = {}
+        if kind == "Alias":
+            fields["name"] = str(expr.name())
+        try:
+            fields["data_type"] = str(expr.dataType().simpleString())
+        except Exception:
+            pass
+        # Never persist expr.sql(), treeString(), Python code or literal values.
+        token = self.node("LITERAL" if kind == "Literal" else "EXPRESSION", kind, **fields)
+        if kind not in _LINEAGE_KNOWN_EXPRESSIONS:
+            self.nodes[token]["gap_code"] = "opaque_udf" if "UDF" in kind else "unsupported_expression"
+        if kind == "AggregateExpression":
+            self.nodes[token]["name"] = "DISTINCT" if expr.isDistinct() else "ALL"
+            self.edge(self.expression(expr.aggregateFunction(), inputs), token)
+            condition = _lineage_option(expr.filter())
+            if condition is not None:
+                self.edge(self.expression(condition, inputs), token, "FILTER")
+        elif kind == "WindowExpression":
+            self.edge(self.expression(expr.windowFunction(), inputs), token)
+            spec = expr.windowSpec()
+            for value in _lineage_seq(spec.partitionSpec()):
+                self.edge(self.expression(value, inputs), token, "GROUP")
+            for value in _lineage_seq(spec.orderSpec()):
+                self.edge(self.expression(value, inputs), token, "ORDER")
+        elif kind == "CaseWhen":
+            for branch in _lineage_seq(expr.branches()):
+                self.edge(self.expression(branch._1(), inputs), token, "CONDITION")
+                self.edge(self.expression(branch._2(), inputs), token)
+            otherwise = _lineage_option(expr.elseValue())
+            if otherwise is not None:
+                self.edge(self.expression(otherwise, inputs), token)
+        else:
+            for index, child in enumerate(_lineage_seq(expr.children())):
+                self.edge(self.expression(child, inputs), token, "CONDITION" if kind == "If" and index == 0 else "VALUE")
+        return token
+
+    def visit(self, plan):
+        self.depth += 1
+        if self.depth > 160:
+            raise ValueError("lineage_limit")
+        try:
+            return self.plan_node(plan)
+        finally:
+            self.depth -= 1
+
+    def plan_node(self, plan):
+        kind = str(plan.nodeName())
+        attributes = _lineage_seq(plan.output())
+        # Only framework-owned checkpoints can bridge a severed logical plan.
+        for boundary, fragment in reversed(self.tracker.bridges):
+            if plan.sameResult(boundary):
+                if len(attributes) != len(fragment["output_ids"]):
+                    break
+                self.nodes.update(fragment["nodes"])
+                self.edges.update(fragment["edges"])
+                return dict(zip((_lineage_key(a) for a in attributes), fragment["output_ids"])), fragment["rowset"]
+        children = _lineage_seq(plan.children())
+        if not children:
+            matches = [(asset, opaque) for root, asset, opaque in self.tracker.reads if plan.sameResult(root)]
+            identities = {}
+            for asset, opaque in matches:
+                key = _lineage_digest(asset)
+                identities[key] = (asset, opaque or identities.get(key, ({}, False))[1])
+            if len(identities) == 1:
+                asset, opaque = next(iter(identities.values()))
+                if not opaque:
+                    rowset = self.node("SOURCE_ASSET", "Read", stable=[asset, "rows"], **asset)
+                    outputs = {}
+                    for attribute in attributes:
+                        name = str(attribute.name())
+                        column = {**asset, "column_id": build_column_id(asset["table_id"], name), "name": name,
+                                  "data_type": str(attribute.dataType().simpleString())}
+                        outputs[_lineage_key(attribute)] = self.node("SOURCE_COLUMN", "Read", stable=column, **column)
+                    return outputs, rowset
+            if kind in {"Range", "OneRowRelation"} and not matches:
+                rowset = self.node("GENERATED", kind)
+                return {_lineage_key(a): self.node("GENERATED", kind, name=str(a.name())) for a in attributes}, rowset
+            reason = "ambiguous_read" if len(identities) > 1 else "opaque_query" if matches else "unregistered_or_severed_read"
+            rowset = self.unknown(kind, reason)
+            return {_lineage_key(a): rowset for a in attributes}, rowset
+        supported = kind in _LINEAGE_PASSTHROUGH | {"Project", "Aggregate", "Join", "Union", "Window", "Generate"}
+        if not supported:
+            rowset = self.unknown(kind, "unsupported_plan")
+            return {_lineage_key(a): rowset for a in attributes}, rowset
+        results = [self.visit(child) for child in children]
+        inputs = {}
+        for columns, _rowset in results:
+            for key, value in columns.items():
+                if key in inputs and inputs[key] != value:
+                    inputs[key] = self.unknown(kind, "ambiguous_attribute")
+                else:
+                    inputs[key] = value
+        labels = {}
+        if kind == "SubqueryAlias":
+            labels["name"] = str(plan.identifier().name())
+        stage = self.node("OPERATOR", kind, **labels)
+        for _columns, rowset in results:
+            self.edge(rowset, stage, "ROW_SET")
+        influence = []
+        if kind == "Filter":
+            influence = [(plan.condition(), "FILTER")]
+        elif kind == "Join":
+            condition = _lineage_option(plan.condition())
+            influence = [(condition, "JOIN")] if condition is not None else []
+            self.nodes[stage]["name"] = str(plan.joinType().sql())
+        elif kind == "Aggregate":
+            influence = [(e, "GROUP") for e in _lineage_seq(plan.groupingExpressions())]
+        elif kind == "Sort":
+            influence = [(e, "ORDER") for e in _lineage_seq(plan.order())]
+        elif kind == "Deduplicate":
+            influence = [(e, "GROUP") for e in _lineage_seq(plan.keys())]
+        elif kind == "Distinct":
+            influence = [(a, "GROUP") for a in _lineage_seq(children[0].output())]
+        elif kind == "RepartitionByExpression":
+            influence = [(e, "PARTITION") for e in _lineage_seq(plan.partitionExpressions())]
+        for expr, role in influence:
+            self.edge(self.expression(expr, inputs), stage, role)
+        named = {}
+        if kind in {"Project", "Aggregate", "Window"}:
+            expressions = _lineage_seq(getattr(plan, {"Project": "projectList", "Aggregate": "aggregateExpressions", "Window": "windowExpressions"}[kind])())
+            named = {_lineage_key(expr): expr for expr in expressions}
+        generator = self.expression(plan.generator(), inputs) if kind == "Generate" else None
+        generated = {_lineage_key(a) for a in _lineage_seq(plan.generatorOutput())} if generator else set()
+        if generator:
+            self.edge(generator, stage, "ROW_SET")
+        outputs = {}
+        for index, attribute in enumerate(attributes):
+            key = _lineage_key(attribute)
+            column = self.node("COLUMN", kind, name=str(attribute.name()), data_type=str(attribute.dataType().simpleString()))
+            self.edge(stage, column, "TRANSFORM")
+            if kind == "Union":
+                for child, (mapping, _rowset) in zip(children, results):
+                    fields = _lineage_seq(child.output())
+                    self.edge(mapping[_lineage_key(fields[index])], column)
+            elif key in named:
+                self.edge(self.expression(named[key], inputs), column)
+            elif key in generated:
+                self.edge(generator, column)
+            elif key in inputs:
+                self.edge(inputs[key], column)
+            else:
+                self.edge(self.unknown(kind, "unresolved_output"), column)
+            outputs[key] = column
+        return outputs, stage
+
+    def analyse(self, plan):
+        columns, rowset = self.visit(plan)
+        if len(self.nodes) > _LINEAGE_MAX_NODES or len(self.edges) > _LINEAGE_MAX_EDGES:
+            raise ValueError("lineage_limit")
+        return {"nodes": self.nodes, "edges": self.edges, "rowset": rowset,
+                "output_ids": [columns[_lineage_key(a)] for a in _lineage_seq(plan.output())]}
+
+
+def _lineage_ancestors(fragment, output):
+    incoming = {}
+    for source, target, role in fragment["edges"]:
+        incoming.setdefault(target, []).append((source, role))
+    pending, seen, roots, gaps, transformations = [(output, ())], set(), {}, set(), set()
+    while pending:
+        token, roles = pending.pop()
+        if (token, roles) in seen:
+            continue
+        seen.add((token, roles))
+        if len(seen) > _LINEAGE_MAX_EDGES * 2:
+            raise ValueError("lineage_limit")
+        node = fragment["nodes"][token]
+        if node.get("gap_code"):
+            gaps.add(node["gap_code"])
+        if node["node_type"] in {"EXPRESSION", "OPERATOR"}:
+            transformations.add(token)
+        if node["node_type"] in {"SOURCE_COLUMN", "SOURCE_ASSET"}:
+            roots.setdefault(token, set()).update(roles or ("VALUE",))
+        for source, dependency in incoming.get(token, []):
+            next_roles = set(roles)
+            if dependency not in {"VALUE", "TRANSFORM"}:
+                next_roles.add(dependency)
+            if next_roles - {"ROW_SET"}:
+                next_roles.discard("ROW_SET")
+            pending.append((source, tuple(sorted(next_roles))))
+    status = "partial" if gaps and roots else "unknown" if gaps else "complete"
+    return {"status": status, "sources": [{"node_id": key, "dependency_types": sorted(roles)} for key, roles in sorted(roots.items())],
+            "gaps": sorted(gaps), "transformation_node_ids": sorted(transformations)}, {token for token, _role in seen}
+
+
+def _lineage_graph(fragment, names, table_id, write_mode):
+    outputs, keep = [], set()
+    for name, token in zip(names, fragment["output_ids"]):
+        detail, ancestors = _lineage_ancestors(fragment, token)
+        keep.update(ancestors)
+        outputs.append({"column_id": build_column_id(table_id, name), "column_name": name, "node_id": token, **detail})
+    statuses = {row["status"] for row in outputs}
+    status = "complete" if statuses == {"complete"} else "unknown" if statuses <= {"unknown"} else "partial"
+    graph = {"version": 1, "detector": "spark_catalyst_v1", "scope": "write_input", "write_mode": write_mode,
+             "status": status, "output_count": len(names), "omitted_output_count": 0, "gaps": [], "outputs": outputs,
+             "nodes": [fragment["nodes"][key] for key in sorted(keep)],
+             "edges": [{"source_node_id": a, "target_node_id": b, "dependency_type": c}
+                       for a, b, c in sorted(fragment["edges"]) if a in keep and b in keep]}
+    if len(json.dumps(graph).encode()) > _LINEAGE_MAX_BYTES:
+        raise ValueError("lineage_limit")
+    return graph
+
+
+def _lineage_tracker(plan):
+    return plan.lineage.setdefault("tracker", LineageTracker())
+
+
+def register_read_lineage(plan, result):
+    """Freeze trusted Read identities without persisting JVM objects or row data."""
+    try:
+        table_id = result["table_id"]
+        binding = plan.runtime_context["_pipeline_bindings"][table_id]
+        asset = {"table_id": table_id, "asset_type": result.get("asset_type", "TABLE"),
+                 "asset_workspace_id": binding["asset_workspace_id"]}
+        _lineage_tracker(plan).register(result["dataframe"], asset,
+            opaque=bool(result.get("is_query") and binding.get("kind") == "warehouse"))
+    except Exception:
+        # Unsupported runtimes still retain participation and an explicit Write gap.
+        pass
+
+
+def capture_write_lineage(dataframe, *, context, table_id, write_mode):
+    """Attach lineage before writer materialization; introspection never fails a Write."""
+    plan = (context or {}).get("execution_plan")
+    if plan is None:
+        return None
+    try:
+        identity = json.loads(plan.participants_json).get(table_id)
+        if not identity:
+            return None
+        key = "target:" + (identity.get("logical_id") or identity['store'] + '/' + identity['table_name'])
+        record = plan.evidence["operations"].get(key)
+        if record is None:
+            return None
+    except (AttributeError, KeyError, TypeError, ValueError):
+        return None
+    names, fragment = [], None
+    try:
+        names = list(dataframe.columns)
+        if len(names) > _LINEAGE_MAX_OUTPUTS:
+            raise ValueError("lineage_limit")
+        fragment = _lineage_tracker(plan).analyse(dataframe)
+        graph = _lineage_graph(fragment, names, table_id, write_mode)
+    except Exception as exc:
+        code = "lineage_limit" if isinstance(exc, (ValueError, RecursionError)) else "plan_access_unavailable"
+        # A bounded fallback must itself succeed even if JVM access or graph budgets fail.
+        # Omitted outputs are explicit; a shortened graph can never claim completeness.
+        fragment = None
+        outputs, nodes, used_bytes = [], [], 0
+        for index, name in enumerate(names[:_LINEAGE_MAX_OUTPUTS]):
+            used_bytes += len(json.dumps(name).encode()) + 1000
+            if used_bytes > _LINEAGE_MAX_BYTES // 2:
+                break
+            token = f"unknown:{index}"
+            outputs.append({"column_id": build_column_id(table_id, name), "column_name": name,
+                "node_id": token, "status": "unknown", "sources": [], "gaps": [code], "transformation_node_ids": []})
+            nodes.append({"node_id": token, "node_type": "UNKNOWN", "operation": "Unresolved", "gap_code": code})
+        graph = {"version": 1, "detector": "spark_catalyst_v1", "scope": "write_input", "write_mode": write_mode,
+            "status": "unknown", "output_count": len(names), "omitted_output_count": len(names) - len(outputs),
+            "gaps": [code], "outputs": outputs, "nodes": nodes, "edges": []}
+
+    record["lineage"] = graph
+    return fragment
+
+
+def bridge_write_snapshot(dataframe, fragment, *, context):
+    """Preserve only snapshots produced and verified by FabricOps itself."""
+    plan = (context or {}).get("execution_plan")
+    if plan is not None and fragment is not None:
+        try:
+            _lineage_tracker(plan).bridge(dataframe, fragment)
+        except Exception:
+            pass
+
+
+def _column_lineage_snapshot(run):
+    from fabricops_kit.config.metadata_schemas import decode_metadata_row
+
+    decoded = decode_metadata_row("METADATA_PIPELINE_RUN", validate_pipeline_run(run))
+    fields = metadata_table_schema_registry()["METADATA_PIPELINE_RUN"].fieldNames()
+    return pipeline_record_content({name: decoded[name] for name in fields if name in decoded})
+
+
+def column_lineage_rows(run):
+    """Project scalar Power BI facts from a Run; participation never becomes a dependency.
+
+    Grain: Run/Write/output/source/dependency type, with null-source rows for
+    constants and gaps. Historical Runs without a graph produce no facts.
+    """
+    from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, decode_metadata_row
+
+    decoded = decode_metadata_row("METADATA_PIPELINE_RUN", validate_pipeline_run(run))
+    rows = []
+    audit = {name: run.get(name) for name, *_ in AUDIT_SCHEMA_FIELDS}
+    for operation in decoded.get("operations", []):
+        graph = operation.get("lineage")
+        if graph is None:
+            continue
+        if graph["version"] != 1:
+            raise ValueError("Unsupported Run column-lineage version.")
+        nodes = {node["node_id"]: node for node in graph["nodes"]}
+        base = {"lineage_version": 1, "run_id": run["run_id"], "operation_key": operation["operation_key"],
+            "target_asset_workspace_id": operation["asset_workspace_id"], "target_table_id": operation["table_id"],
+            "target_asset_type": operation["asset_type"],
+            "publication_status": operation.get("publication_status"), **audit}
+        for output in graph["outputs"]:
+            for source in output["sources"] or [{"node_id": None, "dependency_types": []}]:
+                root = nodes.get(source["node_id"], {})
+                for dependency in source["dependency_types"] or [None]:
+                    record_type = ("COLUMN_DEPENDENCY" if root.get("column_id") else "ROW_SET_DEPENDENCY" if root
+                                   else "OUTPUT" if output["status"] == "complete" else "GAP")
+                    row = {**base, "record_type": record_type,
+                        "target_column_id": output["column_id"], "target_column_name": output["column_name"],
+                        "source_asset_workspace_id": root.get("asset_workspace_id"), "source_table_id": root.get("table_id"),
+                        "source_asset_type": root.get("asset_type"), "source_column_id": root.get("column_id"),
+                        "source_column_name": root.get("name"), "dependency_type": dependency,
+                        "coverage": output["status"]}
+                    row["lineage_id"] = _metadata_hash([run["run_id"], operation["operation_key"], output["column_id"],
+                                                        source["node_id"], dependency])
+                    rows.append(row)
+        if graph["gaps"] or graph["omitted_output_count"]:
+            rows.append({**base, "lineage_id": _metadata_hash([run["run_id"], operation["operation_key"], "capture_gap"]),
+                "record_type": "CAPTURE_GAP", "coverage": "unknown"})
+    return rows
+
+
+def publish_column_lineage(run, *, context, spark_session=None):
+    """Materialize an exact finalized Run as retry-safe scalar Delta facts.
+
+    The Run is verified before publication. A single idempotent Delta append
+    projects the entire immutable snapshot; confirmed aborted metadata conflicts
+    can retry without replaying business Writes. Exact read-back confirms lost
+    acknowledgements. Historical participation rows remain untouched.
+    """
+    if not persistence_permitted(context):
+        return {"status": "diagnostic_only", "row_count": 0}
+    if not run.get("completed_at"):
+        raise ValueError("Column lineage publication requires a finalized Run.")
+    rows = column_lineage_rows(run)
+    if not rows:
+        return {"status": "not_captured", "row_count": 0}
+    from delta.tables import DeltaTable
+    from pyspark.sql import functions as F
+    from fabricops_kit.config.metadata_schemas import coerce_metadata_row_types
+
+    spark = get_spark_session(spark_session, context=context)
+    table = "METADATA_DATA_LINEAGE"
+    schema = metadata_table_schema_registry()[table]
+    physical = [coerce_metadata_row_types(table, row) for row in rows]
+    expected = {row["lineage_id"]: pipeline_record_content(row) for row in physical}
+    if len(expected) != len(physical):
+        raise ValueError("Column lineage contains duplicate fact identities.")
+    stored = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
+        schema=metadata_table_physical_schema(context["config"], "METADATA_PIPELINE_RUN"),
+        context={**context, "_spark_session": spark, "_fabricops_suppress_io_log": True})
+    matches = stored.where(F.col("run_id") == run["run_id"]).limit(2).collect()
+    if len(matches) != 1 or _column_lineage_snapshot(matches[0].asDict(recursive=True)) != _column_lineage_snapshot(run):
+        raise ValueError("Lineage requires the exact committed finalized Run snapshot.")
+    _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
+        metadata_table_physical_schema(context["config"], table), context=context)
+    properties = DeltaTable.forPath(spark, path).detail().select("properties").first()["properties"]
+    if "delta.setTransactionRetentionDuration" in properties:
+        raise RuntimeError("Column lineage requires unbounded Delta transaction identity retention.")
+
+    def confirmed():
+        observed = (spark.read.format("delta").load(path).where((F.col("run_id") == run["run_id"])
+            & (F.col("lineage_version") == 1)).select(*schema.fieldNames()).collect())
+        values = [pipeline_record_content(row.asDict(recursive=True)) for row in observed]
+        return len(values) == len(expected) and {row["lineage_id"]: row for row in values} == expected
+
+    frame = spark.createDataFrame(physical, schema)
+    try:
+        write_metadata_frame(frame, path, table, options={"txnAppId": "fabricops-column-lineage:" + run["run_id"], "txnVersion": 1})
+    except Exception:
+        if not confirmed():
+            raise
+    if not confirmed():
+        raise RuntimeError("Column lineage projection was not confirmed; inspect the Run and projection before retrying.")
+    return {"status": "published", "row_count": len(physical), "source_run_sha256": _metadata_hash(_column_lineage_snapshot(run))}
+
+
+def sync_pipeline_lineage(plan, *, spark_session=None):
+    """Retry projection independently of the already committed business/Run outcome."""
+    run = plan.evidence["final_result"]
+    if not plan.permits_persistence or not any(op.get("lineage") for op in run.get("operations", [])):
+        return
+    digest = _metadata_hash(_column_lineage_snapshot(run))
+    if plan.evidence.get("lineage_projection", {}).get("source_run_sha256") == digest:
+        return
+    try:
+        plan.evidence["lineage_projection"] = publish_column_lineage(run,
+            context={**plan.runtime_context, "execution_plan": plan}, spark_session=spark_session)
+    except Exception as exc:
+        plan.evidence["lineage_projection"] = {"status": "failed", "error_type": type(exc).__name__}
+        error = RuntimeError(f"Run {run['run_id']} is committed, but column lineage projection failed. Retry finalize_pipeline(pipeline) "
+                             "or rebuild from the finalized Run; do not replay business Writes.")
+        error.run_id = run["run_id"]
+        error.published = any(op.get("publication_status") == "published" for op in run.get("operations", []))
+        error.failed_stage = "Lineage metadata"
+        raise error from exc
 
 
 def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
@@ -6169,18 +6596,23 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
             key = f"{role}:{identity.get('logical_id') or identity['store'] + '/' + identity['table_name']}"
             actual = plan.evidence["operations"][key]
             operations.append({"operation_key": key,
-                **({"source_type": "file", "source_id": table_id, "table_id": None} if identity.get("source_type") == "file" else {"table_id": table_id}),
-                **({"source_ids": actual["source_ids"]} if actual.get("source_ids") else {}), "pipeline_role": role,
+                "table_id": table_id, "asset_type": identity.get("asset_type", "TABLE"),
+                "asset_workspace_id": plan.runtime_context["_pipeline_bindings"][table_id]["asset_workspace_id"],
+                "pipeline_role": role,
                 "contract_id": contract["contract_id"] if contract else None,
                 "contract_version": contract["contract_version"] if contract else None,
                 "payload_sha256": hashlib.sha256(contract["contract_payload_json"].encode()).hexdigest() if contract else None,
-                **({name: actual.get(name) for name in ("file_write_parameters_json", "output_path", "publication_status")}
-                   if role == "target" and identity.get("source_type") == "file" else {}),
-                "destination": plan.runtime_context["_pipeline_bindings"][table_id],
+                **({"publication_status": actual.get("publication_status") or plan.evidence.get("publication_outcomes", {}).get(table_id, {}).get("status")}
+                   if role == "target" and (actual.get("publication_status") or table_id in plan.evidence.get("publication_outcomes", {})) else {}),
+                **({name: actual.get(name) for name in ("file_write_parameters_json", "output_path")}
+                   if role == "target" and identity.get("asset_type") == "FILE" else {}),
+                "destination": {key: value for key, value in plan.runtime_context["_pipeline_bindings"][table_id].items()
+                                if key not in {"asset_workspace_id", "table_id", "asset_type"}},
                 **{name: actual.get(name) for name in ("read_parameters", "write_parameters", "repartition_by", "read_mode", "write_mode", "query_sha256", "incremental_target_table_id",
                     "started_at", "completed_at", "rows_read", "rows_written", "observed_columns_json")},
                 "metrics": dict(actual.get("metrics") or {}),
-                "source_table_ids": actual.get("source_table_ids", []),
+                **({"lineage": actual["lineage"]} if "lineage" in actual else {}),
+                "source_assets": actual.get("source_assets", []),
                 "status": actual["status"], "stages": actual["stages"]})
     config = plan.runtime_context["config"]
     row = {"run_id": plan.plan_id, "pipeline_id": plan.pipeline_id,
@@ -6189,7 +6621,7 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
         "pipeline_version": plan.pipeline_version,
         "promotion_id": plan.promotion_id or None, "governed_notebook_id": plan.governed_notebook_id or None,
         "execution_identity": plan.runtime_context.get("user_id") or plan.runtime_context.get("user_name") or None,
-        "run_schema_version": 3,
+        "run_schema_version": 4,
         "boundary_completed": plan.evidence.get("boundary_completed", False),
         "operations": sorted(operations, key=lambda item: item["operation_key"]),
         "profiling": plan.evidence.get("profiling", []), "failures": plan.evidence["failures"],
@@ -6228,11 +6660,11 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
         properties = DeltaTable.forPath(spark, path).detail().select("properties").first()["properties"]
         if "delta.setTransactionRetentionDuration" in properties:
             raise RuntimeError("Pipeline Run requires unbounded Delta transaction identity retention.")
-        retry_delta_metadata(lambda: frame.drop("_expected").write.format("delta").mode("append")
-         .option("txnAppId", "fabricops-pipeline-run:" + plan.plan_id).option("txnVersion", 0).save(path))
+        write_metadata_frame(frame.drop("_expected"), path, table, options={"txnAppId": "fabricops-pipeline-run:" + plan.plan_id, "txnVersion": 0})
     else:
         # Compare the complete previous row inside the transaction. No physical
         # token column or per-update table metadata mutation is needed.
+        validate_metadata_merge(table, frame.drop("_expected"), path)
         previous = "struct(" + ",".join("target.`" + name + "`" for name in schema.fieldNames()) + ")"
         changes = {name: "source.`" + name + "`" for name in schema.fieldNames()}
         changes["run_id"] = ("CASE WHEN target.completed_at IS NULL AND "
@@ -6309,6 +6741,7 @@ class PipelineOperation:
                 if self.role == "target" and args.get("relative_path") is not None else
                 resolve_physical_table_identity(plan.runtime_context["config"], plan.workspace_id,
                     **{key: args[key] for key in ("store", "schema", "table_name")}))
+            self.physical_identity = physical_identity
             table_id = participant_id(physical_identity)
             identities = json.loads(plan.participants_json)
             identity = identities.get(table_id)
@@ -6329,7 +6762,7 @@ class PipelineOperation:
             plan.evidence["operations"][key] = self.record
             # These are the notebook settings retained and compared in Governed mode.
             # Exact processing parameters are retained in the approved Pipeline Activation.
-            is_file_target = self.role == "target" and identity.get("source_type") == "file"
+            is_file_target = self.role == "target" and identity.get("asset_type") == "FILE"
             processing_parameters = ({"read_parameters": None, "write_parameters": None,
                 "repartition_by": args.get("repartition_by")} if is_file_target else validated_pipeline_processing(role=self.role,
                 read_mode=str(args.get("read_mode", "full") or "").strip().lower() if self.role == "source" else None,
@@ -6341,7 +6774,7 @@ class PipelineOperation:
                 if plan.execution_mode == "governed":
                     raise ValueError("Governed file targets require explicit destination authorization; file-target Pipeline Promotion is not supported.")
                 self.record["file_write_parameters_json"] = canonical_pipeline_json({key: args.get(key) for key in
-                    ("write_options", "single_file", "max_single_file_rows", "max_single_file_bytes")})
+                    ("write_options",)})
             self.record.update(
                 store=str(identity["store"]),
                 requested_schema=args.get("schema"),
@@ -6355,21 +6788,20 @@ class PipelineOperation:
                 rows_read=None,
                 rows_written=None,
                 metrics={},
-                source_table_ids=[],
+                source_assets=[],
             )
             self.record.update(processing_parameters)
             if self.role == "target":
                 args["sources"] = tuple(args["sources"])
-                self.record["source_table_ids"] = sorted(source["table_id"] for source in args["sources"] if source.get("table_id"))
-                file_ids = sorted(source["source_id"] for source in args["sources"] if source.get("source_type") == "file")
-                if file_ids:
-                    self.record["source_ids"] = file_ids
+                self.record["source_assets"] = sorted(
+                    [{"table_id": source["table_id"], "asset_type": source.get("asset_type", "TABLE")} for source in args["sources"]],
+                    key=lambda ref: ref["table_id"])
             if plan.execution_mode == "governed":
                 from fabricops_kit.activated_pipeline.shared import verify_governed_plan
                 verify_governed_plan(plan, spark_session=args.get("spark_session"))
                 activated = {(participant_id(item), item["pipeline_role"]): item for item in json.loads(plan.activated_operations_json)}
                 selected = activated.get((table_id, self.role))
-                enforced = ("read_parameters", "repartition_by", "write_parameters", "read_mode", "write_mode", "query_sha256", "incremental_target_table_id", "source_table_ids", "source_ids")
+                enforced = ("read_parameters", "repartition_by", "write_parameters", "read_mode", "write_mode", "query_sha256", "incremental_target_table_id", "source_assets")
                 if not plan.promotion_id or selected is None or any(self.record.get(name) != selected.get(name) for name in enforced):
                     raise ValueError("Governed table or execution mode differs from activated authority.")
             elif plan.execution_mode == "ungoverned" and self.role == "target":
@@ -6404,7 +6836,7 @@ class PipelineOperation:
             self.record["rows_written"] = int(self.record["metrics"]["rows_committed"])
 
     def complete(self, stages, *, rows_read=None, rows_written=None, metrics=None):
-        """Keep safe stage outcomes and actual row metrics; never trigger Spark actions."""
+        """Capture outcomes and persist file Catalogue/profiles before returning."""
         if metrics is not None:
             self.capture_metrics(metrics)
         if rows_read is not None:
@@ -6417,6 +6849,30 @@ class PipelineOperation:
         self.record["status"] = "failed" if any(
             stage.get("status") in {"blocked", "failed"} or stage.get("evaluation_status") == "not_fully_evaluated"
             for stage in stages) else "succeeded"
+        if (self.record["status"] == "succeeded" and self.plan.permits_persistence
+                and self.physical_identity.get("asset_type") == "FILE"
+                and (self.role == "source" or self.record.get("publication_status") == "published")):
+            context = {**self.plan.runtime_context, "execution_plan": self.plan,
+                       "_spark_session": self.arguments.get("spark_session")}
+            try:
+                operation = "read" if self.role == "source" else "write"
+                profile = self.plan.evidence.get("pending_file_profiles", {}).get(
+                    (self.physical_identity["table_id"], operation)
+                )
+                columns = (json.loads(self.record["observed_columns_json"]) if self.role == "source" and self.record.get("observed_columns_json") is not None
+                           else None if self.role == "source"
+                           else [{"column_name": field.name, "data_type": field.dataType.simpleString()}
+                                 for field in getattr(getattr(self.arguments.get("dataframe"), "schema", None), "fields", [])])
+                persist_file_catalogue(self.physical_identity, context=context, profile_summary=profile, columns=columns)
+                _persist_file_profile(self.physical_identity, operation=operation, context=context)
+            except Exception as exc:
+                error = RuntimeError("File Catalogue persistence failed after successful file IO.")
+                if self.role == "target":
+                    error.published = self.record.get("publication_status") == "published"
+                    error.write_metrics = dict(self.record.get("metrics") or {})
+                    error.failed_stage = "File metadata"
+                    error.resolved_path = self.record.get("output_path")
+                raise error from exc
 
     def __exit__(self, exc_type, exc, traceback):
         """Persist the outcome and release the plan even when storage fails."""
@@ -6428,15 +6884,15 @@ class PipelineOperation:
                 if self.role == "target" and getattr(exc, "published", False):
                     write_metrics = getattr(exc, "write_metrics", {}) or {}
                     self.capture_metrics(write_metrics)
+                    self.record["publication_status"] = "published"
                     if self.arguments.get("relative_path") is not None:
                         self.record["output_path"] = getattr(exc, "resolved_path", None) or self.record.get("output_path")
-                        self.record["publication_status"] = "published"
                 plan.evidence["failures"].append({"code": "operation_failed", "exception_type": exc_type.__name__})
             try:
                 persist_pipeline_run(plan, spark_session=self.arguments.get("spark_session"))
             except RuntimeError as persistence_error:
                 for name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status",
-                           "recovery_paths", "resolved_path", "publication_status"):
+                           "recovery_paths", "resolved_path", "publication_status", "output_layout", "overflow_occurred", "overflow_reason"):
                     if exc is not None and hasattr(exc, name):
                         setattr(persistence_error, name, getattr(exc, name))
                 if self.role == "target" and any(stage.get("stage") == "Write" and stage.get("status") == "passed"
@@ -6462,6 +6918,7 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
         if plan.evidence.get("persistence_failed"):
             raise RuntimeError("Evidence persistence failed; create a new plan.")
         if plan.evidence.get("sealed"):
+            sync_pipeline_lineage(plan, spark_session=spark_session)
             return plan.evidence["final_result"]
         if failed:
             plan.evidence["failures"].append({"code": "project_execution_failed"})
@@ -6504,6 +6961,7 @@ def finalize_pipeline_run(plan, *, spark_session=None, failed=False):
                     except Exception:
                         plan.evidence["source_snapshot_acceptance"]["diagnostics_persisted"] = False
         plan.evidence.update(sealed=True, final_result=row)
+        sync_pipeline_lineage(plan, spark_session=spark_session)
         if plan.execution_mode == "dry_run" and status == "dry_run_completed" and plan.evidence.get("notebook_snapshot") is not None:
             from fabricops_kit.activated_pipeline.shared import persist_engineering_dry_run
             try:
@@ -6631,7 +7089,7 @@ class PipelineSession:
                         identities[table_id] = {**identity, "logical_id": logical, "roles": [*roles, participant_role]}
                         choice = (self.choices.get(table_id, {"no_contract": True})
                                   if self.plan.execution_mode == "dry_run" else {"no_contract": True})
-                        if participant_role == "target" and identity.get("source_type") == "file" and choice != {"no_contract": True}:
+                        if participant_role == "target" and identity.get("asset_type") == "FILE" and choice != {"no_contract": True}:
                             raise ValueError("File targets do not support Data Contracts; select No Contract.")
                         selections[table_id] = choice
                         if choice == {"no_contract": True}:
@@ -6658,11 +7116,12 @@ class PipelineSession:
             return self.plan
 
     def register_source(self, result):
-        """Associate a successful Read with this execution, without claiming exact lineage."""
+        """Associate Read participation and register its trusted column-lineage boundary."""
         with self.plan.lock:
             if result.get("execution_plan_id") != self.plan.plan_id:
                 raise ValueError("Read belongs to another execution.")
             self.sources.append(result)
+            register_read_lineage(self.plan, result)
         self.refresh()
         return result
 
@@ -6710,10 +7169,12 @@ class PipelineSession:
             atexit.unregister(self.close)
             for frame in self.plan.evidence.pop("source_observation_caches", []):
                 frame.unpersist()
+            self.plan.evidence.pop("pending_file_profiles", None)
             self.closed = True
             if failed or not self.plan.evidence.get("boundary_completed") or self.plan.evidence.get("final_result", {}).get("status") not in {"succeeded", "ungoverned_completed", "dry_run_completed"}:
                 self.plan.evidence.pop("profile_observations", None)
             self.sources.clear()
+            self.plan.lineage.clear()
             for cache in (_CURRENT_FRESHNESS_EVIDENCE,
                           _PENDING_SOURCE_OBSERVATIONS,
                           _INCREMENTAL_SOURCE_SCOPES, _ACTIVE_PUBLICATION_SOURCES):
@@ -6866,12 +7327,10 @@ def start_pipeline_session(pipeline_mode, *, inspector=None):
         raise
 
 
-
 def build_pipeline_audit_fields(*, config=None, active_workspace_id=None, runtime_context=None):
     """Allow absent notebook audit fields only for nonpersisting Dry Run diagnostics."""
     return build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context,
         require_notebook_identity=persistence_permitted(runtime_context))
-
 
 
 PROFILING_ACTIVITIES = ("standard", "grain", "frequency")
@@ -6930,7 +7389,10 @@ def profiling_context_key(table_id, *, context, spark_session=None):
         config, active_workspace_id, table_id, context=runtime, spark_session=spark_session)
     physical = pipeline_physical_bindings({table_id: identity}, config=config, workspace_id=active_workspace_id)[table_id]
     descriptor = {"table_id": table_id, "workspace_id": active_workspace_id, "physical": physical}
-    return _metadata_hash(descriptor), descriptor
+    # Preserve released context hashes so the rename does not reset accepted history.
+    hash_physical = {"workspace_id": physical["asset_workspace_id"],
+                     **{key: value for key, value in physical.items() if key != "asset_workspace_id"}}
+    return _metadata_hash({**descriptor, "physical": hash_physical}), descriptor
 
 
 def profiling_completion_history(table_id, *, context, spark_session=None, activity=None):
@@ -6942,8 +7404,9 @@ def profiling_completion_history(table_id, *, context, spark_session=None, activ
     def frame(table):
         return read_lakehouse_table(table, store="Metadata",
             schema=metadata_table_physical_schema(config, table),
-            context={**(context or {}), "_spark_session": spark_session, "_fabricops_suppress_io_log": True}).filter(F.col("workspace_id") == active_workspace_id)
-    events = (decode_metadata_dataframe("METADATA_PIPELINE_RUN", frame("METADATA_PIPELINE_RUN"))
+            context={**(context or {}), "_spark_session": spark_session, "_fabricops_suppress_io_log": True})
+    events = (decode_metadata_dataframe("METADATA_PIPELINE_RUN", frame("METADATA_PIPELINE_RUN").filter(
+        F.col("workspace_id") == active_workspace_id))
         .filter(F.col("execution_mode").isin("ungoverned", "governed", "live"))
         .select(F.explode("profiling").alias("event"))
         .select("event.*")
@@ -7197,9 +7660,7 @@ def _show_previous_table_profile(table_id, previous, *, context, spark_session, 
             schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
             context={**context, "_spark_session": spark_session, "_fabricops_suppress_io_log": True},
         ).filter(
-            (F.col("_workspace_id") == context["scope_workspace_id"])
-            & (F.col("table_id") == table_id)
-            & (F.col("profile_snapshot_id") == snapshot_id)
+            (F.col("table_id") == table_id) & (F.col("profile_snapshot_id") == snapshot_id)
         )
         scope = {"profile_scope": previous.get("profile_scope") or "full_table",
                  "profiling_max_rows": previous.get("profiling_max_rows")}
@@ -7337,12 +7798,6 @@ PROFILED_COLUMNS = metadata_table_schema_registry()[PROFILED_TABLE].fieldNames()
 
 
 PROFILED_FREQUENCY_COLUMNS = metadata_table_schema_registry()[PROFILED_FREQUENCY_TABLE].fieldNames()
-
-
-CATALOGUE_COLUMNS = metadata_table_schema_registry()[CATALOGUE_TABLE].fieldNames()
-
-
-LOAD_STRATEGIES = {"overwrite", "append_all", "append_new_only", "scd1", "scd2"}
 
 
 _PROFILE_EXCLUDED_NAMES = {
@@ -7833,128 +8288,6 @@ def _warehouse_profile_key_candidates(
     return []
 
 
-def _require_non_empty_string(value: Any, name: str) -> str:
-    """Return a stripped required string or raise a clear validation error."""
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{name} must be a non-empty string.")
-    return value.strip()
-
-
-def _normalize_choice(value: Any, name: str, allowed: set[str]) -> str:
-    """Return a normalized allowed choice or raise a clear validation error."""
-    normalized = _require_non_empty_string(value, name).lower()
-    if normalized not in allowed:
-        choices = ", ".join(sorted(allowed))
-        raise ValueError(f"{name} must be one of: {choices}.")
-    return normalized
-
-
-def _processing_definition(
-    profile_role: str,
-    load_strategy: Any,
-    load_strategy_parameters: Any,
-) -> tuple[str | None, str | None]:
-    """Validate and canonically serialize one table-owned processing definition."""
-    supplied = load_strategy is not None or load_strategy_parameters is not None
-    if profile_role == "source":
-        if supplied:
-            raise ValueError("Source registration does not accept target processing arguments.")
-        return None, None
-    if load_strategy is None:
-        if load_strategy_parameters is not None:
-            raise ValueError("load_strategy is required when load_strategy_parameters is supplied.")
-        return None, None
-    strategy = _normalize_choice(load_strategy, "load_strategy", LOAD_STRATEGIES)
-    if load_strategy_parameters is None:
-        parameters: dict[str, Any] = {}
-    elif not isinstance(load_strategy_parameters, dict):
-        raise ValueError("load_strategy_parameters must be a mapping when supplied.")
-    else:
-        parameters = dict(load_strategy_parameters)
-    allowed = {
-        "overwrite": {"watermark_column"},
-        "append_all": {"watermark_column"},
-        "append_new_only": {"watermark_column"},
-        "scd1": {"key_columns", "watermark_column"},
-        "scd2": {"key_columns", "effective_column", "tracked_columns", "watermark_column"},
-    }[strategy]
-    unexpected = sorted(set(parameters) - allowed)
-    if unexpected:
-        raise ValueError(f"{strategy} does not accept processing parameters: {', '.join(unexpected)}.")
-    for name in ("key_columns", "tracked_columns"):
-        if name in parameters:
-            values = parameters[name]
-            if not isinstance(values, (list, tuple)) or not values:
-                raise ValueError(f"{name} must be a non-empty sequence of column names.")
-            parameters[name] = [_require_non_empty_string(value, name) for value in values]
-    for name in ("effective_column", "watermark_column"):
-        if name in parameters:
-            parameters[name] = _require_non_empty_string(parameters[name], name)
-    if strategy in {"scd1", "scd2"} and "key_columns" not in parameters:
-        raise ValueError(f"{strategy} requires key_columns.")
-    if strategy == "scd2" and "effective_column" not in parameters:
-        raise ValueError("scd2 requires effective_column.")
-    return strategy, json.dumps(parameters, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-
-
-def _validate_processing_columns(df: Any, parameters_json: str | None) -> None:
-    """Require every authored processing column name to exist in the target schema."""
-    if parameters_json is None:
-        return
-    parameters = json.loads(parameters_json)
-    available = {str(field.name) for field in df.schema.fields}
-    referenced = []
-    for name in ("effective_column", "watermark_column"):
-        if parameters.get(name):
-            referenced.append(str(parameters[name]))
-    for name in ("key_columns", "tracked_columns"):
-        referenced.extend(str(value) for value in parameters.get(name, []))
-    missing = sorted(set(referenced) - available)
-    if missing:
-        raise ValueError(f"Processing definition references columns not present in df: {', '.join(missing)}.")
-
-
-def _validate_resolved_identity(table: Any, *, config: Any, active_workspace_id: str) -> dict[str, str | None]:
-    """Validate a caller-supplied identity against the active Fabric config."""
-    if not isinstance(table, Mapping):
-        raise ValueError("table must be a canonical table identity mapping.")
-    required = {"table_id", "store", "schema", "table_name", "store_kind"}
-    missing = sorted(required - set(table))
-    if missing:
-        raise ValueError(f"table identity is missing required fields: {', '.join(missing)}.")
-    resolved = resolve_physical_table_identity(
-        config,
-        active_workspace_id,
-        store=table["store"],
-        schema=table["schema"],
-        table_name=table["table_name"],
-    )
-    supplied = {name: table[name] for name in required}
-    if supplied != resolved:
-        raise ValueError(
-            "table identity is inconsistent with the canonical identity resolved from the active Fabric config."
-        )
-    return resolved
-
-
-def _validate_frequency_profile_dataframe(source_df, frequency_profile_df, selected_columns: Sequence[str]):
-    """Return the frequency DataFrame after validating caller-provided scope."""
-    if frequency_profile_df is None:
-        return source_df, "full_source"
-    source_session = getattr(source_df, "sparkSession", None)
-    frequency_session = getattr(frequency_profile_df, "sparkSession", None)
-    if source_session is not None and frequency_session is not None and source_session is not frequency_session:
-        raise ValueError("frequency_profile_df must use the same Spark session as df.")
-    fields = getattr(getattr(frequency_profile_df, "schema", None), "fields", None)
-    if fields is None:
-        raise ValueError("frequency_profile_df must be a Spark DataFrame-like object with a schema.")
-    available_columns = {field.name for field in fields}
-    missing_columns = [column for column in selected_columns if column not in available_columns]
-    if missing_columns:
-        raise ValueError(f"frequency_profile_df is missing selected frequency columns: {', '.join(missing_columns)}")
-    return frequency_profile_df, "caller_provided"
-
-
 def _scalar_frequency_columns(df, candidate_columns: Sequence[str]) -> list[str]:
     """Return candidate columns whose Spark types are scalar frequency types."""
     from pyspark.sql.types import ArrayType, BinaryType, MapType, StructType
@@ -8018,8 +8351,10 @@ def _canonical_profiled_dataframe(
     config: Any,
     active_workspace_id: str,
     runtime_context: dict[str, Any],
+    workspace_id: str,
     table_id: str,
     profile_snapshot_id: str,
+    asset_type: str = "TABLE",
 ):
     """Map statistical profiler output to the normalized Profile schema."""
     from pyspark.sql import functions as F
@@ -8049,10 +8384,14 @@ def _canonical_profiled_dataframe(
         F.col("MAX_VALUE").cast("string").alias("max_value"),
     )
     return base.select(
+        F.lit(asset_type).alias("asset_type"),
+        F.lit(runtime_context.get("_profile_run_id")).cast("string").alias("run_id"),
+        F.lit(runtime_context.get("_profile_role")).cast("string").alias("pipeline_role"),
         profile_id_udf(F.col("_column_name")).alias("profile_id"),
         F.lit(profile_snapshot_id).cast("string").alias("profile_snapshot_id"),
         F.lit(table_id).cast("string").alias("table_id"),
         column_id_udf(F.col("_column_name")).alias("column_id"),
+        F.lit(workspace_id).cast("string").alias("asset_workspace_id"),
         F.col("data_type").cast("string"),
         F.lit(str(runtime_context.get("table_name") or "")).cast("string").alias("table_name"),
         F.col("_column_name").cast("string").alias("column_name"),
@@ -8091,11 +8430,13 @@ def _frequency_metadata_dataframe(
     column_id_udf = F.udf(lambda column_name: build_column_id(table_id, column_name), T.StringType())
     identities = profiled_df.select(
         "column_id", "column_name", "table_id", "table_name", "data_type",
-        "profile_id", "profile_snapshot_id",
+        "asset_workspace_id", "profile_id", "profile_snapshot_id", "asset_type", "run_id", "pipeline_role",
     )
-    joined = frequency_df.withColumn("_column_id", column_id_udf(F.col("COLUMN_NAME"))).join(
+    source = frequency_df.withColumn("_column_id", column_id_udf(F.col("COLUMN_NAME")))
+    joined = source.join(
         identities,
-        (F.col("_column_id") == identities.column_id) & (frequency_df.DATA_TYPE == identities.data_type),
+        (F.col("_column_id") == identities.column_id)
+        & (frequency_df.DATA_TYPE == identities.data_type),
         "inner",
     )
     audit_columns = _audit_literal_columns(config=config, active_workspace_id=active_workspace_id, runtime_context=runtime_context)
@@ -8104,6 +8445,7 @@ def _frequency_metadata_dataframe(
         T.StringType(),
     )
     return joined.select(
+        identities.asset_type, identities.run_id, identities.pipeline_role,
         frequency_id_udf(identities.profile_id, F.col("FREQUENCY_RANK")).alias("frequency_id"),
         identities.profile_id.cast("string").alias("profile_id"),
         identities.profile_snapshot_id.cast("string").alias("profile_snapshot_id"),
@@ -8112,6 +8454,7 @@ def _frequency_metadata_dataframe(
         identities.table_name.cast("string").alias("table_name"),
         identities.column_name.cast("string").alias("column_name"),
         identities.data_type.cast("string").alias("data_type"),
+        identities.asset_workspace_id.cast("string").alias("asset_workspace_id"),
         F.lit((runtime_context.get("_profile_scope") or {}).get("profile_scope", "full_table")).alias("profile_scope"),
         F.lit((runtime_context.get("_profile_scope") or {}).get("profiling_max_rows")).cast("long").alias("profiling_max_rows"),
         F.col("VALUE").cast("string").alias("value"),
@@ -8136,6 +8479,7 @@ def _replace_snapshot_rows(
         "Metadata", table_name, metadata_table_physical_schema(config, table_name),
         context={"config": config, "scope_workspace_id": active_workspace_id},
     )
+    validate_metadata_merge(table_name, dataframe, path)
     snapshot = dataframe.select("profile_snapshot_id").dropDuplicates().first()
     if snapshot is None:
         return
@@ -8144,8 +8488,8 @@ def _replace_snapshot_rows(
         retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path)
         .alias("target")
         .merge(dataframe.alias("source"), f"target.{row_id} = source.{row_id}")
-        .whenMatchedUpdateAll()
-        .whenNotMatchedInsertAll()
+        .whenMatchedUpdate(set={name: f"source.{name}" for name in dataframe.columns})
+        .whenNotMatchedInsert(values={name: f"source.{name}" for name in dataframe.columns})
         .whenNotMatchedBySourceDelete(
             condition=f"target.profile_snapshot_id = '{snapshot_id}'"
         )
@@ -8198,43 +8542,38 @@ def _delete_profile_snapshot(
          .whenMatchedDelete().execute()))
 
 
-def _stage_catalogue_profile_retry(
-    *, profiled_df: Any, config: Any, active_workspace_id: str, spark_session: Any
-) -> bool:
-    """Return whether this activity is a retry and hide its prior completion marker."""
+def _stage_catalogue_profile_retry(*, catalogue_asset, context, spark_session) -> bool:
+    """Validate or register the physical parent before replacing a profile snapshot."""
     from delta.tables import DeltaTable
+    from pyspark.sql import functions as F
 
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
+    config = context["config"]
+    workspace_id, table_id = catalogue_asset["asset_workspace_id"], catalogue_asset["table_id"]
+    _, _, _, path = resolve_configured_lakehouse_table(
         "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        context={"config": config, "scope_workspace_id": active_workspace_id},
+        context=context,
     )
-    activities = profiled_df.select(
-        "workspace_id", "table_id", "_activity_id"
-    ).dropDuplicates()
+    key = ((F.col("asset_type") == "TABLE") & (F.col("asset_workspace_id") == workspace_id)
+           & (F.col("table_id") == table_id))
     target = DeltaTable.forPath(spark_session, path)
-    same_activity_retry = bool(
-        target.toDF()
-        .select("workspace_id", "table_id", "_activity_id")
-        .join(
-            activities,
-            on=["workspace_id", "table_id", "_activity_id"],
-            how="inner",
-        )
-        .limit(1)
-        .count()
-    )
-    (
-        retry_delta_metadata(lambda: target.alias("target")
-        .merge(
-            activities.alias("source"),
-            "target.workspace_id = source.workspace_id "
-            "AND target.table_id = source.table_id "
-            "AND target._activity_id = source._activity_id",
-        )
-        .whenMatchedUpdate(set={"last_profiled_at": "CAST(NULL AS TIMESTAMP)"})
-        .execute())
-    )
-    return same_activity_retry
+    existing = target.toDF().where(key).select("item_id", "is_active", "_activity_id").limit(2).collect()
+    if len(existing) > 1:
+        raise ValueError(f"Profiling requires one Catalogue parent for {table_id!r} in {workspace_id!r}.")
+    if not existing or existing[0]["is_active"] is False:
+        merge_catalogue_asset(catalogue_asset, context=context, spark_session=spark_session)
+        return False
+    item = existing[0]["item_id"]
+    if item and item.lower() != catalogue_asset["item_id"].lower():
+        raise ValueError(f"Profiling Catalogue item disagrees with the resolved store for {table_id!r}.")
+    activity_id = catalogue_asset["_activity_id"]
+    if existing[0]["_activity_id"] != activity_id:
+        return False
+
+    retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path).update(
+        condition=key & (F.col("_activity_id") == activity_id),
+        set={"last_profiled_at": F.lit(None).cast("timestamp")},
+    ))
+    return True
 
 
 def _profile_snapshot_id(*, config: Any, active_workspace_id: str, context: dict[str, Any], table_id: str) -> str:
@@ -8247,180 +8586,70 @@ def _profile_snapshot_id(*, config: Any, active_workspace_id: str, context: dict
     return str(uuid5(NAMESPACE_URL, f"fabricops-profile|{active_workspace_id}|{table_id}|{activity_id}"))
 
 
-def _catalogue_dataframe_from_profiled(
-    profiled_df,
-    *,
-    source_df: Any,
-    store_type: str,
-    layer: str,
-    schema_name: str | None,
-    table_name: str,
-    load_strategy: str | None = None,
-    load_strategy_parameters_json: dict[str, Any] | None = None,
-    writer_workspace_id: str | None = None,
-    writer_notebook_id: str | None = None,
-    writer_notebook_name: str | None = None,
-    scheduled_refresh_json: dict[str, Any] | None = None,
-    profile_key_candidates_json: dict[str, Any] | None = None,
-    source_fields: Sequence[tuple[str, str]] | None = None,
-):
-    """Return one table row and one row for each observed column asset."""
-    from pyspark.sql import functions as F
+def _catalogue_columns(table_id, fields):
+    """Build the current schema while retaining the established column ID algorithm."""
+    if fields is None:
+        return None
+    return [{"column_id": build_column_id(table_id, name), "column_name": name, "data_type": dtype}
+            for name, dtype in fields]
 
-    first = profiled_df.select(
-        "table_id",
-        "workspace_id",
-        "_committed_by",
-        "_committed_at",
-        "_workspace_id",
-        "_workspace_name",
-        "_notebook_id",
-        "_notebook_name",
-        "_metadata_lakehouse_name",
-        "_activity_id",
-    ).first()
-    if first is None:
-        return profiled_df.sparkSession.createDataFrame([], schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
-    audit = {name: first[name] for name in CATALOGUE_COLUMNS if name.startswith("_")}
-    common = {
-        "table_id": first["table_id"],
-        "workspace_id": first["workspace_id"],
-        "store_type": store_type,
-        "layer": layer,
-        "schema_name": schema_name,
-        "table_name": table_name,
-        "first_profiled_at": first["_committed_at"],
-        "last_profiled_at": first["_committed_at"],
-        "is_active": True,
-        **audit,
+
+def table_catalogue_observation(identity, *, context, dataframe=None, fields=None, audit=None):
+    """Build a physical TABLE registration with optional full schema observation."""
+    config, scope, runtime = resolve_fabric_context(context=context)
+    if audit is None:
+        audit = build_pipeline_audit_fields(config=config, active_workspace_id=scope, runtime_context=runtime)
+    store = get_store(config, scope, identity["store"])
+    workspace = store.workspace_id.lower()
+    if fields is None and getattr(getattr(dataframe, "schema", None), "fields", None) is not None:
+        fields = [(field.name, field.dataType.simpleString()) for field in dataframe.schema.fields]
+    return {
+        "asset_type": "TABLE", "asset_workspace_id": workspace,
+        "asset_workspace_name": resolve_asset_workspace_name(workspace, context=runtime), "item_id": store.item_id,
+        "table_id": identity["table_id"], "store_type": identity.get("store_kind") or identity["store_type"],
+        "layer": identity["store"], "schema_name": identity.get("schema"), "table_name": identity["table_name"],
+        "columns_json": _catalogue_columns(identity["table_id"], fields),
+        "first_observed_at": audit["_committed_at"] if fields is not None else None,
+        "last_observed_at": audit["_committed_at"] if fields is not None else None,
+        "is_active": True, **audit,
     }
-    rows = [
-        coerce_metadata_row_types(
-            CATALOGUE_TABLE,
-            {
-                **common,
-                "metadata_level": "table",
-                "column_id": None,
-                "column_name": None,
-                "data_type": None,
-                "load_strategy": load_strategy,
-                "load_strategy_parameters_json": load_strategy_parameters_json,
-                "writer_workspace_id": writer_workspace_id,
-                "writer_notebook_id": writer_notebook_id,
-                "writer_notebook_name": writer_notebook_name,
-                "scheduled_refresh_json": scheduled_refresh_json,
-                "profile_key_candidates_json": profile_key_candidates_json,
-            },
-        )
-    ]
-    fields = source_fields or [(field.name, field.dataType.simpleString()) for field in source_df.schema.fields]
-    for column_name, data_type in fields:
-        column_id = build_column_id(first["table_id"], column_name)
-        rows.append(
-            coerce_metadata_row_types(
-                CATALOGUE_TABLE,
-                {
-                    **common,
-                    "metadata_level": "column",
-                    "column_id": column_id,
-                    "column_name": column_name,
-                    "data_type": data_type,
-                    "load_strategy": None,
-                    "load_strategy_parameters_json": None,
-                    "writer_workspace_id": None,
-                    "writer_notebook_id": None,
-                    "writer_notebook_name": None,
-                    "scheduled_refresh_json": None,
-                    "profile_key_candidates_json": None,
-                },
-            )
-        )
-    return profiled_df.sparkSession.createDataFrame(
-        [encode_metadata_row(CATALOGUE_TABLE, row) for row in rows],
-        schema=metadata_table_schema_registry()[CATALOGUE_TABLE])
 
 
-def _upsert_catalogue_identities(*, catalogue_df: Any, config: Any, active_workspace_id: str, spark_session: Any) -> None:
-    """Upsert Catalogue rows by workspace-aware asset grain and deactivate missing columns."""
-    try:
-        from delta.tables import DeltaTable
-    except Exception as exc:  # pragma: no cover - depends on Fabric/Delta runtime
-        raise RuntimeError(
-            "Delta Lake merge support is required for idempotent METADATA_DATA_CATALOGUE writes."
-        ) from exc
-    _store, _table_value, _schema_value, path = resolve_configured_lakehouse_table(
-        "Metadata",
-        CATALOGUE_TABLE,
-        metadata_table_physical_schema(config, CATALOGUE_TABLE),
-        context={"config": config, "scope_workspace_id": active_workspace_id},
+def merge_catalogue_asset(row, *, context, spark_session):
+    """Merge one asset, preserving schema when no new full schema was observed."""
+    from delta.tables import DeltaTable
+
+    config = context["config"]
+    schema = metadata_table_schema_registry()[CATALOGUE_TABLE]
+    source = spark_session.createDataFrame([encode_metadata_row(CATALOGUE_TABLE, row)], schema=schema)
+    _, _, _, path = resolve_configured_lakehouse_table(
+        "Metadata", CATALOGUE_TABLE, metadata_table_physical_schema(config, CATALOGUE_TABLE), context=context,
     )
-    first = catalogue_df.select("workspace_id", "table_id").first()
-    if first is None:
-        return
-    workspace_id = str(first["workspace_id"]).replace("'", "''")
-    table_id = str(first["table_id"]).replace("'", "''")
-    target = DeltaTable.forPath(spark_session, path)
-    (
-        retry_delta_metadata(lambda: target.alias("target")
-        .merge(
-            catalogue_df.alias("source"),
-            "target.workspace_id = source.workspace_id "
-            "AND target.metadata_level = source.metadata_level "
-            "AND target.table_id = source.table_id "
-            "AND coalesce(target.column_id, '') = coalesce(source.column_id, '')",
+    validate_metadata_merge(CATALOGUE_TABLE, source, path)
+    updates = {name: f"source.{name}" for name in row
+               if name not in {"asset_workspace_id", "table_id", "asset_type", "first_observed_at", "first_profiled_at"}}
+    if row.get("item_id"):
+        updates["item_id"] = (
+            "CASE WHEN target.item_id IS NOT NULL AND lower(target.item_id) <> lower(source.item_id) "
+            "THEN CAST(raise_error('Catalogue asset key is already registered to a different Fabric item') AS STRING) "
+            "ELSE source.item_id END"
         )
-        .whenMatchedUpdate(
-            set={
-                "store_type": "source.store_type",
-                "layer": "source.layer",
-                "schema_name": "source.schema_name",
-                "table_name": "source.table_name",
-                "column_name": "source.column_name",
-                "data_type": "source.data_type",
-                "load_strategy": "coalesce(source.load_strategy, target.load_strategy)",
-                "load_strategy_parameters_json": (
-                    "coalesce(source.load_strategy_parameters_json, target.load_strategy_parameters_json)"
-                ),
-                "writer_workspace_id": (
-                    "coalesce(source.writer_workspace_id, target.writer_workspace_id)"
-                ),
-                "writer_notebook_id": (
-                    "coalesce(source.writer_notebook_id, target.writer_notebook_id)"
-                ),
-                "writer_notebook_name": (
-                    "coalesce(source.writer_notebook_name, target.writer_notebook_name)"
-                ),
-                "scheduled_refresh_json": (
-                    "coalesce(source.scheduled_refresh_json, target.scheduled_refresh_json)"
-                ),
-                "profile_key_candidates_json": (
-                    "coalesce(source.profile_key_candidates_json, target.profile_key_candidates_json)"
-                ),
-                "last_profiled_at": "source.last_profiled_at",
-                "is_active": "true",
-                "_committed_by": "source._committed_by",
-                "_committed_at": "source._committed_at",
-                "_workspace_id": "source._workspace_id",
-                "_workspace_name": "source._workspace_name",
-                "_notebook_id": "source._notebook_id",
-                "_notebook_name": "source._notebook_name",
-                "_metadata_lakehouse_name": "source._metadata_lakehouse_name",
-                "_activity_id": "source._activity_id",
-            }
+    for name in ("first_observed_at", "first_profiled_at"):
+        if name in row:
+            updates[name] = f"coalesce(target.{name}, source.{name})"
+    if "columns_json" in row:
+        updates["columns_json"] = (
+            "CASE WHEN source.columns_json IS NOT NULL AND "
+            "(target.columns_json IS NULL OR target.last_observed_at IS NULL OR source.last_observed_at >= target.last_observed_at) "
+            "THEN source.columns_json ELSE target.columns_json END"
         )
-        .whenNotMatchedInsert(values={
-            field.name: f"source.{field.name}"
-            for field in metadata_table_schema_registry()[CATALOGUE_TABLE].fields
-        })
-        .whenNotMatchedBySourceUpdate(
-            condition=(
-                f"target.workspace_id = '{workspace_id}' AND target.table_id = '{table_id}' "
-                "AND target.metadata_level = 'column' AND target.is_active = true"
-            ),
-            set={"is_active": "false"},
-        )
+        updates["last_observed_at"] = "greatest(target.last_observed_at, source.last_observed_at)"
+    retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path).alias("target")
+        .merge(source.alias("source"), "target.asset_workspace_id = source.asset_workspace_id "
+               "AND target.table_id = source.table_id AND target.asset_type = source.asset_type")
+        .whenMatchedUpdate(set=updates)
+        .whenNotMatchedInsert(values={name: f"source.{name}" for name in schema.fieldNames()})
         .execute())
-    )
 
 
 def execute_table_profile(
@@ -8628,6 +8857,7 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
             config=config, active_workspace_id=active_workspace_id, context=context, spark_session=spark_session)
         return {"grain_candidates": profile_key_candidates, **profile_metrics}
 
+    physical_workspace_id = get_store(config, active_workspace_id, identity["store"]).workspace_id.lower()
     profile_snapshot_id = _profile_snapshot_id(
         config=config, active_workspace_id=active_workspace_id, context=context, table_id=identity["table_id"]
     )
@@ -8636,6 +8866,7 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
         config=config,
         active_workspace_id=active_workspace_id,
         runtime_context={**context, "table_name": identity.get("table_name")},
+        workspace_id=physical_workspace_id,
         table_id=identity["table_id"],
         profile_snapshot_id=profile_snapshot_id,
     ).cache()
@@ -8655,6 +8886,7 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
                 runtime_context=context,
             )
         if "standard" not in selected_activities:
+            _require_catalogue_assets(profiled_df, context=context, table_name=PROFILED_FREQUENCY_TABLE)
             if "grain" in selected_activities:
                 _persist_grain_candidates(identity, profile_key_candidates, max_columns=grain_discovery_max_columns,
                     config=config, active_workspace_id=active_workspace_id, context=context, spark_session=spark_session)
@@ -8670,10 +8902,12 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
             finally:
                 profiled_df.unpersist()
 
+        row = table_catalogue_observation(identity, context=context,
+            dataframe=observation["source_df"], fields=observation["source_fields"])
         summary_persisted = False
         try:
             same_activity_retry = _stage_catalogue_profile_retry(
-                profiled_df=profiled_df, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session
+                catalogue_asset=row, context=context, spark_session=spark_session,
             )
             _replace_snapshot_rows(
                 dataframe=profiled_df, table_name=PROFILED_TABLE, row_id="profile_id",
@@ -8698,23 +8932,11 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
             else:
                 frequency_action = "skipped; no frequency profile generated"
             emit(f"6. Frequency profile metadata → {frequency_action}")
-            catalogue_df = _catalogue_dataframe_from_profiled(
-                profiled_df, source_df=observation.get("source_df"), store_type=identity["store_kind"],
-                layer=identity["store"], schema_name=identity["schema"],
-                table_name=identity["table_name"], load_strategy=None,
-                load_strategy_parameters_json=None,
-                writer_workspace_id=None,
-                writer_notebook_id=None,
-                writer_notebook_name=None,
-                scheduled_refresh_json=None,
-                profile_key_candidates_json=_key_candidate_evidence(
-                    profile_key_candidates, max_columns=grain_discovery_max_columns, scope=context.get("_profile_scope")
-                ) if grain_discovery_enabled else None,
-                source_fields=observation["source_fields"],
-            )
-            _upsert_catalogue_identities(
-                catalogue_df=catalogue_df, config=config, active_workspace_id=active_workspace_id, spark_session=spark_session,
-            )
+            row.update(first_profiled_at=row["_committed_at"], last_profiled_at=row["_committed_at"])
+            if grain_discovery_enabled:
+                row["profile_key_candidates_json"] = _key_candidate_evidence(
+                    profile_key_candidates, max_columns=grain_discovery_max_columns, scope=context.get("_profile_scope"))
+            merge_catalogue_asset(row, context=context, spark_session=spark_session)
         except Exception:
             if summary_persisted:
                 try:
@@ -8730,7 +8952,7 @@ def _persist_profile_observation(observation, *, context, spark_session, emit):
             raise
         catalogue_action = "updated" if same_activity_retry else "registered or updated"
         emit(
-            f"7. Catalogue → {catalogue_action} table and column metadata; "
+            f"7. Catalogue → {catalogue_action} table schema; "
             "existing load strategy and parameters preserved"
         )
         emit("Result → Profile completed and metadata saved.")
@@ -8747,8 +8969,10 @@ def _persist_grain_candidates(identity, candidates, *, max_columns, config, acti
     _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", CATALOGUE_TABLE,
         metadata_table_physical_schema(config, CATALOGUE_TABLE), context=context)
     table = DeltaTable.forPath(spark_session, path)
-    condition = ((F.col("table_id") == identity["table_id"]) & (F.col("workspace_id") == active_workspace_id)
-                 & (F.col("metadata_level") == "table"))
+    store = get_store(config, active_workspace_id, identity["store"])
+    condition = ((F.col("table_id") == identity["table_id"]) & (F.col("asset_workspace_id") == store.workspace_id.lower())
+                 & (F.col("asset_type") == "TABLE")
+                 & (F.col("item_id").isNull() | (F.lower(F.col("item_id")) == store.item_id.lower())))
     if table.toDF().where(condition).limit(2).count() != 1:
         raise RuntimeError("Grain Discovery requires one registered Catalogue table in this workspace_id.")
     audit = build_runtime_audit_fields(config=config, active_workspace_id=active_workspace_id, runtime_context=context)

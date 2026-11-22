@@ -40,13 +40,14 @@ _RESULT_COLUMNS = [
     "guardrail_rule_id",
     "guardrail_version",
     "table_id",
-    "source_id",
+    "asset_type",
     "table_name",
     "contract_id",
     "contract_version",
     "execution_type",
     "run_id",
-    "workspace_id",
+    "asset_workspace_id",
+    "execution_workspace_id",
     "status",
     "can_continue",
     "severity",
@@ -258,6 +259,7 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch, fak
         table_id="table-a",
         contract_id="contract-a",
         contract_version=2,
+        context={"_pipeline_bindings": {"table-a": {"asset_workspace_id": "remote"}}},
     )
 
     table_name, row = writes[0]
@@ -269,6 +271,10 @@ def test_runtime_result_writer_records_exact_guardrail_revision(monkeypatch, fak
     assert row["run_id"] == "run-1"
     assert row["execution_type"] == "governed"
     assert row["table_id"] == "table-a"
+    assert row["asset_workspace_id"] == "remote"
+    assert row["execution_workspace_id"] is None
+    assert "legacy_workspace_id" not in row
+    assert row["_workspace_id"] != "remote"
     assert row["table_name"] == "orders"
     assert row["guardrail_type"] == "schema"
     assert row["rule_id"] == "schema-1"
@@ -319,7 +325,9 @@ def test_guardrail_result_writer_rejects_per_rule_execution_overrides(
 
 def test_source_observation_uses_standard_audit_timestamp_only() -> None:
     """Capture and acceptance retain distinct lifecycle timestamps."""
-    assert _field_names("METADATA_PROCESSING_STATE") == _PROCESSING_STATE_COLUMNS
+    from fabricops_kit.pipeline.shared import processing_state_schema
+
+    assert processing_state_schema().fieldNames() == _PROCESSING_STATE_COLUMNS
     assert "observed_at" in _PROCESSING_STATE_COLUMNS
     assert "_committed_at" in _PROCESSING_STATE_COLUMNS
 

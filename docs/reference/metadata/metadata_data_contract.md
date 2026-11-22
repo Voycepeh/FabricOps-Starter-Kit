@@ -1,6 +1,6 @@
 # METADATA_DATA_CONTRACT
 
-Defines one immutable table or file dataset contract history. Workspace observations supply authoring evidence; physical activation selects exact frozen versions.
+Defines versioned Schema, Enrichment and executable Guardrails for a registered table or file dataset.
 
 ## Writer functions
 
@@ -18,17 +18,20 @@ Defines one immutable table or file dataset contract history. Workspace observat
 
 **Grain:** One Draft or Frozen version of a Data Contract for a table or file-backed dataset.
 
-**Primary key:** `contract_id` + `contract_version`
+**Primary key:** composite (`contract_id` + `contract_version`)
+
+**Composite foreign key (checked by FabricOps):** (`asset_workspace_id` + `table_id` + `asset_type`) → [METADATA_DATA_CATALOGUE](metadata_data_catalogue.md) (`asset_workspace_id` + `table_id` + `asset_type`).
+FabricOps checks the three columns together against one active Catalogue row before saving new observations.
 
 **Relationships:**
 
 `METADATA_PIPELINE_RUN` **(N → M)**
 via Not defined in the current implementation.
 
-`METADATA_DATA_CATALOGUE` **(N → M)**
-via `table_id`
+`METADATA_DATA_CATALOGUE` **(N → 1)**
+via `asset_workspace_id` + `table_id` + `asset_type`
 
-**Implementation details:** Reusable immutable frozen dataset definition with Enrichment and executable Guardrails. Engineering owns processing and profiling through the pipeline. Files use a stable source_id and null table_id; their exact selector, format and reader options are frozen in the payload. table_id is a global logical reference across workspace observations, not a unique physical Catalogue foreign key. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.
+**Implementation details:** asset_workspace_id, table_id and asset_type reference exactly one Catalogue asset using the same field names on both tables. New drafts require an active Catalogue asset with an observed schema. Each Contract version captures its schema; later Catalogue observations do not rewrite it. Contract Activation records where the frozen version applies. Engineering owns processing and profiling through the pipeline. Files use their stable selector identity in table_id with asset_type FILE. Payloads use format_version 2 and freeze the exact selector, format and reader options. Exact Agreement linkage belongs to the physical Contract Activation in Governance metadata.
 
 ## Column summary
 
@@ -45,21 +48,31 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
-<tr class="metadata-column--governance"><td><code>contract_id</code></td><td><code>string</code></td><td>Stable identifier for the contract row.</td></tr>
+<tr class="metadata-column--governance"><td><code>contract_id</code></td><td><code>string</code></td><td>Stable identifier for the Contract lifecycle; combine with contract_version to identify one row.</td></tr>
 <tr class="metadata-column--governance"><td><code>contract_version</code></td><td><code>integer</code></td><td>Version recorded for the contract row.</td></tr>
-<tr class="metadata-column--governance"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across workspace, dataset, and table context.</td></tr>
-<tr class="metadata-column--governance"><td><code>source_id</code></td><td><code>string</code></td><td>Stable file Source ID based on physical workspace, Lakehouse item and normalized Files selector; file records have no Table ID.</td></tr>
+<tr class="metadata-column--governance"><td><code>table_id</code></td><td><code>string</code></td><td>Common operational asset key for TABLE or FILE assets across workspace, dataset, and table context.</td></tr>
+<tr class="metadata-column--governance"><td><code>asset_type</code></td><td><code>string</code></td><td>Explicit asset discriminator: TABLE or FILE. Historical null values with table_id are TABLE.</td></tr>
 <tr class="metadata-column--governance"><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
-<tr class="metadata-column--governance"><td><code>evidence_workspace_id</code></td><td><code>string</code></td><td>Workspace observation used to author this global Contract version; never part of Contract identity.</td></tr>
-<tr class="metadata-column--governance"><td><code>contract_payload_json</code></td><td><code>string</code></td><td>String column containing the JSON definition for this exact table/contract version and authoring workspace, including Enrichment, Guardrails, and Processing; editable while draft and immutable once frozen. This is not a separate physical table.</td></tr>
+<tr class="metadata-column--governance"><td><code>asset_workspace_id</code></td><td><code>string</code></td><td>ID of the Fabric workspace that contains the physical asset. Part of the required Catalogue reference for this Contract version.</td></tr>
+<tr class="metadata-column--governance"><td><code>contract_payload_json</code></td><td><code>string</code></td><td>JSON definition for the exact Contract version, including schema, Enrichment, and Guardrails. A draft is editable and a frozen payload is immutable. File Contracts retain the physical file selector in source.</td></tr>
 <tr class="metadata-column--governance"><td><code>status</code></td><td><code>string</code></td><td>Pipeline run status recorded with the run summary.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
-<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
-<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>ID of the executing notebook’s Fabric workspace, captured when the metadata row was written.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Display name of the executing notebook’s Fabric workspace, captured when the metadata row was written.</td></tr>
 <tr class="metadata-column--audit"><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
 <tr class="metadata-column--audit"><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
 <tr class="metadata-column--audit"><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
 <tr class="metadata-column--audit"><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
 </tbody></table>
 </div>
+
+## Automatic column cleanup
+
+`setup_metadata_tables()` removes only the explicitly retired columns below. It preserves canonical rows, all eight audit columns and other extension columns. If a populated value cannot be proved redundant, setup fails for this table with data preserved.
+
+| Retired column | Removal condition |
+| --- | --- |
+| `source_id` | SQL NULL or equal to `table_id` |
+
+See [`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md) for transaction results and the Delta recovery boundary.

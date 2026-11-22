@@ -16,18 +16,19 @@ Canonical operating guide for Codex and agent contributions in this repository. 
 - Public brand name: **FabricOps Starter Kit**.
 - Preferred positioning: **governed, quality-checked, Microsoft Fabric notebook workflows**.
 - Keep metadata responsibilities separated and name the implemented tables precisely:
-  - `METADATA_DATA_CATALOGUE` stores canonical table and column identity, physical location, data type, and processing-definition fields.
-  - `METADATA_DATA_PROFILED` stores profile metrics for registered table and column snapshots.
+  - `METADATA_DATA_CATALOGUE` stores one current TABLE or FILE per physical `asset_workspace_id`, `table_id` and `asset_type`. Its validated `columns_json` stores the latest observed active schema. Files reuse their existing selector identity in `table_id`. The Catalogue uses asset_workspace_name for the readable asset workspace name. Audit workspace fields describe the executing notebook.
+  - New Profile, Frequency and Access rows reference the Catalogue through physical `asset_workspace_id + table_id + asset_type`. Require one active Catalogue parent before saving a new observation. Resolve the workspace from the asset’s FabricStore and preserve the notebook workspace in the audit fields. Retained history may require exact Pipeline Run evidence for physical association.
+  - `METADATA_DATA_PROFILED` stores table-column or file-column snapshot metrics. Both types use table_id and column_id, distinguished by asset_type.
   - `METADATA_DATA_PROFILED_FREQUENCY` stores frequency-distribution rows linked to profile snapshots where applicable.
-  - `METADATA_DATA_LINEAGE` stores registered source/target pipeline participation.
-  - `METADATA_DATA_CONTRACT.contract_payload_json` stores authored descriptive Enrichment and executable Guardrails for one exact contract version; frozen payloads are immutable.
-  - `METADATA_DATA_CONTRACT_ACTIVATION` stores retained Governance-owned exact frozen Contract selections and scoped Agreement associations per physical workspace/Table ID.
+  - `METADATA_PIPELINE_RUN.operations` stores typed table/file source/target participation per Run. Join projected operations to the Catalogue using operations[].asset_workspace_id, common Table ID and asset type. Prepared Writes additionally retain a bounded versioned Catalyst graph in `operations[].lineage`, with per-output source dependencies, transformation steps and explicit coverage gaps; this describes the Write input, with publication status kept separately. `METADATA_DATA_LINEAGE` stores scalar versioned Run/output/source/dependency facts projected automatically at finalization for Power BI. Keep exact Run/source hashes, coverage and publication status; retry projections without replaying business Writes. Setup additively preserves old activity rows, whose lineage_version is null; they are never reclassified as dependencies.
+  - `METADATA_DATA_CONTRACT.contract_payload_json` stores authored descriptive Enrichment and executable Guardrails for one exact contract version; frozen payloads are immutable. Contracts and activations use table_id and asset_type for both TABLE and FILE; new Contract payloads use format_version 2.
+  - `METADATA_DATA_CONTRACT_ACTIVATION` stores retained Governance-owned exact frozen Contract selections and scoped Agreement associations per physical workspace/table_id/asset_type.
   - `METADATA_PIPELINE_ACTIVATION` stores immutable accepted submission packages and conditional Governance decision history. Governance owns the whole Metadata Lakehouse; Engineering has scoped writes only.
   - `METADATA_PIPELINE_REGISTRY` stores only immutable per-workspace Pipeline Promotion versions, snapshot pointers/hashes, reviewed operations and exact Governance approval references. Superseded versions remain; at most one active version per workspace/Pipeline ID is enforced by Serializable conditional mutation. No Git/deployment attestation or mixed control/Contract rows. Governed admission remains fail closed pending signed-in Fabric validation.
-  - `METADATA_PIPELINE_RUN` stores one authoritative execution with validated JSON STRING operations, profiling and failures. New version 3 records include Pipeline Promotion provenance and execution identity. Preserve released Run content/hash semantics and exact Contract references per operation.
+  - `METADATA_PIPELINE_RUN` stores one authoritative execution with validated JSON STRING operations, profiling and failures. New version 4 records include Pipeline Promotion provenance and execution identity. New operations use table_id and asset_type with one typed source_assets array. Every physical binding and file selector uses asset_workspace_id, including Run operation identities and profiling physical records; execution scope is separate. Preserve released Run content/hash semantics and exact Contract references per operation.
   - `METADATA_GUARDRAIL_RESULTS` stores Guardrail evaluation results and continuation decisions.
   - Guardrail results persist aggregate rule outcomes, not full failed business rows; `METADATA_GUARDRAIL_ROW_RESULTS` is not a canonical metadata table.
-  - `METADATA_PROCESSING_STATE` stores typed Processing State: source observations, accepted incremental checkpoints, accepted Source Drift baselines and target-specific publication receipts. Target markers verify publication before metadata progress is accepted.
+- Processing State uses the operational Delta table `misc.PROCESSING_STATE` in the configured shared Lakehouse. It stores typed source observations, accepted incremental checkpoints, accepted Source Drift baselines and target-specific publication receipts. Target markers verify publication before progress is accepted.
 
 ## Canonical terminology and glossary
 
@@ -106,6 +107,8 @@ Discontinued callables do not imply current support. Preserve historical behavio
 When breaking cleanup is authorized, do not add compatibility layers unless requested. Clearly identify every changed public contract in the PR summary.
 
 ## Supported Live metadata upgrades
+
+Metadata setup currently supports the direct `v0.5.0`-to-`main` upgrade. Do not chain migrations through earlier releases or intermediate PR layouts. Migration support is release-to-release. Verify the starting schema against a published release manifest or frozen release source before adding migration code. Unreleased PR schemas are implementation details and must not acquire migrations, compatibility branches or migration tests. Consolidate unreleased changes into the next release schema; retain only upgrades needed by supported released versions.
 
 Preserve supported Live metadata tables and their existing rows. Compatible additive columns may be applied automatically without replacing data. An approved Live column removal, rename or type change must ship with an explicit, tested automatic migration that preserves required data, validates results, supports safe repeated execution and defines a rollback boundary. Do not require users to drop/rebuild supported Live tables or guess conversions. No hypothetical conversions should be implemented ahead of an approved change.
 
@@ -244,7 +247,7 @@ Validation builds do not make generated files on `main` current unless those fil
 - Do not maintain duplicate manual callable lists.
 - Public callable pages are sourced from `src/fabricops_kit/` docstrings and source metadata.
 - Do not manually edit generated reference pages as source of truth.
-- `src/fabricops_kit/config/metadata_schemas.py` is the canonical implemented metadata schema source.
+- `src/fabricops_kit/config/metadata_schemas.py` is the canonical implemented metadata schema source. The pipeline owns the separate Processing State schema.
 - `Managed by` entries should identify exact source functions when traceable.
 - Use `.agents/skills/fabricops-docs-maintenance/SKILL.md` for documentation ownership, readability, Guided Demo, Featured Solutions, and diagram procedure.
 - Use `.agents/skills/fabricops-notebook-template/SKILL.md` for all living standard notebook templates. Only `00_env_config.ipynb` and `02_pipeline.ipynb` are currently part of the release snapshot contract.

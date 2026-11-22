@@ -4,6 +4,7 @@ import hashlib
 from unittest.mock import Mock
 
 from tests.unit.test_activated_pipeline import operation
+from fabricops_kit.config.metadata_schemas import operation_physical_binding
 
 
 def test_reviewed_contract_binding_and_payload_are_passed_to_atomic_action(monkeypatch):
@@ -18,7 +19,7 @@ def test_reviewed_contract_binding_and_payload_are_passed_to_atomic_action(monke
     contract = dict(table_id='orders', contract_id='contract', contract_version=1, status='frozen', contract_payload_json='{}')
     monkeypatch.setattr(module, 'metadata_records', lambda table, **kw: [contract] if table == 'METADATA_DATA_CONTRACT' else [])
     monkeypatch.setattr(pipeline, 'resolve_catalogue_table_identity', lambda *a, **kw: {'table_id': 'orders'})
-    binding = operation()['destination']
+    binding = operation_physical_binding(operation())
     monkeypatch.setattr(pipeline, 'pipeline_physical_bindings', lambda *a, **kw: {'orders': binding})
     action = Mock(return_value={'status': 'active'})
     monkeypatch.setattr(module, 'set_table_contract_activation', action)
@@ -48,9 +49,9 @@ def test_explicit_physical_workspace_keeps_governance_metadata_routing(monkeypat
     monkeypatch.setattr(module, 'read_activation_history', activations)
     monkeypatch.setattr(module, 'metadata_records', lambda table, **kw: [dict(table_id='orders', contract_id='contract', contract_version=1, status='frozen', contract_payload_json='{}')] if table == 'METADATA_DATA_CONTRACT' else [])
     monkeypatch.setattr(pipeline, 'resolve_catalogue_table_identity', lambda *a, **kw: {'table_id': 'orders'})
-    monkeypatch.setattr(pipeline, 'pipeline_physical_bindings', lambda *a, **kw: {'orders': operation(workspace=kw['workspace_id'])['destination']})
+    monkeypatch.setattr(pipeline, 'pipeline_physical_bindings', lambda *a, **kw: {'orders': operation_physical_binding(operation(workspace=kw['workspace_id']))})
     ui = module.widget_activate_data_contract('orders', 'contract', 1, workspace_id='PROD')
-    assert ui['destination']['workspace_id'] == 'PROD'
+    assert ui['destination']['asset_workspace_id'] == 'PROD'
     assert observed[0]['scope_workspace_id'] == 'PROD'
     assert observed[0]['metadata_workspace_id'] == 'CENTRAL'
 
@@ -65,13 +66,13 @@ def test_no_argument_widget_selects_physical_table_and_frozen_version(monkeypatc
     monkeypatch.setattr(module, 'get_spark_session', lambda **kw: object())
     monkeypatch.setattr(module, 'read_activation_history', lambda **kw: [])
     data = {
-        'METADATA_DATA_CATALOGUE': [dict(table_id='orders', workspace_id='DEV', metadata_level='table', is_active=True)],
+        'METADATA_DATA_CATALOGUE': [dict(table_id='orders', asset_workspace_id='DEV', asset_type='TABLE', is_active=True)],
         'METADATA_DATA_CONTRACT': [dict(table_id='orders', contract_id='contract', contract_version=2, status='frozen', contract_payload_json='{}')],
         'METADATA_DATA_AGREEMENT': [],
     }
     monkeypatch.setattr(module, 'metadata_records', lambda table, **kw: data[table])
     monkeypatch.setattr(pipeline, 'resolve_catalogue_table_identity', lambda *a, **kw: {'table_id': 'orders'})
-    monkeypatch.setattr(pipeline, 'pipeline_physical_bindings', lambda *a, **kw: {'orders': operation()['destination']})
+    monkeypatch.setattr(pipeline, 'pipeline_physical_bindings', lambda *a, **kw: {'orders': operation_physical_binding(operation())})
     action = Mock(return_value={'status': 'active'})
     monkeypatch.setattr(module, 'set_table_contract_activation', action)
     ui = module.widget_activate_data_contract()
@@ -88,13 +89,13 @@ def test_no_argument_widget_selects_physical_table_and_frozen_version(monkeypatc
     assert ui['state']['review'] is None and ui['controls']['activate'].disabled
 
 
-def test_named_file_activation_never_uses_a_table_id(monkeypatch):
+def test_named_file_activation_uses_common_asset_identity(monkeypatch):
     """The shared activation widget passes exact file source/configuration to its service."""
     import json
     from fabricops_kit.data_contract import shared as contracts
     module = importlib.import_module('fabricops_kit.widgets.widget_activate_data_contract')
-    source = contracts.file_source_identity(workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
-    frozen = dict(table_id=None, source_id=source['source_id'], contract_id='file-contract', contract_version=1,
+    source = contracts.file_source_identity(asset_workspace_id='w', item_id='i', relative_path='demo/orders.csv', file_format='csv')
+    frozen = dict(table_id=source['table_id'], asset_type='FILE', contract_id='file-contract', contract_version=1,
                   status='frozen', contract_payload_json=json.dumps({'source': source, 'table': {'columns': []}}))
     from IPython import display as ip
     monkeypatch.setattr(ip, 'display', lambda *a, **kw: None)
@@ -102,20 +103,20 @@ def test_named_file_activation_never_uses_a_table_id(monkeypatch):
     monkeypatch.setattr(module, 'get_spark_session', lambda **kw: object())
     monkeypatch.setattr(module, 'metadata_records', lambda table, **kw: [frozen] if table == 'METADATA_DATA_CONTRACT' else [])
     monkeypatch.setattr(module, 'read_activation_history', lambda **kw: [])
-    monkeypatch.setattr(contracts, 'contract_file_datasets', lambda *a, **kw: [{**source, 'store': 'Bronze', 'configuration_workspace_id': 'engineering-route'}])
-    action = Mock(return_value={'status': 'active', 'source_id': source['source_id'], 'table_id': None})
+    monkeypatch.setattr(contracts, 'contract_file_datasets', lambda *a, **kw: [{**source, 'asset_workspace_id': source['asset_workspace_id'], 'store': 'Bronze', 'configuration_workspace_id': 'engineering-route'}])
+    action = Mock(return_value={'status': 'active', 'table_id': source['table_id'], 'asset_type': 'FILE'})
     monkeypatch.setattr(module, 'set_table_contract_activation', action)
     ui = module.widget_activate_data_contract()
     ui['controls']['workspace'].value = 'w'
     choices = ui['controls']['table'].options
-    assert any('demo/orders.csv' in label and value == source['source_id'] for label, value in choices)
-    ui['controls']['table'].value = source['source_id']
+    assert any('demo/orders.csv' in label and value == source['table_id'] for label, value in choices)
+    ui['controls']['table'].value = source['table_id']
     ui['controls']['contract'].value = ('file-contract', 1)
     reviewed = ui['actions']['review']()
-    assert reviewed['table_id'] is None and reviewed['source_id'] == source['source_id']
+    assert reviewed['asset_type'] == 'FILE' and reviewed['table_id'] == source['table_id']
     ui['controls']['confirm'].value = True
-    assert ui['actions']['activate']()['table_id'] is None
-    assert action.call_args.args[0] is None
+    assert ui['actions']['activate']()['table_id'] == source['table_id']
+    assert action.call_args.args[0] == source['table_id']
     assert action.call_args.kwargs['file_source'] == source
     assert action.call_args.kwargs['file_store'] == 'Bronze'
     assert action.call_args.kwargs['file_configuration_workspace_id'] == 'engineering-route'

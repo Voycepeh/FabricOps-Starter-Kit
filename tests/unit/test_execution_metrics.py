@@ -346,6 +346,10 @@ def test_full_and_query_reads_count_the_exact_returned_dataframe(
     monkeypatch.setattr(module, "observe_full_source", lambda *_args, **_kwargs: {"status": "skipped"})
     monkeypatch.setattr(module, reader_name, lambda *_args, **_kwargs: frame)
 
+    observation, merge = Mock(return_value={"asset_type": "TABLE"}), Mock()
+    monkeypatch.setattr(module, "table_catalogue_observation", observation)
+    monkeypatch.setattr(module, "merge_catalogue_asset", merge)
+
     result = module.pipeline_read(
         store="Bronze", schema="demo", table_name="orders", query=query,
         context={"config": object(), "scope_workspace_id": "dev"}, verbose=False,
@@ -353,6 +357,8 @@ def test_full_and_query_reads_count_the_exact_returned_dataframe(
 
     assert result["read_metrics"]["rows_read"] == rows
     assert result["read_metrics"]["measurement_source"] == "returned_dataframe"
+    assert observation.call_args.kwargs["dataframe"] is (frame if query is None else None)
+    merge.assert_called_once()
     frame.count.assert_called_once()
 
 
@@ -374,6 +380,9 @@ def test_incremental_read_never_reports_physical_source_observation_total(monkey
     })
     monkeypatch.setattr(module, "read_warehouse_query", lambda *_args, **_kwargs: batch)
     monkeypatch.setattr(module, "observe_full_source", lambda *_args, **_kwargs: {"status": "skipped"})
+
+    monkeypatch.setattr(module, "table_catalogue_observation", Mock(return_value={"asset_type": "TABLE"}))
+    monkeypatch.setattr(module, "merge_catalogue_asset", Mock())
 
     result = module.pipeline_read(
         store="Bronze", schema="demo", table_name="orders",

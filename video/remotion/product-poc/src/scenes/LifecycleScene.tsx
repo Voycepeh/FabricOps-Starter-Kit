@@ -6,32 +6,35 @@ import {theme} from '../theme';
 import {VIDEO_CONFIG} from '../videoConfig';
 import {lifecycleFrame, VIDEO_TUNING} from '../videoTuning';
 
+const WORKSPACE_WIDTH = 580;
+const STEP_CARD_WIDTH = WORKSPACE_WIDTH * 0.8;
+const STEP_CARD_HEIGHT = VIDEO_CONFIG.sizes.workflowCardHeight * 1.2;
+
 const workspaces = [
   {name: 'Governance', color: theme.governance, x: 55},
-  {name: 'Engineering Development', color: theme.engineering, x: 510},
-  {name: 'Engineering Production', color: theme.production, x: 965},
-  {name: 'Consumer', color: theme.consumer, x: 1420},
+  {name: 'Engineering', color: theme.engineering, x: 670},
+  {name: 'Consumption', color: theme.consumer, x: 1285},
 ];
 
-export const STEP_7_LABEL = 'Consume approved\nProduction data';
+export const STEP_7_LABEL = 'Consume Data\nStored in Engineering\nWorkspace';
 
 const steps = [
-  {number: 1, label: 'Data Stewards &\nData Agreement', color: theme.governance, x: 80, y: 205},
-  {number: 2, label: 'ETL, Profile &\nCatalogue', color: theme.engineering, x: 535, y: 205},
-  {number: 3, label: 'Author\nData Contract', color: theme.governance, x: 80, y: 485},
-  {number: 4, label: 'ETL with Contract\nGuardrails', color: theme.engineering, x: 535, y: 485},
-  {number: 5, label: 'Activate &\nPromote', color: theme.governance, x: 80, y: 765},
-  {number: 6, label: 'Run Production\nPipeline', color: theme.production, x: 990, y: 765},
-  {number: 7, label: STEP_7_LABEL, color: theme.consumer, x: 1445, y: 765},
+  {number: 1, label: 'Data Stewards &\nData Agreement', color: theme.governance, x: 113, y: 205},
+  {number: 2, label: 'Pipeline\nRead · Transform · Write · Profile', color: theme.engineering, x: 728, y: 205},
+  {number: 3, label: 'Author\nData Contract', color: theme.governance, x: 113, y: 485},
+  {number: 4, label: 'Dry Run & Validate\nData Contract within Pipeline', color: theme.engineering, x: 728, y: 485},
+  {number: 5, label: 'Activate Data Contract\nand Pipeline', color: theme.governance, x: 113, y: 765},
+  {number: 6, label: 'Run Governed\nPipeline', color: theme.production, x: 728, y: 765},
+  {number: 7, label: STEP_7_LABEL, color: theme.consumer, x: 1343, y: 765},
 ];
 
 const connectors = [
-  {d: 'M420 280 H535', destination: 1},
-  {d: 'M710 355 C710 420 255 420 255 485', destination: 2},
-  {d: 'M420 560 H535', destination: 3},
-  {d: 'M710 635 C710 700 255 700 255 765', destination: 4},
-  {d: 'M420 840 H990', destination: 5},
-  {d: 'M1330 840 H1445', destination: 6},
+  {d: 'M577 295 H728', destination: 1},
+  {d: 'M960 385 C960 435 345 435 345 485', destination: 2},
+  {d: 'M577 575 H728', destination: 3},
+  {d: 'M960 665 C960 715 345 715 345 765', destination: 4},
+  {d: 'M577 855 H728', destination: 5},
+  {d: 'M1192 855 H1343', destination: 6},
 ];
 
 const MascotBadgeArtwork = memo(({pose}: {pose: MascotName}) => <Img src={mascotSrc(pose)} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 7px 12px #0007)'}} />);
@@ -123,7 +126,7 @@ export const LifecycleScene = ({hideStep7 = false, seamlessHandoff = true}: {hid
   return <div style={{position: 'absolute', inset: 0, opacity: exit}}>
     {workspaces.map((workspace, index) => {
       const enter = spring({frame: frame - index * 5, fps, config: {damping: 20, stiffness: 82}});
-      return <div key={workspace.name} style={{position: 'absolute', left: workspace.x, top: 58, width: 445, height: 950, borderRadius: 34, border: `2px solid ${workspace.color}45`, background: `${workspace.color}0b`, opacity: enter}}><div style={{paddingTop: 28, textAlign: 'center', color: workspace.color, fontSize: 28, fontWeight: 800}}>{workspace.name}<br />Workspace</div></div>;
+      return <div key={workspace.name} style={{position: 'absolute', left: workspace.x, top: 58, width: WORKSPACE_WIDTH, height: 950, borderRadius: 34, border: `2px solid ${workspace.color}45`, background: `${workspace.color}0b`, opacity: enter}}><div style={{paddingTop: 28, textAlign: 'center', color: workspace.color, fontSize: 28, fontWeight: 800}}>{workspace.name}<br />Workspace</div></div>;
     })}
     <AnimatedDataFlow>
       {connectors.map((connector) => {
@@ -142,7 +145,7 @@ export const LifecycleScene = ({hideStep7 = false, seamlessHandoff = true}: {hid
       if (frame < stepTimes[index]) return null;
       if (hideStep7 && step.number === 7) return null;
       const enter = spring({frame: frame - stepTimes[index], fps, durationInFrames: timing.workflowStepEnter, config: {damping: 19, stiffness: 92}});
-      return <div key={step.number} style={{position: 'absolute', left: step.x, top: step.y}}><StepCard {...step} enter={enter} active={activeIndex === index} /></div>;
+      return <div key={step.number} style={{position: 'absolute', left: step.x, top: step.y}}><StepCard {...step} width={STEP_CARD_WIDTH} height={STEP_CARD_HEIGHT} enter={enter} active={activeIndex === index} /></div>;
     })}
     {loopOpacity > 0 ? <div style={{position: 'absolute', left: loop.captionLeft, top: loop.captionTop, width: 300, textAlign: 'center', color: '#dce7f5', fontSize: 24, fontWeight: 720, opacity: loopOpacity}}>Iterate until validations pass</div> : null}
   </div>;

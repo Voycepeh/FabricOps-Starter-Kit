@@ -116,6 +116,8 @@ def test_data_steward_widget_save_preserves_configured_timezone(monkeypatch, fak
         writes.append((table, df.rows, kwargs))
 
     monkeypatch.setattr(agreement, "write_lakehouse_table", write_table)
+    monkeypatch.setattr(agreement, "write_metadata_frame", lambda df, path, table, **kw: write_table(
+        df, table, store="Metadata", context={"config": framework_config(), "scope_workspace_id": "dev"}, **kw))
 
     row = steward_widget._create_or_update_data_steward(
         spark=FakeSpark(),
@@ -182,6 +184,8 @@ def test_data_agreement_metadata_write_and_read_use_configured_metadata_route(mo
         return []
 
     monkeypatch.setattr(agreement, "write_lakehouse_table", write_table)
+    monkeypatch.setattr(agreement, "write_metadata_frame", lambda df, path, table, **kw: write_table(
+        df, table, store="Metadata", context={"config": framework_config(), "scope_workspace_id": "dev"}, **kw))
     monkeypatch.setattr(agreement, "read_lakehouse_table", read_table)
 
     steward = steward_widget._create_or_update_data_steward(
@@ -412,7 +416,7 @@ def test_guardrail_result_fallback_uses_catalogue_logical_key(monkeypatch, fake_
         )
 
     assert [frame.rows[0]["guardrail_rule_id"] for frame in writes] == ["schema-rule", "schema-rule"]
-    assert [frame.rows[0]["workspace_id"] for frame in writes] == ["dev", "prod"]
+    assert [frame.rows[0]["execution_workspace_id"] for frame in writes] == ["dev", "prod"]
 
 
 def test_persistent_checkpoint_tables_are_not_registered():
@@ -420,7 +424,8 @@ def test_persistent_checkpoint_tables_are_not_registered():
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES, metadata_table_schema_registry
 
     registry = metadata_table_schema_registry()
-    assert "METADATA_PROCESSING_STATE" in CANONICAL_METADATA_TABLES
+    assert "METADATA_PROCESSING_STATE" not in CANONICAL_METADATA_TABLES
+    assert "METADATA_PROCESSING_STATE" not in registry
     assert "METADATA_SOURCE_CONSUMPTION" not in CANONICAL_METADATA_TABLES
     assert all("CHECKPOINT" not in table_name for table_name in CANONICAL_METADATA_TABLES)
     assert all("CHECKPOINT" not in table_name for table_name in registry)

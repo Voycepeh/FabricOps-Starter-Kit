@@ -106,6 +106,7 @@ def test_required_is_presence_even_with_null_values():
 @pytest.mark.parametrize("required", [["col-id"], ["id"], []])
 def test_save_freeze_runtime_preserves_selections(monkeypatch, required):
     """Use real save/freeze/resolution code with mocked Delta and metadata transport."""
+    monkeypatch.setattr(contracts, "validate_metadata_merge", lambda *a, **kw: None)
     contract = frozen_contract(required)
     draft = {**contract, "status": "draft"}
     payload = json.loads(contract["contract_payload_json"])
@@ -144,10 +145,9 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: (config, "dev", context))
     # The current Catalogue has drifted to string; the frozen contract remains bigint.
     catalogue = [
-        {"table_id": "orders", "table_name": "orders", "metadata_level": "table",
-         "workspace_id": "dev", "layer": "Bronze", "store_type": "lakehouse", "schema_name": "dbo"},
-        {"table_id": "orders", "column_id": "col-id", "column_name": "id",
-         "metadata_level": "column", "workspace_id": "dev", "data_type": "string"},
+        {"table_id": "orders", "table_name": "orders", "asset_type": "TABLE",
+         "asset_workspace_id": "dev", "layer": "Bronze", "store_type": "lakehouse", "schema_name": "dbo",
+         "columns_json": [{"column_id": "col-id", "column_name": "id", "data_type": "string"}]},
     ]
     monkeypatch.setattr(
         shared, "read_lakehouse_table",
@@ -173,7 +173,7 @@ def test_public_check_persists_decision_with_catalogue_drift(monkeypatch, differ
     frame, table, routing = writes[0]
     persisted = frame.rows[0]
     assert create_frame.call_args.kwargs["schema"] == shared.metadata_table_schema_registry()["METADATA_GUARDRAIL_RESULTS"]
-    assert persisted["source_id"] is None
+    assert "source_id" not in persisted and persisted["asset_type"] == "TABLE"
     assert table == "METADATA_GUARDRAIL_RESULTS"
     assert routing["store"] == "Metadata"
     expected_status = "failed" if blocking else "failed" if difference == "additional" else "passed"

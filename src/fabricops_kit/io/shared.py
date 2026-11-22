@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from importlib import import_module
+from time import sleep
 from typing import Any, Mapping
 import re
 import json
@@ -401,7 +402,6 @@ def retry_delta_metadata(action):
     Unknown acknowledgements, permission failures and stale approvals propagate.
     """
     import random
-    import time
 
     transient = {
         "ConcurrentAppendException", "ConcurrentWriteException",
@@ -426,7 +426,142 @@ def retry_delta_metadata(action):
                 condition = getter()
             if (name not in transient and str(condition).split(".", 1)[0] not in conditions) or attempt == 31:
                 raise
-            time.sleep(random.uniform(0.1, min(8.0, 0.2 * 2 ** attempt)))
+            sleep(random.uniform(0.1, min(8.0, 0.2 * 2 ** attempt)))
+
+
+def validate_metadata_primary_key(table, frame):
+    """Reject missing, null, blank or duplicate canonical row identities without exposing values."""
+    from fabricops_kit.config.metadata_schemas import METADATA_PRIMARY_KEYS
+
+    keys = METADATA_PRIMARY_KEYS[table]
+    error = f"{table}: primary key ({', '.join(keys)}) must be non-null, non-blank and unique; existing data is preserved."
+    if isinstance(frame, (list, tuple)):
+        seen = set()
+        for row in frame:
+            key = tuple(row.get(name) for name in keys)
+            if any(value is None or isinstance(value, str) and not value.strip() for value in key) or key in seen:
+                raise ValueError(error)
+            seen.add(key)
+        return
+    from functools import reduce
+    from pyspark.sql import functions as F
+
+    if any(name not in frame.columns for name in keys):
+        raise ValueError(error)
+    invalid = reduce(lambda a, b: a | b,
+        (F.col(name).isNull() | (F.trim(F.col(name).cast("string")) == "") for name in keys))
+    if frame.where(invalid).limit(1).count() or frame.groupBy(*keys).count().where(F.col("count") > 1).limit(1).count():
+        raise ValueError(error)
+
+
+def validate_metadata_merge(table, source, path):
+    """Fence native key-preserving Delta MERGEs with validated inputs and Serializable isolation."""
+    from delta.tables import DeltaTable
+
+    spark = source.sparkSession
+    properties = DeltaTable.forPath(spark, path).detail().select("properties").first()["properties"]
+    if properties.get("delta.isolationLevel") != "Serializable":
+        raise ValueError(f"{table}: primary key enforcement requires Serializable isolation; run setup_metadata_tables().")
+    validate_metadata_primary_key(table, source)
+    validate_metadata_primary_key(table, spark.read.format("delta").load(path))
+
+
+def write_metadata_frame(df, path, table, *, mode="append", partition_by=None, options=None):
+    """Commit canonical keys and row writes in one Serializable Delta transaction.
+
+    Append reads the pinned key set and writes only new files. Upsert is used for
+    the small current Steward register. Overwrite validates the full replacement.
+    Only confirmed aborted transactions are retried, including a fresh key read.
+    Arbitrary writes outside FabricOps must use the same protocol for uniqueness.
+    """
+    from delta.tables import DeltaTable
+    from py4j.protocol import Py4JError
+    from fabricops_kit.config.metadata_schemas import METADATA_PRIMARY_KEYS
+
+    options = dict(options or {})
+    spark = df.sparkSession
+    cached = df.is_cached
+    frame = df if cached else df.persist()
+    try:
+        # Freeze generated IDs and values once across validation, retries and commit.
+        frame.count()
+        validate_metadata_primary_key(table, frame)
+        if mode in {"errorifexists", "ignore"} or not DeltaTable.isDeltaTable(spark, path):
+            # A missing-table check cannot authorize a blind append: another
+            # writer may create the same table before this write reaches Delta.
+            write_delta_path(frame, path, mode="ignore" if mode == "ignore" else "errorifexists",
+                partition_by=partition_by, options={**options, "delta.isolationLevel": "Serializable"})
+            return
+        if mode not in {"append", "overwrite", "upsert"}:
+            raise ValueError("Unsupported canonical metadata write mode.")
+        # Schema changes belong to setup's explicit upgrade path. Do not silently
+        # discard writer options when using the Delta transaction API.
+        supported = {"txnAppId", "txnVersion", "userMetadata"}
+        if set(options) - supported or partition_by:
+            raise ValueError("Existing canonical metadata writes do not support schema, partition or arbitrary writer options; use setup_metadata_tables() for upgrades.")
+        if ("txnAppId" in options) != ("txnVersion" in options):
+            raise ValueError("Metadata transaction identity requires txnAppId and txnVersion together.")
+        def attempt():
+            jvm = spark._jvm
+            delta = jvm.org.apache.spark.sql.delta
+            txn = delta.DeltaLog.forTable(spark._jsparkSession, path).startTransaction()
+            txn.readWholeTable()
+            files = txn.filterFiles()
+            properties = json.loads(txn.metadata().json())["metaData"].get("configuration", {})
+            if properties.get("delta.isolationLevel") != "Serializable":
+                raise ValueError(f"{table}: run setup_metadata_tables() to enable primary key enforcement.")
+            if "txnAppId" in options:
+                if "delta.setTransactionRetentionDuration" in properties:
+                    raise ValueError("Metadata replay identities require unbounded transaction retention.")
+                if int(txn.txnVersion(str(options["txnAppId"]))) >= int(options["txnVersion"]):
+                    return
+            previous = spark.read.format("delta").option("versionAsOf", int(txn.readVersion())).load(path)
+            validate_metadata_primary_key(table, previous)
+            validate_metadata_primary_key(table, frame)
+            keys = list(METADATA_PRIMARY_KEYS[table])
+            if mode == "append" and previous.join(frame.select(*keys), keys, "left_semi").limit(1).count():
+                raise ValueError(f"{table}: primary key ({', '.join(keys)}) already exists; no rows were written.")
+            from pyspark.sql import functions as F
+
+            fields = {field.name: field for field in previous.schema.fields}
+            if any(field.name not in fields or field.dataType != fields[field.name].dataType for field in frame.schema.fields):
+                raise ValueError(f"{table}: metadata schema differs; run setup_metadata_tables() before writing.")
+            missing = [name for name in previous.columns if name not in frame.columns]
+            if mode == "overwrite" and missing:
+                raise ValueError(f"{table}: overwrite must retain all existing metadata columns.")
+            # Append fills omitted extension fields with NULL. Steward edits retain
+            # extension values belonging to the same key instead of erasing them.
+            incoming = (frame.join(previous.select(*keys, *missing), keys, "left")
+                        if mode == "upsert" and missing else frame)
+            incoming = incoming.select(*(F.col(name) if name in incoming.columns else F.lit(None).cast(fields[name].dataType).alias(name)
+                                         for name in previous.columns))
+            proposed = (previous.join(frame.select(*keys), keys, "left_anti").select(*previous.columns).unionByName(incoming)
+                        if mode == "upsert" else incoming)
+            actions = jvm.java.util.ArrayList()
+            if mode != "append":
+                for index in range(files.size()):
+                    actions.add(files.apply(index).remove())
+            added = txn.writeFiles(proposed._jdf)
+            for index in range(added.size()):
+                actions.add(added.apply(index))
+            option = jvm.scala.Option
+            if "txnAppId" in options:
+                actions.add(delta.actions.SetTransaction(str(options["txnAppId"]), int(options["txnVersion"]),
+                    option.apply(jvm.java.lang.System.currentTimeMillis())))
+            seq = jvm.scala.collection.JavaConverters.asScalaBufferConverter(actions).asScala().toSeq()
+            args = (jvm.org.apache.spark.sql.SaveMode.Append if mode == "append" else jvm.org.apache.spark.sql.SaveMode.Overwrite,
+                    option.empty(), option.empty(), option.apply(str(options["userMetadata"])) if "userMetadata" in options else option.empty())
+            try:
+                operation = delta.DeltaOperations.Write(*args, option.empty(), option.empty(), option.empty())
+            except Py4JError as exc:
+                if "Constructor org.apache.spark.sql.delta.DeltaOperations$Write" not in str(exc) or "does not exist" not in str(exc):
+                    raise
+                operation = delta.DeltaOperations.Write(*args)
+            txn.commit(seq, operation)
+        return retry_delta_metadata(attempt)
+    finally:
+        if not cached:
+            frame.unpersist()
 
 
 def write_delta_path(df, path: str, *, mode: str, partition_by=None, options: dict[str, Any] | None = None) -> None:
@@ -929,11 +1064,10 @@ def convert_single_parquet_ns_to_us(local_in_path, local_out_path, verbose=True)
         print(f"FAILED converting ns to us for file {local_in_path}: {exc}")
 
 
-def validate_file_write(relative_path, file_format, mode, write_options=None, *, single_file=False, repartition_by=None,
-                        max_single_file_rows=1000000, max_single_file_bytes=134217728):
+def validate_file_write(relative_path, file_format, mode, write_options=None):
     """Validate an exact writable Files destination without reader selectors."""
     from fabricops_kit.data_contract.shared import file_source_identity
-    file_source_identity(workspace_id="validation", item_id="validation", relative_path=relative_path,
+    file_source_identity(asset_workspace_id="validation", item_id="validation", relative_path=relative_path,
                          file_format=file_format)
     if file_format not in {"csv", "parquet", "json"}:
         raise ValueError("file_format must be csv, parquet or json.")
@@ -942,17 +1076,11 @@ def validate_file_write(relative_path, file_format, mode, write_options=None, *,
         raise ValueError("relative_path must contain exact non-empty folder/file names, without wildcards or traversal.")
     if relative_path.startswith("Files/"):
         raise ValueError("relative_path is relative to Files; omit the Files/ prefix.")
-    if type(single_file) is not bool:
-        raise ValueError("single_file must be boolean.")
-    if single_file and not relative_path.endswith("." + file_format):
-        raise ValueError("Single-file name must end with the selected format extension.")
-    normalized = normalize_write_mode(mode)
-    if single_file and normalized == "append":
-        raise ValueError("Single-file output does not support append; use a dataset folder.")
-    if single_file and repartition_by is not None:
-        raise ValueError("single_file cannot be combined with repartition_by.")
-    if any(type(value) is not int or value <= 0 for value in (max_single_file_rows, max_single_file_bytes)):
-        raise ValueError("Single-file row and byte limits must be positive integers.")
+    normalized = str(mode or "").strip().lower()
+    if normalized not in {"overwrite", "append_all"}:
+        raise ValueError("File write mode must be overwrite or append_all.")
+    if normalized != "append_all" and not relative_path.endswith("." + file_format):
+        raise ValueError("Export name must end with the selected format extension.")
     if write_options is not None and not isinstance(write_options, dict):
         raise ValueError("write_options must be a dict.")
     options = dict(write_options or {})
@@ -960,9 +1088,9 @@ def validate_file_write(relative_path, file_format, mode, write_options=None, *,
         raise ValueError("write_options keys must be non-empty strings.")
     if any(str(key).lower() in {"path", "paths", "mode", "partitionby", "maxrecordsperfile"} for key in options):
         raise ValueError("write_options cannot override destination, mode or output layout.")
-    if single_file and file_format in {"csv", "json"}:
+    if normalized != "append_all" and file_format in {"csv", "json"}:
         if any(str(value).lower() not in {"none", "uncompressed"} for key, value in options.items() if key.lower() == "compression"):
-            raise ValueError("Single CSV/JSON artifacts require uncompressed output; use a dataset folder for compression.")
+            raise ValueError("CSV/JSON overwrite exports require uncompressed output; append_all supports dataset compression.")
     if file_format == "json" and any(str(key).lower() == "linesep" and value != "\n" for key, value in options.items()):
         raise ValueError("JSON output requires newline-delimited records.")
     return normalized, options

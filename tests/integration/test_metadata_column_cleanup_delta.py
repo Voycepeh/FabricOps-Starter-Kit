@@ -1,155 +1,169 @@
-"""Automatic explicit column retirement preserves real Delta rows and identity."""
-
+"""Direct v0.5.0-to-main metadata upgrades on real Delta tables."""
 from datetime import datetime
 import importlib
-import json
 from types import SimpleNamespace
 
 import pytest
 
-from fabricops_kit.config.metadata_schemas import (
-    AUDIT_SCHEMA_FIELDS, RETIRED_METADATA_COLUMNS, metadata_table_schema_registry,
-)
-from tests.helpers import call_with_spark, framework_config
+from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+from tests.helpers import metadata_schema_050
 
 pytestmark = pytest.mark.spark
 setup = importlib.import_module('fabricops_kit.config.setup_metadata_tables')
-TABLES = [table for table, columns in RETIRED_METADATA_COLUMNS.items() if columns]
 
 
 @pytest.fixture
-def cleanup_delta(spark_session, monkeypatch, tmp_path):
-    """Route the setup migration to actual Delta and isolate unrelated tables."""
-    from fabricops_kit.io import shared as io
+def release_delta(spark_session, monkeypatch, tmp_path):
+    """Seed frozen release schemas and route only their upgrade transactions."""
     pytest.importorskip('delta.tables')
     from delta.tables import DeltaTable
+    from fabricops_kit.io import shared as io
     from pyspark.sql.types import StructField, StructType, StringType
     if 'DeltaSparkSessionExtension' not in spark_session.conf.get('spark.sql.extensions', ''):
         pytest.skip('requires Delta Spark extensions')
-    registry = metadata_table_schema_registry()
     paths = {}
-
-    class Unrelated:
-        def __init__(self, schema):
-            self.schema = schema
-
-        def toLocalIterator(self):  # noqa: N802
-            return iter(())
-
-    def read(name, **kwargs):
-        if name not in registry:
-            raise RuntimeError('[PATH_NOT_FOUND]')
-        if name in paths:
-            return spark_session.read.format('delta').load(paths[name])
-        return Unrelated(registry[name])
-
-    monkeypatch.setattr(setup, 'read_lakehouse_table', read)
     monkeypatch.setattr(io, 'resolve_configured_lakehouse_table',
-                        lambda store, name, schema, **kw: (store, name, schema, paths[name]))
-    monkeypatch.setattr(setup, 'write_lakehouse_table', lambda *a, **kw: pytest.fail('migration must commit atomically'))
+        lambda store, name, schema, **kw: (store, name, schema, paths[name]))
 
-    def seed(table, bad=None, missing=None, empty=False, layout=None):
-        path = paths[table] = str(tmp_path / table)
-        canonical = registry[table]
-        fields = [StructField(f.name, f.dataType, True, {'comment': f.name}) for f in canonical if f.name != missing]
-        for name, replacement in RETIRED_METADATA_COLUMNS[table].items():
-            fields.append(StructField(name, canonical[replacement].dataType if replacement else StringType(), True))
-        if table != 'METADATA_PIPELINE_RUN':
-            fields.append(StructField('consumer_extension', StringType(), True, {'comment': 'preserve'}))
-        row = {f.name: None for f in fields}
-        row.update({name: datetime(2020, 1, 2, 3, 4, 5, 123456) if kind == 'timestamp' else 'original'
-                    for name, kind, _ in AUDIT_SCHEMA_FIELDS})
-        if table != 'METADATA_PIPELINE_RUN':
+    def seed(table, values, *, layout=None):
+        schema = metadata_schema_050(table)
+        row = {field.name: datetime(2020, 1, 2, 3, 4, 5, 123456) if field.dataType.typeName() == 'timestamp'
+               else True if field.dataType.typeName() == 'boolean'
+               else 1 if field.dataType.typeName() in {'integer', 'long'} else 'original'
+               for field in schema if not field.nullable}
+        row.update(values)
+        if table not in {'METADATA_DATA_CONTRACT_ACTIVATION', 'METADATA_PIPELINE_RUN', 'METADATA_PIPELINE_REGISTRY'}:
             row['consumer_extension'] = ' keep exact bytes \n '
-        else:
-            row.update(run_id='historical-run', pipeline_id='pipeline', execution_mode='ungoverned',
-                       workspace_id='original', started_at=datetime(2020, 1, 2), status='running',
-                       boundary_completed=False, operations='[]', profiling='[]', failures='[]', warnings_json='[]')
-        for name, replacement in RETIRED_METADATA_COLUMNS[table].items():
-            row[name] = row[replacement] if replacement else None
-        if bad:
-            row[bad] = datetime(2021, 1, 1) if RETIRED_METADATA_COLUMNS[table][bad] else 'unique historical data'
-        writer = spark_session.createDataFrame([] if empty else ([row] if table == 'METADATA_PIPELINE_RUN' else [row, row]), StructType(fields)).write.format('delta')
-        if layout == 'partition':
-            writer = writer.partitionBy('lineage_event_id')
+            schema = StructType([*schema.fields, StructField('consumer_extension', StringType(), True, {'comment': 'keep'})])
+        path = paths[table] = str(tmp_path / table)
+        writer = spark_session.createDataFrame([row], schema).write.format('delta')
         if layout == 'mapping':
             writer = writer.option('delta.columnMapping.mode', 'name')
+        if layout == 'partition':
+            writer = writer.partitionBy('source_id')
         writer.save(path)
         delta = DeltaTable.forPath(spark_session, path)
-        spark_session.sql(f"ALTER TABLE delta.`{path}` SET TBLPROPERTIES ('owner_note'='retain')")
-        return SimpleNamespace(path=path, delta=delta, read=lambda: read(table),
-                               version=lambda: delta.history(1).first()['version'])
+        def read():
+            return spark_session.read.format('delta').load(path)
+        def upgrade():
+            return setup._upgrade_metadata_table(spark=spark_session, table=read(), table_name=table,
+                expected_schema=metadata_table_schema_registry()[table], metadata_schema='engineering', context={})
+        return SimpleNamespace(read=read, upgrade=upgrade, path=path, delta=delta,
+            version=lambda: delta.history(1).first()['version'])
+    return SimpleNamespace(spark=spark_session, seed=seed)
 
-    def run():
-        return call_with_spark(spark_session, setup.setup_metadata_tables,
-                              config=framework_config(), workspace_id='dev', verbose=False)
 
-    return SimpleNamespace(spark=spark_session, seed=seed, run=run)
+@pytest.mark.parametrize('table', ['METADATA_DATA_CONTRACT', 'METADATA_DATA_CONTRACT_ACTIVATION', 'METADATA_GUARDRAIL_RESULTS'])
+@pytest.mark.parametrize('file_asset', [True, False])
+def test_released_identity_upgrade_preserves_rows_json_and_rollback(release_delta, table, file_asset):
+    """Only the three released source_id fields are consolidated; frozen bytes stay intact."""
+    from fabricops_kit.data_contract.shared import file_source_identity
+    import json
 
-
-@pytest.mark.parametrize('table', TABLES)
-@pytest.mark.parametrize('empty', [False, True])
-def test_setup_removes_only_declared_redundant_columns(cleanup_delta, table, empty):
-    """Duplicate rows, audit, extensions, properties and table ID survive cleanup."""
-    rt = cleanup_delta
-    missing = 'profile_scope' if 'PROFILED' in table else ('is_active' if 'CATALOGUE' in table else None)
-    state = rt.seed(table, missing=missing, empty=empty)
-    retired = set(RETIRED_METADATA_COLUMNS[table])
-    before = state.read()
-    kept = [name for name in before.columns if name not in retired]
-    expected = before.select(*kept).collect()
-    historical_rows = before.collect()
-    detail = state.delta.detail().first().asDict()
-    version = state.version()
-    result = rt.run()
-    assert result['status'] == 'ready', result['table_results']
-    info = result['table_results'][table]
-    assert info['status'] == 'evolved'
-    assert info['removed_columns'] == sorted(retired)
-    assert info['pre_upgrade_version'] == version and info['upgrade_version'] == version + 1
-    recovery = json.loads(state.delta.history(1).first()['userMetadata'])
-    assert recovery['pre_upgrade_version'] == version
-    assert recovery['removed_columns'] == sorted(retired)
-    if missing:
-        assert info['added_columns'] == [missing]
-        assert all(row[missing] is None for row in state.read().collect())
-    assert not (set(state.read().columns) & retired)
-    assert state.read().select(*kept).collect() == expected
-    current = state.delta.detail().first().asDict()
-    assert current['id'] == detail['id'] and current['properties'] == detail['properties']
-    if table != 'METADATA_PIPELINE_RUN':
-        assert state.read().schema['consumer_extension'].metadata == {'comment': 'preserve'}
-    # The old version remains available as the rollback boundary, including retired values.
-    assert rt.spark.read.format('delta').option('versionAsOf', version).load(state.path).collect() == historical_rows
-    again = rt.run()
-    assert again['table_results'][table]['status'] == 'validated'
+    rt = release_delta
+    source = file_source_identity(asset_workspace_id='physical', item_id='files', relative_path='orders.csv', file_format='csv')
+    old_source = {key: value for key, value in source.items() if key not in {'table_id', 'asset_type', 'asset_workspace_id'}}
+    old_source.update(source_id=source['table_id'], source_type='file', workspace_id='physical')
+    frozen = json.dumps({'source': old_source, 'table': {'columns': []}}, indent=3)
+    destination = json.dumps(old_source if file_asset else {'kind': 'lakehouse', 'workspace_id': 'physical', 'item_id': 'tables'}, indent=2)
+    values = {'table_id': None if file_asset else 'table:orders', 'source_id': source['table_id'] if file_asset else None,
+        'workspace_id': 'physical', 'contract_payload_json': frozen, 'destination_json': destination,
+        'contract_id': 'orders', 'contract_version': 1, 'status': 'frozen', 'activation_id': 'activation', 'revision': 1}
+    state = rt.seed(table, values)
+    before, version = state.read().first().asDict(), state.version()
+    identity = state.delta.detail().first()['id']
+    frame, info = state.upgrade()
+    after = frame.first().asDict()
+    assert info['removed_columns'] == (['source_id', 'workspace_id'] if table != 'METADATA_DATA_CONTRACT' else ['source_id'])
+    assert info['converted_columns'] == []
+    assert after['table_id'] == (source['table_id'] if file_asset else 'table:orders')
+    assert after['asset_type'] == ('FILE' if file_asset else 'TABLE')
+    for name, value in before.items():
+        if name not in {'source_id', 'table_id', 'workspace_id'}:
+            assert after[name] == value
+    if 'workspace_id' in before:
+        assert after['asset_workspace_id' if table == 'METADATA_DATA_CONTRACT_ACTIVATION' else 'legacy_workspace_id'] == before['workspace_id']
+    assert state.delta.detail().first()['id'] == identity
+    assert rt.spark.read.format('delta').option('versionAsOf', version).load(state.path).first().asDict() == before
+    assert state.upgrade()[1] is None
     assert state.version() == version + 1
 
 
-@pytest.mark.parametrize('table,bad', [(table, column) for table in TABLES
-                                     for column in RETIRED_METADATA_COLUMNS[table]])
-def test_unique_retired_values_fail_before_mutation(cleanup_delta, table, bad):
-    """Every retirement is checked; no useful populated legacy value disappears."""
-    rt = cleanup_delta
-    state = rt.seed(table, bad=bad)
+@pytest.mark.parametrize('table', ['METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY', 'METADATA_DATA_ACCESS'])
+def test_released_workspace_history_is_preserved_without_inference(release_delta, table):
+    """Release observations have execution-scoped workspaces; do not reinterpret them as physical."""
+    state = release_delta.seed(table, {'table_id': 'orders', 'workspace_id': 'execution', 'column_id': 'exact-column',
+        'profile_id': 'profile', 'profile_snapshot_id': 'snapshot', 'frequency_id': 'frequency', 'value': 'original'})
+    before = state.read().first().asDict()
+    frame, info = state.upgrade()
+    after = frame.first().asDict()
+    assert info['removed_columns'] == ['workspace_id']
+    assert after['legacy_workspace_id'] == 'execution' and after['asset_workspace_id'] is None
+    if table != 'METADATA_DATA_ACCESS':
+        assert after['asset_type'] == 'TABLE'
+    assert all(after[key] == value for key, value in before.items() if key != 'workspace_id')
+    assert state.upgrade()[1] is None
+
+
+@pytest.mark.parametrize('layout', ['partition', 'mapping'])
+def test_unsupported_released_layout_is_unchanged(release_delta, layout):
+    """Reject an unsupported physical rewrite before touching the released data."""
+    state = release_delta.seed('METADATA_GUARDRAIL_RESULTS', {'source_id': None, 'table_id': 'orders'}, layout=layout)
     before, version = state.read().collect(), state.version()
-    result = rt.run()
-    assert result['failed_tables'] == [table]
-    assert bad in result['table_results'][table]['message']
-    assert 'not provably redundant' in result['table_results'][table]['message']
+    with pytest.raises(ValueError, match='unsupported partition, mapping or constraint migration'):
+        state.upgrade()
     assert state.version() == version and state.read().collect() == before
 
 
-@pytest.mark.parametrize('layout', ['constraint', 'partition', 'mapping'])
-def test_unsupported_layout_fails_without_modifying_metadata(cleanup_delta, layout):
-    """Complex physical layouts require a separately reviewed migration."""
-    rt = cleanup_delta
-    table = 'METADATA_DATA_LINEAGE'
-    state = rt.seed(table, layout=layout)
-    if layout == 'constraint':
-        rt.spark.sql(f"ALTER TABLE delta.`{state.path}` ADD CONSTRAINT keep_extension CHECK (consumer_extension IS NOT NULL)")
+@pytest.mark.parametrize('table', ['METADATA_DATA_CONTRACT', 'METADATA_DATA_CONTRACT_ACTIVATION', 'METADATA_GUARDRAIL_RESULTS'])
+def test_released_conflicting_ids_abort_without_modification(release_delta, table):
+    """A release-backed migration cannot guess which populated identity to retain."""
+    state = release_delta.seed(table, {'table_id': 'existing', 'source_id': 'file:conflicting',
+        'workspace_id': 'physical', 'destination_json': '{"workspace_id":"physical","kind":"lakehouse","item_id":"files"}'})
     before, version = state.read().collect(), state.version()
-    result = rt.run()
-    assert result['failed_tables'] == [table]
-    assert 'constraint migration' in result['table_results'][table]['message']
+    with pytest.raises(ValueError, match='not provably redundant'):
+        state.upgrade()
+    assert state.version() == version and state.read().collect() == before
+
+
+def test_released_run_json_and_provenance_require_no_rewrite(release_delta):
+    """v0.5.0 already stores JSON strings and provenance; retain their exact bytes."""
+    state = release_delta.seed('METADATA_PIPELINE_RUN', {'run_id': 'released-run', 'pipeline_id': 'pipeline',
+        'execution_mode': 'ungoverned', 'status': 'incomplete', 'boundary_completed': False,
+        'run_schema_version': 3, 'pipeline_version': 1, 'operations': '[ ]', 'profiling': '[\n]',
+        'failures': '[  ]', 'warnings_json': '[ ]'})
+    before, version = state.read().collect(), state.version()
+    frame, info = state.upgrade()
+    assert info is None and frame.collect() == before
+    assert state.version() == version
+
+
+def test_released_run_null_approval_cleanup_preserves_history_and_repeats(release_delta):
+    """Retire duplicate null approval fields without changing retained Run facts."""
+    rt = release_delta
+    state = rt.seed('METADATA_PIPELINE_RUN', {
+        'run_id': 'retained-run', 'status': 'running', 'execution_mode': 'ungoverned',
+        'operations': '[]', 'profiling': '[]', 'failures': '[]', 'warnings_json': '[]',
+    })
+    before, version = state.read().first().asDict(), state.version()
+    frame, info = state.upgrade()
+    assert info['removed_columns'] == ['activation_revision', 'approval_id']
+    assert frame.first().asDict() == {key: value for key, value in before.items()
+                                    if key not in {'approval_id', 'activation_revision'}}
+    assert rt.spark.read.format('delta').option('versionAsOf', version).load(state.path).first().asDict() == before
+    assert state.upgrade()[1] is None
+    assert state.version() == version + 1
+
+
+@pytest.mark.parametrize('column', ['approval_id', 'activation_revision'])
+def test_released_run_populated_approval_fields_are_never_discarded(release_delta, column):
+    """Preserve historical decisions when their redundancy cannot be established."""
+    state = release_delta.seed('METADATA_PIPELINE_RUN', {
+        'run_id': 'retained-run', 'status': 'running', 'execution_mode': 'ungoverned',
+        'operations': '[]', 'profiling': '[]', 'failures': '[]', 'warnings_json': '[]',
+        column: 'historical-decision',
+    })
+    before, version = state.read().collect(), state.version()
+    with pytest.raises(ValueError, match='not provably redundant'):
+        state.upgrade()
     assert state.version() == version and state.read().collect() == before

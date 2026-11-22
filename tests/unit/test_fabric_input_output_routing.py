@@ -625,8 +625,12 @@ def test_canonical_metadata_read_uses_ownership_schema_over_explicit_schema():
     assert spark.table_calls == []
 
 
-def test_canonical_metadata_write_uses_ownership_schema_over_explicit_schema():
+def test_canonical_metadata_write_uses_ownership_schema_over_explicit_schema(monkeypatch):
     """Verify canonical metadata writes ignore caller schemas in favor of ownership."""
+    from importlib import import_module
+    writer = import_module("fabricops_kit.io.write_lakehouse_table")
+    monkeypatch.setattr(writer, "write_metadata_frame", lambda frame, path, table, **kw:
+        writer.write_delta_path(frame, path, **kw))
     config = _io_config()
     context = {"config": config, "scope_workspace_id": "dev"}
     frame = _Frame()
@@ -637,7 +641,6 @@ def test_canonical_metadata_write_uses_ownership_schema_over_explicit_schema():
         store="Metadata",
         schema="METADATA",
         mode="overwrite",
-        options={"overwriteSchema": "true"},
         verbose=False,
         context=context,
     )
@@ -647,8 +650,12 @@ def test_canonical_metadata_write_uses_ownership_schema_over_explicit_schema():
     assert not any(call[0] == "saveAsTable" for call in frame.write.calls)
 
 
-def test_schema_enabled_target_still_uses_canonical_metadata_ownership_schema():
+def test_schema_enabled_target_still_uses_canonical_metadata_ownership_schema(monkeypatch):
     """Verify canonical metadata ownership overrides a configured caller schema."""
+    from importlib import import_module
+    writer = import_module("fabricops_kit.io.write_lakehouse_table")
+    monkeypatch.setattr(writer, "write_metadata_frame", lambda frame, path, table, **kw:
+        writer.write_delta_path(frame, path, **kw))
     config = _schema_io_config()
     context = {"config": config, "scope_workspace_id": "dev"}
     spark = _Spark()
@@ -661,7 +668,6 @@ def test_schema_enabled_target_still_uses_canonical_metadata_ownership_schema():
         store="Metadata",
         schema="meta",
         mode="overwrite",
-        options={"overwriteSchema": "true"},
         verbose=False,
         context=context,
     )

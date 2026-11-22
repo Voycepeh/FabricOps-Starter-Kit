@@ -13,6 +13,7 @@ import yaml
 from fabricops_kit.config.metadata_schemas import (
     CANONICAL_METADATA_TABLES,
     RETIRED_PREVIEW_METADATA_TABLES,
+    HISTORICAL_METADATA_TABLES,
     metadata_table_schema_registry,
 )
 from tests.helpers import framework_config
@@ -23,14 +24,18 @@ def test_retirement_inventory_matches_released_lifecycle():
     inventories = [yaml.safe_load(path.read_text()) for path in Path('docs/releases/manifests').glob('*.yml')]
     released = {item['name'] for manifest in inventories for item in manifest['metadata_tables']}
     retired = RETIRED_PREVIEW_METADATA_TABLES
-    assert set(retired) == released - set(CANONICAL_METADATA_TABLES)
+    relocated = "METADATA_PROCESSING_STATE"
+    assert set(retired) | {relocated} | set(HISTORICAL_METADATA_TABLES) == released - set(CANONICAL_METADATA_TABLES)
     for name in ('METADATA_ENRICHMENT', 'METADATA_GUARDRAIL', 'METADATA_SOURCE_OBSERVATION'):
         assert retired[name]['retired_in'] == '0.3.0'
     for manifest in inventories:
         for item in manifest['metadata_tables']:
             name = item['name']
+            if name in HISTORICAL_METADATA_TABLES:
+                assert name not in CANONICAL_METADATA_TABLES
+                continue
             if item['status'] == 'live':
-                assert name in CANONICAL_METADATA_TABLES
+                assert name in CANONICAL_METADATA_TABLES or name == relocated
                 assert name not in retired
             if name not in retired:
                 continue
@@ -94,6 +99,9 @@ def test_retirement_alerts_are_presence_only_and_nonblocking(monkeypatch, capsys
         writes.append(name)
         tables[name] = frame.schema
 
+    monkeypatch.setattr(setup, '_enforce_metadata_primary_key', lambda **kw: None)
+    monkeypatch.setattr(setup, '_setup_processing_state', lambda **kw: {
+        'status': 'validated', 'path': 'Tables/misc/PROCESSING_STATE'})
     monkeypatch.setattr(setup, 'read_lakehouse_table', read)
     monkeypatch.setattr(setup, 'write_lakehouse_table', write)
     result = call_with_spark(SimpleNamespace(createDataFrame=lambda rows, schema: Frame(schema)), setup.setup_metadata_tables,

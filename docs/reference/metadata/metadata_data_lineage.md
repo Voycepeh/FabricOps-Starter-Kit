@@ -1,16 +1,14 @@
 # METADATA_DATA_LINEAGE
 
-Shows which tables a pipeline reads and writes, so you can trace how data moves through FabricOps.
+Stores scalar Run/output/source column dependencies for Power BI and impact queries.
 
 ## Writer functions
 
-* [`orchestrate_read`](../../api/reference/orchestrate_read.md)
-* [`orchestrate_write`](../../api/reference/orchestrate_write.md)
+* [`finalize_pipeline`](../../api/reference/finalize_pipeline.md)
 
 ## Used in Workflow Template
 
-* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Standard Read orchestration
-* [`02_pipeline`](https://github.com/Voycepeh/FabricOps-Starter-Kit/tree/main/templates/notebooks) — Standard Write orchestration
+No starter template or solution is traced for the public writer functions.
 
 ## Model
 
@@ -18,22 +16,25 @@ Shows which tables a pipeline reads and writes, so you can trace how data moves 
 
 **Default physical schema:** `engineering`
 
-**Grain:** One table's participation as a source or target in a pipeline operation.
+**Grain:** One finalized Run/Write/output/source/dependency type, with explicit constant, row-set and gap facts.
 
 **Primary key:** `lineage_id`
 
 **Relationships:**
 
-`METADATA_DATA_CATALOGUE` **(N → 1)**
-via `table_id`
+`METADATA_PIPELINE_RUN` **(N → 1)**
+via `run_id`
 
-**Implementation details:** See which registered tables participated as sources and targets in pipeline activities; table_name records the name at the participation write while table_id remains stable. The current notebook's Lineage defines Data Contract resolution scope.
+`METADATA_DATA_CATALOGUE` **(N → M)**
+via `source_asset_workspace_id` + `source_table_id` + `source_asset_type` + `target_asset_workspace_id` + `target_table_id` + `target_asset_type`
+
+**Implementation details:** Finalization derives immutable lineage_version=1 facts from the exact committed Run graph. Source/target physical Catalogue identities and column IDs, dependency_type, coverage and publication status are scalar columns; no JSON expansion is required for reporting. The projection has 18 dependency fields plus eight standard audit fields. Run/Pipeline attributes, transformation structure, graph node IDs and gap diagnostics remain available from the Run. Publication snapshot hashes are computed for retry tracking rather than repeated on each edge. Detailed graphs remain in Run operations for drill-through and rebuilding. Append transaction identities and exact read-back make retries idempotent without business-write replay. Setup additively upgrades the released participation layout, retaining its rows, audit fields and extension columns. Unreleased intermediate PR schemas do not receive migrations. Historical rows have null lineage_version and must be excluded from dependency reports. Rows describe Write input, not retained target history. Run and projection are separate Delta commits; projection failure is explicit and independently retryable.
 
 ## Column summary
 
 <div class="metadata-column-kpis" aria-label="Column counts by responsibility">
-<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">13</strong></div>
-<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">5</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--total"><span class="metadata-column-kpi__label">Total columns</span><strong class="metadata-column-kpi__value">26</strong></div>
+<div class="metadata-column-kpi metadata-column-kpi--engineering"><span class="metadata-column-kpi__label">Engineering columns</span><strong class="metadata-column-kpi__value">18</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--governance"><span class="metadata-column-kpi__label">Governance columns</span><strong class="metadata-column-kpi__value">0</strong></div>
 <div class="metadata-column-kpi metadata-column-kpi--audit"><span class="metadata-column-kpi__label">Standard audit columns</span><strong class="metadata-column-kpi__value">8</strong></div>
 </div>
@@ -45,30 +46,30 @@ Blue rows are Engineering columns; purple rows are Governance columns. Neutral r
 <div class="metadata-schema-table">
 <table class="metadata-schema-table"><thead><tr><th scope="col">Column</th><th scope="col">Data type</th><th scope="col">Description</th></tr></thead><tbody>
 <tr class="metadata-column--engineering"><td><code>lineage_id</code></td><td><code>string</code></td><td>Identifier stored for <code>lineage_id</code>.</td></tr>
-<tr class="metadata-column--engineering"><td><code>table_id</code></td><td><code>string</code></td><td>Stable governed data asset key that identifies a table across workspace, dataset, and table context.</td></tr>
-<tr class="metadata-column--engineering"><td><code>table_name</code></td><td><code>string</code></td><td>Table name captured from the authoritative Catalogue or contract when this metadata row was written; later renames do not change it.</td></tr>
-<tr class="metadata-column--engineering"><td><code>workspace_id</code></td><td><code>string</code></td><td>Stable Fabric workspace ID defining the physical observation or runtime authority scope; independent of audit writer workspace.</td></tr>
-<tr class="metadata-column--engineering"><td><code>pipeline_role</code></td><td><code>string</code></td><td>Metadata Data Lineage field <code>pipeline_role</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>lineage_version</code></td><td><code>integer</code></td><td>Metadata Data Lineage field <code>lineage_version</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>record_type</code></td><td><code>string</code></td><td>Metadata Data Lineage field <code>record_type</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>run_id</code></td><td><code>string</code></td><td>Identifier stored for <code>run_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>operation_key</code></td><td><code>string</code></td><td>Metadata Data Lineage field <code>operation_key</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>publication_status</code></td><td><code>string</code></td><td>Metadata Data Lineage field <code>publication_status</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>coverage</code></td><td><code>string</code></td><td>Metadata Data Lineage field <code>coverage</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>target_asset_workspace_id</code></td><td><code>string</code></td><td>Identifier stored for <code>target_asset_workspace_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>target_table_id</code></td><td><code>string</code></td><td>Identifier stored for <code>target_table_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>target_asset_type</code></td><td><code>string</code></td><td>Metadata Data Lineage field <code>target_asset_type</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>target_column_id</code></td><td><code>string</code></td><td>Identifier stored for <code>target_column_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>target_column_name</code></td><td><code>string</code></td><td>Human-readable name stored for <code>target_column_name</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>source_asset_workspace_id</code></td><td><code>string</code></td><td>Identifier stored for <code>source_asset_workspace_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>source_table_id</code></td><td><code>string</code></td><td>Identifier stored for <code>source_table_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>source_asset_type</code></td><td><code>string</code></td><td>Metadata Data Lineage field <code>source_asset_type</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>source_column_id</code></td><td><code>string</code></td><td>Identifier stored for <code>source_column_id</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>source_column_name</code></td><td><code>string</code></td><td>Human-readable name stored for <code>source_column_name</code>.</td></tr>
+<tr class="metadata-column--engineering"><td><code>dependency_type</code></td><td><code>string</code></td><td>Metadata Data Lineage field <code>dependency_type</code>.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_by</code></td><td><code>string</code></td><td>User principal or runtime identity that committed the metadata row.</td></tr>
 <tr class="metadata-column--audit"><td><code>_committed_at</code></td><td><code>timestamp</code></td><td>Timestamp when the metadata row was committed.</td></tr>
-<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>Fabric workspace identifier captured from runtime audit context.</td></tr>
-<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Fabric workspace name captured from runtime audit context.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_id</code></td><td><code>string</code></td><td>ID of the executing notebook’s Fabric workspace, captured when the metadata row was written.</td></tr>
+<tr class="metadata-column--audit"><td><code>_workspace_name</code></td><td><code>string</code></td><td>Display name of the executing notebook’s Fabric workspace, captured when the metadata row was written.</td></tr>
 <tr class="metadata-column--audit"><td><code>_notebook_id</code></td><td><code>string</code></td><td>Fabric notebook identifier captured from runtime audit context.</td></tr>
 <tr class="metadata-column--audit"><td><code>_notebook_name</code></td><td><code>string</code></td><td>Fabric notebook name captured from runtime audit context.</td></tr>
 <tr class="metadata-column--audit"><td><code>_metadata_lakehouse_name</code></td><td><code>string</code></td><td>Configured metadata lakehouse name used for the write.</td></tr>
 <tr class="metadata-column--audit"><td><code>_activity_id</code></td><td><code>string</code></td><td>Fabric execution activity identifier for the current notebook or pipeline run.</td></tr>
 </tbody></table>
 </div>
-
-## Automatic column cleanup
-
-`setup_metadata_tables()` removes only the explicitly retired columns below. It preserves canonical rows, all eight audit columns and other extension columns. If a populated value cannot be proved redundant, setup fails for this table with data preserved.
-
-| Retired column | Removal condition |
-| --- | --- |
-| `lineage_event_id` | Every value is SQL NULL |
-| `profile_role` | Every value is SQL NULL |
-| `profiled_at` | SQL NULL or equal to `_committed_at` |
-| `recorded_at` | SQL NULL or equal to `_committed_at` |
-
-See [`setup_metadata_tables`](../../api/reference/setup_metadata_tables.md) for transaction results and the Delta recovery boundary.

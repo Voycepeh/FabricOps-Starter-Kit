@@ -16,7 +16,7 @@ from fabricops_kit.pipeline.shared import (
     schedule_table_profiling,
     PipelineOperation,
     execution_result,
-    _run_orchestration_stage,
+    run_orchestration_stage,
     prepare_pipeline_execution,
     pipeline_guardrail_types,
     print_pipeline_contract,
@@ -31,13 +31,20 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
     Define store, schema, table_name and any full/incremental/query options.
     Alternatively select a Lakehouse file, folder or wildcard using relative_path,
     file_format and read_options. Files support full reads only and retain their
-    stable Source ID, with no Table ID. Foundational readers remain independent.
-    File profiles are calculated in memory per execution (including persistent
-    modes), using the pipeline row limit; no table profile snapshot is persisted.
+    stable identity in table_id with asset_type=FILE in the response and shared metadata. Foundational readers remain independent.
+    Persistent reads register their physical asset and observed schema in
+    METADATA_DATA_CATALOGUE independently of profiling. Query projections
+    leave the registered table schema intact. Run operations record participation
+    and its physical asset workspace. Successful Reads also register trusted plan
+    boundaries for automatic per-Write column lineage; this performs no row action. File profiles
+    and frequency results use that common Table ID and stable Column IDs in
+    METADATA_DATA_PROFILED and METADATA_DATA_PROFILED_FREQUENCY; Dry Run stays
+    in memory. Profiling uses the pipeline row limit and records selection scope.
     A replaced file can be read again in a new execution; no exactly-once or
     immutable-file guarantee is provided.
     Spark, execution authority and reporting come from setup_pipeline. The result
-    retains its dataframe, canonical Table ID or file Source ID and Guardrail diagnostics. Reads
+    retains its dataframe, common asset Table ID and asset type and Guardrail diagnostics. Reads
+    record their own participation in METADATA_PIPELINE_RUN.operations and
     register pipeline-level participation for subsequent Writes; this is not
     exact DataFrame lineage. Governed blocks failed contract checks; Dry Run never commits.
     FabricOps resolves source and target Table IDs through configured workspace routing.
@@ -146,7 +153,14 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
             if (not isinstance(target_store, str) or not target_store.strip()
                     or not isinstance(target_table_name, str) or not target_table_name.strip()):
                 raise ValueError("target_store and target_table_name are required for incremental reads or supplied target coordinates.")
-        execution_plan = session.operation_plan("source", locals())
+        arguments = {
+            "store": store, "schema": schema, "table_name": table_name, "read_mode": read_mode,
+            "query": query, "read_parameters": read_parameters, "target_store": target_store,
+            "target_schema": target_schema, "target_table_name": target_table_name,
+            "relative_path": relative_path, "file_format": file_format, "read_options": read_options,
+            "verbose": verbose, "dq_diagnostics": dq_diagnostics, "spark_session": spark_session,
+        }
+        execution_plan = session.operation_plan("source", arguments)
         target_table_id = resolve_table_id(
             store=target_store, schema=target_schema, table_name=target_table_name,
             context=execution_plan.runtime_context,
@@ -154,14 +168,14 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
     except BaseException:
         session.close(failed=True)
         raise
-    arguments = {key: value for key, value in locals().items() if key not in {"session"}}
+    arguments["target_table_id"] = target_table_id
     with PipelineOperation(execution_plan, "source", arguments) as operation:
         if dq_diagnostics not in {"none", "sample", "full"}:
             raise ValueError("dq_diagnostics must be 'none', 'sample', or 'full'.")
         summary = ExecutionSummary("READ", verbose=verbose)
         presentations = []
         source_name = relative_path if is_file else table_name
-        table_id = file_identity["source_id"] if is_file else resolve_table_id(store=store, schema=schema, table_name=table_name, context=execution_plan.runtime_context)
+        table_id = file_identity["table_id"] if is_file else resolve_table_id(store=store, schema=schema, table_name=table_name, context=execution_plan.runtime_context)
         context = prepare_pipeline_execution([table_id], execution_plan=execution_plan, spark_session=spark_session)
         context = {**context, "_fabricops_suppress_io_log": True}
         if "source" not in context["_pipeline_identities"][table_id]["roles"]:
@@ -173,7 +187,7 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
         # A new Read supersedes earlier evidence even if evaluation cannot complete.
         read_types = {kind for kind, _label in labels}
         execution_plan.results[:] = [row for row in execution_plan.results
-                                    if (row.get("source_id") or row.get("table_id")) != table_id or row.get("guardrail_type") not in read_types]
+                                    if (row.get("table_id")) != table_id or row.get("guardrail_type") not in read_types]
         names = ["Read", *[label for kind, label in labels if kind in active]]
         names.append("Profile")
         stages = []
@@ -181,7 +195,7 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
             print(f"FabricOps READ · {source_name} · {PIPELINE_MODE_NAMES[execution_plan.execution_mode]}")
         print_pipeline_contract(context, table_id, operation="Read", guardrails=[label for kind, label in labels if kind in active], verbose=verbose)
         def run(stage, function):
-            result, record = _run_orchestration_stage(operation="READ", name=source_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose, allow_blocked=not execution_plan.permits_persistence)
+            result, record = run_orchestration_stage(operation="READ", name=source_name, index=names.index(stage)+1, total=len(names), stage=stage, function=function, verbose=verbose, allow_blocked=not execution_plan.permits_persistence)
             stages.append(record)
             return result
         source = run("Read", lambda: read_file_participant(file_identity, context=context, spark_session=spark_session)) if is_file else run("Read", lambda: pipeline_read(store=store, schema=schema, table_name=table_name, read_mode=read_mode, query=query, read_parameters=read_parameters, target_table_id=target_table_id, verbose=False, context={**(context or {}), "_spark_session": spark_session}))
@@ -230,4 +244,4 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
         display_profile_presentations(presentations)
         operation.complete(stages, rows_read=metrics.get("rows_read"), metrics=metrics)
 
-        return session.register_source({**source, **execution_result(context, table_id, stages=stages), "published": False, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages})
+        return session.register_source({**source, "asset_type": "FILE" if is_file else "TABLE", **execution_result(context, table_id, stages=stages), "published": False, "read_metrics": metrics, "total_duration_seconds": duration, "freshness_result": freshness, "schema_result": schema_result, "dq_result": dq_result, "profile_result": profile, "orchestration_stages": stages})

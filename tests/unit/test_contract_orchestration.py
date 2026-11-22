@@ -66,8 +66,8 @@ def runtime(monkeypatch, spark_session):
             self.row = frame.collect()[0].asDict(recursive=True)
             return self
         def toDF(self):
-            from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
-            return spark_session.createDataFrame([], metadata_table_schema_registry()["METADATA_PROCESSING_STATE"])
+            from fabricops_kit.pipeline.shared import processing_state_schema
+            return spark_session.createDataFrame([], processing_state_schema())
         def whenMatchedUpdate(self, **kwargs): return self
         def whenMatchedUpdateAll(self): return self
         def whenNotMatchedInsertAll(self): return self
@@ -84,8 +84,12 @@ def runtime(monkeypatch, spark_session):
     runtime_context = context
     monkeypatch.setattr(shared, "resolve_fabric_context", lambda context=None: (config, "dev", context or runtime_context))
     monkeypatch.setattr(shared, "get_spark_session", lambda *a, **_kwargs: spark_session)
+    monkeypatch.setattr(shared, "resolve_asset_workspace_name", lambda workspace, **_kw: workspace.title())
+    monkeypatch.setattr(shared, "processing_state_path", lambda context: "private-state")
+    monkeypatch.setattr(shared, "read_processing_state", lambda **kw: [])
     monkeypatch.setattr(shared, "read_lakehouse_table", lambda name, **kw: RecordingFrame(rows) if name == "METADATA_DATA_CONTRACT" else RecordingFrame([]) if name == "METADATA_ACTIVATED_PIPELINE" else (_ for _ in ()).throw(RuntimeError("[TABLE_OR_VIEW_NOT_FOUND] Table does not exist")))
     monkeypatch.setattr(read_module, "read_lakehouse_table", lambda *a, **kw: source)
+    monkeypatch.setattr(importlib.import_module("fabricops_kit.io"), "read_lakehouse_table", lambda *a, **kw: source)
     caller_snapshot = {"dataframe": None}
     monkeypatch.setattr(shared, "PublicationBatch", lambda dataframe, **kw: nullcontext(SimpleNamespace(
         dataframe=dataframe, audit=kw["audit"], receipt={"batch_id": "batch", "activity_id": kw["audit"]["_activity_id"],
@@ -97,8 +101,9 @@ def runtime(monkeypatch, spark_session):
     monkeypatch.setattr(write_module, "_target_has_rows", lambda **kw: False)
     # Every mutation reachable from Read, validation, recovery and Write is observed.
     spies = {}
-    for owner, names in ((shared, ["write_lakehouse_table", "persist_lineage_participation"]),
-                         (profile_module, ["_replace_snapshot_rows", "_replace_frequency_rows", "_upsert_catalogue_identities", "_delete_profile_snapshot", "_stage_catalogue_profile_retry"]),
+    for owner, names in ((shared, ["write_lakehouse_table"]),
+                         (profile_module, ["_replace_snapshot_rows", "_replace_frequency_rows", "merge_catalogue_asset", "_delete_profile_snapshot", "_stage_catalogue_profile_retry"]),
+                         (read_module, ["merge_catalogue_asset"]),
                          (write_module, ["_persist_target_processing"]),
                          (importlib.import_module("fabricops_kit.io"), ["write_lakehouse_table", "write_warehouse_table"]),
                          (importlib.import_module("fabricops_kit.io.shared"), ["execute_warehouse_processing"])):
@@ -248,7 +253,7 @@ def test_testing_observation_recovery_cannot_merge_durable_state(runtime, monkey
     create_spark = Mock(side_effect=AssertionError("must not reach physical merge"))
     monkeypatch.setattr(shared, "get_spark_session", create_spark)
     shared._merge_source_observation_records([{"observation_status": "committed"}],
-        config=context["config"], context={**context, "execution_plan": plan})
+        context={**context, "execution_plan": plan})
     create_spark.assert_not_called()
 
 
@@ -272,7 +277,7 @@ def test_initial_publication_publishes_and_commits_lineage(runtime, spark_sessio
     result = write(plan, source, spark_session)
     assert result["published"] and result["execution_mode"] == mode
     assert spies["fabricops_kit.io.write_lakehouse_table"].call_count == 1
-    assert spies["fabricops_kit.pipeline.shared.persist_lineage_participation"].call_count == 2
+    assert next(iter(plan.evidence["publication_outcomes"].values()))["status"] == "committed"
     assert spies["fabricops_kit.pipeline.pipeline_write._persist_target_processing"].call_count == 1
     capture = spies["fabricops_kit.pipeline.pipeline_write._persist_target_processing"].call_args.kwargs["scheduled_refresh"]
     assert capture == {"status": "not_configured" if schedule_available else "unavailable", "schedules": []}

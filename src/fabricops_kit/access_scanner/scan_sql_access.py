@@ -189,7 +189,6 @@ def _map_to_catalogue(observations, catalogue_tables):
 def _access_rows(
     mapped,
     *,
-    workspace_id: str,
     access_snapshot_id: str,
     audit_fields: dict[str, Any],
 ):
@@ -200,6 +199,7 @@ def _access_rows(
             "\u001f",
             F.lit(access_snapshot_id),
             F.col("_catalogue_table_id"),
+            F.col("_catalogue_workspace_id"),
             F.coalesce(F.col("user_name"), F.lit("")),
             F.coalesce(F.col("role_name"), F.lit("")),
             F.coalesce(F.col("permission_source"), F.lit("")),
@@ -218,7 +218,8 @@ def _access_rows(
             F.col("user_name").alias("user_principal"),
             F.col("_catalogue_table_id").alias("table_id"),
             F.col("_catalogue_table_name").alias("table_name"),
-            F.lit(workspace_id).alias("workspace_id"),
+            F.col("_catalogue_workspace_id").alias("asset_workspace_id"),
+            F.lit("TABLE").alias("asset_type"),
             F.col("class_desc").alias("access_level"),
             F.col("permission_name").alias("access_value"),
             F.col("state_desc").alias("access_state"),
@@ -309,9 +310,9 @@ def scan_sql_access(
         ``00_env_config`` whose SQL endpoints expose the supported catalogue
         views.
     workspace_id : str, optional
-        FabricOps configuration workspace_id used for target resolution,
-        catalogue filtering, and workspace_id-labelled access rows. Defaults to
-        the active FabricOps workspace_id. Fabric authentication and execution
+        FabricOps configuration workspace used to resolve target stores. Access rows
+        record the physical target workspace as asset_workspace_id. Defaults to
+        the active FabricOps workspace. Fabric authentication and execution
         identity continue to come from the active runtime.
     access_snapshot_id : str, optional
         Identifier shared by all rows in this scan. A UUID is generated when
@@ -367,6 +368,7 @@ def scan_sql_access(
     )
     registered_tables = catalogue_tables(
         catalogue_df,
+        config=config,
         workspace_id=resolved_workspace_id,
         target_store_kinds=resolved_store_kinds,
     )
@@ -379,7 +381,6 @@ def scan_sql_access(
 
     access = _access_rows(
         mapped,
-        workspace_id=resolved_workspace_id,
         access_snapshot_id=snapshot_id,
         audit_fields=audit_fields,
     )

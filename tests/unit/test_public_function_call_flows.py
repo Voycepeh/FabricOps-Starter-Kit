@@ -419,16 +419,17 @@ def test_reintroduced_activation_widget_is_preview_with_unchanged_history(reposi
     """Current Preview status preserves the historical Live manifest records."""
     qn = "fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract"
     history, _ = flows.read_function_lifecycle()
-    assert history[qn].lifecycle_status == "live"
+    assert history[qn].lifecycle_status == "preview"
     current = flows.public_lifecycle(qn, "widget_activate_data_contract", history)
     assert current.lifecycle_status == "preview"
     assert current.live_since is None
     assert current.discontinued_in is None
     assert current.release_history == history[qn].release_history
     assert any(row["status"] == "discontinued" for row in current.release_history)
-    assert current.release_history[-2:] == (
+    assert current.release_history[-3:] == (
         {"version": "0.4.0", "status": "live"},
         {"version": "0.4.1", "status": "live"},
+        {"version": "0.5.0", "status": "preview"},
     )
     row = next(item for item in repository_call_flow_payload["public_functions"] if item["qualified_name"] == qn)
     assert row["lifecycle_status"] == "preview"
@@ -1510,5 +1511,5 @@ def test_renamed_governance_widgets_preserve_live_badges(repository_call_flow_pa
     row = next(item for item in repository_call_flow_payload["public_functions"] if item["qualified_name"] == qn)
     assert row["lifecycle_status"] == "live"
     assert row["live_since"] == "0.2.0"
-    assert row["release_history"] == []
-    assert row["release_versions"] == []
+    assert row["release_history"] == [{"version": "0.5.0", "status": "live"}]
+    assert row["release_versions"] == ["0.5.0"]

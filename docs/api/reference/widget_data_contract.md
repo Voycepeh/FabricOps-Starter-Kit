@@ -59,8 +59,8 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `table_id` | `str \| None` | No | `None` | Initial canonical governed table identity. If omitted, select it in the widget. |
-| `contract_version` | `int \| None` | No | `None` | Initial exact lifecycle version. If omitted, the newest version is selected. |
+| `table_id` | `str \| None` | No | `None` | Initial canonical governed dataset identity, applied after Workspace and Store selection. |
+| `contract_version` | `int \| None` | No | `None` | Initial exact lifecycle version. If omitted, choose a version or New draft explicitly. |
 | `context` | `Any` | No | `None` | FabricOps runtime context normally established by ``00_env_config``. |
 | `ai_model` | `str \| None` | No | `None` | Built-in Fabric model: ``gpt-5-mini`` or ``gpt-5.1``. Overrides configuration. |
 | `ai_reasoning_effort` | `str \| None` | No | `None` | ``minimal``, ``low``, ``medium``, or ``high``. Overrides configuration. |
@@ -103,9 +103,9 @@ Metadata Lakehouse even when the notebook workspace is not a pipeline environmen
 Tables retain their selected Catalogue observation. Named file datasets share
 the selector; enter a validated configured Files path and reader settings to
 observe a new file schema without registering a table. File contracts preserve
-Source ID and exact format/options through Save, Freeze and Activation.
-Returned state uses source_id for files and table_id for physical tables;
-dataset_id identifies either selection. File profiles remain session-only.
+common Table ID, asset type and exact format/options through Save, Freeze and Activation.
+Returned state uses table_id and asset_type for either kind;
+dataset_id identifies either selection. File column profiles load by the shared asset and Column IDs from the configured Metadata Lakehouse when available.
 Activation and governed execution still require configured environment mapping.
 Save overwrites the complete canonical JSON for the selected draft version, then reloads
 that exact version. A new draft is seeded from the previous frozen version when one exists.
@@ -113,7 +113,7 @@ Engineering processing is reviewed through Pipeline Activation and is not author
 Profile context remains read-only and is never added
 to the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and
 optional enforcement are independent. Enabling Grain defaults to Block.
-The sidebar includes collapsible read-only summaries of configured Read and Write
+Review includes collapsible read-only summaries of configured Read and Write
 rules. These summaries do not execute validation or navigate authoring controls.
 The Data Quality section is the single DQ authoring surface. Governance can add
 any supported deterministic rule manually, or generate transient proposals
@@ -121,8 +121,11 @@ from business language when AI is enabled. Proposals require explicit review
 and addition. Both paths create the same editable Guardrail records; the
 Columns section contains column metadata and non-DQ settings only.
 Open Data Contract loads a manual-first editor without AI inference or AI-only
-profile reads. Top navigation keeps Table, Columns, Data Quality, Review,
-and AI Usage above the editor; lifecycle actions remain in the sidebar.
+profile reads. Top navigation keeps Table (File for file sources), Columns, Data Quality, Review,
+and AI Usage above one bounded content body; lifecycle actions remain in the header.
+Entry selects Workspace, Store, dataset, then version. Upstream changes clear dependent
+selections. Native searchable, paginated pickers wrap long dataset names without popup
+JavaScript. Optional profile and participation context loads when expanded.
 Every AI request requires an explicit Generate, Suggest or Re-run action.
 Suggestions persist during navigation and require explicit acceptance.
 Switching columns reuses cached profile reads and suggestions.
@@ -191,9 +194,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:989`
+`fabricops_kit/widgets/widget_data_contract.py:1004`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L989-L7459">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1004-L7511">View on GitHub</a>
 </div>
 
 
@@ -220,6 +223,7 @@ No related guides documented.
 | Preview | 0.3.1 |
 | Preview | 0.4.0 |
 | Preview | 0.4.1 |
+| Preview | 0.5.0 |
 
 
 </details>

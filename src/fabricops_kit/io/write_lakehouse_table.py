@@ -12,6 +12,7 @@ from .shared import (
     resolve_configured_lakehouse_table,
     validate_dataframe_writer,
     write_delta_path,
+    write_metadata_frame,
 )
 
 
@@ -102,6 +103,16 @@ def write_lakehouse_table(
 
     Notes
     -----
+    Canonical metadata keys
+        Writes through the Metadata store enforce the diagram primary key as a
+        non-null, non-blank unique row identity. Duplicate inserts fail atomically.
+        Existing tables require setup_metadata_tables() before using this protocol.
+        For existing canonical metadata, options are limited to txnAppId,
+        txnVersion and userMetadata; schema or partition changes require setup
+        or an explicit metadata migration. Ordinary business table writes retain
+        their writer options. External writers must follow the same protocol
+        to preserve uniqueness.
+
     Parallel processing and write concurrency
         Spark writes DataFrame partitions concurrently across available
         executors. ``write_lakehouse_table`` can repartition the input
@@ -309,10 +320,16 @@ def write_lakehouse_table(
             attempt = None
     if attempt is not None:
         physical_options["userMetadata"] = attempt.token
-    from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
-    from fabricops_kit.io.shared import retry_delta_metadata
-    if store == "Metadata" and _table_value in CANONICAL_METADATA_TABLES and normalized_mode == "append":
-        retry_delta_metadata(lambda: write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=physical_options if attempt is not None else options))
+    from fabricops_kit.config.metadata_schemas import METADATA_PRIMARY_KEYS
+
+    config = (context or {}).get("config")
+    config = config.get("data_agreement_config", config) if isinstance(config, dict) else getattr(config, "data_agreement_config", config)
+    configured = (config.get("metadata_tables", {}) if isinstance(config, dict) else getattr(config, "metadata_tables", {})) or {}
+    canonical = {configured.get("data_steward", "METADATA_DATA_STEWARD"): "METADATA_DATA_STEWARD",
+                 configured.get("data_agreement", "METADATA_DATA_AGREEMENT"): "METADATA_DATA_AGREEMENT"}.get(_table_value, _table_value)
+    if store == "Metadata" and canonical in METADATA_PRIMARY_KEYS:
+        write_metadata_frame(df, path, canonical, mode=normalized_mode, partition_by=partition_by,
+            options=physical_options if attempt is not None else options)
     else:
         write_delta_path(df, path, mode=normalized_mode, partition_by=partition_by, options=physical_options if attempt is not None else options)
     if attempt is not None:

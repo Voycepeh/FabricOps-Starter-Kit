@@ -8,13 +8,43 @@ from fabricops_kit.io.shared import retry_delta_metadata
 from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
 
 
+def test_retry_sleep_mock_is_isolated_from_background_threads(monkeypatch):
+    """Background polling must keep its real sleep and never inflate retry counts."""
+    from threading import Thread
+    import time
+
+    original_sleep = time.sleep
+    delays, background_sleeps, calls = [], [], []
+    monkeypatch.setattr('fabricops_kit.io.shared.sleep', delays.append)
+
+    def poll():
+        background_sleeps.append(time.sleep)
+        time.sleep(0)
+
+    def action():
+        calls.append(1)
+        thread = Thread(target=poll)
+        thread.start()
+        thread.join(timeout=5)
+        assert not thread.is_alive()
+        if len(calls) == 1:
+            raise type('ConcurrentAppendException', (Exception,), {})()
+        return 'committed'
+
+    assert retry_delta_metadata(action) == 'committed'
+    assert background_sleeps == [original_sleep, original_sleep]
+    assert time.sleep is original_sleep
+    assert len(calls) == 2 and len(delays) == 1
+    assert 0.1 <= delays[0] <= 0.2
+
+
 @pytest.mark.parametrize('name', ['ConcurrentAppendException', 'ConcurrentWriteException',
     'ConcurrentDeleteReadException', 'ConcurrentDeleteDeleteException', 'ConcurrentTransactionException'])
 @pytest.mark.parametrize('wrapped', [False, True])
 def test_retry_known_delta_conflicts_with_backoff(monkeypatch, name, wrapped):
     """Support both captured Python Delta exceptions and their JVM equivalents."""
     calls, delays = [], []
-    monkeypatch.setattr('time.sleep', delays.append)
+    monkeypatch.setattr('fabricops_kit.io.shared.sleep', delays.append)
     def action():
         calls.append(1)
         if len(calls) < 3:
@@ -45,7 +75,7 @@ def test_metadata_retry_is_bounded(monkeypatch):
     """Persistent contention eventually propagates rather than blocking indefinitely."""
     error = type('ConcurrentAppendException', (Exception,), {})
     calls, delays = [], []
-    monkeypatch.setattr('time.sleep', delays.append)
+    monkeypatch.setattr('fabricops_kit.io.shared.sleep', delays.append)
     def action():
         calls.append(1)
         raise error()
@@ -55,28 +85,19 @@ def test_metadata_retry_is_bounded(monkeypatch):
     assert all(0.1 <= delay <= 8 for delay in delays)
 
 
-@pytest.mark.parametrize('table,store,retried', [(table, 'Metadata', True) for table in CANONICAL_METADATA_TABLES] + [('orders', 'Silver', False),
+@pytest.mark.parametrize('table,store,guarded', [(table, 'Metadata', True) for table in CANONICAL_METADATA_TABLES] + [('orders', 'Silver', False),
     ('METADATA_GUARDRAIL_RESULTS', 'Silver', False)])
-def test_metadata_append_retries_without_replaying_business_writes(monkeypatch, table, store, retried):
-    """Canonical table and configured Metadata store must both match before retrying."""
+def test_metadata_writes_delegate_to_key_transaction_only_for_metadata(monkeypatch, table, store, guarded):
+    """Business writes retain their ordinary physical path and single attempt."""
     module = importlib.import_module('fabricops_kit.io.write_lakehouse_table')
-    monkeypatch.setattr('time.sleep', lambda _: None)
     monkeypatch.setattr(module, 'validate_dataframe_writer', lambda _: None)
     monkeypatch.setattr(module, 'resolve_configured_lakehouse_table', lambda *a, **kw: (None, table, 'engineering', 'path'))
     monkeypatch.setattr(module, 'repartition_dataframe_for_write', lambda df, _: df)
     calls = []
-    def write(*args, **kwargs):
-        calls.append(kwargs)
-        if len(calls) == 1:
-            raise type('ConcurrentAppendException', (Exception,), {})()
-    monkeypatch.setattr(module, 'write_delta_path', write)
-    if retried:
-        module.write_lakehouse_table(object(), table, store=store, mode='append', verbose=False)
-        assert len(calls) == 2
-    else:
-        with pytest.raises(Exception):
-            module.write_lakehouse_table(object(), table, store=store, mode='append', verbose=False)
-        assert len(calls) == 1
+    monkeypatch.setattr(module, 'write_metadata_frame', lambda *a, **kw: calls.append('metadata'))
+    monkeypatch.setattr(module, 'write_delta_path', lambda *a, **kw: calls.append('ordinary'))
+    module.write_lakehouse_table(object(), table, store=store, mode='append', verbose=False)
+    assert calls == ['metadata' if guarded else 'ordinary']
 
 
 def test_publication_coordination_is_removed():
@@ -84,7 +105,7 @@ def test_publication_coordination_is_removed():
     from pathlib import Path
     from fabricops_kit.activated_pipeline import shared
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
-    assert len(CANONICAL_METADATA_TABLES) == 14
+    assert len(CANONICAL_METADATA_TABLES) == 13
     assert not hasattr(shared, 'publication_claim')
     assert not hasattr(shared, 'release_pipeline_lease')
     assert 'publication_coordination' not in Path(shared.__file__).read_text()
@@ -95,7 +116,7 @@ def test_fabric_structured_delta_conflict_is_retried(monkeypatch):
     class FabricException(Exception):
         def getErrorClass(self):  # noqa: N802
             return 'DELTA_CONCURRENT_APPEND.WITHOUT_HINT'
-    monkeypatch.setattr('time.sleep', lambda _: None)
+    monkeypatch.setattr('fabricops_kit.io.shared.sleep', lambda _: None)
     calls = []
     def action():
         calls.append(1)
@@ -117,7 +138,7 @@ def test_metadata_authoring_destinations_share_one_bounded_retry_budget(monkeypa
 
     writer = importlib.import_module("fabricops_kit.io.write_lakehouse_table")
     calls, frames, delays, reads, audits = [], [], [], [], []
-    monkeypatch.setattr("time.sleep", delays.append)
+    monkeypatch.setattr("fabricops_kit.io.shared.sleep", delays.append)
     monkeypatch.setattr(writer, "validate_dataframe_writer", lambda _: None)
     monkeypatch.setattr(writer, "resolve_configured_lakehouse_table",
         lambda store, table, schema, **kw: (None, table.strip(), schema, "configured-path"))
@@ -140,12 +161,21 @@ def test_metadata_authoring_destinations_share_one_bounded_retry_budget(monkeypa
         frames.append(frame)
         return frame
 
+    # The authoring boundary delegates retry ownership to the key transaction.
+    # Real Delta collision/retry behavior is covered by the primary-key tests.
+    def keyed_write(frame, path, table, *, mode="append", options=None, **kwargs):
+        return retry_delta_metadata(lambda: write(frame, path, mode=mode, options=options))
+    for module in (writer, contracts, widgets):
+        monkeypatch.setattr(module, "write_metadata_frame", keyed_write)
+    for module in (contracts, widgets):
+        monkeypatch.setattr(module, "resolve_configured_lakehouse_table",
+            lambda store, table, schema, **kw: (None, table, schema, "configured-path"))
     monkeypatch.setattr(writer, "write_delta_path", write)
     spark = SimpleNamespace(createDataFrame=create_frame)
     if "contract" in destination:
         def read(table, **kwargs):
             reads.append((table, kwargs))
-            return ([{"table_id": "orders", "workspace_id": "dev", "metadata_level": "table", "is_active": True}]
+            return ([{"table_id": "orders", "asset_workspace_id": "dev", "asset_type": "TABLE", "columns_json": [], "is_active": True}]
                     if table == "METADATA_DATA_CATALOGUE" else [])
 
         def audit(**kwargs):
@@ -177,10 +207,10 @@ def test_metadata_authoring_destinations_share_one_bounded_retry_budget(monkeypa
         assert len(calls) == (32 if failure == "exhausted" else 1)
         assert len(delays) == (31 if failure == "exhausted" else 0)
     assert len(frames) == 1
-    assert all(frame is frames[0] and path == "configured-path" and options["mode"] == "append"
+    assert all(frame is frames[0] and path == "configured-path" and options["mode"] == ("upsert" if "steward" in destination else "append")
                for frame, path, options in calls)
     if "contract" in destination:
-        assert len(reads) == 2 and len(audits) == 1
+        assert len(reads) == (2 if failure == "transient" else 3) and len(audits) == 1
         assert all(kwargs["context"]["scope_workspace_id"] == "metadata-workspace" for _, kwargs in reads)
         assert frames[0].rows[0]["contract_version"] == 1
         assert frames[0].rows[0]["status"] == "draft"

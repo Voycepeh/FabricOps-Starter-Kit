@@ -1,0 +1,349 @@
+release_version: 0.5.0
+release_status: live
+release_date: 2026-11-18
+source_ref: v0.5.0
+source_ref_note: Frozen release source is the annotated v0.5.0 tag.
+github_owner: Voycepeh
+github_repo: FabricOps-Starter-Kit
+release_motivation: FabricOps 0.5.0 adds Lakehouse SQL query reads, promotes Lakehouse Files writing and Guided Demo reset to Live, and improves notebook display clarity.
+functions:
+  - name: create_data_agent
+    qualified_name: fabricops_kit.data_agent.create_data_agent.create_data_agent
+    source_path: src/fabricops_kit/data_agent/create_data_agent.py
+    documentation_path: docs/api/reference/create_data_agent.md
+    status: preview
+    introduced_in: 0.2.5
+  - name: finalize_pipeline
+    qualified_name: fabricops_kit.pipeline.finalize_pipeline.finalize_pipeline
+    source_path: src/fabricops_kit/pipeline/finalize_pipeline.py
+    documentation_path: docs/api/reference/finalize_pipeline.md
+    status: live
+    live_since: 0.3.0
+    introduced_in: 0.3.0
+    rationale: Supported lifecycle finalization entry point for governed pipeline execution.
+  - name: orchestrate_demo_reset
+    qualified_name: fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset
+    source_path: src/fabricops_kit/config/orchestrate_demo_reset.py
+    documentation_path: docs/api/reference/orchestrate_demo_reset.md
+    status: live
+    live_since: 0.5.0
+    rationale: Supported public callable with release compatibility guarantees.
+  - name: orchestrate_read
+    qualified_name: fabricops_kit.pipeline.orchestrate_read.orchestrate_read
+    source_path: src/fabricops_kit/pipeline/orchestrate_read.py
+    documentation_path: docs/api/reference/orchestrate_read.md
+    status: live
+    live_since: 0.2.5
+    introduced_in: 0.2.5
+    rationale: Supported governed read orchestration validated across the full 02 pipeline flow.
+  - name: orchestrate_write
+    qualified_name: fabricops_kit.pipeline.orchestrate_write.orchestrate_write
+    source_path: src/fabricops_kit/pipeline/orchestrate_write.py
+    documentation_path: docs/api/reference/orchestrate_write.md
+    status: live
+    live_since: 0.2.5
+    introduced_in: 0.2.5
+    rationale: Supported governed write orchestration validated for full refresh, incremental append, and SCD strategies in Microsoft Fabric.
+  - name: profile_table
+    qualified_name: fabricops_kit.pipeline.profile_table.profile_table
+    source_path: src/fabricops_kit/pipeline/profile_table.py
+    documentation_path: docs/api/reference/profile_table.md
+    status: live
+    live_since: 0.2.0
+    introduced_in: 0.2.0
+    rationale: Consolidated PySpark profiling API for ad hoc and governed table workflows.
+  - name: read_lakehouse_csv
+    qualified_name: fabricops_kit.io.read_lakehouse_csv.read_lakehouse_csv
+    source_path: src/fabricops_kit/io/read_lakehouse_csv.py
+    documentation_path: docs/api/reference/read_lakehouse_csv.md
+    status: live
+    live_since: 0.1.0
+    introduced_in: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+  - name: read_lakehouse_excel
+    qualified_name: fabricops_kit.io.read_lakehouse_excel.read_lakehouse_excel
+    source_path: src/fabricops_kit/io/read_lakehouse_excel.py
+    documentation_path: docs/api/reference/read_lakehouse_excel.md
+    status: live
+    live_since: 0.1.0
+    introduced_in: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+  - name: read_lakehouse_json
+    qualified_name: fabricops_kit.io.read_lakehouse_json.read_lakehouse_json
+    source_path: src/fabricops_kit/io/read_lakehouse_json.py
+    documentation_path: docs/api/reference/read_lakehouse_json.md
+    status: live
+    live_since: 0.2.0
+    introduced_in: 0.2.0
+  - name: read_lakehouse_parquet
+    qualified_name: fabricops_kit.io.read_lakehouse_parquet.read_lakehouse_parquet
+    source_path: src/fabricops_kit/io/read_lakehouse_parquet.py
+    documentation_path: docs/api/reference/read_lakehouse_parquet.md
+    status: live
+    live_since: 0.1.0
+    introduced_in: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+  - name: read_lakehouse_query
+    qualified_name: fabricops_kit.io.read_lakehouse_query.read_lakehouse_query
+    source_path: src/fabricops_kit/io/read_lakehouse_query.py
+    documentation_path: docs/api/reference/read_lakehouse_query.md
+    status: live
+    live_since: 0.5.0
+    introduced_in: 0.5.0
+    rationale: Supported Lakehouse SQL query equivalent to the established Warehouse query reader.
+  - name: read_lakehouse_table
+    qualified_name: fabricops_kit.io.read_lakehouse_table.read_lakehouse_table
+    source_path: src/fabricops_kit/io/read_lakehouse_table.py
+    documentation_path: docs/api/reference/read_lakehouse_table.md
+    status: live
+    live_since: 0.1.0
+    introduced_in: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+  - name: read_warehouse_query
+    qualified_name: fabricops_kit.io.read_warehouse_query.read_warehouse_query
+    source_path: src/fabricops_kit/io/read_warehouse_query.py
+    documentation_path: docs/api/reference/read_warehouse_query.md
+    status: live
+    live_since: 0.1.0
+    introduced_in: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+  - name: read_warehouse_table
+    qualified_name: fabricops_kit.io.read_warehouse_table.read_warehouse_table
+    source_path: src/fabricops_kit/io/read_warehouse_table.py
+    documentation_path: docs/api/reference/read_warehouse_table.md
+    status: live
+    live_since: 0.1.0
+    introduced_in: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+  - name: scan_effective_access
+    qualified_name: fabricops_kit.access_scanner.scan_effective_access.scan_effective_access
+    source_path: src/fabricops_kit/access_scanner/scan_effective_access.py
+    documentation_path: docs/api/reference/scan_effective_access.md
+    status: preview
+    introduced_in: 0.2.5
+  - name: scan_onelake_access
+    qualified_name: fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access
+    source_path: src/fabricops_kit/access_scanner/scan_onelake_access.py
+    documentation_path: docs/api/reference/scan_onelake_access.md
+    status: preview
+    introduced_in: 0.2.5
+  - name: scan_sql_access
+    qualified_name: fabricops_kit.access_scanner.scan_sql_access.scan_sql_access
+    source_path: src/fabricops_kit/access_scanner/scan_sql_access.py
+    documentation_path: docs/api/reference/scan_sql_access.md
+    status: preview
+    introduced_in: 0.2.5
+  - name: scan_workspace_access
+    qualified_name: fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access
+    source_path: src/fabricops_kit/access_scanner/scan_workspace_access.py
+    documentation_path: docs/api/reference/scan_workspace_access.md
+    status: preview
+    introduced_in: 0.2.0
+  - name: setup_metadata_tables
+    qualified_name: fabricops_kit.config.setup_metadata_tables.setup_metadata_tables
+    source_path: src/fabricops_kit/config/setup_metadata_tables.py
+    documentation_path: docs/api/reference/setup_metadata_tables.md
+    status: live
+    live_since: 0.2.0
+    introduced_in: 0.1.0
+    rationale: Stable v0.2.0 metadata setup and profiling public API.
+  - name: setup_notebook
+    qualified_name: fabricops_kit.config.setup_notebook.setup_notebook
+    source_path: src/fabricops_kit/config/setup_notebook.py
+    documentation_path: docs/api/reference/setup_notebook.md
+    status: live
+    live_since: 0.1.0
+    introduced_in: 0.1.0
+    rationale: Supported notebook setup flow included in the first FabricOps release before the Live read and write functions.
+  - name: setup_pipeline
+    qualified_name: fabricops_kit.pipeline.setup_pipeline.setup_pipeline
+    source_path: src/fabricops_kit/pipeline/setup_pipeline.py
+    documentation_path: docs/api/reference/setup_pipeline.md
+    status: live
+    live_since: 0.3.0
+    introduced_in: 0.3.0
+    rationale: Supported lifecycle setup entry point for governed pipeline execution.
+  - name: widget_activate_data_contract
+    qualified_name: fabricops_kit.widgets.widget_activate_data_contract.widget_activate_data_contract
+    source_path: src/fabricops_kit/widgets/widget_activate_data_contract.py
+    documentation_path: docs/api/reference/widget_activate_data_contract.md
+    status: preview
+    introduced_in: 0.2.0
+    rationale: Supported Governance entry point for retaining exact frozen Data Contract selections and scoped Agreement associations per physical workspace and Table ID.
+  - name: widget_activate_pipeline
+    qualified_name: fabricops_kit.widgets.widget_activate_pipeline.widget_activate_pipeline
+    source_path: src/fabricops_kit/widgets/widget_activate_pipeline.py
+    documentation_path: docs/api/reference/widget_activate_pipeline.md
+    status: preview
+    introduced_in: 0.3.0
+  - name: widget_data_agreement
+    qualified_name: fabricops_kit.widgets.widget_data_agreement.widget_data_agreement
+    source_path: src/fabricops_kit/widgets/widget_data_agreement.py
+    documentation_path: docs/api/reference/widget_data_agreement.md
+    status: live
+    live_since: 0.2.0
+    introduced_in: 0.1.0
+    rationale: Renamed Governance widget; retains Live lifecycle since 0.2.0.
+  - name: widget_data_contract
+    qualified_name: fabricops_kit.widgets.widget_data_contract.widget_data_contract
+    source_path: src/fabricops_kit/widgets/widget_data_contract.py
+    documentation_path: docs/api/reference/widget_data_contract.md
+    status: preview
+    introduced_in: 0.2.5
+  - name: widget_data_steward
+    qualified_name: fabricops_kit.widgets.widget_data_steward.widget_data_steward
+    source_path: src/fabricops_kit/widgets/widget_data_steward.py
+    documentation_path: docs/api/reference/widget_data_steward.md
+    status: live
+    live_since: 0.2.0
+    introduced_in: 0.1.0
+    rationale: Renamed Governance widget; retains Live lifecycle since 0.2.0.
+  - name: write_lakehouse_file
+    qualified_name: fabricops_kit.io.write_lakehouse_file.write_lakehouse_file
+    source_path: src/fabricops_kit/io/write_lakehouse_file.py
+    documentation_path: docs/api/reference/write_lakehouse_file.md
+    status: live
+    live_since: 0.5.0
+    rationale: Supported public callable with release compatibility guarantees.
+  - name: write_lakehouse_table
+    qualified_name: fabricops_kit.io.write_lakehouse_table.write_lakehouse_table
+    source_path: src/fabricops_kit/io/write_lakehouse_table.py
+    documentation_path: docs/api/reference/write_lakehouse_table.md
+    status: live
+    live_since: 0.1.0
+    introduced_in: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+  - name: write_warehouse_table
+    qualified_name: fabricops_kit.io.write_warehouse_table.write_warehouse_table
+    source_path: src/fabricops_kit/io/write_warehouse_table.py
+    documentation_path: docs/api/reference/write_warehouse_table.md
+    status: live
+    live_since: 0.1.0
+    introduced_in: 0.1.0
+    rationale: Stable core Fabric input, output, or profiling capability included in the first supported FabricOps release surface.
+metadata_tables:
+  - name: METADATA_DATA_ACCESS
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_access.md
+    status: preview
+    schema_since: 0.3.0
+    schema_fingerprint: 3c621b69cec80de7099e53a7a65d78f819e741aed96d9e5674ea3425e48a8079
+    introduced_in: 0.1.0
+    rationale: access governance model still being stabilised
+  - name: METADATA_DATA_AGREEMENT
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_agreement.md
+    status: live
+    live_since: 0.2.0
+    schema_since: 0.2.5
+    schema_fingerprint: fbd7de85fc0d881516613bb1e162b99558cb9ba1a95ace5e6f9aafefe49a5689
+    introduced_in: 0.1.0
+    rationale: Stable Data Agreement metadata contract exercised in the Fabric governance flow.
+  - name: METADATA_DATA_CATALOGUE
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_catalogue.md
+    status: live
+    live_since: 0.2.0
+    schema_since: 0.4.0
+    schema_fingerprint: 668c8357c1739c674638e007d564eda4d9dc27f3d8085804dad2607cc945798d
+    introduced_in: 0.1.0
+    rationale: Stable v0.2.0 profiling metadata contract.
+  - name: METADATA_DATA_CONTRACT
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_contract.md
+    status: live
+    live_since: 0.3.0
+    schema_since: 0.5.0
+    schema_fingerprint: dad5b5ed17ebf6b682cb58feba6f2e57c4aef53bf28f2547ea6d689e71367041
+    introduced_in: 0.2.0
+    rationale: Supported immutable Data Contract definition and lifecycle contract.
+  - name: METADATA_DATA_CONTRACT_ACTIVATION
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_contract_activation.md
+    status: live
+    live_since: 0.4.0
+    schema_since: 0.5.0
+    schema_fingerprint: ea73f57a265cbeab0e6d31ceabf755941969c11ad9f6480d30b63a243b167fe8
+    introduced_in: 0.4.0
+    rationale: Supported Governance contract for retained exact frozen Data Contract selections and scoped Agreement associations per physical workspace and Table ID.
+  - name: METADATA_DATA_LINEAGE
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_lineage.md
+    status: live
+    live_since: 0.2.0
+    schema_since: 0.3.0
+    schema_fingerprint: 9dcdc00c3660872e24905403b68385b6726cecac99564b220d601235f3e6362f
+    introduced_in: 0.2.0
+    rationale: Stable v0.2.0 profiling metadata contract.
+  - name: METADATA_DATA_PROFILED
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_profiled.md
+    status: live
+    live_since: 0.2.0
+    schema_since: 0.5.0
+    schema_fingerprint: 290aa8ba5ed3e4a7a19965c3d26658ac34b7ed11a0b1684964901db98136e355
+    introduced_in: 0.2.0
+    rationale: Stable v0.2.0 profiling metadata contract.
+  - name: METADATA_DATA_PROFILED_FREQUENCY
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_profiled_frequency.md
+    status: live
+    live_since: 0.2.0
+    schema_since: 0.5.0
+    schema_fingerprint: 1b3c37d4783f2f498a65c02488b3aafd1f393a3489a3b9d1651387f60bcaae02
+    introduced_in: 0.2.0
+    rationale: Stable v0.2.0 profiling metadata contract.
+  - name: METADATA_DATA_STEWARD
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_data_steward.md
+    status: live
+    live_since: 0.2.0
+    schema_since: 0.2.0
+    schema_fingerprint: 08311069057dcfc5eee75ddb18d561bd024799bd2ed93a2510b53e0b1cb947c1
+    introduced_in: 0.1.0
+    rationale: Stable Data Steward metadata contract exercised in the Fabric governance flow.
+  - name: METADATA_GUARDRAIL_RESULTS
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_guardrail_results.md
+    status: live
+    live_since: 0.3.0
+    schema_since: 0.5.0
+    schema_fingerprint: 4dfcb2792d0fa0cb30eccfdd08832eed9bc2a1b90fb3cd4d488635a96ecca0eb
+    introduced_in: 0.1.0
+    rationale: Supported aggregate Guardrail evaluation result and continuation-decision contract.
+  - name: METADATA_PIPELINE_ACTIVATION
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_pipeline_activation.md
+    status: live
+    live_since: 0.4.0
+    schema_since: 0.4.0
+    schema_fingerprint: 47d975c6979f98602302a518aac587e2e8c6ba6672efce22e9f2524da9ecfeda
+    introduced_in: 0.4.0
+    rationale: Supported Governance contract for immutable accepted pipeline submission packages and conditional decision history.
+  - name: METADATA_PIPELINE_REGISTRY
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_pipeline_registry.md
+    status: live
+    live_since: 0.3.0
+    schema_since: 0.4.0
+    schema_fingerprint: 66428aff485a04641fb6845b5f23f9690c0918a5120e67e93c5744f5d4782d2a
+    introduced_in: 0.3.0
+    rationale: Supported pipeline registration, approval reference, environment selection, ownership, and activation reservation contract.
+  - name: METADATA_PIPELINE_RUN
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_pipeline_run.md
+    status: live
+    live_since: 0.3.0
+    schema_since: 0.4.0
+    schema_fingerprint: c57b4097c6ebb97434512384a3172275c867345afb022e3b2a5f39fb4542a0c0
+    introduced_in: 0.3.0
+    rationale: Supported authoritative pipeline execution record contract.
+  - name: METADATA_PROCESSING_STATE
+    source_path: src/fabricops_kit/config/metadata_schemas.py
+    documentation_path: docs/reference/metadata/metadata_processing_state.md
+    status: live
+    live_since: 0.3.0
+    schema_since: 0.5.0
+    schema_fingerprint: 1dbd44a5cdf7e68f39c3adcb2243fd45ca373ca81bb4a5cff96c42d9319f2a7e
+    introduced_in: 0.3.0
+    rationale: Supported typed source observation, accepted progress, drift baseline, and publication receipt contract.

@@ -6,9 +6,11 @@ and keep widget rendering concerns out of governance metadata semantics.
 
 from __future__ import annotations
 
+from fabricops_kit.config.metadata_schemas import migrate_asset_references
+
 from time import perf_counter
 
-from fabricops_kit.io.shared import retry_delta_metadata
+from fabricops_kit.io.shared import retry_delta_metadata, validate_metadata_merge, write_metadata_frame, resolve_configured_lakehouse_table
 
 
 from fabricops_kit.io import read_lakehouse_table, write_lakehouse_table
@@ -29,6 +31,7 @@ from fabricops_kit.config.metadata_schemas import (
     decode_metadata_row,
     metadata_table_physical_schema,
     metadata_table_schema_registry,
+    parse_metadata_json,
 )
 from fabricops_kit.pipeline.shared import validate_grain_parameters
 
@@ -43,15 +46,15 @@ ENRICHMENT_TYPES_BY_LEVEL = {
 _CONTRACT_NAMESPACE = uuid.UUID("8383c7ec-23f5-4ad8-92ea-0871045c310c")
 
 
-def file_source_identity(*, workspace_id, item_id, relative_path, file_format, reader_options=None):
-    """Identify a Lakehouse Files selector without manufacturing a Table ID.
+def file_source_identity(*, asset_workspace_id, item_id, relative_path, file_format, reader_options=None):
+    """Identify a Lakehouse Files selector using the common asset identity.
 
     Identity includes physical workspace/item and a case-sensitive normalized
     relative selector. Folder/wildcard membership may change without changing
     the selector identity. Format and reader options are approved separately.
     """
-    if any(not isinstance(value, str) or not value.strip() for value in (workspace_id, item_id, relative_path)):
-        raise ValueError("File source requires workspace_id, item_id and relative_path.")
+    if any(not isinstance(value, str) or not value.strip() for value in (asset_workspace_id, item_id, relative_path)):
+        raise ValueError("File source requires asset_workspace_id, item_id and relative_path.")
     if relative_path.startswith(("/", "\\")) or ":" in relative_path or "\\" in relative_path or ".." in relative_path.split("/"):
         raise ValueError("File selector must remain beneath the configured Lakehouse Files area.")
     if any(ord(character) < 32 for character in relative_path) or "%" in relative_path:
@@ -65,30 +68,31 @@ def file_source_identity(*, workspace_id, item_id, relative_path, file_format, r
         raise ValueError("Unsupported file source format.")
     if reader_options is not None and not isinstance(reader_options, dict):
         raise ValueError("File reader_options must be an object.")
-    physical = {"workspace_id": workspace_id.strip().lower(), "item_id": item_id.strip().lower(), "relative_path": path}
+    # Keep the released hash projection; emitted selectors use asset_workspace_id.
+    physical = {"workspace_id": asset_workspace_id.strip().lower(), "item_id": item_id.strip().lower(), "relative_path": path}
     digest = hashlib.sha256(json.dumps(physical, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     options = json.loads(json.dumps(reader_options or {}, allow_nan=False, sort_keys=True))
-    return {"source_type": "file", "source_id": "file:" + digest, **physical,
+    return {"asset_type": "FILE", "table_id": "file:" + digest, "asset_workspace_id": physical["workspace_id"], "item_id": physical["item_id"], "relative_path": physical["relative_path"],
             "file_format": file_format, "reader_options": options}
 
 
 def validate_contract_source(payload):
-    """Validate physical Table IDs or a distinct stable file selector identity."""
+    """Validate the common asset identity and exact physical file selector."""
     source = payload.get("source")
     if source is None:
         return  # Physical table contracts retain their canonical Table ID.
     if not isinstance(source, dict):
         raise ValueError("Data Contract source must be an object.")
-    if source.get("source_type") == "table":
+    if source.get("asset_type") == "TABLE":
         if not source.get("table_id") or source["table_id"] != payload.get("table", {}).get("table_id"):
             raise ValueError("Table source must preserve the canonical Table ID.")
-    elif source.get("source_type") == "file":
+    elif source.get("asset_type") == "FILE":
         expected = file_source_identity(**{key: source.get(key) for key in
-            ("workspace_id", "item_id", "relative_path", "file_format", "reader_options")})
-        if expected != source or payload.get("table", {}).get("table_id"):
-            raise ValueError("File source must use its stable file identity, without a Table ID.")
+            ("asset_workspace_id", "item_id", "relative_path", "file_format", "reader_options")})
+        if expected != source or payload.get("table", {}).get("table_id") not in (None, source["table_id"]):
+            raise ValueError("File source must retain its stable asset identity.")
     else:
-        raise ValueError("Data Contract source_type must be table or file.")
+        raise ValueError("Data Contract asset_type must be TABLE or FILE.")
 
 
 def _metadata_io_context(config: Any, active_workspace_id: str) -> dict[str, Any]:
@@ -97,23 +101,23 @@ def _metadata_io_context(config: Any, active_workspace_id: str) -> dict[str, Any
 
 
 def current_catalogue_observations(rows):
-    """Return current active assets without reviving older inactive columns."""
-    latest = _latest(row_dicts(rows), ("workspace_id", "table_id", "metadata_level", "column_id"))
-    active_tables = {(str(row.get("workspace_id") or ""), str(row.get("table_id") or ""))
-                     for row in latest if row.get("is_active") is not False
-                     and str(row.get("metadata_level") or "").lower() == "table"}
-    return [row for row in latest if row.get("is_active") is not False
-            and (str(row.get("workspace_id") or ""), str(row.get("table_id") or "")) in active_tables]
-
+    """Return active table/file assets and their current registered columns."""
+    active = {}
+    for row in row_dicts(rows):
+        key = (row.get("asset_workspace_id"), row.get("table_id"), row.get("asset_type"))
+        if key in active:
+            raise ValueError(f"Duplicate Catalogue asset identity {key!r}.")
+        active[key] = row
+    return [row for row in active.values() if row.get("is_active") is not False]
 
 def observation_selector_options(rows, *, table_id=None, workspace_id=None):
     """Filter global Table and Workspace choices in either direction, without defaults."""
     tables = [row for row in current_catalogue_observations(rows)
-              if str(row.get("metadata_level") or "").lower() == "table"]
+              if row.get("asset_type") == "TABLE"]
     return {
         "tables": sorted({str(row["table_id"]) for row in tables
-                          if not workspace_id or str(row["workspace_id"]) == workspace_id}),
-        "workspaces": sorted({str(row["workspace_id"]) for row in tables
+                          if not workspace_id or str(row["asset_workspace_id"]) == workspace_id}),
+        "workspaces": sorted({str(row["asset_workspace_id"]) for row in tables
                               if not table_id or str(row["table_id"]) == table_id}),
     }
 
@@ -127,108 +131,90 @@ def contract_file_datasets(rows, *, config, workspace_id):
     for row in rows:
         payload = _json_value(row.get("contract_payload_json"), field="contract_payload_json", default={})
         source = payload.get("source", {})
-        if source.get("source_type") != "file":
+        if source.get("asset_type") != "FILE":
             continue
         validate_contract_source(payload)
-        if versions.get(source["source_id"], -1) >= int(row.get("contract_version") or 0):
+        if versions.get(source["table_id"], -1) >= int(row.get("contract_version") or 0):
             continue
-        versions[source["source_id"]] = int(row.get("contract_version") or 0)
+        versions[source["table_id"]] = int(row.get("contract_version") or 0)
         stores = []
         for route in paths:
             for key in paths[route]:
                 store = get_store(config, route, key)
-                if (store.workspace_id.lower(), store.item_id.lower()) == (source["workspace_id"], source["item_id"]):
+                if (store.workspace_id.lower(), store.item_id.lower()) == (source["asset_workspace_id"], source["item_id"]):
                     stores.append((str(route), key))
         if not stores:
             continue
         route, store_key = sorted(stores, key=lambda item: (item[0] != workspace_id, *item))[0]
-        datasets[source["source_id"]] = {**source, "store": store_key, "configuration_workspace_id": route,
+        datasets[source["table_id"]] = {**source, "store": store_key, "configuration_workspace_id": route,
             "columns": payload.get("table", {}).get("columns", [])}
     return list(datasets.values())
 
 
-def pipeline_file_datasets(rows, *, config, workspace_id):
-    """Discover successfully observed file sources from Engineering run evidence.
-
-    Only recorded configurations with an observed schema can create new drafts;
-    previously authored Contracts are handled independently.
-    """
+def catalogue_file_datasets(rows, *, config, workspace_id, pipeline_runs=()):
+    """List current file schemas with reader settings from successful Pipeline Runs."""
     from fabricops_kit.config.shared import get_store
-    from uuid import uuid5, NAMESPACE_URL
+
     paths = config.get("path_config", {}) if isinstance(config, Mapping) else config.path_config
     paths = paths.get("paths", paths) if isinstance(paths, Mapping) else paths.paths
-    candidates = {}
-    for run in rows:
-        operations = _json_value(run.get("operations"), field="operations", default=[])
-        if not isinstance(operations, list):
-            continue
-        for operation in operations:
-            if not isinstance(operation, Mapping) or operation.get("pipeline_role") != "source":
-                continue
-            if operation.get("source_type") != "file" or operation.get("status") != "succeeded":
+    reader_settings = {}
+    for run in pipeline_runs:
+        for operation in _json_value(run.get("operations"), field="operations", default=[]):
+            if (operation.get("pipeline_role"), operation.get("asset_type"), operation.get("status")) != (
+                    "source", "FILE", "succeeded"):
                 continue
             binding = operation.get("destination") or {}
-            if not isinstance(binding, Mapping):
-                continue
-            schema_json = operation.get("observed_columns_json")
-            if not schema_json:
-                continue  # Historic runs without schema evidence cannot author new contracts.
-            columns_raw = _json_value(schema_json, field="observed_columns_json", default=[])
-            if not isinstance(columns_raw, list) or not columns_raw:
-                continue
-            try:
-                options = _json_value(binding.get("reader_options_json"), field="reader_options_json", default={})
-                source = file_source_identity(
-                    workspace_id=binding["workspace_id"], item_id=binding["item_id"],
-                    relative_path=binding["relative_path"], file_format=binding["file_format"],
-                    reader_options=options,
-                )
-                if source["source_id"] != operation.get("source_id"):
-                    continue
-                columns = [{"column_id": str(uuid5(NAMESPACE_URL, source["source_id"] + ":" + col["column_name"])),
-                            "column_name": col["column_name"], "data_type": col["data_type"]}
-                           for col in columns_raw if isinstance(col, Mapping)
-                           and isinstance(col.get("column_name"), str) and isinstance(col.get("data_type"), str)]
-                if len(columns) != len(columns_raw):
-                    continue
-            except (KeyError, TypeError, ValueError):
-                continue
-            stores = []
-            for route, targets in paths.items():
-                for key in targets:
-                    store = get_store(config, route, key)
-                    if (str(store.workspace_id).lower(), str(store.item_id).lower()) == (source["workspace_id"], source["item_id"]):
-                        stores.append((str(route), str(key)))
-            if not stores:
-                continue
-            route, store_key = sorted(stores, key=lambda item: (item[0] != workspace_id, *item))[0]
+            key = (operation.get("table_id"), binding.get("file_format"))
             timestamp = str(operation.get("completed_at") or run.get("completed_at") or "")
-            candidate = {**source, "store": store_key, "configuration_workspace_id": route,
-                         "columns": columns}
-            current = candidates.get(source["source_id"])
-            if current is None or timestamp > current[0]:
-                candidates[source["source_id"]] = (timestamp, candidate)
-    return [record for _, record in sorted(candidates.values(), key=lambda entry: entry[1]["relative_path"])]
+            if key not in reader_settings or timestamp > reader_settings[key][0]:
+                reader_settings[key] = (timestamp, binding.get("reader_options_json"))
+
+    datasets = []
+    for row in current_catalogue_observations(rows):
+        if row.get("asset_type") != "FILE":
+            continue
+        columns = decode_metadata_row("METADATA_DATA_CATALOGUE", {"columns_json": row.get("columns_json")})["columns_json"]
+        if columns is None:
+            continue
+        _, raw_options = reader_settings.get((row["table_id"], row["file_format"]), ("", None))
+        source = file_source_identity(
+            asset_workspace_id=row["asset_workspace_id"], item_id=row["item_id"],
+            relative_path=row["relative_path"], file_format=row["file_format"],
+            reader_options=_json_value(raw_options, field="reader_options_json", default={}),
+        )
+        if source["table_id"] != row["table_id"]:
+            raise ValueError(f"Invalid Catalogue file location for {row['table_id']!r}.")
+        stores = []
+        for route, targets in paths.items():
+            for key in targets:
+                store = get_store(config, route, key)
+                if (store.workspace_id.lower(), store.item_id.lower()) == (source["asset_workspace_id"], source["item_id"]):
+                    stores.append((route, key))
+        if stores:
+            route, key = min(stores, key=lambda match: (match[0] != workspace_id, match[1] != row["layer"], *match))
+            datasets.append({**source, "store": key, "configuration_workspace_id": route,
+                             "asset_workspace_name": row["asset_workspace_name"], "columns": columns})
+    return sorted(datasets, key=lambda row: row["relative_path"])
 
 
 def dataset_selector_options(tables, files, *, table_id=None, workspace_id=None):
     """Combine typed dataset choices while preserving the table observation selector."""
     options = observation_selector_options(tables, table_id=table_id, workspace_id=workspace_id)
-    return {"tables": sorted(set(options["tables"]) | {row["source_id"] for row in files
-                if not workspace_id or row["workspace_id"] == workspace_id}),
-            "workspaces": sorted(set(options["workspaces"]) | {row["workspace_id"] for row in files
-                if not table_id or row["source_id"] == table_id})}
+    return {"tables": sorted(set(options["tables"]) | {row["table_id"] for row in files
+                if not workspace_id or row["asset_workspace_id"] == workspace_id}),
+            "workspaces": sorted(set(options["workspaces"]) | {row["asset_workspace_id"] for row in files
+                if not table_id or row["table_id"] == table_id})}
 
 
 def dataset_display_name(dataset):
     """Describe a dataset with its readable name, store, schema/path and physical context."""
-    if dataset.get("source_type") == "file":
+    if dataset.get("asset_type") == "FILE":
         path = dataset["relative_path"]
         kind = "Folder" if path.endswith("/") else "File selector" if any(char in path for char in "*?[") else "File"
-        return f"{path} — {dataset.get('store', '')} — {kind} · {dataset['workspace_id']} / {dataset['item_id']}"
+        return f"{path} — {dataset.get('store', '')} — {kind} · {dataset.get('asset_workspace_name') or dataset['asset_workspace_id']} / {dataset['item_id']}"
     name = dataset.get("table_name") or dataset.get("table_id") or ""
     location = " / ".join(str(value) for value in (dataset.get("layer") or dataset.get("store"), dataset.get("schema_name") or dataset.get("schema")) if value)
-    return f"{name} — {location} — Table · {dataset.get('_workspace_name') or dataset.get('workspace_id', '')} / {dataset.get('item_id') or dataset.get('store_name', '')}"
+    return f"{name} — {location} — Table · {dataset.get('asset_workspace_name') or dataset.get('asset_workspace_id', '')} / {dataset.get('item_id') or dataset.get('store_name', '')}"
 
 
 def contract_lifecycle_id(table_id: str) -> str:
@@ -239,22 +225,41 @@ def contract_lifecycle_id(table_id: str) -> str:
     return str(uuid.uuid5(_CONTRACT_NAMESPACE, table))
 
 
+def _clean_authored_payload(payload):
+    """Remove retired execution fields from a newly authored mutable payload in place."""
+    payload.pop("profiling", None)
+    for name in ("processing", "processing_source", "scheduled_refresh"):
+        payload.get("table", {}).pop(name, None)
+    payload["guardrails"] = [rule for rule in payload.get("guardrails", [])
+                             if rule.get("guardrail_type") != "source_drift"]
+    return payload
+
+
+def _draft_revision_condition(draft):
+    """Compare the exact saved draft revision inside both Save and Freeze transactions."""
+    digest = hashlib.sha256(str(draft.get("contract_payload_json") or "").encode("utf-8")).hexdigest()
+    activity = draft.get("_activity_id")
+    activity_condition = "target._activity_id IS NULL" if activity is None else f"target._activity_id = {_sql_literal(str(activity))}"
+    return f"target.status = 'draft' AND {activity_condition} AND sha2(target.contract_payload_json, 256) = '{digest}'"
+
+
 def create_contract_draft(
     *, table_id: str | None = None, file_source: Mapping[str, Any] | None = None,
-    columns: list[dict[str, Any]] | None = None, config: Any, active_workspace_id: str, spark_session: Any,
+    config: Any, active_workspace_id: str, spark_session: Any,
     context: Mapping[str, Any] | None = None, store: str = "Metadata",
     schema: str | None = None, metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
     """Create or reopen one mutable table or file dataset draft without processing.
 
     File sources require a validated physical selector and an explicitly observed
-    schema; they use source_id with no artificial Table ID.
+    schema; they use table_id and asset_type=FILE. Competing creators reopen the
+    draft admitted by the canonical primary-key transaction without replaying writes.
     """
     if file_source is not None:
         if table_id:
             raise ValueError("Select a physical table or file source, not both.")
         validate_contract_source({"source": dict(file_source), "table": {}})
-        lifecycle_id = str(uuid.uuid5(_CONTRACT_NAMESPACE, file_source["source_id"]))
+        lifecycle_id = str(uuid.uuid5(_CONTRACT_NAMESPACE, file_source["table_id"]))
     else:
         lifecycle_id = contract_lifecycle_id(table_id)
     routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
@@ -262,43 +267,28 @@ def create_contract_draft(
         "config": config, **dict(context or {}), "scope_workspace_id": routing_workspace_id,
         "_fabricops_suppress_io_log": True,
     }
-    if file_source is not None:
-        table = {"table_name": file_source["relative_path"], "store_type": "file"}
-        observed_columns = [dict(column) for column in columns or []]
-        if not observed_columns or any(not all(column.get(key) for key in ("column_id", "column_name", "data_type")) for column in observed_columns):
-            raise ValueError("File contract requires an explicitly observed schema with stable column identities.")
-    else:
-        catalogue_rows = row_dicts(read_lakehouse_table(
-            "METADATA_DATA_CATALOGUE", store=store,
-            schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
-            context={**(runtime_context or {}), "_spark_session": spark_session},
-        ))
-        active_catalogue = [
-            row for row in current_catalogue_observations(catalogue_rows)
-            if str(row.get("table_id") or "") == str(table_id).strip()
-            and str(row.get("workspace_id") or "") == active_workspace_id
-            and row.get("is_active") is not False
-        ]
-        current = _latest(active_catalogue, ("table_id", "column_id"))
-        table_rows = [
-            row for row in current
-            if str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id")
-        ]
-        if not table_rows:
-            raise ValueError("table_id has no active table-level Catalogue row in the authoring workspace_id.")
-        table = dict(table_rows[-1])
-        table.update(decode_metadata_row("METADATA_DATA_CATALOGUE", {
-            "load_strategy_parameters_json": table.get("load_strategy_parameters_json"),
-        }))
-        observed_columns = [
-            _fields(row, ("column_id", "column_name", "data_type"))
-            for row in current if row.get("column_id")
-        ]
+    kind, identity, workspace = (
+        ("FILE", file_source["table_id"], file_source["asset_workspace_id"]) if file_source is not None
+        else ("TABLE", str(table_id).strip(), active_workspace_id)
+    )
+    catalogue_rows = _scoped_rows(read_lakehouse_table(
+        "METADATA_DATA_CATALOGUE", store=store,
+        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
+        context={**runtime_context, "_spark_session": spark_session},
+    ), f"asset_workspace_id = {_sql_literal(workspace)}", f"table_id = {_sql_literal(identity)}",
+        f"asset_type = {_sql_literal(kind)}")
+    table = next((row for row in current_catalogue_observations(catalogue_rows)
+                  if (row.get("asset_type"), row.get("table_id"), row.get("asset_workspace_id")) == (kind, identity, workspace)), None)
+    if table is None:
+        raise ValueError(f"No active Catalogue {kind} {identity!r} in physical workspace {workspace!r}.")
+    observed_columns = decode_metadata_row("METADATA_DATA_CATALOGUE", {"columns_json": table.get("columns_json")})["columns_json"]
+    if observed_columns is None:
+        raise ValueError(f"Catalogue {kind} {identity!r} needs an observed schema before drafting a Data Contract.")
 
-    rows = row_dicts(read_lakehouse_table(
+    rows = _scoped_rows(read_lakehouse_table(
         DATA_CONTRACT_TABLE, store=store, schema=schema,
-        context={**(runtime_context or {}), "_spark_session": spark_session},
-    ))
+        context={**runtime_context, "_spark_session": spark_session},
+    ), f"contract_id = {_sql_literal(lifecycle_id)}")
     owned = [
         row for row in rows
         if str(row.get("contract_id") or "") == lifecycle_id
@@ -354,7 +344,7 @@ def create_contract_draft(
                                                           if column.get("presence", "required") == "required"]})
 
     payload = {
-        **seed,
+        **seed, "format_version": 2,
         "contract": {
             "contract_id": lifecycle_id,
             "contract_version": version,
@@ -363,11 +353,12 @@ def create_contract_draft(
         "table": {
             **dict(seed.get("table") or {}),
             **_fields(table, ("table_id", "store_type", "layer", "schema_name", "table_name")),
-            "evidence_workspace_id": active_workspace_id,
+            "asset_workspace_id": workspace,
+            "table_id": identity, "asset_type": kind,
             "columns": columns,
             "writer": {
-                "notebook_id": str(table.get("_notebook_id") or "").strip(),
-                "notebook_name": str(table.get("_notebook_name") or "").strip(),
+                "notebook_id": str(table.get("writer_notebook_id") or table.get("_notebook_id") or "").strip(),
+                "notebook_name": str(table.get("writer_notebook_name") or table.get("_notebook_name") or "").strip(),
             },
         },
         "enrichment": dict(seed.get("enrichment") or {"table": [], "columns": []}),
@@ -375,13 +366,11 @@ def create_contract_draft(
     }
     if file_source is not None:
         payload["source"] = dict(file_source)
-        payload["table"].pop("table_id", None)
-    payload.pop("profiling", None)
-    payload["guardrails"] = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
+        payload["table"]["table_id"] = identity
+        payload["table"]["asset_type"] = "FILE"
+        payload["table"]["store_type"] = "file"
+    _clean_authored_payload(payload)
     payload_table_name = str(payload.get("table", {}).get("table_name") or "")
-    payload["table"].pop("processing", None)
-    payload["table"].pop("processing_source", None)
-    payload["table"].pop("scheduled_refresh", None)
     for item in [*payload["enrichment"].get("table", []), *payload["enrichment"].get("columns", [])]:
         item["contract_id"] = lifecycle_id
         item["contract_version"] = version
@@ -396,23 +385,34 @@ def create_contract_draft(
     row = coerce_metadata_row_types(DATA_CONTRACT_TABLE, {
         "contract_id": lifecycle_id,
         "contract_version": version,
-        "table_id": str(table_id).strip() if table_id else None,
-        "source_id": file_source["source_id"] if file_source is not None else None,
+        "table_id": identity,
+        "asset_type": kind,
         "table_name": payload_table_name,
-        "evidence_workspace_id": active_workspace_id,
+        "asset_workspace_id": workspace,
         "contract_payload_json": json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False),
         "status": "draft",
         **audit,
     })
     frame = spark_session.createDataFrame([row], schema=metadata_table_schema_registry()[DATA_CONTRACT_TABLE])
     write_options = {"store": store, "schema": schema, "context": runtime_context, "mode": "append"}
-    if store == "Metadata":
-        # Canonical appends already own their retry budget in foundational I/O.
-        write_lakehouse_table(frame, DATA_CONTRACT_TABLE, **write_options)
-    else:
-        # Alternate authoring stores still contain metadata. Retry the fixed
-        # append, never draft discovery/version selection or the whole workflow.
-        retry_delta_metadata(lambda: write_lakehouse_table(frame, DATA_CONTRACT_TABLE, **write_options))
+    try:
+        if store == "Metadata":
+            write_lakehouse_table(frame, DATA_CONTRACT_TABLE, **write_options)
+        else:
+            _, _, _, path = resolve_configured_lakehouse_table(store, DATA_CONTRACT_TABLE, schema, context=runtime_context)
+            write_metadata_frame(frame, path, DATA_CONTRACT_TABLE)
+    except Exception:
+        # Canonical primary-key transactions admit one creator. Reopen its draft
+        # after contention or a lost acknowledgement; never replay the append.
+        matches = contract_version_records(_scoped_rows(read_lakehouse_table(
+            DATA_CONTRACT_TABLE, store=store, schema=schema,
+            context={**runtime_context, "_spark_session": spark_session},
+        ), f"contract_id = {_sql_literal(lifecycle_id)}", f"contract_version = {version}"),
+            contract_id=lifecycle_id, contract_version=version, workspace_id=active_workspace_id)
+        if len(matches) == 1 and str(matches[0].get("status") or "").lower() == "draft":
+            return dict(matches[0])
+        raise
+
     return row
 
 def _sql_literal(value: Any) -> str:
@@ -439,7 +439,7 @@ def row_dicts(value: Any) -> list[dict[str, Any]]:
     if value is None:
         return []
     source = value.collect() if hasattr(value, "collect") else value
-    return [row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row) for row in source]
+    return [migrate_asset_references(row.asDict(recursive=True) if hasattr(row, "asDict") else dict(row)) for row in source]
 
 
 def parse_approved_usages(value: Any) -> list[str]:
@@ -469,7 +469,8 @@ def _json_value(value: Any, *, field: str, default: Any) -> Any:
     if value in (None, ""):
         return default
     try:
-        return json.loads(str(value))
+        parsed = json.loads(str(value))
+        return migrate_asset_references(parsed) if field in {"contract_payload_json", "operations"} else parsed
     except (TypeError, json.JSONDecodeError) as exc:
         raise ValueError(f"{field} must contain valid JSON.") from exc
 
@@ -663,10 +664,10 @@ def save_contract_draft(
         raise ValueError("Only a draft Data Contract version can be saved.")
 
     canonical = json.loads(json.dumps(dict(payload), default=str))
-    canonical.get("table", {}).pop("processing", None)
-    canonical.get("table", {}).pop("processing_source", None)
-    canonical.pop("profiling", None)
-    canonical["guardrails"] = [rule for rule in canonical.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
+    canonical["format_version"] = 2
+    if isinstance(canonical.get("table"), dict):
+        canonical["table"]["asset_type"] = draft.get("asset_type") or "TABLE"
+    _clean_authored_payload(canonical)
     canonical["contract"] = {
         "contract_id": contract_id,
         "contract_version": contract_version,
@@ -674,7 +675,7 @@ def save_contract_draft(
     }
     if not isinstance(canonical.get("table"), dict):
         raise ValueError("Data Contract payload must contain one table definition.")
-    if draft.get("source_id") and canonical.get("source", {}).get("source_id") != draft["source_id"]:
+    if draft.get("asset_type") == "FILE" and canonical.get("source", {}).get("table_id") != draft["table_id"]:
         raise ValueError("Data Contract file source identity must match the draft row.")
     if str(canonical["table"].get("table_id") or "") != str(draft.get("table_id") or ""):
         raise ValueError("Data Contract payload table_id must match the draft row.")
@@ -719,14 +720,9 @@ def save_contract_draft(
         if store == "Metadata" else schema or configured_lakehouse_schema(config, active_workspace_id, store),
         context=runtime_context,
     )
+    validate_metadata_merge(DATA_CONTRACT_TABLE, frame, path)
     # Keep the revision check in the MERGE itself so concurrent writers
     # cannot win a race between preflight and publication.
-    prior_payload_digest = hashlib.sha256(str(draft.get("contract_payload_json") or "").encode("utf-8")).hexdigest()
-    prior_activity = draft.get("_activity_id")
-    activity_condition = (
-        "target._activity_id IS NULL" if prior_activity is None
-        else f"target._activity_id = {_sql_literal(str(prior_activity))}"
-    )
     (
         retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path)
         .alias("target")
@@ -735,11 +731,7 @@ def save_contract_draft(
             "target.contract_id = source.contract_id "
             "AND target.contract_version = source.contract_version",
         )
-        .whenMatchedUpdateAll(condition=(
-            "target.status = 'draft' AND "
-            + activity_condition
-            + f" AND sha2(target.contract_payload_json, 256) = '{prior_payload_digest}'"
-        ))
+        .whenMatchedUpdateAll(condition=_draft_revision_condition(draft))
         .execute())
     )
     return _confirm_contract_mutation(
@@ -998,19 +990,19 @@ def get_contract_authoring_state(
         draft = matches[0]
 
     table_id = str(draft.get("table_id") or "")
-    if draft.get("source_id"):
-        catalogue_rows = []
-    else:
-        catalogue_frame = read_lakehouse_table(
-            "METADATA_DATA_CATALOGUE", store="Metadata",
-            schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
-            context={**(context or {}), "_spark_session": spark_session},
-        )
-        catalogue_rows = _scoped_rows(
-            catalogue_frame,
-            f"table_id = {_sql_literal(table_id)}",
-            f"workspace_id = {_sql_literal(active_workspace_id)}",
-        )
+    catalogue_id = str(draft.get("table_id") or table_id)
+    asset_type = draft.get("asset_type") or "TABLE"
+    catalogue_frame = read_lakehouse_table(
+        "METADATA_DATA_CATALOGUE", store="Metadata",
+        schema=metadata_table_physical_schema(config, "METADATA_DATA_CATALOGUE"),
+        context={**context, "_spark_session": spark_session},
+    )
+    catalogue_rows = _scoped_rows(
+        catalogue_frame,
+        f"table_id = {_sql_literal(catalogue_id)}",
+        f"asset_workspace_id = {_sql_literal(active_workspace_id)}",
+        f"asset_type = {_sql_literal(asset_type)}",
+    )
     payload = _json_value(
         draft.get("contract_payload_json"), field="contract_payload_json", default=None
     )
@@ -1031,8 +1023,8 @@ def get_contract_authoring_state(
         "workspace_id": active_workspace_id,
         "catalogue_rows": [
             row for row in row_dicts(catalogue_rows)
-            if str(row.get("workspace_id") or "") == active_workspace_id
-            and str(row.get("table_id") or "") == table_id
+            if row.get("asset_workspace_id") == active_workspace_id
+            and row.get("table_id") == catalogue_id and row.get("asset_type") == asset_type
         ],
         "enrichment": canonical_enrichment_state(enrichment_rows),
         "guardrails": guardrail_rows,
@@ -1069,7 +1061,7 @@ def list_contract_governance_state(
     contracts = read_metadata(DATA_CONTRACT_TABLE, row_dicts)
     runs = read_metadata("METADATA_PIPELINE_RUN", row_dicts)
     return {"observations": observations, "pipeline_runs": runs,
-            "tables": [row for row in observations if str(row.get("metadata_level") or "").lower() == "table"],
+            "tables": [row for row in observations if row.get("asset_type") == "TABLE"],
             "contracts": sorted(contracts, key=lambda row: (str(row.get("table_id") or ""), -int(row.get("contract_version") or 0)))}
 
 
@@ -1116,41 +1108,109 @@ def get_contract_review_state(
     }
 
 
-def get_table_runtime_context(
+def _asset_history_reader(config, routing_workspace_id, spark_session, table_id, workspace_id):
+    """Read current asset history and resolve legacy scope references from exact Run evidence."""
+    context = _metadata_io_context(config, routing_workspace_id)
+    asset_type = "FILE" if table_id.startswith("file:") else "TABLE"
+    workspace = workspace_id.casefold()
+    profile_locations = {}
+    runs_loaded = False
+
+    def read(table_name, *predicates):
+        try:
+            frame = read_lakehouse_table(
+                table_name, store="Metadata", schema=metadata_table_physical_schema(config, table_name),
+                context={**(context or {}), "_spark_session": spark_session},
+            )
+        except Exception as exc:
+            if any(marker in str(exc).lower() for marker in ("not found", "does not exist")):
+                return []
+            raise
+        return _scoped_rows(frame, *predicates)
+
+    def load_runs():
+        nonlocal runs_loaded
+        if runs_loaded:
+            return
+        runs_loaded = True
+        # Run fields are JSON on Delta. Filter the journal before decoding candidate rows.
+        run_table = "METADATA_PIPELINE_RUN"
+        for record in read(run_table, f"instr(profiling, {_sql_literal(table_id)}) > 0"):
+            events = record.get("profiling")
+            if isinstance(events, str):
+                events = parse_metadata_json(events, field="METADATA_PIPELINE_RUN.profiling")
+            for event in migrate_asset_references(events or []):
+                snapshot = event.get("profile_snapshot_id")
+                destination = (event.get("physical") or {}).get("asset_workspace_id")
+                if (event.get("table_id") == table_id and snapshot and destination
+                        and event.get("status") == "passed" and event.get("results_persisted")):
+                    profile_locations.setdefault(snapshot, set()).add(destination.casefold())
+
+    def asset_rows(table_name, *predicates):
+        rows = [
+            row for row in read(table_name, f"table_id = {_sql_literal(table_id)}", *predicates)
+            if row.get("table_id") == table_id and (row.get("asset_type") or asset_type) == asset_type
+        ]
+        if table_name == "METADATA_DATA_PROFILED_FREQUENCY":
+            return rows
+        if asset_type == "FILE":
+            # The file selector itself encodes its physical workspace.
+            return rows
+        if rows:
+            load_runs()
+
+        def matches(row):
+            if physical := row.get("asset_workspace_id"):
+                return physical.casefold() == workspace
+            proven = profile_locations.get(row.get("profile_snapshot_id"))
+            return proven == {workspace} if proven else str(row.get("legacy_workspace_id") or "").casefold() == workspace
+
+        return [row for row in rows if matches(row)]
+
+    return asset_rows
+
+
+def _profile_workspace(row):
+    """Match profile siblings inside the same stored workspace provenance."""
+    return row.get("asset_workspace_id"), row.get("legacy_workspace_id")
+
+
+def get_asset_pipeline_participation(*, config, routing_workspace_id, spark_session, table_id, physical_workspace_id=None):
+    """Load the latest asset attempt per pipeline/workspace/role, bounded in Spark."""
+    from pyspark.sql import functions as F
+    from pyspark.sql import Window
+    from fabricops_kit.pipeline.shared import pipeline_participation
+
+    context = {**(_metadata_io_context(config, routing_workspace_id) or {}), "_spark_session": spark_session}
+    runs = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
+        schema=metadata_table_physical_schema(config, "METADATA_PIPELINE_RUN"), context=context)
+    participants = pipeline_participation(runs).filter(F.col("table_id") == table_id)
+    if physical_workspace_id is not None:
+        participants = participants.filter(F.col("asset_workspace_id") == physical_workspace_id.lower())
+    latest = Window.partitionBy("execution_workspace_id", "pipeline_id", "pipeline_role").orderBy(
+        # Released naive operation timestamps are UTC, independently of Spark's session zone.
+        F.coalesce(*[F.from_json(F.to_json(F.struct(F.col(name).alias("at"))),
+            "at TIMESTAMP", {"timeZone": "UTC", "mode": "FAILFAST"})["at"]
+            for name in ("operation_completed_at", "operation_started_at")],
+            F.col("run_completed_at"), F.col("run_started_at")).desc(),
+        F.col("run_id").desc(),
+    )
+    return row_dicts(participants.withColumn("_participation_rank", F.row_number().over(latest))
+                    .filter(F.col("_participation_rank") == 1).drop("_participation_rank"))
+
+
+def get_asset_runtime_context(
     *, config: Any, active_workspace_id: str, spark_session: Any, table_id: str,
     metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
-    """Return latest profile provenance and cross-workspace pipeline usage for one table."""
+    """Return profile provenance and source/target usage for one typed data asset."""
     table_identity = str(table_id or "").strip()
     if not table_identity:
         raise ValueError("table_id is required to load table runtime context.")
     routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
-    context = _metadata_io_context(config, routing_workspace_id)
-
-    def table_rows(table_name: str) -> list[dict[str, Any]]:
-        try:
-            frame = read_lakehouse_table(
-                table_name, store="Metadata",
-                schema=metadata_table_physical_schema(config, table_name),
-                context={**(context or {}), "_spark_session": spark_session},
-            )
-        except Exception as exc:
-            if any(
-                marker in str(exc).lower()
-                for marker in ("not found", "does not exist", "path does not exist")
-            ):
-                return []
-            raise
-        workspace_field = "_workspace_id" if table_name == "METADATA_DATA_PROFILED" else "workspace_id"
-        return [
-            row for row in _scoped_rows(
-                frame, f"table_id = {_sql_literal(table_identity)}",
-                "" if table_name == "METADATA_DATA_LINEAGE"
-                else f"{workspace_field} = {_sql_literal(active_workspace_id)}",
-            )
-            if str(row.get("table_id") or "") == table_identity
-            and (table_name == "METADATA_DATA_LINEAGE" or str(row.get(workspace_field) or "") == active_workspace_id)
-        ]
+    table_rows = _asset_history_reader(
+        config, routing_workspace_id, spark_session, table_identity, active_workspace_id,
+    )
 
     profiled = table_rows("METADATA_DATA_PROFILED")
     latest_by_column: dict[str, dict[str, Any]] = {}
@@ -1178,8 +1238,8 @@ def get_table_runtime_context(
         latest_profile = {
             **{key: latest_profile_row[key] for key in ("profile_scope", "profiling_max_rows") if latest_profile_row.get(key) is not None},
             "profile_snapshot_id": str(latest_profile_row.get("profile_snapshot_id") or ""),
-            "workspace_id": str(latest_profile_row.get("_workspace_id") or ""),
-            "workspace_name": str(latest_profile_row.get("_workspace_name") or ""),
+            "asset_workspace_id": str(latest_profile_row.get("asset_workspace_id") or active_workspace_id),
+            "execution_workspace_name": str(latest_profile_row.get("_workspace_name") or ""),
             "pipeline_name": str(
                 latest_profile_row.get("_notebook_name")
                 or latest_profile_row.get("_notebook_id")
@@ -1199,8 +1259,7 @@ def get_table_runtime_context(
         else:
             latest_profile_rows = [
                 row for row in profiled
-                if str(row.get("_workspace_id") or "")
-                == str(latest_profile_row.get("_workspace_id") or "")
+                if _profile_workspace(row) == _profile_workspace(latest_profile_row)
                 and metadata_timestamp_sort_key(row.get("_committed_at"))
                 == metadata_timestamp_sort_key(latest_profile_row.get("_committed_at"))
                 and str(row.get("_activity_id") or "")
@@ -1236,37 +1295,13 @@ def get_table_runtime_context(
             for row in latest_profile_rows
             if str(row.get("profile_id") or "") and str(row.get("column_id") or "")
         }
-        try:
-            frequency_frame = read_lakehouse_table(
-                "METADATA_DATA_PROFILED_FREQUENCY", store="Metadata",
-                schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED_FREQUENCY"),
-                context={**(context or {}), "_spark_session": spark_session},
-            )
-            frequency_rows = row_dicts(_scoped_rows(
-                frequency_frame,
-                frequency_predicate,
-                f"_workspace_id = {_sql_literal(active_workspace_id)}",
-                f"table_id = {_sql_literal(table_identity)}",
-            ))
-        except Exception as exc:
-            if any(
-                marker in str(exc).lower()
-                for marker in ("not found", "does not exist", "path does not exist")
-            ):
-                frequency_rows = []
-            else:
-                raise
-        frequency_rows = [
-            row for row in frequency_rows
-            if str(row.get("_workspace_id") or "") == active_workspace_id
-            and str(row.get("table_id") or "") == table_identity
-        ]
+        frequency_rows = table_rows("METADATA_DATA_PROFILED_FREQUENCY", frequency_predicate)
+        profile_workspaces = {row.get("profile_id"): _profile_workspace(row) for row in latest_profile_rows}
         summary_frequency_rows = [
             row for row in frequency_rows
             if str(row.get("profile_snapshot_id") or "") == latest_snapshot_id
             and str(row.get("profile_id") or "") in profile_columns
-            and str(row.get("_workspace_id") or "") == active_workspace_id
-            and str(row.get("table_id") or "") == table_identity
+            and _profile_workspace(row) == profile_workspaces.get(row.get("profile_id"))
         ]
         summary_frequency_rows.sort(
             key=lambda row: (
@@ -1294,8 +1329,8 @@ def get_table_runtime_context(
         snapshot = profile.get("profile_id") or profile.get("profile_snapshot_id")
         values = [
             row for row in frequency_by_column.get(column_id, [])
-            if snapshot is None or row.get("profile_id") == snapshot
-            or row.get("profile_snapshot_id") == snapshot
+            if _profile_workspace(row) == _profile_workspace(profile)
+            and (snapshot is None or row.get("profile_id") == snapshot or row.get("profile_snapshot_id") == snapshot)
         ]
         values.sort(key=lambda row: (
             int(row.get("frequency_rank") or 2_147_483_647),
@@ -1308,19 +1343,22 @@ def get_table_runtime_context(
         }
 
     grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
-    for row in table_rows("METADATA_DATA_LINEAGE"):
+    for row in get_asset_pipeline_participation(config=config, routing_workspace_id=routing_workspace_id,
+                                               spark_session=spark_session, table_id=table_identity,
+                                               physical_workspace_id=active_workspace_id):
         raw_role = str(row.get("pipeline_role") or "").strip().lower()
         relationship = "Writer" if raw_role == "target" else "Reader" if raw_role == "source" else ""
         if not relationship:
             continue
         pipeline_name = str(row.get("_notebook_name") or row.get("_notebook_id") or "").strip()
-        workspace_id = str(row.get("workspace_id") or "").strip()
-        key = (workspace_id, relationship, pipeline_name)
+        workspace_id = str(row.get("execution_workspace_id") or "").strip()
+        pipeline_id = str(row.get("pipeline_id") or row.get("_notebook_id") or "").strip()
+        key = (workspace_id, relationship, pipeline_id)
         previous = grouped.get(key)
-        rank = (metadata_timestamp_sort_key(row.get("_committed_at")), str(row.get("_activity_id") or ""))
+        rank = (metadata_timestamp_sort_key(row.get("operation_completed_at") or row.get("operation_started_at") or row.get("run_completed_at") or row.get("run_started_at")), str(row.get("run_id") or ""))
         previous_rank = (
             metadata_timestamp_sort_key(previous.get("last_seen")),
-            str(previous.get("_activity_id") or ""),
+            str(previous.get("run_id") or ""),
         ) if previous else None
         if previous_rank is None or rank >= previous_rank:
             grouped[key] = {
@@ -1328,12 +1366,16 @@ def get_table_runtime_context(
                 "workspace_name": str(row.get("_workspace_name") or ""),
                 "relationship": relationship,
                 "pipeline_name": pipeline_name or "Unknown pipeline",
-                "last_seen": row.get("_committed_at"),
-                "_activity_id": str(row.get("_activity_id") or ""),
+                "pipeline_id": pipeline_id,
+                "run_id": row["run_id"],
+                "operation_status": row["operation_status"],
+                "run_status": row["run_status"],
+                "publication_status": row.get("publication_status"),
+                "last_seen": row.get("operation_completed_at") or row.get("operation_started_at") or row.get("run_completed_at") or row.get("run_started_at"),
             }
 
-    lineage = [
-        {name: value for name, value in row.items() if name != "_activity_id"}
+    participation = [
+        dict(row)
         for row in sorted(
             grouped.values(),
             key=lambda row: (
@@ -1344,12 +1386,12 @@ def get_table_runtime_context(
         )
     ]
     writers = {
-        str(row.get("pipeline_name") or "")
-        for row in lineage if row.get("relationship") == "Writer"
+        str(row.get("pipeline_id") or "")
+        for row in participation if row.get("relationship") == "Writer"
     }
     readers = {
-        str(row.get("pipeline_name") or "")
-        for row in lineage if row.get("relationship") == "Reader"
+        str(row.get("pipeline_id") or "")
+        for row in participation if row.get("relationship") == "Reader"
     }
     return {
         "latest_profile": latest_profile,
@@ -1357,7 +1399,7 @@ def get_table_runtime_context(
         "profile_contexts": profile_contexts,
         "writer_count": len(writers),
         "reader_count": len(readers),
-        "lineage": lineage,
+        "participation": participation,
     }
 
 
@@ -1365,25 +1407,14 @@ def get_column_profile_context(
     *, config: Any, active_workspace_id: str, spark_session: Any, table_id: str,
     column_id: str, metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
-    """Return the latest column profile with optional top frequency evidence."""
-    routing_workspace_id = str(metadata_workspace_id or active_workspace_id)
-    context = _metadata_io_context(config, routing_workspace_id)
-    profiled = _scoped_rows(
-        read_lakehouse_table(
-            "METADATA_DATA_PROFILED", store="Metadata",
-            schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED"),
-            context={**(context or {}), "_spark_session": spark_session},
-        ),
-        f"table_id = {_sql_literal(table_id)}",
-        f"column_id = {_sql_literal(column_id)}",
-        f"_workspace_id = {_sql_literal(active_workspace_id)}",
+    """Return a table-column or file-column profile and its matching frequencies."""
+    table_rows = _asset_history_reader(
+        config, metadata_workspace_id or active_workspace_id, spark_session, table_id, active_workspace_id,
     )
+    column_filter = f"column_id = {_sql_literal(column_id)}"
     candidates = [
-        row for row in profiled
-        if str(row.get("table_id") or "") == str(table_id)
-        and str(row.get("column_id") or "") == str(column_id)
-        and str(row.get("_workspace_id") or "") == active_workspace_id
-        and str(row.get("status") or "completed").lower() == "completed"
+        row for row in table_rows("METADATA_DATA_PROFILED", column_filter)
+        if row.get("column_id") == column_id and str(row.get("status") or "completed").lower() == "completed"
     ]
     if not candidates:
         return {"kind": "unavailable", "message": "Not yet profiled."}
@@ -1393,34 +1424,14 @@ def get_column_profile_context(
         key=lambda row: metadata_timestamp_sort_key(row.get("profiled_at") or row.get("_committed_at")),
     )
     snapshot = latest.get("profile_id") or latest.get("profile_snapshot_id")
-    try:
-        frequency_filters = []
-        if snapshot is not None:
-            frequency_filters.append(f"profile_id = {_sql_literal(snapshot)}")
-        frequency = _scoped_rows(
-            read_lakehouse_table(
-                "METADATA_DATA_PROFILED_FREQUENCY", store="Metadata",
-                schema=metadata_table_physical_schema(config, "METADATA_DATA_PROFILED_FREQUENCY"),
-                context={**(context or {}), "_spark_session": spark_session},
-            ),
-            *frequency_filters,
-            f"_workspace_id = {_sql_literal(active_workspace_id)}",
-            f"table_id = {_sql_literal(table_id)}",
-            f"column_id = {_sql_literal(column_id)}",
-        )
-    except Exception as exc:
-        if not any(
-            marker in str(exc).lower()
-            for marker in ("not found", "does not exist", "path does not exist")
-        ):
-            raise
-        frequency = []
-
+    frequency_filter = (
+        f"(profile_id = {_sql_literal(snapshot)} OR profile_snapshot_id = {_sql_literal(snapshot)})"
+        if snapshot else ""
+    )
     values = [
-        row for row in frequency
-        if snapshot is None
-        or row.get("profile_id") == snapshot
-        or row.get("profile_snapshot_id") == snapshot
+        row for row in table_rows("METADATA_DATA_PROFILED_FREQUENCY", column_filter, frequency_filter)
+        if row.get("column_id") == column_id and _profile_workspace(row) == _profile_workspace(latest)
+        and (snapshot is None or row.get("profile_id") == snapshot or row.get("profile_snapshot_id") == snapshot)
     ]
     values.sort(
         key=lambda row: (
@@ -1547,12 +1558,9 @@ def freeze_contract_record(
     if not isinstance(payload, dict):
         raise ValueError("Save the Data Contract draft before freezing it.")
     payload = json.loads(json.dumps(payload))
-    payload.get("table", {}).pop("processing", None)
-    payload.get("table", {}).pop("processing_source", None)
-    payload.get("table", {}).pop("scheduled_refresh", None)
-    payload.pop("profiling", None)
-    payload["guardrails"] = [rule for rule in payload.get("guardrails", []) if rule.get("guardrail_type") != "source_drift"]
-    if draft.get("source_id") and payload.get("source", {}).get("source_id") != draft["source_id"]:
+    payload["format_version"] = 2
+    _clean_authored_payload(payload)
+    if draft.get("asset_type") == "FILE" and payload.get("source", {}).get("table_id") != draft["table_id"]:
         raise ValueError("Frozen file source identity must match the draft row.")
     validate_contract_definitions(payload)
     validate_grain_contract(payload)
@@ -1591,28 +1599,19 @@ def assemble_contract_payload(
     draft_payload = _json_value(
         draft.get("contract_payload_json"), field="contract_payload_json", default={}
     )
-    catalogue = [
-        row for row in row_dicts(catalogue_rows)
-        if str(row.get("table_id") or "") == table_id
-        and str(row.get("workspace_id") or "") == workspace_id
-        and row.get("is_active") is not False
-    ]
-    current = _latest(catalogue, ("table_id", "column_id"))
-    table_rows = [
-        row for row in current
-        if str(row.get("metadata_level") or "").lower() == "table" or not row.get("column_id")
-    ]
     captured_table = draft_payload.get("table") or {}
-    if not table_rows and "columns" not in captured_table:
+    table = next((row for row in current_catalogue_observations(catalogue_rows)
+                  if row.get("asset_type") == "TABLE" and row.get("table_id") == table_id
+                  and row.get("asset_workspace_id") == workspace_id), None)
+    if table is None and "columns" not in captured_table:
         raise ValueError("Select one valid active METADATA_DATA_CATALOGUE table_id.")
-    table = table_rows[-1] if table_rows else captured_table
-    columns = [row for row in current if row.get("column_id")]
-    observed_column_docs = [
-        _fields(row, ("column_id", "column_name", "data_type")) for row in columns
-    ]
-    column_docs = [dict(column) for column in draft_payload.get("table", {}).get("columns", [])]
-    if "columns" not in draft_payload.get("table", {}):
-        column_docs = [{**column, "presence": "required"} for column in observed_column_docs]
+    table = table if table is not None else captured_table
+    column_docs = [dict(column) for column in captured_table.get("columns", [])]
+    if "columns" not in captured_table:
+        observed = decode_metadata_row("METADATA_DATA_CATALOGUE", {"columns_json": table.get("columns_json")})["columns_json"]
+        if observed is None:
+            raise ValueError("Observe the Catalogue table schema before assembling a Data Contract.")
+        column_docs = [{**column, "presence": "required"} for column in observed]
     incomplete = [
         str(row.get("column_name") or row.get("column_id") or "<blank>")
         for row in column_docs
@@ -1668,6 +1667,7 @@ def assemble_contract_payload(
         guardrail_docs.append(item)
 
     payload = {
+        "format_version": 2,
         "contract": {
             "contract_id": contract_id,
             "contract_version": contract_version,
@@ -1676,11 +1676,12 @@ def assemble_contract_payload(
         "table": {
             **dict(draft_payload.get("table") or _fields(table, ("table_id", "store_type", "layer", "schema_name", "table_name"))),
             **({"table_id": table_id} if table_id else {}),
-            "evidence_workspace_id": draft.get("evidence_workspace_id") or workspace_id,
+            "asset_type": draft.get("asset_type") or "TABLE",
+            "asset_workspace_id": draft.get("asset_workspace_id") or workspace_id,
             "columns": column_docs,
             "writer": dict(draft_payload["table"]["writer"]) if "writer" in draft_payload.get("table", {}) else {
-                "notebook_id": str(table.get("_notebook_id") or "").strip(),
-                "notebook_name": str(table.get("_notebook_name") or "").strip(),
+                "notebook_id": str(table.get("writer_notebook_id") or table.get("_notebook_id") or "").strip(),
+                "notebook_name": str(table.get("writer_notebook_name") or table.get("_notebook_name") or "").strip(),
             },
         },
         "enrichment": {
@@ -1689,13 +1690,12 @@ def assemble_contract_payload(
         },
         "guardrails": guardrail_docs,
     }
-    payload["table"].pop("processing", None)
-    payload["table"].pop("processing_source", None)
-    payload["table"].pop("scheduled_refresh", None)
+    _clean_authored_payload(payload)
     if draft_payload.get("source") is not None:
         payload["source"] = dict(draft_payload["source"])
-        if payload["source"].get("source_type") == "file":
-            payload["table"].pop("table_id", None)
+        if payload["source"].get("asset_type") == "FILE":
+            payload["table"]["table_id"] = payload["source"]["table_id"]
+            payload["table"]["asset_type"] = "FILE"
     if not allow_incomplete_grain:
         validate_grain_contract(payload)
     warnings = []
@@ -1720,7 +1720,7 @@ def freeze_contract(
     schema: str | None = None,
     metadata_workspace_id: str | None = None,
 ) -> dict[str, Any]:
-    """Freeze one already-saved draft; its governed JSON becomes immutable."""
+    """Freeze the exact saved revision; reject stale authors without replacing newer edits."""
     from delta.tables import DeltaTable
     from fabricops_kit.io.shared import configured_lakehouse_schema, resolve_configured_lakehouse_table
 
@@ -1758,6 +1758,7 @@ def freeze_contract(
         ),
         context=runtime_context,
     )
+    validate_metadata_merge(DATA_CONTRACT_TABLE, frame, path)
     (
         retry_delta_metadata(lambda: DeltaTable.forPath(spark_session, path)
         .alias("target")
@@ -1766,7 +1767,7 @@ def freeze_contract(
             "target.contract_id = source.contract_id AND "
             "target.contract_version = source.contract_version",
         )
-        .whenMatchedUpdateAll(condition="target.status = 'draft'")
+        .whenMatchedUpdateAll(condition=_draft_revision_condition(draft))
         .execute())
     )
     frozen = _confirm_contract_mutation(

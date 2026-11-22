@@ -31,7 +31,7 @@ def metadata(monkeypatch):
             'execution_plan': SimpleNamespace(plan_id=run_id, permits_persistence=True, evidence={"profiling_configuration": {"grain_discovery_enabled": True, "frequency_enabled": True}}), **overrides}
     monkeypatch.setattr(shared, 'resolve_fabric_context', lambda context=None: (context['config'], context['scope_workspace_id'], context))
     monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, config, workspace_id: {
-        table_id: {'workspace_id': config.get('workspace', 'workspace'), 'item_id': config.get('item', 'lakehouse'),
+        table_id: {'asset_workspace_id': config.get('workspace', 'workspace'), 'item_id': config.get('item', 'lakehouse'),
                    'kind': 'lakehouse', 'schema': identity['schema'], 'table_name': identity['table_name']}
         for table_id, identity in identities.items()})
     history_reads = []
@@ -39,7 +39,7 @@ def metadata(monkeypatch):
         history_reads.append(activity)
         key, _descriptor = shared.profiling_context_key(table_id, context=context)
         result_ids = {kind: {row['profile_snapshot_id'] for row in rows[table]
-                            if row['table_id'] == table_id and row['workspace_id'] == context['scope_workspace_id']}
+                            if row['table_id'] == table_id and row['asset_workspace_id'] == context['scope_workspace_id']}
                       for kind, table in [('standard', 'METADATA_DATA_PROFILED'), ('frequency', 'METADATA_DATA_PROFILED_FREQUENCY')]}
         completed = {}
         for run in rows['METADATA_PIPELINE_RUN'].values():
@@ -72,7 +72,7 @@ def metadata(monkeypatch):
         if shared.persistence_permitted(context) and activity != 'grain':
             table = 'METADATA_DATA_PROFILED' if activity == 'standard' else 'METADATA_DATA_PROFILED_FREQUENCY'
             with lock:
-                rows[table].append({'table_id': table_id, 'workspace_id': context['scope_workspace_id'],
+                rows[table].append({'table_id': table_id, 'asset_workspace_id': context['scope_workspace_id'],
                                     'profile_snapshot_id': context['_profile_snapshot_id']})
         return {'row_count': 100}
     profiler = Mock(side_effect=execute)
@@ -282,16 +282,17 @@ def test_real_profiler_activities_publish_independent_metadata(activity,spark_se
     # Keep aggregate/distribution/grain calculations real, replace metadata transport.
     monkeypatch.setattr(module,'_canonical_profiled_dataframe',lambda profile,**kwargs: profile.withColumnRenamed('ROW_COUNT','row_count'))
     monkeypatch.setattr(module,'_frequency_metadata_dataframe',lambda frequency,**kwargs:frequency)
-    monkeypatch.setattr(module,'_catalogue_dataframe_from_profiled',lambda *args,**kwargs:object())
+    monkeypatch.setattr(module, 'table_catalogue_observation', lambda *a, **kw: {"_committed_at": None})
+    monkeypatch.setattr(module, 'get_store', lambda *a, **kw: Mock(workspace_id="dev"))
     spies={}
-    for name in ['_replace_snapshot_rows','_replace_frequency_rows','_upsert_catalogue_identities','_persist_grain_candidates','_stage_catalogue_profile_retry']:
+    for name in ['_replace_snapshot_rows','_replace_frequency_rows','merge_catalogue_asset','_persist_grain_candidates','_stage_catalogue_profile_retry','_require_catalogue_assets']:
         spies[name]=Mock(return_value=False)
         monkeypatch.setattr(module,name,spies[name])
     result=module.execute_table_profile(table_id='orders',context={'config':{},'scope_workspace_id':'dev'},
         spark_session=spark_session,activities={'grain', 'frequency'} if activity == 'grain_frequency' else {activity},verbose=False)
     assert reader.call_args.kwargs['table_id']=='orders' and result['row_count']==3
     assert spies['_replace_snapshot_rows'].called is (activity=='standard')
-    assert spies['_upsert_catalogue_identities'].called is (activity=='standard')
+    assert spies['merge_catalogue_asset'].called is (activity=='standard')
     assert spies['_persist_grain_candidates'].called is (activity in {'grain', 'grain_frequency'})
     assert spies['_replace_frequency_rows'].called is (activity in {'frequency', 'grain_frequency'})
     if activity in {'frequency', 'grain_frequency'}:
@@ -379,11 +380,11 @@ def test_history_filters_and_aggregates_in_spark(metadata, spark_session, monkey
         'run_id': 'test-observation', 'execution_mode': 'testing', 'workspace_id': 'dev', 'profiling': [
             {**event, 'completed_at': '2099-01-01T00:00:00+00:00'}
             for event in metadata.rows['METADATA_PIPELINE_RUN']['A']['profiling'] if event['status'] == 'passed']}
-    metadata.rows['METADATA_DATA_PROFILED'].append({'table_id': 'orders', 'workspace_id': 'dev', 'profile_snapshot_id': 'other-snapshot'})
+    metadata.rows['METADATA_DATA_PROFILED'].append({'table_id': 'orders', 'asset_workspace_id': 'dev', 'profile_snapshot_id': 'other-snapshot'})
     tables = {table: spark_session.createDataFrame(
         [encode_metadata_row(table, row) for row in rows.values()] if isinstance(rows, dict) else rows,
         'run_id string, execution_mode string, workspace_id string, profiling string' if table == 'METADATA_PIPELINE_RUN'
-        else 'table_id string, workspace_id string, profile_snapshot_id string')
+        else 'table_id string, asset_workspace_id string, profile_snapshot_id string')
         for table, rows in metadata.rows.items()}
     reads = []
     def reader(table, **kwargs):
@@ -496,7 +497,7 @@ def test_bounded_selection_limits_real_computation_and_labels_saved_metrics(kind
         assert {row.VALUE for row in observation['frequency_profile'].collect()} == {'A'}
         assert all(candidate['row_count'] == 2 for candidate in observation['grain_candidates'])
         canonical = module._canonical_profiled_dataframe(observation['profile'], config={}, active_workspace_id='dev',
-            runtime_context={**context, 'table_name': 'orders'}, table_id='orders', profile_snapshot_id='bounded')
+            runtime_context={**context, 'table_name': 'orders'}, workspace_id='dev', table_id='orders', profile_snapshot_id='bounded')
         rows = canonical.collect()
         assert all(row.profile_scope == 'bounded_selection' and row.profiling_max_rows == 2 and row.row_count == 2 for row in rows)
         frequencies = module._frequency_metadata_dataframe(observation['frequency_profile'], profiled_df=canonical,
@@ -551,7 +552,7 @@ def test_real_history_filters_bounded_completion_scope_in_spark(metadata, spark_
     tables = {table: spark_session.createDataFrame(
         [encode_metadata_row(table, row) for row in rows.values()] if isinstance(rows, dict) else rows,
         'run_id string, execution_mode string, workspace_id string, profiling string' if table == 'METADATA_PIPELINE_RUN'
-        else 'table_id string, workspace_id string, profile_snapshot_id string')
+        else 'table_id string, asset_workspace_id string, profile_snapshot_id string')
         for table, rows in metadata.rows.items()}
     metadata.context['execution_plan'].evidence['profiling_configuration']['profiling_max_rows'] = requested_limit
     monkeypatch.setattr(shared, 'read_lakehouse_table', lambda table, **kwargs: tables[table])
@@ -571,14 +572,14 @@ def test_newer_sample_does_not_replace_latest_full_completion_for_history(metada
                 'completed_at': datetime.now(UTC).isoformat(), 'profile_snapshot_id': 'sample-' + event['activity']})
             if event['activity'] != 'grain':
                 table = 'METADATA_DATA_PROFILED' if event['activity'] == 'standard' else 'METADATA_DATA_PROFILED_FREQUENCY'
-                metadata.rows[table].append({'table_id': 'orders', 'workspace_id': 'dev',
+                metadata.rows[table].append({'table_id': 'orders', 'asset_workspace_id': 'dev',
                     'profile_snapshot_id': 'sample-' + event['activity']})
     metadata.rows['METADATA_PIPELINE_RUN']['sample'] = {
         'run_id': 'sample', 'workspace_id': 'dev', 'execution_mode': 'live', 'profiling': sample_events}
     tables = {table: spark_session.createDataFrame(
         [encode_metadata_row(table, row) for row in rows.values()] if isinstance(rows, dict) else rows,
         'run_id string, execution_mode string, workspace_id string, profiling string' if table == 'METADATA_PIPELINE_RUN'
-        else 'table_id string, workspace_id string, profile_snapshot_id string')
+        else 'table_id string, asset_workspace_id string, profile_snapshot_id string')
         for table, rows in metadata.rows.items()}
     monkeypatch.setattr(shared, 'read_lakehouse_table', lambda table, **kwargs: tables[table])
     monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: 'engineering')

@@ -25,7 +25,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="data-contract">
 <summary><strong>Data Contract</strong> — A versioned set of governed expectations for one table or file-backed dataset.</summary>
-<p>A Data Contract freezes Schema, descriptive Enrichment and executable Guardrails in METADATA_DATA_CONTRACT.contract_payload_json. Physical tables preserve canonical Table IDs; file-backed datasets use a stable file source identity. Draft becomes Frozen and stays immutable. METADATA_DATA_CONTRACT_ACTIVATION retains exact physical selections. Pipeline Activation separately approves Engineering read/write processing parameters and source authorizations; processing is not authored in a Data Contract.</p>
+<p>A Data Contract references exactly one registered Catalogue asset through asset_workspace_id, table_id and asset_type, and freezes Schema, descriptive Enrichment and executable Guardrails in METADATA_DATA_CONTRACT.contract_payload_json. Physical tables preserve canonical Table IDs; file-backed datasets use a stable file source identity. Draft becomes Frozen and stays immutable. METADATA_DATA_CONTRACT_ACTIVATION retains exact physical selections. Pipeline Activation separately approves Engineering read/write processing parameters and source authorizations; processing is not authored in a Data Contract.</p>
 <p><strong>Also known as:</strong> data contracts</p>
 </details>
 
@@ -123,7 +123,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="source-drift">
 <summary><strong>Source Drift</strong> — Pipeline-owned complete-source change observation against confirmed physical-source history.</summary>
-<p>setup_pipeline independently configures Source Drift enablement, interval and blocking. Due Reads capture complete physical-source SHA256 hash multiplicities, regardless of profiling limits or query/incremental scope. Authored validated keys permit exact modified-row counts; unkeyed comparisons retain content multiplicities without pairing unrelated rows. Pure additions do not block normal incremental ETL. Configured blocking applies to removals, modifications, typed-schema changes and unavailable observations. All source decisions precede Write. METADATA_PROCESSING_STATE accepts shared physical-source snapshots only after successful finalization and verified required publications under a Serializable conditional update. Data Contracts do not own Source Drift execution policy.</p>
+<p>setup_pipeline independently configures Source Drift enablement, interval and blocking. Due Reads capture complete physical-source SHA256 hash multiplicities, regardless of profiling limits or query/incremental scope. Authored validated keys permit exact modified-row counts; unkeyed comparisons retain content multiplicities without pairing unrelated rows. Pure additions do not block normal incremental ETL. Configured blocking applies to removals, modifications, typed-schema changes and unavailable observations. All source decisions precede Write. the operational Processing State table accepts shared physical-source snapshots only after successful finalization and verified required publications under a Serializable conditional update. Data Contracts do not own Source Drift execution policy.</p>
 </details>
 
 <details id="writer-ownership">
@@ -133,8 +133,8 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="data-catalogue">
-<summary><strong>Data Catalogue</strong> — The canonical metadata record for a governed table and its columns.</summary>
-<p>FabricOps Data Catalogue metadata identifies governed tables and columns and stores the technical and enriched attributes used by profiling, contracts, guardrails, and other governance workflows.</p>
+<summary><strong>Data Catalogue</strong> — The canonical metadata registry for table and file assets and their columns.</summary>
+<p>The FabricOps Data Catalogue keeps one current entry per physical workspace, Table ID and asset type. It stores asset location, the latest observed column definitions and Engineering processing information used by profiling and Contract authoring.</p>
 <p><strong>Also known as:</strong> Data Catalogue</p>
 </details>
 
@@ -182,12 +182,12 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="processing-state">
 <summary><strong>Processing State</strong> — Typed source observations, accepted checkpoints, Source Drift baselines and publication receipts.</summary>
-<p>METADATA_PROCESSING_STATE stores incremental source observations/checkpoints and target-specific publication receipts, plus immutable source_snapshot manifests, distributed source_row_evidence hash multiplicities, shared source_drift_baseline heads and immutable source_snapshot_acceptance history. Checkpoints follow verified target publication; Source Drift heads wait for successful whole-run finalization and all required verified publications. Historical rows remain retained.</p>
+<p>The operational Processing State table holds incremental source observations/checkpoints and target-specific publication receipts, plus immutable source_snapshot manifests, distributed source_row_evidence hash multiplicities, shared source_drift_baseline heads and immutable source_snapshot_acceptance history. Checkpoints follow verified target publication; Source Drift heads wait for successful whole-run finalization and all required verified publications. Historical rows remain retained.</p>
 </details>
 
 <details id="source-observation">
 <summary><strong>Source Observation</strong> — Captured source state for incremental execution, Source Drift or full physical-source comparison.</summary>
-<p>Source Observation captures incremental source state or complete physical-source hash evidence for pipeline-owned Source Drift. Disabled Source Drift adds no observation scan. Complete-source observation is independent of profiling limits and SQL/incremental predicates. METADATA_PROCESSING_STATE retains source_snapshot manifests, source_row_evidence multiplicities, source_drift_baseline heads and immutable source_snapshot_acceptance history. Source Drift acceptance waits for successful finalization and verified required publications; incremental checkpoint acceptance remains tied to publication receipts.</p>
+<p>Source Observation captures incremental source state or complete physical-source hash evidence for pipeline-owned Source Drift. Disabled Source Drift adds no observation scan. Complete-source observation is independent of profiling limits and SQL/incremental predicates. the operational Processing State table retains source_snapshot manifests, source_row_evidence multiplicities, source_drift_baseline heads and immutable source_snapshot_acceptance history. Source Drift acceptance waits for successful finalization and verified required publications; incremental checkpoint acceptance remains tied to publication receipts.</p>
 <p><strong>Also known as:</strong> source observations</p>
 </details>
 
@@ -197,14 +197,14 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 </details>
 
 <details id="lineage">
-<summary><strong>Lineage</strong> — Metadata that records how governed data moves from source to target through a pipeline.</summary>
-<p>FabricOps records source-to-target relationships from governed pipeline execution so a table's upstream and downstream paths can be traced.</p>
+<summary><strong>Lineage</strong> — Source-to-output dependencies captured for each prepared Write within a pipeline Run.</summary>
+<p>FabricOps stores automatic Spark column dependencies and expression/operator steps in METADATA_PIPELINE_RUN.operations[].lineage. Each output records complete, partial or unknown coverage and explicit gaps. The graph describes the Write input; operation publication status determines whether it was published. Typed table/file participation remains separate in operations and source_assets. Finalization materializes scalar dependency facts in METADATA_DATA_LINEAGE for reporting; lineage_version=1 distinguishes them from unchanged historical participation rows.</p>
 <p><strong>Also known as:</strong> data lineage</p>
 </details>
 
 <details id="table-id">
-<summary><strong>table_id</strong> — The stable FabricOps identifier for one governed table.</summary>
-<p>FabricOps uses table_id to resolve a governed table across metadata, Data Contracts, profiles, guardrails, lineage, and pipeline execution without relying on a physical Fabric item name alone.</p>
+<summary><strong>table_id</strong> — The shared FabricOps identifier for a table or file asset, distinguished by asset_type.</summary>
+<p>Operational metadata uses table_id for both TABLE and FILE assets. Tables preserve their existing IDs; files reuse their stable physical selector identity. Column IDs derive from the asset identity and normalized column name. Contracts, activations and new Pipeline Run operations use the same table_id and asset_type fields, with asset_workspace_id in physical bindings and file selectors. Released JSON keeps its original bytes and hashes and is interpreted when read.</p>
 <p><strong>Also known as:</strong> table ID</p>
 </details>
 
@@ -230,7 +230,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="workspace">
 <summary><strong>Workspace</strong> — A collaborative container that brings related Fabric items together and controls access to them.</summary>
-<p>A Microsoft Fabric Workspace is a collection of items in a shared environment designed for collaboration. It acts as a container for items such as lakehouses, warehouses, notebooks, semantic models, and reports, and provides controls for who can access them. FabricOps uses stable workspace_id for local observations, profiling, Testing and activation. Names are labels; global Data Contract identity does not include workspace.</p>
+<p>A Microsoft Fabric Workspace is a collection of items in a shared environment designed for collaboration. It acts as a container for items such as lakehouses, warehouses, notebooks, semantic models, and reports, and provides controls for who can access them. FabricOps stores the physical table or file workspace as asset_workspace_id and uses separate workspace fields for execution, Contract authoring evidence and notebook audit. Names are labels; global Data Contract identity does not include workspace.</p>
 <p><strong>Microsoft Learn:</strong> <a href="https://learn.microsoft.com/en-us/fabric/fundamentals/workspaces">Official documentation</a></p>
 <p><strong>Also known as:</strong> workspaces</p>
 </details>
@@ -357,7 +357,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="pipeline-run">
 <summary><strong>pipeline run</strong> — One logical pipeline execution across every declared Read and Write.</summary>
-<p>METADATA_PIPELINE_RUN stores one authoritative row per execution with JSON STRING Read/Write operations, exact Contract references, physical destinations, strategies, stages, profiling and failures. Explicit finalize_pipeline records whole-run completion. Version 3 records execution workspace, Pipeline version, promotion ID, Governed notebook and actual execution identity. Setup preserves retained Run content/hash semantics and adds compatible provenance without deleting history.</p>
+<p>METADATA_PIPELINE_RUN stores one authoritative row per execution with JSON STRING Read/Write operations, exact Contract references, physical destinations, strategies, stages, profiling and failures. Explicit finalize_pipeline records whole-run completion. Version 4 uses asset_workspace_id directly on each operation beside table_id and asset_type; it records execution workspace, Pipeline version, promotion ID, Governed notebook and actual execution identity. Setup preserves retained Run content/hash semantics and adds compatible provenance without deleting history.</p>
 </details>
 
 <details id="pyspark">

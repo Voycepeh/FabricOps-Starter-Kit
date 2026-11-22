@@ -34,6 +34,21 @@ from tests.helpers import framework_config, store
 pytestmark = pytest.mark.unit
 
 
+@pytest.fixture(autouse=True)
+def metadata_transaction_boundary(monkeypatch):
+    """Isolate setup decisions from the real-Delta primary-key protocol tests."""
+    from importlib import import_module
+
+    setup = import_module("fabricops_kit.config.setup_metadata_tables")
+    monkeypatch.setattr(setup, "_enforce_metadata_primary_key", lambda **kwargs: None)
+    monkeypatch.setattr(import_module("fabricops_kit.config.setup_metadata_tables"), "_setup_processing_state",
+        lambda **kwargs: {"status": "validated", "path": "Tables/misc/PROCESSING_STATE"})
+
+    # Existing setup doubles record physical appends through their table writer.
+    monkeypatch.setattr(setup, "write_delta_path", lambda frame, path, **kwargs:
+        setup.write_lakehouse_table(frame, path.rsplit("/", 1)[-1], store="Metadata", **kwargs))
+
+
 def _canonical_metadata_reader(reader):
     """Keep generic setup fixtures explicit about absent noncanonical tables."""
     from fabricops_kit.config.metadata_schemas import CANONICAL_METADATA_TABLES
@@ -454,7 +469,7 @@ def test_setup_metadata_tables_directly_bootstraps_canonical_tables(monkeypatch)
         assert store == "Metadata"
         assert schema in {"governance", "engineering"}
         assert mode == "errorifexists"
-        assert options == ({"delta.isolationLevel": "Serializable"} if table_name in {"METADATA_PIPELINE_REGISTRY", "METADATA_DATA_CONTRACT_ACTIVATION", "METADATA_PIPELINE_ACTIVATION", "METADATA_PROCESSING_STATE"} else None)
+        assert options == {"delta.isolationLevel": "Serializable"}
         assert verbose is False
         spark.created_tables.append(table_name)
         spark.tables[table_name] = spark.pending_columns
@@ -865,7 +880,7 @@ def test_setup_evolves_existing_tables_with_new_readable_identity_columns(monkey
             "provider_steward_name", "recipient_steward_name", "guardrail_type",
             "rule_id", "rule_type", "action",
         }]
-        old_tables[name] = Frame(schema if name == "METADATA_PROCESSING_STATE" else type(schema)(fields))
+        old_tables[name] = Frame(type(schema)(fields))
 
     def read_table(name, **_kwargs):
         return old_tables[name]
@@ -882,7 +897,7 @@ def test_setup_evolves_existing_tables_with_new_readable_identity_columns(monkey
     assert result["status"] == "ready"
     expected_evolved = {
         "METADATA_DATA_AGREEMENT", "METADATA_DATA_CONTRACT", "METADATA_DATA_PROFILED",
-        "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_LINEAGE", "METADATA_DATA_ACCESS",
+        "METADATA_DATA_PROFILED_FREQUENCY", "METADATA_DATA_ACCESS",
         "METADATA_GUARDRAIL_RESULTS",
     }
     expected_evolved.add("METADATA_DATA_CATALOGUE")
@@ -949,6 +964,8 @@ def test_setup_metadata_tables_creates_new_tables_with_canonical_schema(monkeypa
     result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
 
     assert result["created_tables"] == list(registry)
+    assert result["active_metadata_table_count"] == 13
+    assert "METADATA_PROCESSING_STATE" not in created
     assert created["METADATA_DATA_ACCESS"].fieldNames() == registry["METADATA_DATA_ACCESS"].fieldNames()
     access_fields = {field.name: field for field in created["METADATA_DATA_ACCESS"].fields}
     assert all(not access_fields[field].nullable for field in {"_activity_id", "_committed_at", "_workspace_id"})
@@ -1000,16 +1017,16 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
     }
 
     assert catalogue_names == [
-        "metadata_level",
+        "asset_type", "item_id", "relative_path", "file_format",
+        "first_observed_at", "last_observed_at",
         "table_id",
-        "column_id",
-        "workspace_id",
+        "asset_workspace_id",
+        "asset_workspace_name",
+        "columns_json",
         "store_type",
         "layer",
         "schema_name",
         "table_name",
-        "column_name",
-        "data_type",
         "load_strategy",
         "load_strategy_parameters_json",
         "writer_workspace_id",
@@ -1030,9 +1047,9 @@ def test_metadata_data_catalogue_and_profiled_schema_split():
         "_activity_id",
     ]
     assert (profiling_fields - {"data_type"}).isdisjoint(catalogue_names)
-    assert {"metadata_level", "table_id", "column_id", "column_name", "first_profiled_at", "last_profiled_at", "is_active"}.issubset(catalogue_names)
+    assert {"asset_type", "table_id", "asset_workspace_name", "columns_json", "first_profiled_at", "last_profiled_at", "is_active"}.issubset(catalogue_names)
     assert profiling_fields.issubset(profiled_names)
-    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id", "_workspace_id", "data_type"}.issubset(profiled_names)
+    assert {"profile_id", "profile_snapshot_id", "table_id", "column_id", "asset_workspace_id", "data_type"}.issubset(profiled_names)
     assert len(catalogue_names) == len(set(catalogue_names))
     assert len(profiled_names) == len(set(profiled_names))
     audit_names = {name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS}
@@ -1220,7 +1237,7 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
         if hasattr(data_type, "elementType"):
             return [sample_value(data_type.elementType, native=native)]
         if hasattr(data_type, "fields"):
-            return {field.name: sample_value(field.dataType, native=native) for field in data_type.fields}
+            return {field.name: "TABLE" if field.name == "asset_type" else sample_value(field.dataType, native=native) for field in data_type.fields}
         if native and type(data_type).__name__ in {"BooleanType", "LongType", "DoubleType"}:
             return {"BooleanType": True, "LongType": 7, "DoubleType": 7.5}[type(data_type).__name__]
         return {"TimestampType": "2026-06-29T12:34:56+08:00", "DateType": "2026-06-29",
@@ -1249,6 +1266,8 @@ def test_canonical_metadata_schemas_include_audit_and_runtime_python_types():
     for table_name, schema in registry.items():
         assert audit_columns.issubset({field.name for field in schema.fields})
         sample = {field.name: sample_value(field.dataType, native=(table_name in {"METADATA_DATA_CATALOGUE", "METADATA_PIPELINE_RUN"})) for field in schema.fields}
+        if table_name == "METADATA_PIPELINE_RUN":
+            sample["run_schema_version"] = 4
         row = coerce_metadata_row_types(table_name, sample)
         for field in schema.fields:
             assert_runtime_type(row[field.name], field.dataType, table_name + "." + field.name)
@@ -1365,7 +1384,7 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
         if table_name == "METADATA_DATA_CATALOGUE":
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()]
             timestamp_fields = [row["name"] for row in metadata_table_schema_rows(schema) if row["type"] == "timestamp"]
-            assert timestamp_fields == ["first_profiled_at", "last_profiled_at", "_committed_at"]
+            assert timestamp_fields == ["first_observed_at", "last_observed_at", "first_profiled_at", "last_profiled_at", "_committed_at"]
         elif table_name == "METADATA_DATA_PROFILED":
             assert names[-len(audit_schema_fields()) :] == [name for name, _kind, _nullable in audit_schema_fields()]
         else:
@@ -1374,29 +1393,12 @@ def test_metadata_docs_schema_rows_preserve_non_string_types_and_audit_order():
             )
 
 
-def test_lineage_schema_has_only_lineage_fields_and_canonical_audit_context():
-    """Verify the breaking lineage schema has one authoritative execution context."""
-    from fabricops_kit.config.metadata_schemas import AUDIT_SCHEMA_FIELDS, metadata_table_schema_registry
+def test_lineage_table_is_canonical_with_scalar_versioned_facts():
+    """The physical table reports real dependencies while preserving old activity rows."""
+    from fabricops_kit.config.metadata_schemas import HISTORICAL_METADATA_TABLES, metadata_table_schema_registry
 
-    schema = metadata_table_schema_registry()["METADATA_DATA_LINEAGE"]
-    audit_names = [name for name, _kind, _nullable in AUDIT_SCHEMA_FIELDS]
-    assert schema.fieldNames() == [
-        "lineage_id",
-        "table_id",
-        "table_name",
-        "workspace_id",
-        "pipeline_role",
-        *audit_names,
-    ]
-    assert all(not field.nullable for field in schema.fields if field.name in audit_names)
-    assert {
-        "activity_id",
-        "notebook_id",
-        "notebook_name",
-        "workspace_name",
-        "committed_by",
-        "metadata_lakehouse_name",
-    }.isdisjoint(schema.fieldNames())
+    assert "METADATA_DATA_LINEAGE" in metadata_table_schema_registry()
+    assert "METADATA_DATA_LINEAGE" not in HISTORICAL_METADATA_TABLES
 
 
 def test_metadata_audit_schema_nullability_contract():
@@ -1412,12 +1414,13 @@ def test_metadata_audit_schema_nullability_contract():
         assert set(audit_names).issubset(fields)
 
     access_fields = [field.name for field in registry["METADATA_DATA_ACCESS"].fields]
-    assert access_fields[:8] == [
+    assert access_fields[:9] == [
         "access_id",
         "user_principal",
         "table_id",
         "table_name",
-        "workspace_id",
+        "asset_workspace_id",
+        "asset_type",
         "access_level",
         "access_value",
         "access_state",
@@ -1626,7 +1629,7 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
     registry = metadata_table_schema_registry()
     names = list(registry)
-    failed_name = "METADATA_DATA_PROFILED"
+    failed_name = "METADATA_GUARDRAIL_RESULTS"
     read_order = []
 
     class Table:
@@ -1645,7 +1648,7 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
     def read_table(table_name, **_kwargs):
         read_order.append(table_name)
         if table_name == failed_name:
-            return Table([*registry[table_name].fieldNames(), "frequency_json"])
+            return Table([*registry[table_name].fieldNames(), "source_id"])
         return Table(registry[table_name].fieldNames())
 
     monkeypatch.setattr(setup_module, "read_lakehouse_table", _canonical_metadata_reader(read_table))
@@ -1663,7 +1666,7 @@ def test_setup_metadata_tables_one_failure_continues_and_reports_details(monkeyp
     assert f"Successful: {len(names) - 1}/{len(names)}" in output
     assert f"Failed: 1/{len(names)}" in output
     assert f"- {failed_name}:" in output
-    assert "cannot verify retired column(s): frequency_json" in output
+    assert "cannot verify retired column(s): source_id" in output
 
 
 def test_setup_metadata_tables_raise_on_failure_waits_until_all_tables_attempted(monkeypatch):
@@ -1721,10 +1724,17 @@ def test_setup_metadata_tables_verbose_false_is_silent(monkeypatch, capsys):
     assert result["data_agreement"]["active_steward_count"] == 0
 
 
+@pytest.mark.parametrize("levels", [[], ["Public"], {}, {"": "Meaning"}, {"Public": ""}, {"Public": None}, {1: "Meaning"}])
+def test_classification_definitions_require_labels_and_policy_explanations(levels):
+    """Reject the old list format and incomplete definitions before the widget opens."""
+    with pytest.raises(ValueError, match="classification_levels"):
+        GovernanceConfig(classification_levels=levels)
+
+
 def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
     """Keep prompts configurable and AI optional alongside Classification labels."""
     config = GovernanceConfig(
-        classification_levels=[" Public ", "Restricted"],
+        classification_levels={" Public ": " External sharing ", "Restricted": "Internal use"},
         ai_enrichment={
             "enabled": True,
             "table_description_prompt": " describe table ",
@@ -1732,9 +1742,9 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
             "sensitive_data_prompt": " sensitive rules ",
         },
     )
-    assert config.classification_levels == ["Public", "Restricted"]
+    assert config.classification_levels == {"Public": "External sharing", "Restricted": "Internal use"}
     with pytest.raises(ValueError, match="unique ranked values"):
-        GovernanceConfig(classification_levels=["Public", "Restricted", "Restricted"])
+        GovernanceConfig(classification_levels={"Public": "External", " Public ": "Duplicate"})
     assert config.ai_enrichment == {
         "enabled": True,
         "model_deployment_name": "gpt-5-mini", "reasoning_effort": "low", "verbosity": None,

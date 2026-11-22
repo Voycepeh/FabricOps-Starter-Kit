@@ -13,28 +13,24 @@ module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
 
 
 def _catalogue_rows(count: int = 2) -> list[dict]:
-    rows = [{
-        "table_id": "orders", "workspace_id": "dev", "metadata_level": "table",
+    return [{
+        "table_id": "orders", "asset_workspace_id": "dev", "asset_type": "TABLE",
         "schema_name": "sales", "table_name": "orders", "store_type": "Lakehouse",
         "layer": "Silver", "load_strategy": "append_all",
         "load_strategy_parameters_json": {}, "is_active": True,
-        "_workspace_id": "workspace-id", "_workspace_name": "Development",
+        "asset_workspace_name": "Development", "_workspace_id": "workspace-id", "_workspace_name": "Execution",
         "_notebook_id": "writer-notebook-id",
+        "columns_json": [
+            {"column_id": f"col-{index}", "column_name": f"column_{index}",
+             "data_type": "long" if index == 0 else "timestamp" if index == 1 else "string"}
+            for index in range(count)
+        ],
     }]
-    for index in range(count):
-        rows.append({
-            "table_id": "orders", "workspace_id": "dev", "metadata_level": "column",
-            "column_id": f"col-{index}", "column_name": f"column_{index}",
-            "data_type": (
-                "long" if index == 0 else "timestamp" if index == 1 else "string"
-            ), "is_active": True,
-        })
-    return rows
 
 
 def _use_text_identifier(runtime):
     """Use a categorical identifier when exercising mask-specific controls."""
-    runtime["catalogue"][1]["data_type"] = "string"
+    runtime["catalogue"][0]["columns_json"][0]["data_type"] = "string"
     payload = json.loads(runtime["contract"]["contract_payload_json"])
     payload["table"]["columns"][0]["data_type"] = "string"
     runtime["contract"]["contract_payload_json"] = json.dumps(payload)
@@ -47,7 +43,7 @@ def _use_text_identifier(runtime):
 def _capture_fixture_columns(runtime):
     """Simulate creating a draft after the test's Engineering schema change."""
     payload = json.loads(runtime["contract"]["contract_payload_json"])
-    payload["table"]["columns"] = [{**row, "presence": "required"} for row in runtime["catalogue"][1:]]
+    payload["table"]["columns"] = [{**row, "presence": "required"} for row in runtime["catalogue"][0]["columns_json"]]
     runtime["contract"]["contract_payload_json"] = json.dumps(payload)
 
 
@@ -202,7 +198,7 @@ def widget_runtime(monkeypatch):
             **catalogue[0],
             "processing": {"load_strategy": "append_all"},
             "processing_source": "catalogue",
-            "columns": [{**row, "presence": "required" if index == 0 else "optional"} for index, row in enumerate(catalogue[1:])],
+            "columns": [{**row, "presence": "required" if index == 0 else "optional"} for index, row in enumerate(catalogue[0]["columns_json"])],
         },
         "enrichment": {"table": [], "columns": []},
         "guardrails": [],
@@ -250,7 +246,7 @@ def widget_runtime(monkeypatch):
 
     def review(**_kwargs):
         calls["review"].append(dict(_kwargs))
-        catalogue_workspace_id = str(catalogue[0]["workspace_id"])
+        catalogue_workspace_id = str(catalogue[0]["asset_workspace_id"])
         if contract["status"] == "draft":
             return {
                 "contract": dict(contract), "contract_id": contract["contract_id"],
@@ -278,7 +274,7 @@ def widget_runtime(monkeypatch):
                 **catalogue[0],
                 "processing": dict(saved.get("table", {}).get("processing") or {}),
                 "processing_source": str(saved.get("table", {}).get("processing_source") or "default"),
-                "columns": [dict(row) for row in catalogue[1:]],
+                "columns": [dict(row) for row in catalogue[0]["columns_json"]],
             },
             "enrichment": {
                 "table": [dict(row) for row in enrichment if not row.get("column_id")],
@@ -335,7 +331,7 @@ def widget_runtime(monkeypatch):
         }),
         governance_config=types.SimpleNamespace(
             ai_enrichment=ai_enrichment,
-            classification_levels=["Public", "Restricted", "Confidential", "Highly Sensitive"],
+            classification_levels=dict(module.DEFAULT_CLASSIFICATION_LEVELS),
         ),
     )
     monkeypatch.setattr(module, "resolve_fabric_context", lambda **_kwargs: (config, "dev", {}))
@@ -349,17 +345,17 @@ def widget_runtime(monkeypatch):
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "save_contract_draft", save_contract_draft)
     monkeypatch.setattr(module.contracts, "freeze_contract", freeze_contract)
-    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **_kwargs: {
         "latest_profile": {
             "profile_snapshot_id": "snapshot-prod",
-            "workspace_id": "PROD",
+            "asset_workspace_id": "PROD",
             "pipeline_name": "02_pipeline",
             "committed_by": "voyce@example.com",
             "committed_at": "2026-09-26T02:45:00",
         },
         "writer_count": 1,
         "reader_count": 2,
-        "lineage": [
+        "participation": [
             {
                 "workspace_id": "DEV", "relationship": "Writer",
                 "pipeline_name": "02_pipeline", "last_seen": "2026-09-26T03:00:00",
@@ -392,8 +388,13 @@ def widget_runtime(monkeypatch):
 
     def open_widget():
         state = start()
-        state["_controls"]["workspace_select"].value = "dev"
-        state["_controls"]["open"].click()
+        controls = state["_controls"]
+        controls["workspace_select"].value = "dev"
+        controls["store_select"].value = "Silver"
+        controls["table"].value = "orders"
+        controls["contract"].value = "1"
+        _choose_entry(controls)
+        controls["open"].click()
         return state
 
     return {
@@ -402,6 +403,16 @@ def widget_runtime(monkeypatch):
         "enrichment": enrichment, "guardrails": guardrails,
         "ai_enrichment": ai_enrichment, "config": config,
     }
+
+
+def _choose_entry(controls):
+    """Complete the dependent entry fields before exercising editor behaviour."""
+    for key, preferred in (("workspace_select", "dev"), ("store_select", "Silver"),
+                           ("table", "orders"), ("contract", "1")):
+        control = controls[key]
+        values = [value for _label, value in control.options if value]
+        if not control.value and values:
+            control.value = preferred if preferred in values else values[0]
 
 
 def test_manifest_review_shows_business_rule_lifecycle_state():
@@ -458,116 +469,65 @@ def test_select_rejects_missing_explicit_contract_version(widget_runtime):
 
 
 def test_selector_is_explicit_and_pending_selection_cannot_change_active_contract(widget_runtime):
-    """The editor stays inactive until Open and Change table deactivates the current contract."""
+    """Entry stays inactive until upstream fields and an exact version are chosen."""
     state = widget_runtime["start"]()
     controls = state["_controls"]
-
     assert state["current"] is None
-    assert state["table_id"] is None
-    assert state["pending_table_id"] == "orders"
-    assert controls["workspace_select"].value == ""
-    assert controls["table"].value == "orders"
+    assert controls["open"].disabled
+    assert controls["store_select"].disabled
+    assert controls["table"].disabled
+    assert controls["contract"].disabled
+    controls["workspace_select"].value = "dev"
+    assert not controls["store_select"].disabled
+    assert controls["table"].disabled
+    controls["store_select"].value = "Silver"
+    assert not controls["table"].disabled
+    assert controls["table"].value == "orders"  # explicit constructor hint, after upstream selection
     assert controls["contract"].value == "1"
-    assert controls["table_search"].options == [
-        "Select dataset",
-        "Curated Lakehouse · sales.orders — Table · Development",
-    ]
-    assert controls["contract_search"].options == ["Select contract", "v1 · Draft", "New Draft"]
-    selector = controls["selector_panel"].children[0]
-    assert [field.children[0].value for field in selector.children] == [
-        "<b>Dataset</b>",
-        "<b>Workspace</b>",
-        "<b>Contract</b>",
-    ]
-    assert all(field.children[1].layout.width == "100%" for field in selector.children)
-    assert selector.layout.grid_template_columns == "repeat(2, minmax(0, 1fr))"
-    assert selector.layout.grid_template_areas == '"table table" "workspace contract"'
-    assert [field.layout.grid_area for field in selector.children] == [
-        "table", "workspace", "contract",
-    ]
-    assert controls["selector_panel"].layout.display != "none"
-    assert controls["editor_shell"].layout.display == "none"
-
     controls["open"].click()
     assert state["current"]["table_id"] == "orders"
-    assert state["table_id"] == "orders"
-    assert controls["selector_panel"].layout.display == "none", state["message"]
-    assert controls["editor_shell"].layout.display == ""
-
-    controls["table_description"].value = "Unsaved edit"
-    assert state["dirty"] is True
-    assert controls["change_table"].description == "Exit"
-    assert controls["table_exit_row"].layout.justify_content == "flex-end"
-
+    controls["column_description"].value = "Keep my draft"
     controls["change_table"].click()
-    assert state["current"] is not None
-    assert state["dirty"] is True
-    assert controls["table_exit_confirm"].layout.display != "none"
-
+    assert controls["table_exit_confirm"].layout.display == ""
     controls["cancel_exit"].click()
-    assert controls["table_exit_confirm"].layout.display == "none"
-    assert state["current"] is not None
-    assert state["dirty"] is True
-
+    assert controls["column_description"].value == "Keep my draft"
     controls["change_table"].click()
     controls["confirm_exit_discard"].click()
     assert state["current"] is None
-    assert state["table_id"] is None
-    assert state["dirty"] is False
     assert controls["selector_panel"].layout.display == ""
-    assert controls["editor_shell"].layout.display == "none"
-    assert "Unsaved changes discarded" in state["message"]
 
 
 @pytest.mark.parametrize("versions, expected", [([], "new"), ([3, 2, 1], "3")])
-def test_contract_selector_defaults_to_latest_version_or_new_draft(
-    widget_runtime, monkeypatch, versions, expected
-):
-    """Tables without versions start a draft; versioned tables default to the latest."""
-    monkeypatch.setattr(
-        module.contracts,
-        "list_contract_governance_state",
-        lambda **_kwargs: {
-            "tables": [widget_runtime["catalogue"][0]],
-            "contracts": [
-                {**widget_runtime["contract"], "contract_version": version}
-                for version in versions
-            ],
-        },
-    )
-    state = module.widget_data_contract()
-    controls = state["_controls"]
-    table_option = next(
-        option for option in controls["table_search"].options if "sales.orders" in option
-    )
-    controls["table_search"].value = table_option
-
-    assert controls["contract"].value == expected
-    assert state["pending_contract_version"] == (None if expected == "new" else int(expected))
-    assert [value for _label, value in controls["contract"].options] == [
-        "", *map(str, versions), "new"
-    ]
-    assert controls["contract_search"].options[-1] == "New Draft"
+def test_contract_selector_defaults_to_latest_version_or_new_draft(widget_runtime, monkeypatch, versions, expected):
+    """Available versions follow the dataset; a version choice is explicit."""
+    monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **kw: {
+        "tables": [widget_runtime["catalogue"][0]], "contracts": [
+            {**widget_runtime["contract"], "contract_version": version} for version in versions]})
+    controls = module.widget_data_contract()["_controls"]
+    controls["workspace_select"].value = "dev"
+    controls["store_select"].value = "Silver"
+    assert controls["table"].value == ""
+    controls["table"].value = "orders"
+    assert controls["contract"].value == ""
+    assert controls["open"].disabled
+    assert [value for label, value in controls["contract"].options] == ["", *map(str, versions), "new"]
+    controls["contract"].value = expected
+    assert not controls["open"].disabled
 
 
 def test_initial_table_search_does_not_filter_by_selection_prompt(widget_runtime):
-    """An unselected table field leaves all registered table suggestions visible."""
-    widget_runtime["catalogue"][0].update(layer="Bronze", schema_name="demo")
-    state = module.widget_data_contract()
-    controls = state["_controls"]
-
-    assert controls["workspace_select"].value == ""
+    """Filtering lists matches without selecting or retaining the prompt."""
+    controls = module.widget_data_contract()["_controls"]
+    controls["workspace_select"].value = "dev"
+    controls["store_select"].value = "Silver"
+    picker = controls["entry_pickers"][2]
+    picker["trigger"].click()
+    picker["search"].value = "sales.orders"
+    assert len(picker["results"].children) == 1
     assert controls["table"].value == ""
-    assert controls["table_search"].value == ""
-    assert any("demo.orders" in option for option in controls["table_search"].options)
-    assert state["pending_table_id"] is None
-
-    table_option = next(
-        option for option in controls["table_search"].options if "demo.orders" in option
-    )
-    controls["table_search"].value = table_option
+    picker["results"].children[0].click()
     assert controls["table"].value == "orders"
-    assert state["pending_table_id"] == "orders"
+    assert picker["panel"].layout.display == "none"
 
 
 def test_configured_workspace_routes_authoring_to_its_metadata_mapping(widget_runtime):
@@ -595,7 +555,7 @@ def test_unregistered_workspace_uses_central_metadata_without_taking_ownership(
         lambda **_kwargs: (widget_runtime["config"], "governance-authoring", origin),
     )
     for row in widget_runtime["catalogue"]:
-        row["workspace_id"] = "engineering-prod"
+        row["asset_workspace_id"] = "engineering-prod"
     widget_runtime["contract"]["workspace_id"] = "engineering-prod"
     payload = json.loads(widget_runtime["contract"]["contract_payload_json"])
     payload["table"]["workspace_id"] = "engineering-prod"
@@ -609,6 +569,7 @@ def test_unregistered_workspace_uses_central_metadata_without_taking_ownership(
     assert widget_runtime["calls"]["list"][0]["active_workspace_id"] == "dev"
 
     controls["workspace_select"].value = "engineering-prod"
+    _choose_entry(controls)
     controls["open"].click()
     state["save_data_contract"](return_to_selector_after=False)
     state["freeze"]()
@@ -625,79 +586,121 @@ def test_unregistered_workspace_uses_central_metadata_without_taking_ownership(
 
 
 def test_data_contract_table_selector_fills_responsive_grid_cell(widget_runtime):
-    """The searchable Table ID control and its container own the full available width."""
-    state = widget_runtime["start"]()
-    controls = state["_controls"]
-    search = controls["table_search"]
-    selector = controls["selector_panel"].children[0]
-    style = controls["page"].children[0].value
+    """Rows allocate workspace/store equally and dataset/version at 70/30."""
+    controls = widget_runtime["start"]()["_controls"]
+    entry = controls["selector_panel"].children[0]
+    assert entry.children[0].layout.grid_template_columns == "repeat(2,minmax(0,1fr))"
+    assert entry.children[1].layout.grid_template_columns == "minmax(0,7fr) minmax(0,3fr)"
+    assert [field.children[0].value for row in entry.children for field in row.children] == [
+        "<b>Workspace</b>", "<b>Store</b>", "<b>Table / file</b>", "<b>Contract version</b>"]
+    assert "white-space:normal; overflow-wrap:anywhere" in controls["page"].children[0].value
 
-    assert search.layout.width == "100%"
-    assert search.layout.min_width == "0"
-    assert search.layout.max_width == "100%"
-    assert "fabricops-searchable-selector" in search._dom_classes
-    assert selector.layout.width == "100%"
-    assert selector.layout.min_width == "0"
-    assert selector.layout.max_width == "100%"
-    assert ".fabricops-searchable-selector .widget-combobox-container" in style
-    assert "grid-template-columns:minmax(0,1fr)" in style
+
+@pytest.mark.parametrize("path,kind", [("demo/orders.csv", "File"), ("demo/*.csv", "File selector")])
+def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, monkeypatch, path, kind):
+    """Files use configured item names and known workspace names without changing their identity."""
+    source = module.contracts.file_source_identity(
+        asset_workspace_id="dev", item_id="raw-item-id", relative_path=path, file_format="csv",
+    )
+    dataset = {**source, "asset_workspace_id": source["asset_workspace_id"], "store": "Bronze", "configuration_workspace_id": "dev", "columns": []}
+    monkeypatch.setattr(module.contracts, "contract_file_datasets", lambda *args, **kwargs: [dataset])
+    original_review = module.contracts.get_contract_review_state
+
+    def file_review(**kwargs):
+        loaded = original_review(**kwargs)
+        loaded["catalogue_rows"] = []
+        loaded["payload"] = {**json.loads(loaded["contract"]["contract_payload_json"]), "source": dict(source)}
+        return loaded
+
+    monkeypatch.setattr(module.contracts, "get_contract_review_state", file_review)
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **kw: {"latest_profile": None, "column_profiles": {}, "profile_contexts": {}, "lineage": []})
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["store_select"].value = "Bronze"
+    labels = {value: label for label, value in controls["table"].options}
+    assert labels[source["table_id"]] == path
+    assert "orders" not in labels
+    assert ("Development", "dev") in controls["workspace_select"].options
+    context = controls["table_context"].children[0].value
+    assert "Development" not in context and "Raw Lakehouse" in context and path in context
+    assert "File path" in context and "Full table name" not in context
+    assert "Unknown workspace" not in context and ">Unknown<" not in context
+    assert controls["top_nav"].options[0] == ("File", "Table")
+    assert ">File</h3>" in controls["right_pane"].children[0].value
+    assert "File definition" in _sidebar_text(controls["table_definition"])
+    assert "<b>File</b>" in module._manifest_html(state["current"]["payload"])
+    controls["top_nav"].value = "Data Quality"
+    assert "File tab" in _sidebar_text(controls["right_pane"])
+    controls["top_nav"].value = "Table"
+    sidebar = controls["left_pane"].children
+    assert "v1 · DRAFT" in sidebar[0].value
+    assert sidebar[2:4] == (controls["operation_progress"], controls["status"])
+    assert state["current"]["payload"]["source"] == source
+    assert state["dirty"] is False
+
+
+def test_workspace_selector_keeps_a_single_id_when_name_is_unavailable(widget_runtime):
+    """An unnamed workspace has one useful fallback instead of ID (ID)."""
+    for row in widget_runtime["catalogue"]:
+        row.pop("asset_workspace_name", None)
+    state = widget_runtime["start"]()
+    assert ("dev", "dev") in state["_controls"]["workspace_select"].options
+
+
+@pytest.mark.parametrize("status", ["draft", "frozen"])
+def test_editor_keeps_one_columns_heading_and_navigation_for_frozen_contracts(widget_runtime, status):
+    """Draft actions already navigate; frozen reviews retain a way back to datasets."""
+    widget_runtime["contract"]["status"] = status
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    assert controls["table_exit_row"].layout.display == ""
+    controls["top_nav"].value = "Columns"
+    assert controls["right_pane"].children[1] is controls["column_search"]
+    assert "Select a column to review its details and rules." not in _sidebar_text(controls["right_pane"])
+    if status == "frozen":
+        controls["change_table"].click()
+        assert state["current"] is None
+        assert controls["selector_panel"].layout.display == ""
+        assert widget_runtime["calls"]["draft"] == []
 
 
 def test_selector_refresh_is_atomic_after_observers_are_registered(widget_runtime, monkeypatch):
-    """Table and Workspace filtering clears stale selections in either direction."""
-    rows = [dict(widget_runtime["catalogue"][0]),
-            {**widget_runtime["catalogue"][0], "table_id": "inventory", "table_name": "inventory", "workspace_id": "other"},
-            {**widget_runtime["catalogue"][0], "workspace_id": "other"}]
-    monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **kw: {"tables": rows, "contracts": [widget_runtime["contract"]]})
+    """Changing workspace or store clears dependent selections atomically."""
+    rows = [dict(widget_runtime["catalogue"][0]), {**widget_runtime["catalogue"][0],
+            "asset_workspace_id": "other", "table_id": "inventory", "table_name": "inventory"}]
+    monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **kw: {
+        "tables": rows, "contracts": [widget_runtime["contract"]]})
     state = module.widget_data_contract()
     controls = state["_controls"]
-    assert controls["table"].value == controls["workspace_select"].value == ""
-    controls["workspace_select"].value = "dev"
-    assert [value for label, value in controls["table"].options] == ["", "orders"]
-    controls["table"].value = "orders"
-    assert [value for label, value in controls["workspace_select"].options] == ["", "dev", "other"]
-    assert controls["contract"].value == "1"
+    _choose_entry(controls)
+    assert not controls["open"].disabled
     controls["workspace_select"].value = "other"
-    assert controls["table"].value == "orders"
+    assert controls["store_select"].value == controls["table"].value == controls["contract"].value == ""
+    assert controls["table"].disabled and controls["contract"].disabled
+    controls["store_select"].value = "Silver"
+    assert [value for label, value in controls["table"].options] == ["", "inventory"]
     controls["table"].value = "inventory"
-    assert [value for label, value in controls["workspace_select"].options] == ["", "other"]
-    assert state["_selector_refreshing"] is False
-    assert controls["contract"].value == "new"
-    assert state["pending_contract_version"] is None
-    controls["table"].value = "orders"
-    assert controls["contract"].value == "1"
-    assert state["pending_contract_version"] == 1
+    assert controls["contract"].value == ""
+    controls["contract"].value = "new"
+    assert not controls["open"].disabled
+    controls["store_select"].value = ""
+    assert controls["table"].value == controls["contract"].value == ""
+    assert controls["open"].disabled
+    assert not state["_selector_refreshing"]
 
 
 def test_table_labels_show_object_then_full_table_name(widget_runtime, monkeypatch):
-    """Table choices show the Fabric object followed by the schema-qualified table name."""
-    rows = [
-        dict(widget_runtime["catalogue"][0]),
-        {
-            **widget_runtime["catalogue"][0],
-            "table_id": "audit-orders",
-            "store_type": "Warehouse",
-            "layer": "Gold",
-            "schema_name": "audit",
-        },
-    ]
-    monkeypatch.setattr(
-        module.contracts,
-        "list_contract_governance_state",
-        lambda **_kwargs: {"tables": rows, "contracts": [widget_runtime["contract"]]},
-    )
-
-    state = module.widget_data_contract()
-    controls = state["_controls"]
-    labels_by_value = {value: label for label, value in controls["table"].options}
-
-    assert labels_by_value["orders"] == "Curated Lakehouse · sales.orders — Table · Development"
-    assert labels_by_value["audit-orders"] == "Serving Warehouse · audit.orders — Table · Development"
-    assert "Development" in labels_by_value["orders"]
-    assert "Lakehouse:" not in labels_by_value["orders"]
-    assert "Warehouse:" not in labels_by_value["audit-orders"]
-    controls["table"].value = "audit-orders"
-    assert state["pending_table_id"] == "audit-orders"
+    """Store names are separate; dataset labels contain schema and table only."""
+    rows = [dict(widget_runtime["catalogue"][0]), {**widget_runtime["catalogue"][0],
+            "table_id": "audit-orders", "layer": "Gold", "schema_name": "audit"}]
+    monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **kw: {
+        "tables": rows, "contracts": [widget_runtime["contract"]]})
+    controls = module.widget_data_contract()["_controls"]
+    controls["workspace_select"].value = "dev"
+    controls["store_select"].value = "Silver"
+    assert dict((value, label) for label, value in controls["table"].options)["orders"] == "sales.orders"
+    controls["store_select"].value = "Gold"
+    assert dict((value, label) for label, value in controls["table"].options)["audit-orders"] == "audit.orders"
 
 
 @pytest.mark.parametrize('strategy', ['append_all', 'append_new_only'])
@@ -777,7 +780,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert tuple(controls["top_nav"].options) == (
         "Table", "Columns", "Data Quality", "Review", "AI Usage"
     )
-    assert controls["workspace"].layout.grid_template_columns == "480px minmax(0, 1fr)"
+    assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr)"
     assert len(controls["workspace"].children) == 2
     assert controls["table"].value == "orders"
     assert controls["contract"].value == "1"
@@ -963,43 +966,44 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     controls["top_nav"].value = "Table"
     table_context = controls["left_pane"].children[0]
     assert "v1 · DRAFT" in table_context.value
-    assert controls["table_context"].selected_index == 0
+    assert controls["table_context"].selected_index is None
+    controls["table_context"].selected_index = 0
     table_summary = controls["table_context"].children[0].value
     assert "Latest profile" in table_summary
-    assert "Workspace" in table_summary
-    assert "Development" in table_summary
+    assert "Workspace</div>" not in table_summary
+    assert "Development" not in table_summary
     assert "Fabric object" in table_summary
     assert "Curated Lakehouse" in table_summary
-    assert "Full table name" in table_summary
-    assert "sales.orders" in table_summary
+    assert "Full table name" not in table_summary
+    assert "sales.orders" not in table_summary
     assert "Unknown workspace · 02_pipeline" in table_summary
     assert "voyce@example.com · 26 Sep 2026, 02:45" in table_summary
     assert "Pipeline usage" in table_summary
     assert "1 write · 2 reads" in table_summary
-    assert "View lineage" in table_summary
-    assert "class='fabricops-lineage-table'" in table_summary
-    assert "<colgroup><col style='width:31%'><col style='width:25%'>" in table_summary
-    assert "<col style='width:12%'><col style='width:32%'></colgroup>" in table_summary
+    assert "View pipeline participation" in table_summary
+    assert "class='fabricops-participation-table'" in table_summary
     assert "title='04_reporting'" in table_summary
     assert ">Workspace</th>" in table_summary
     assert ">Pipeline</th>" in table_summary
     assert ">Role</th>" in table_summary
+    assert ">Run ID</th>" in table_summary
+    assert ">Operation status</th>" in table_summary
+    assert ">Publication status</th>" in table_summary
     assert ">Write</td>" in table_summary
     assert ">Read</td>" in table_summary
     assert "04_reporting" in table_summary
-    assert "Classification" in table_summary
-    assert "Grain" in table_summary
-    assert "Row Key" in table_summary
+    assert "Classification" not in table_summary
+    assert "Grain" not in table_summary
+    assert "Row Key" not in table_summary
     assert "Scheduled refresh" not in table_summary
     assert controls["guardrail_disclosure"].selected_index is None
     assert controls["guardrail_disclosure"] not in controls["left_pane"].children
     page_style = controls["page"].children[0].value
-    assert ".fabricops-lineage-table th" in page_style
+    assert ".fabricops-participation-table th" in page_style
     assert "white-space:nowrap; overflow-wrap:normal" in page_style
-    assert table_summary.index("Grain") < table_summary.index("Classification")
-    assert table_summary.index("Classification") < table_summary.index("Row Key")
+    assert "Expected source refresh" not in table_summary
     assert "table_save" not in controls
-    table_sections = controls["right_pane"].children[1:]
+    table_sections = controls["right_pane"].children[1:-1]
     assert [section.children[0].value for section in table_sections[:4]] == [
         "<div class=\"fabricops-section-heading\">Grain &amp; Row Key</div>",
         "<div class=\"fabricops-section-heading\">Table definition</div>",
@@ -1121,7 +1125,7 @@ def test_column_selection_reuses_one_editor_and_refreshes_profile(widget_runtime
     assert widget_runtime["calls"]["profiles"][-1] == "col-249"
     assert controls["column_select"] in controls["right_pane"].children
     assert controls["column_search"] in controls["right_pane"].children
-    assert controls["workspace"].layout.grid_template_columns == "480px minmax(0, 1fr)"
+    assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr)"
     assert controls["column_select"].layout.height == "180px"
     assert controls["column_select"].layout.min_height == "130px"
     assert controls["column_select"].layout.flex == "0 0 auto"
@@ -1291,7 +1295,7 @@ def test_sidebar_saves_and_clears_from_every_section(
     controls["top_nav"].value = tab
     controls["table_description"].value = f"Saved from {tab}"
 
-    assert controls["sidebar_actions"] in controls["left_pane"].children
+    assert controls["sidebar_actions"] in controls["left_pane"].children[1].children
     assert controls["sidebar_actions"].layout.display == ""
     controls["save_data_contract"].click()
 
@@ -1418,6 +1422,7 @@ def _enable_ai(widget_runtime, monkeypatch, *, captures=None):
             "action": "Block",
             "parameters": {"preserve_start": 1, "preserve_end": 0, "mask_character": "*"} if column["data_type"] == "string" else {},
             "is_active": True,
+            "output_classification": "Restricted", "classification_reason": "Residual sensitivity requires internal access.",
         }]
 
     monkeypatch.setattr(module, "suggest_enrichment", enrichment)
@@ -1430,6 +1435,7 @@ def _generate_initial_suggestions(widget_runtime, monkeypatch, *, captures=None)
     """Open manually, then explicitly request initial suggestions for AI review tests."""
     captures = _enable_ai(widget_runtime, monkeypatch, captures=captures)
     state = widget_runtime["start"]()
+    _choose_entry(state["_controls"])
     state["_controls"]["open"].click()
     controls = state["_controls"]
     controls["suggest_grain"].click()
@@ -1455,6 +1461,7 @@ def test_opening_and_navigation_never_generate_ai(widget_runtime, monkeypatch):
     controls = state["_controls"]
     assert controls["open"].description == "Open Data Contract"
     assert "open_with_ai" not in controls and "open_without_ai" not in controls
+    _choose_entry(controls)
     controls["open"].click()
     assert state["current"] is not None
     assert widget_runtime["calls"]["profiles"] == []
@@ -1482,19 +1489,20 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
     assert controls["page"].layout.overflow == "visible"
     assert "height:500px" not in style
     assert "max-height:500px" not in style
-    assert "max-height:max(680px, calc(100vh - 200px))" in style
-    assert "position:sticky; top:0; align-self:start" in style
+    assert "height:clamp(240px, calc(100vh - 440px), 560px)" in style
+    assert "position:relative; align-self:stretch" in style
     assert "flex-direction:row; flex-wrap:wrap" in style
     assert "align-items:stretch !important; overflow:hidden !important" not in module._CONTRACT_STYLE
     assert "overflow-y:auto !important" not in module._CONTRACT_STYLE
     assert "fabricops-contract-nav-row" in controls["contract_nav_row"]._dom_classes
     controls["top_nav"].value = "Data Quality"
-    for panel in (controls["current_dq_rules_section"], controls["right_pane"].children[-1]):
+    for panel in (controls["current_dq_rules_section"], controls["right_pane"].children[-2]):
         assert panel.layout.height == "auto"
         assert panel.layout.overflow == "visible"
-    assert getattr(controls["business_saved"].layout, "height", None) is None
+    assert controls["business_saved"].rows <= 5
     assert controls["rule_workspace_body"].children == (controls["new_rule_editor"],)
-    assert controls["ai_rule_editor"] in controls["new_rule_editor"].children
+    controls["creation_method"].value = "AI-assisted"
+    assert controls["creation_body"].children == (controls["ai_rule_editor"],)
     assert controls["resolve_business_rule"] in controls["ai_rule_editor"].children[-1].children
     controls["business_saved"].value = "advanced"
     assert controls["rule_workspace_body"].children[0].children[0] is not None
@@ -1514,10 +1522,8 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
 
 def test_technical_columns_are_excluded_from_contract_authoring(widget_runtime):
     """FabricOps-managed underscore columns stay out of governance authoring controls."""
-    widget_runtime["catalogue"].append({
-        "table_id": "orders", "workspace_id": "dev", "metadata_level": "column",
-        "column_id": "col-technical", "column_name": "_row_hash",
-        "data_type": "string", "is_active": True,
+    widget_runtime["catalogue"][0]["columns_json"].append({
+        "column_id": "col-technical", "column_name": "_row_hash", "data_type": "string",
     })
     _capture_fixture_columns(widget_runtime)
 
@@ -1532,7 +1538,7 @@ def test_technical_columns_are_excluded_from_contract_authoring(widget_runtime):
     ]
 
     controls["top_nav"].value = "Review"
-    exact_json = controls["right_pane"].children[-1].children[1]
+    exact_json = controls["right_pane"].children[-2].children[1]
     assert exact_json.layout.height == "auto"
     assert exact_json.layout.overflow == "visible"
 
@@ -1634,9 +1640,10 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     controls = state["_controls"]
 
     controls["row_key_columns"].value = ("column_1",)
-    table_summary = controls["table_context"].children[0].value
-    assert "Row Key" in table_summary
-    assert "column_1" in table_summary
+    assert tuple(controls["row_key_columns"].value) == ("column_1",)
+    table_context = controls["table_context"].children[0].value
+    assert "Row Key" not in table_context
+    assert "column_1" not in table_context
 
     controls["accept_grain"].click()
     assert controls["accept_grain"].description == "Use grain wording"
@@ -1644,9 +1651,9 @@ def test_grain_ai_updates_wording_without_overwriting_manual_row_key(widget_runt
     assert tuple(controls["row_key_columns"].value) == ("column_1",)
     assert controls["grain_enabled"].value is False
     assert "Turn on Enforce Grain" in state["message"]
-    table_summary = controls["table_context"].children[0].value
-    assert "One row represents a single order line." in table_summary
-    assert "column_1" in table_summary
+    table_context = controls["table_context"].children[0].value
+    assert "One row represents a single order line." not in table_context
+    assert "column_1" not in table_context
 
 
 def test_managed_grain_is_visible_in_dq_without_duplicate_authoring(widget_runtime):
@@ -1756,8 +1763,59 @@ def test_ai_requests_report_progress_only_after_explicit_click(widget_runtime, m
     assert any(t["operation"] == "Opening Data Contract…" for t in state["_operation_timings"])
 
 
+@pytest.mark.parametrize("assessment", ["direct", "none"])
+@pytest.mark.parametrize("use_real_widgets", [False, True])
+def test_custom_classification_is_suggested_reviewed_applied_and_saved(widget_runtime, monkeypatch, assessment, use_real_widgets):
+    """AI uses policy definitions; classification stays advisory until Apply and saves as Enrichment."""
+    real_suggest = module.suggest_sensitive_data
+    _enable_ai(widget_runtime, monkeypatch)
+    if use_real_widgets:
+        widgets = pytest.importorskip("ipywidgets")
+        monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: widgets)
+    levels = {"Open": "External sharing", "Team": "Only <approved> internal users", "Secret": "Severely restricted"}
+    widget_runtime["config"].governance_config.classification_levels = levels
+    contexts = []
+
+    def suggest(context, **kwargs):
+        contexts.append(context)
+        return real_suggest(context, prompt=kwargs["prompt"], invoke=lambda _: json.dumps([{
+            "column": "column_0", "pii_type": assessment, "reason": "Reviewed identifying potential.",
+            "treatment": "tokenize" if assessment == "direct" else None, "action": "Block" if assessment == "direct" else None, "parameters": {},
+            "output_classification": "Team", "classification_reason": "Tokenized identifiers remain internal business data.",
+        }]))
+
+    monkeypatch.setattr(module, "suggest_sensitive_data", suggest)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["column_classification"].value = "Secret"
+    controls["rerun_sensitive"].click()
+    assert contexts[-1]["classification_levels"] == levels
+    assert controls["column_classification"].value == "Secret"
+    assert "Tokenized identifiers remain internal business data." in controls["sensitive_ai"].value
+    assert widget_runtime["calls"]["draft"] == []
+    controls["accept_sensitive"].click()
+    assert controls["column_classification"].value == "Team"
+    assert controls["table_classification"].value == "Team"
+    assert "Only &lt;approved&gt; internal users" in controls["classification_context"].value
+    assert widget_runtime["calls"]["draft"] == []
+    controls["save_data_contract"].click()
+    saved = widget_runtime["calls"]["draft"][-1]
+    assert any(row["column_id"] == "col-0" and row["enrichment_type"] == "Classification" and row["value"] == "Team"
+               for row in saved["enrichment"]["columns"])
+
+
+def test_enabling_sensitive_treatment_does_not_automatically_lower_classification(widget_runtime):
+    """Classification requires a reviewed policy decision instead of a one-rank downgrade."""
+    controls = widget_runtime["open"]()["_controls"]
+    controls["sensitive_enabled"].value = False
+    controls["column_classification"].value = "Highly Sensitive"
+    controls["pii_type"].value = "direct"
+    controls["sensitive_enabled"].value = True
+    assert controls["column_classification"].value == "Highly Sensitive"
+
+
 def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeypatch):
-    """Description and Sensitive Data acceptance stay isolated from manual Classification."""
+    """Sensitive Data acceptance applies its proposed classification and preserves unrelated fields."""
     state, _captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
     controls = state["_controls"]
     controls["required"].value = False
@@ -1776,7 +1834,7 @@ def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeyp
     assert controls["sensitive_treatment"].value == "tokenize"
     assert "sensitive_block" not in controls
     assert controls["column_description"].value == description
-    assert controls["column_classification"].value == "Confidential"
+    assert controls["column_classification"].value == "Restricted"
     assert controls["required"].value is False
     assert controls["dq_whitelist_values"].value == "keep-me"
     assert widget_runtime["calls"]["guardrails"] == []
@@ -1989,6 +2047,7 @@ def test_unavailable_ai_is_discovered_on_demand_and_never_blocks_opening(widget_
     assert not controls["open"].disabled
     assert controls["rerun_column_description"].disabled
     controls["change_table"].click()
+    _choose_entry(controls)
     controls["open"].click()
     assert state["current"] is not None
     assert not controls["column_description"].disabled
@@ -2103,6 +2162,7 @@ def test_ai_failure_is_non_blocking(widget_runtime, monkeypatch):
     )
     state = widget_runtime["start"]()
     assert all(not errors for errors in state["_ai_errors"].values())
+    _choose_entry(state["_controls"])
     state["_controls"]["open"].click()
     controls = state["_controls"]
     assert controls["column_description"].disabled is False
@@ -2290,7 +2350,7 @@ def test_review_sections_render_column_contract_table_with_profile_and_governanc
     assert set(sections) == {"Review"}
     review = sections["Review"]
     assert review.index("<b>Column definitions</b>") < review.index("<b>Guardrails</b>")
-    assert "<b>Column definitions</b> · 1 columns" in review
+    assert "<b>Column definitions</b> · 1 authoring columns" in review
     assert "<b>Guardrails</b> · 7 configured" in review
     assert ">Column</th>" in review
     assert ">Examples</th>" in review
@@ -2416,7 +2476,7 @@ def test_data_quality_tab_supports_manual_authoring_without_ai(widget_runtime):
     assert controls["current_dq_rules_section"] in controls["right_pane"].children
     assert controls["business_saved"].value == "__new_rule__"
     assert controls["rule_workspace_body"].children == (controls["new_rule_editor"],)
-    assert controls["new_rule_editor"].children == (controls["manual_rule_editor"],)
+    assert controls["creation_body"].children == (controls["manual_rule_editor"],)
     assert controls["add_manual_rule"].disabled is False
 
 
@@ -2988,6 +3048,7 @@ def test_clearing_required_removes_id_and_name_through_save_freeze_runtime(widge
     payload = widget_runtime["calls"]["draft"][-1]
     saved = next(row for row in payload["guardrails"] if row["guardrail_type"] == "schema")
     assert saved["rule_parameters"] == {"required_columns": ["col-1"]}
+    _choose_entry(state["_controls"])
     state["_controls"]["open"].click()
     controls = state["_controls"]
     controls["column_select"].value = "col-0"
@@ -3090,22 +3151,23 @@ def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
     assert len(column_definition.children) == 2
 
 
-def test_table_classification_updates_left_summary_immediately(widget_runtime):
-    """Table classification feedback follows the staged editor value without a save."""
+def test_table_classification_stays_in_the_authoring_control_without_context_duplication(widget_runtime):
+    """Classification remains editable without repeating it in the context summary."""
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    summary = controls["table_context"].children[0]
+    context = controls["table_context"].children[0]
 
-    assert "Confidential" in summary.value
+    assert controls["table_classification"].value == "Confidential"
+    assert "Confidential" not in context.value
     controls["table_classification"].value = "Restricted"
-    assert "Restricted" in summary.value
-    assert "Confidential</div>" not in summary.value
+    assert controls["table_classification"].value == "Restricted"
+    assert "Restricted" not in context.value
     assert widget_runtime["calls"]["enrichment"] == []
 
 
 def test_datatype_drift_requires_explicit_contract_choice(widget_runtime):
     """Observed datatype drift stays red and does not silently replace the contract type."""
-    widget_runtime["catalogue"][1]["data_type"] = "string"
+    widget_runtime["catalogue"][0]["columns_json"][0]["data_type"] = "string"
     state = widget_runtime["open"]()
     controls = state["_controls"]
 
@@ -3224,7 +3286,9 @@ def test_file_freshness_automatically_uses_metadata_with_matching_editor(widget_
     def file_review(**kwargs):
         loaded = original_review(**kwargs)
         loaded["payload"] = {
-            "source": {"source_type": "file"},
+            "source": module.contracts.file_source_identity(
+                asset_workspace_id="dev", item_id="raw", relative_path="demo/orders.csv", file_format="csv",
+            ),
             "table": {"table_id": "orders"},
         }
         return loaded
@@ -3253,7 +3317,7 @@ def test_file_freshness_automatically_uses_metadata_with_matching_editor(widget_
 def test_warehouse_freshness_is_metadata_only_without_temporal_columns(widget_runtime):
     """Warehouse authoring never offers column-based freshness or requires a date field."""
     widget_runtime["catalogue"][0]["store_type"] = "Warehouse"
-    for column in widget_runtime["catalogue"][1:]:
+    for column in widget_runtime["catalogue"][0]["columns_json"]:
         column["data_type"] = "string"
     _capture_fixture_columns(widget_runtime)
     state = widget_runtime["open"]()
@@ -3427,7 +3491,7 @@ def test_sidebar_state_is_replaced_when_another_table_is_opened(widget_runtime, 
             return original_review(**kwargs)
         return {"contract": other_contract, "contract_id": "contract-inventory", "contract_version": 1,
                 "table_id": "inventory", "workspace_id": "dev", "catalogue_rows": other_catalogue,
-                "available_columns": other_catalogue[1:], "enrichment": [], "guardrails": []}
+                "available_columns": other_catalogue[0]["columns_json"], "enrichment": [], "guardrails": []}
     monkeypatch.setattr(module.contracts, "get_contract_review_state", review)
     monkeypatch.setattr(module.contracts, "list_contract_governance_state", lambda **_kw: {
         "tables": [widget_runtime["catalogue"][0], other_catalogue[0]],
@@ -3442,6 +3506,7 @@ def test_sidebar_state_is_replaced_when_another_table_is_opened(widget_runtime, 
     controls["change_table"].click()
     controls["confirm_exit_discard"].click()
     controls["table"].value = "inventory"
+    _choose_entry(controls)
     controls["open"].click()
     controls = state["_controls"]
     assert state["table_id"] == "inventory", state["message"]
@@ -3810,6 +3875,7 @@ def test_invalid_ai_acceptance_leaves_all_authored_fields_unchanged(widget_runti
         column = context['columns'][0]
         return [{'column_name': column['column_name'], 'column_id': column['column_id'],
             'pii_type': 'indirect', 'pii_label': 'Indirect PII', 'reason': 'Coarse detail',
+            'output_classification': 'Restricted', 'classification_reason': 'Internal output.',
             'treatment': 'bucket', 'action': 'Block', 'parameters': {'bins': [0, 10], 'labels': ['low', 'high']}, 'is_active': True}]
     monkeypatch.setattr(module, 'suggest_sensitive_data', bucket)
     controls['rerun_sensitive'].click()
@@ -3968,6 +4034,7 @@ def test_ai_information_is_contained_in_its_own_editor_tab(widget_runtime):
 def test_invalid_widget_ai_override_preserves_manual_editor(widget_runtime, override):
     """A bad AI override disables assistance and preserves the manual editor."""
     state = module.widget_data_contract(table_id="orders", **override)
+    _choose_entry(state["_controls"])
     state["_controls"]["open"].click()
     assert state["current"] is not None
     assert state["_controls"]["rerun_table_description"].disabled
@@ -3989,7 +4056,7 @@ def test_all_five_authoring_callbacks_reach_real_helpers_with_one_configuration(
         if operation == "grain_key":
             return '```json\n{"grain":"One order", "rationale":"Governed context"}\n```'
         if operation == "sensitive_data":
-            return '[{"column":"column_0", "pii_type":"none", "reason":"No personal meaning", "treatment":null, "action":null, "parameters":{}}]'
+            return '[{"column":"column_0", "pii_type":"none", "reason":"No personal meaning", "treatment":null, "action":null, "parameters":{}, "output_classification":"Restricted", "classification_reason":"Internal business data"}]'
         if operation == "business_rule_ai":
             return '[{"requirement":"Positive values", "rule_type":"range", "columns":["column_0"], "parameters":{"minimum":0,"minimum_inclusive":true,"maximum_inclusive":true}, "rationale":"Requested minimum"}]'
         return "Suggested description"
@@ -4000,6 +4067,7 @@ def test_all_five_authoring_callbacks_reach_real_helpers_with_one_configuration(
         ai_model="gpt-5.1", ai_reasoning_effort="high", ai_verbosity="medium",
     )
     assert calls == []
+    _choose_entry(state["_controls"])
     state["_controls"]["open"].click()
     controls = state["_controls"]
     assert calls == []
@@ -4079,12 +4147,12 @@ def test_ai_diagnostics_are_scoped_to_instance_and_retry_operation(widget_runtim
     ("unparseable", "unparseable"),
 ])
 def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, value, expected):
-    """Profile provenance and lineage use the same configured audit zone."""
+    """Profile provenance and participation use the same configured audit zone."""
     widget_runtime["config"].audit_timezone = "Asia/Singapore"
     module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
-    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **_kwargs: {
         "latest_profile": {"committed_at": value},
-        "lineage": [{"last_seen": value}],
+        "participation": [{"last_seen": value}],
     })
     controls = widget_runtime["open"]()["_controls"]
     controls["table_context"].selected_index = 0
@@ -4093,19 +4161,20 @@ def test_runtime_timestamps_use_audit_timezone(widget_runtime, monkeypatch, valu
     assert f"title='{expected}'>{expected}</td>" in summary
 
 
-def test_open_loads_profile_and_lineage_once_for_expanded_context(widget_runtime, monkeypatch):
+def test_open_loads_profile_and_participation_once_for_expanded_context(widget_runtime, monkeypatch):
     """Open context by default and reuse its metadata on subsequent expansions."""
     reads = []
-    original = module.contracts.get_table_runtime_context
+    original = module.contracts.get_asset_runtime_context
 
     def load_context(**kwargs):
         reads.append(kwargs)
         return original(**kwargs)
 
-    monkeypatch.setattr(module.contracts, "get_table_runtime_context", load_context)
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", load_context)
     controls = widget_runtime["open"]()["_controls"]
-    assert len(reads) == 1
-    assert controls["table_context"].selected_index == 0
+    assert len(reads) == 0
+    assert controls["table_context"].selected_index is None
+    controls["table_context"].selected_index = 0
     assert "Pipeline usage" in controls["table_context"].children[0].value
     controls["table_context"].selected_index = None
     controls["table_context"].selected_index = 0
@@ -4120,7 +4189,7 @@ def test_wide_table_navigation_reuses_bulk_profiles_without_ai(widget_runtime, m
     profiles = {f"col-{index}": {"kind": "profile", "profile": {"row_count": 10},
                 "values": [{"value": f"sample-{index}", "count": 1, "percent": 10}]}
                 for index in range(59)}
-    monkeypatch.setattr(module.contracts, "get_table_runtime_context", lambda **_kwargs: {
+    monkeypatch.setattr(module.contracts, "get_asset_runtime_context", lambda **_kwargs: {
         "profile_contexts": profiles,
     })
     state, captures = _generate_initial_suggestions(widget_runtime, monkeypatch)
@@ -4180,7 +4249,7 @@ def test_ai_progress_precedes_work_and_recovers_after_failure(widget_runtime, mo
     assert not controls["column_select"].disabled
     assert not controls["top_nav"].disabled
     assert controls["accept_column_description"].disabled
-    assert "Ready." in controls["operation_progress"].value
+    assert controls["operation_progress"].value == ""
     assert state["_operation_timings"][-1]["seconds"] >= 0
 
 
@@ -4234,6 +4303,7 @@ def test_reopening_releases_old_editor_models(widget_runtime):
     for _ in range(4):
         previous = controls["column_description"]
         controls["change_table"].click()
+        _choose_entry(controls)
         controls["open"].click()
         assert previous.closed
         assert previous.layout.closed
@@ -4305,7 +4375,7 @@ def test_column_search_avoids_transient_selection_and_preserves_edits(monkeypatc
 
 def test_datatype_change_keeps_profile_visible_without_new_reads(widget_runtime):
     """Rehydrating the active Column editor must not leave the profile placeholder behind."""
-    widget_runtime["catalogue"][1]["data_type"] = "string"
+    widget_runtime["catalogue"][0]["columns_json"][0]["data_type"] = "string"
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["top_nav"].value = "Columns"
@@ -4332,7 +4402,7 @@ def test_profile_cache_keeps_workspace_results_separate(widget_runtime, monkeypa
     original = module.contracts.list_contract_governance_state
     def list_state(**kwargs):
         result = original(**kwargs)
-        result["tables"] = [*result["tables"], {**result["tables"][0], "workspace_id": "prod"}]
+        result["tables"] = [*result["tables"], {**result["tables"][0], "asset_workspace_id": "prod"}]
         return result
     calls = []
     def profile_context(*, active_workspace_id, **_kwargs):
@@ -4411,7 +4481,7 @@ def test_empty_column_search_hides_editor_and_disables_ai(widget_runtime, monkey
     before = {key: len(value) for key, value in captures.items()}
     controls["column_search"].value = "no-such-column"
     assert controls["column_select"].value is None
-    assert controls["right_pane"].children[-1] is controls["empty_column"]
+    assert controls["right_pane"].children[-2] is controls["empty_column"]
     assert controls["column_select"] in controls["right_pane"].children
     for key in ("rerun_column_description", "rerun_sensitive", "accept_column_description", "accept_sensitive"):
         assert controls[key].disabled
@@ -4420,7 +4490,7 @@ def test_empty_column_search_hides_editor_and_disables_ai(widget_runtime, monkey
     assert "" not in next(iter(state["_ai_suggestions"].values()))["columns"]
     controls["top_nav"].value = "Table"
     controls["top_nav"].value = "Columns"
-    assert controls["right_pane"].children[-1] is controls["empty_column"]
+    assert controls["right_pane"].children[-2] is controls["empty_column"]
     assert controls["column_select"] in controls["right_pane"].children
     controls["column_search"].value = ""
     assert controls["column_select"].value == "col-0"
@@ -4601,7 +4671,7 @@ def test_sampled_grain_discovery_is_labelled_and_never_preselects_table_key(widg
 
 def test_lakehouse_freshness_automatically_uses_delta_history(widget_runtime):
     """Lakehouse tables use existing Delta history without requiring temporal columns."""
-    for column in widget_runtime["catalogue"][1:]:
+    for column in widget_runtime["catalogue"][0]["columns_json"]:
         column["data_type"] = "string"
     _capture_fixture_columns(widget_runtime)
     state = widget_runtime["open"]()
@@ -4619,3 +4689,102 @@ def test_lakehouse_freshness_automatically_uses_delta_history(widget_runtime):
     )
     assert module._parameters(saved)["evidence_method"] == "metadata"
     assert "freshness_column" not in module._parameters(saved)
+
+
+def test_file_runtime_profiles_are_reused_by_column_name(widget_runtime, monkeypatch):
+    """File profiles remain Source ID records while the editor uses authored column tokens."""
+    from unittest.mock import Mock
+    from fabricops_kit.config.shared import build_column_id
+    source = module.contracts.file_source_identity(
+        asset_workspace_id='dev', item_id='raw-item-id', relative_path='orders.csv', file_format='csv')
+    dataset = {**source, 'asset_workspace_id': source['asset_workspace_id'], 'store': 'Bronze', 'configuration_workspace_id': 'dev', 'columns': []}
+    monkeypatch.setattr(module.contracts, 'contract_file_datasets', lambda *a, **kw: [dataset])
+    original = module.contracts.get_contract_review_state
+    def file_review(**kwargs):
+        loaded = original(**kwargs)
+        loaded['catalogue_rows'] = []
+        loaded['payload'] = {**json.loads(loaded['contract']['contract_payload_json']), 'source': source}
+        return loaded
+    monkeypatch.setattr(module.contracts, 'get_contract_review_state', file_review)
+    profile = {'kind': 'profile', 'profile': {'row_count': 42, 'table_id': source['table_id'],
+                                           'column_id': build_column_id(source['table_id'], 'column_0')}}
+    reader = Mock(return_value={'latest_profile': None, 'column_profiles': {},
+        'profile_contexts': {build_column_id(source['table_id'], 'column_0'): profile}, 'lineage': [], 'reader_count': 1, 'writer_count': 0})
+    monkeypatch.setattr(module.contracts, 'get_asset_runtime_context', reader)
+    state = widget_runtime['open']()
+    state['_controls']['table_context'].selected_index = 0
+    assert reader.call_args.kwargs['table_id'] == source['table_id']
+    assert 'source_id' not in reader.call_args.kwargs
+    assert state['load_profile_context']('col-0') == profile
+
+
+def test_inline_picker_paginates_and_filtering_preserves_selection():
+    """Filtering and paging long names never change the canonical value until chosen."""
+    import ipywidgets as widgets
+    picker = module.shared.render_inline_selector(widgets=widgets, label="Dataset", placeholder="Select dataset")
+    picker["selector"].refresh_rows([
+        {"value": str(index), "label": f"schema.dataset_{index:02d}_with_a_long_name"} for index in range(13)
+    ])
+    picker["trigger"].click()
+    assert len(picker["results"].children) == 5
+    picker["panel"].children[-1].children[-1].click()
+    assert "dataset_05" in picker["results"].children[0].description
+    picker["results"].children[0].click()
+    assert picker["selector"].value == "5"
+    picker["trigger"].click()
+    picker["search"].value = "dataset_12"
+    assert picker["selector"].value == "5"
+    assert len(picker["results"].children) == 1
+    picker["results"].children[0].click()
+    assert picker["selector"].value == "12"
+    picker["selector"].disabled = True
+    assert picker["trigger"].disabled
+    assert picker["panel"].layout.display == "none"
+
+
+def test_rule_creation_modes_retain_unsaved_manual_input(widget_runtime, monkeypatch):
+    """Switching authoring methods changes visibility without rebuilding controls."""
+    _enable_ai(widget_runtime, monkeypatch)
+    controls = widget_runtime["open"]()["_controls"]
+    controls["manual_pattern"].value = "^keep_this$"
+    controls["creation_method"].value = "AI-assisted"
+    assert controls["creation_body"].children == (controls["ai_rule_editor"],)
+    controls["creation_method"].value = "Manual"
+    assert controls["creation_body"].children == (controls["manual_rule_editor"],)
+    assert controls["manual_pattern"].value == "^keep_this$"
+
+
+@pytest.mark.parametrize("real_widgets", [False, True])
+def test_rule_filter_preserves_selected_rule_and_pending_parameters(widget_runtime, monkeypatch, real_widgets):
+    """Searching the collection does not rehydrate or erase the active rule editor."""
+    if real_widgets:
+        import ipywidgets as widgets
+        monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: widgets)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    controls["top_nav"].value = "Data Quality"
+    selected = controls["business_saved"].options[2][1]
+    controls["business_saved"].value = selected
+    controls["business_tolerance"].value = "3.5"
+    controls["rule_search"].value = "no other matching rules"
+    assert controls["business_saved"].value == selected
+    assert controls["business_tolerance"].value == "3.5"
+    assert len(controls["business_saved"].options) == 2
+    controls["top_nav"].value = "Table"
+    controls["top_nav"].value = "Data Quality"
+    assert controls["business_saved"].value == selected
+    assert controls["business_tolerance"].value == "3.5"
+    assert widget_runtime["calls"]["draft"] == []
+
+
+def test_constructor_hints_are_consumed_before_later_upstream_changes(widget_runtime):
+    """Constructor defaults cannot resurrect a cleared dataset or contract version."""
+    controls = widget_runtime["start"]()["_controls"]
+    controls["workspace_select"].value = "dev"
+    controls["store_select"].value = "Silver"
+    assert controls["table"].value == "orders"
+    assert controls["contract"].value == "1"
+    controls["store_select"].value = ""
+    controls["store_select"].value = "Silver"
+    assert controls["table"].value == controls["contract"].value == ""
+    assert controls["open"].disabled

@@ -5,6 +5,8 @@ from __future__ import annotations
 import importlib
 from pathlib import Path
 
+import pytest
+
 
 def test_scan_workspace_access_is_exposed_from_access_scanner_package():
     """Expose the workspace scanner from the access_scanner package."""
@@ -151,6 +153,8 @@ def test_shared_access_persistence_always_appends_to_metadata(monkeypatch):
         lambda df, table, **kwargs: writes.append((df, table, kwargs)),
     )
 
+    validated = []
+    monkeypatch.setattr(shared, "_require_catalogue_assets", lambda df, **kwargs: validated.append((df, kwargs)))
     frame = object()
     shared.persist_access_rows(
         frame,
@@ -160,12 +164,38 @@ def test_shared_access_persistence_always_appends_to_metadata(monkeypatch):
         persist=True,
     )
 
+    assert validated[0][0] is frame
     assert len(writes) == 1
     assert writes[0][0] is frame
     assert writes[0][1] == "METADATA_DATA_ACCESS"
     assert writes[0][2]["store"] == "Metadata"
     assert writes[0][2]["schema"] == "engineering"
     assert writes[0][2]["mode"] == "append"
+
+
+@pytest.mark.parametrize("parent_count", [0, 1, 2])
+def test_access_append_requires_one_physical_catalogue_parent(monkeypatch, spark_session, parent_count):
+    """Reject missing or duplicate Catalogue parents before appending observations."""
+    shared = importlib.import_module("fabricops_kit.access_scanner.shared")
+    reader = importlib.import_module("fabricops_kit.io.read_lakehouse_table")
+    fields = "asset_workspace_id string, table_id string, asset_type string"
+    reference = ("physical", "orders", "TABLE")
+    access = spark_session.createDataFrame([reference], fields)
+    parents = spark_session.createDataFrame(
+        [("other", "orders", "TABLE", True), ("physical", "orders", "FILE", True)]
+        + [(*reference, True)] * parent_count, fields + ", is_active boolean",
+    )
+    writes = []
+    monkeypatch.setattr(reader, "read_lakehouse_table", lambda *a, **kw: parents)
+    monkeypatch.setattr(shared, "write_lakehouse_table", lambda *a, **kw: writes.append(a))
+    context = dict(config={}, workspace_id="execution", context={}, persist=True)
+    if parent_count == 1:
+        shared.persist_access_rows(access, **context)
+        assert len(writes) == 1
+    else:
+        with pytest.raises(ValueError, match="requires exactly one active Catalogue asset"):
+            shared.persist_access_rows(access, **context)
+        assert not writes
 
 
 def test_shared_access_persistence_can_be_disabled(monkeypatch):

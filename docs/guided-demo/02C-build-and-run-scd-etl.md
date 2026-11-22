@@ -185,9 +185,10 @@ For **Ungoverned** and **Governed** executions, FabricOps writes applicable oper
 | `METADATA_DATA_CATALOGUE` | Canonical table and column identities for the Bronze source and both Silver targets, plus applicable target processing and profile metadata. |
 | `METADATA_DATA_PROFILED` | Profile snapshots for each Full Read source snapshot and each published SCD target when profiling completes. |
 | `METADATA_DATA_PROFILED_FREQUENCY` | Frequency rows linked to profile snapshots where applicable. |
-| `METADATA_DATA_LINEAGE` | Source and both target roles recorded for this notebook pipeline. |
-| `METADATA_PROCESSING_STATE` | Typed source observations, checkpoints, Source Drift baselines and target publication receipts, when applicable. |
+| `METADATA_PIPELINE_RUN.operations` | Source and both target roles recorded for this notebook pipeline. |
 | `METADATA_GUARDRAIL_RESULTS` | Evaluation results when a selected Data Contract supplies executable Guardrails and the applicable execution flow evaluates them. |
+
+[Processing State](../maintainer/processing-state.md) retains typed source observations, checkpoints, Source Drift baselines and target publication receipts, when applicable.
 
 
 ### Diagnose a later day before changing the SCD targets

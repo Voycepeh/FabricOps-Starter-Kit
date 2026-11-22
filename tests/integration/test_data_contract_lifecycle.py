@@ -65,6 +65,10 @@ class _DeltaTransport:
         self.insert = True
         return self
 
+    def whenNotMatchedInsert(self, values):
+        self.insert = True
+        return self
+
     def whenMatchedUpdate(self, set=None, condition=None):
         self.updates, self.update_condition = set, condition
         return self
@@ -88,6 +92,10 @@ class _DeltaTransport:
                         match = re.search(r"source\.`?(\w+)", expression)
                         assert match or expression in {"true", "false"}, expression
                         value = source.get(match.group(1)) if match else expression == "true"
+                        if expression.startswith("coalesce(target.") and target.get(key) is not None:
+                            continue
+                        if expression.startswith(("CASE ", "greatest(")) and value is None:
+                            continue
                         if value is not None or not expression.startswith("coalesce("):
                             target[key] = value
             if not matches and self.insert:
@@ -163,6 +171,8 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         if module is None or not getattr(module, "__name__", "").startswith("fabricops_kit"):
             continue
         for name, replacement in (("read_lakehouse_table", read), ("write_lakehouse_table", write),
+                                  ("validate_metadata_merge", lambda *a, **kw: None),
+                                  ("resolve_asset_workspace_name", lambda workspace, **_kw: workspace.title()),
                                   ("resolve_fabric_context", resolve), ("build_runtime_audit_fields", audit_fields),
                                   ("get_spark_session", lambda *a, **k: spark_session),
                                   ("resolve_configured_lakehouse_table", path),
@@ -191,13 +201,15 @@ def lifecycle(monkeypatch, spark_session, tmp_path):
         identity = runtime.resolve_physical_table_identity(config, "dev", store=layer, schema="dbo", table_name=name)
         table_id = identity["table_id"]
         setattr(state, "source_id" if name == "orders" else "schema_source_id" if name == "products" else "target_id", table_id)
-        table = {"table_id": table_id, "table_name": name, "workspace_id": "dev", "metadata_level": "table",
-                 "column_id": None, "store_type": "lakehouse", "layer": layer, "schema_name": "dbo",
+        table = {"table_id": table_id, "table_name": name, "asset_workspace_id": "dev", "asset_type": "TABLE",
+                 "asset_workspace_name": "Development", "store_type": "lakehouse", "layer": layer, "schema_name": "dbo",
                  "is_active": True, "load_strategy": "overwrite", "load_strategy_parameters_json": {},
                  "scheduled_refresh_json": {'status': 'not_configured', 'schedules': []}, **audit}
+        table["columns_json"] = [
+            {"column_id": f"{table_id}/{column}", "column_name": column, "data_type": dtype}
+            for column, dtype in (("id", "bigint"), ("email", "string"), ("modified_at", "timestamp"), ("day", "string"))
+        ]
         state.metadata["METADATA_DATA_CATALOGUE"].append(table)
-        for column, dtype in (("id", "bigint"), ("email", "string"), ("modified_at", "timestamp"), ("day", "string")):
-            state.metadata["METADATA_DATA_CATALOGUE"].append({**table, "metadata_level": "column", "column_id": f"{table_id}/{column}", "column_name": column, "data_type": dtype})
     state.business["orders"] = spark_session.createDataFrame([
         (1, "one@example.test", now - timedelta(hours=1), str(now.date())),
         (2, "two@example.test", now - timedelta(hours=1), str(now.date())),
@@ -230,6 +242,8 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
     contracts.save_contract_draft(draft=draft, payload=payload, config=state.config, active_workspace_id="dev", spark_session=state.spark)
     widget_module = importlib.import_module("fabricops_kit.widgets.widget_data_contract")
     widget = call_with_spark(state.spark, widget_module.widget_data_contract, table_id=table_id, contract_version=1,  context=state.context)
+    widget["_controls"]["workspace_select"].value = "dev"
+    widget["_controls"]["store_select"].value = payload["table"]["layer"]
     widget["_controls"]["open"].click()
     assert widget["current"] is not None, widget.get("message")
     assert widget["_controls"]["grain_enabled"].value is (not schema_only)
@@ -239,6 +253,8 @@ def _author_and_freeze(state, table_id, *, source, schema_only=False):
     widget["_controls"]["table_description"].value = "Authored and hydrated"
     widget["save_data_contract"](return_to_selector_after=False)
     widget = call_with_spark(state.spark, widget_module.widget_data_contract, table_id=table_id, contract_version=1,  context=state.context)
+    widget["_controls"]["workspace_select"].value = "dev"
+    widget["_controls"]["store_select"].value = payload["table"]["layer"]
     widget["_controls"]["open"].click()
     assert widget["current"] is not None, widget.get("message")
     assert widget["_controls"]["table_description"].value == "Authored and hydrated"
@@ -266,7 +282,7 @@ def test_authored_payload_lifecycle_and_both_orchestrators(lifecycle):
     assert not before["state"]["rows"] and not before["state"]["deployments"]
     assert before["ready"] is False
     assert "signed-in Fabric" in before["reason"]
-    assert not state.metadata["METADATA_DATA_LINEAGE"]
+    assert state.metadata["METADATA_DATA_LINEAGE"] == []
     coordinates = {"pipeline_id": "8f32a471-6c91-4b7e-9d13-2f0c947eab52", "sources": [
         {"store": "Bronze", "schema": "dbo", "table_name": "orders"},
         {"store": "Bronze", "schema": "dbo", "table_name": "products"}],

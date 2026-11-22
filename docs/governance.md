@@ -16,7 +16,7 @@
 
 ![Anatomy of a frozen Data Contract](assets/data-contract-anatomy.svg){ .fabricops-section-evidence }
 
-A FabricOps Data Contract is a versioned definition for one governed dataset: a physical table identified by `table_id`, or a Lakehouse Files source identified by `source_id`. It combines observed schema evidence with the decisions Governance owns:
+A FabricOps Data Contract is a versioned definition for one governed dataset: a physical table or Lakehouse Files source identified by `table_id` and `asset_type`. It combines observed schema evidence with the decisions Governance owns:
 
 - business descriptions and information classification;
 - the expected schema and required columns;
@@ -29,7 +29,7 @@ Saving keeps a draft editable. **Freezing creates an immutable version.** Engine
 
     [`widget_data_contract()`](api/reference/widget_data_contract.md) assembles `contract_payload_json` from the selected physical table or file observation, authored Enrichment and Guardrails. Processing and profiling settings remain outside new frozen Contract payloads. Internal [`freeze_contract()`](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/shared.py#L1447) validates the saved payload and changes the version to an immutable frozen candidate.
 
-    [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) stores the `contract_id`, `contract_version`, dataset identity, authoring provenance and exact JSON payload. Table contracts use `table_id`; file contracts use a stable physical file-selector `source_id` rather than manufacturing a Catalogue Table ID. Freezing does not deploy a notebook, grant access, activate a pipeline or prove that deployed code matches reviewed code.
+    [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md) stores the `contract_id`, `contract_version`, dataset identity, authoring provenance and exact JSON payload. Both table and file contracts use `table_id` and `asset_type`; files retain their stable physical selector hash. Freezing does not deploy a notebook, grant access, activate a pipeline or prove that deployed code matches reviewed code.
 
 ## Is it one contract per workspace, pipeline or dataset?
 
@@ -37,7 +37,7 @@ Saving keeps a draft editable. **Freezing creates an immutable version.** Engine
 
 | Scope | What FabricOps does |
 | --- | --- |
-| Table or file source | One contract history belongs to the stable table `table_id` or file selector `source_id`. |
+| Table or file source | One contract history belongs to the stable `table_id` and `asset_type` for a table or file selector. |
 | Workspace | Each physical workspace can independently activate an exact frozen version for a dataset. Development and Production can therefore reference different versions during a controlled change. |
 | Pipeline | A pipeline uses the exact contracts for every participating source and target. A contract is not copied into the pipeline. |
 | Authoring evidence | The selected physical workspace supplies observed schema and available profiling evidence for authoring; Processing remains Engineering-owned. It does not own global contract version history. |
@@ -228,9 +228,9 @@ This repository does **not** currently ship a `.pbix`, `.pbit` or Power BI proje
     | Deployed pipeline versions and notebook identity | [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md) |
     | Table identity and observed processing context (table sources) | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md) |
     | Profiling trends | [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md) |
-    | Pipeline participation and outcomes | [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) |
+    | Pipeline participation and outcomes | [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md) |
     | Guardrail status and continuation | [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
-    | Accepted checkpoints and Source Drift baselines | [`METADATA_PROCESSING_STATE`](reference/metadata/metadata_processing_state.md) |
+    | Accepted checkpoints and Source Drift baselines | [Processing State](maintainer/processing-state.md) |
 
     A Power BI model should use those stable relationships and timestamps rather than parse widget screenshots.
 

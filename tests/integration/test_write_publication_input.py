@@ -56,12 +56,13 @@ def publication_input_runtime(monkeypatch, spark_session):
     monkeypatch.setattr(writer, "validated_processing", processing)
     monkeypatch.setattr(writer, "_persist_target_processing", lambda **kw: None)
     monkeypatch.setattr(writer, "_writer_scheduled_refresh", lambda **kw: {})
-    monkeypatch.setattr(shared, "read_lakehouse_table", lambda *a, **kw: [])
-    monkeypatch.setattr(shared, "metadata_table_physical_schema", lambda *a: None)
+    monkeypatch.setattr(shared, "read_processing_state", lambda **kw: [])
     monkeypatch.setattr(shared, "_find_applied_publication", lambda *a, **kw: None)
     monkeypatch.setattr(shared, "_physical_target_has_publication", lambda *a, **kw: state.confirmed and state.fail != "confirmation")
     monkeypatch.setattr(shared, "stage_pipeline_write_observations", lambda *a: None)
     monkeypatch.setattr(shared, "commit_pipeline_write_success", lambda *a: None)
+    monkeypatch.setattr(io, "read_lakehouse_table", lambda *a, **kw: state.target)
+    monkeypatch.setattr(io, "read_warehouse_query", lambda *a, **kw: state.target.limit(0))
     monkeypatch.setattr(io, "write_lakehouse_table", publish)
     monkeypatch.setattr(io, "write_warehouse_table", publish)
     monkeypatch.setattr(shared, "execute_lakehouse_processing", publish)
@@ -218,3 +219,31 @@ def test_already_loaded_append_returns_no_new_insertions(publication_input_runti
     assert result["write_metrics"]["rows_committed"] == 0
     assert state.received is None
     result["dataframe"].unpersist(blocking=True)
+
+
+@pytest.mark.parametrize('mode', ['ungoverned', 'dry_run'])
+def test_lineage_captured_before_writer_checkpoint(publication_input_runtime, mode):
+    """Actual publication preparation traces hash/audit columns without losing source ancestry."""
+    import json
+    from fabricops_kit.pipeline.shared import register_read_lineage
+    state, context, incoming, run = publication_input_runtime
+    identities = {'target': {'table_id': 'target', 'store': 'Silver', 'table_name': 'target',
+                             'logical_id': 'target', 'roles': ['target']}}
+    plan = shared.PipelineExecutionPlan(mode, 'dev', 'notebook', 'lineage-run', json.dumps(identities), '{}', '{}',
+        {'_pipeline_bindings': {'source': {'asset_workspace_id': 'physical', 'kind': 'lakehouse'}}})
+    context['execution_plan'] = plan
+    register_read_lineage(plan, {'table_id': 'source', 'dataframe': incoming})
+    result = run(incoming.withColumnRenamed('value', 'renamed'))
+    try:
+        graph = plan.evidence['operations']['target:target']['lineage']
+        assert graph['status'] == 'complete', graph
+        output = next(row for row in graph['outputs'] if row['column_name'] == 'renamed')
+        nodes = {node['node_id']: node for node in graph['nodes']}
+        assert any(nodes[row['node_id']].get('table_id') == 'source'
+                   and nodes[row['node_id']].get('name') == 'value' and 'VALUE' in row['dependency_types']
+                   for row in output['sources'])
+        assert {'_row_hash', '_committed_at'} <= {row['column_name'] for row in graph['outputs']}
+        assert (state.received is None) == (mode == 'dry_run')
+    finally:
+        if mode != 'dry_run':
+            result['dataframe'].unpersist(blocking=True)

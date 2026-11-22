@@ -12,7 +12,9 @@ API = import_module('fabricops_kit.config.orchestrate_demo_reset')
 
 
 def _environment(monkeypatch):
-    registry = metadata_table_schema_registry()
+    from fabricops_kit.pipeline.shared import processing_state_schema
+
+    registry = {**metadata_table_schema_registry(), API._DEMO_PROCESSING_STATE: processing_state_schema()}
     rows = {table: [] for table in registry}
     stores = {key: SimpleNamespace(workspace_id='dev', item_id=key, name=key,
               kind='warehouse' if key == 'Gold' else 'lakehouse', schema_enabled=True)
@@ -22,16 +24,18 @@ def _environment(monkeypatch):
     setup = SimpleNamespace(workspace_id='dev', readiness_status='ready', paths=stores)
     config = SimpleNamespace(path_config=SimpleNamespace(paths={'dev': stores, 'governance': {'Metadata': stores['Metadata']}}))
     runtime = {'_notebook_setup': {'config': config, 'scope_workspace_id': 'dev', 'result': setup}}
-    def read(table, **kwargs):
-        return SimpleNamespace(schema=registry[table], count=lambda: len(rows[table]),
-            toLocalIterator=lambda: iter([SimpleNamespace(asDict=lambda recursive=True, r=row: r) for row in rows[table]]),
-            collect=lambda: rows[table], select=lambda *a: SimpleNamespace(distinct=lambda: SimpleNamespace(collect=lambda: [])))
+    def read(table, selected=None, **kwargs):
+        values = rows[table] if selected is None else selected
+        return SimpleNamespace(where=lambda predicate: read(table, [r for r in values if r.get("lineage_version") == 1]),schema=registry[table], count=lambda: len(values),
+            toLocalIterator=lambda: iter([SimpleNamespace(asDict=lambda recursive=True, r=row: r) for row in values]),
+            collect=lambda: values, select=lambda *a: SimpleNamespace(distinct=lambda: SimpleNamespace(collect=lambda: [])))
     def request(method, path):
         if path.endswith('/notebooks') or path.endswith('/jobs/instances'):
             return {'value': []}
         return {'displayName': 'demo_metadata' if path.endswith('metadata-id') else 'configured'}
     monkeypatch.setattr(API, 'resolve_fabric_context', lambda: (config, 'dev', runtime))
     monkeypatch.setattr(API, 'read_lakehouse_table', read)
+    monkeypatch.setattr(API, 'read_processing_state', lambda **kw: read(API._DEMO_PROCESSING_STATE))
     monkeypatch.setattr(API, 'metadata_table_physical_schema', lambda config, table: 'configured-schema')
     monkeypatch.setattr(API, 'FabricNotebookClient', lambda: SimpleNamespace(request=request))
     monkeypatch.setattr(API, 'resolve_physical_table_identity', lambda *a, **kw: {'table_id': kw['table_name']})
@@ -58,8 +62,11 @@ def _ready(monkeypatch):
     def clear(self, counts, order):
         for table in order:
             print(f'{table}: removed {len(env.rows[table])}')
-            if env.rows[table]: env.removed.append(table)
-            env.rows[table].clear()
+            if counts[table]: env.removed.append(table)
+            if table == 'METADATA_DATA_LINEAGE':
+                env.rows[table][:] = [r for r in env.rows[table] if r.get('lineage_version') != 1]
+            else:
+                env.rows[table].clear()
     monkeypatch.setattr(API, '_demo_clear_metadata', clear)
     return env
 
@@ -73,13 +80,13 @@ def test_false_preserves_every_populated_metadata_table(monkeypatch, table, caps
     assert 'Preview only' in capsys.readouterr().out
 
 
-def test_export_is_preview_and_has_one_safe_switch():
+def test_export_is_live_and_has_one_safe_switch():
     import inspect
     from fabricops_kit import orchestrate_demo_reset
-    from fabricops_kit.public_api import PREVIEW_PUBLIC_API, SUPPORTED_PUBLIC_API
+    from fabricops_kit.public_api import SUPPORTED_PUBLIC_API
     qualified = 'fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset'
     assert orchestrate_demo_reset is API.orchestrate_demo_reset
-    assert qualified in PREVIEW_PUBLIC_API and qualified not in SUPPORTED_PUBLIC_API
+    assert qualified in SUPPORTED_PUBLIC_API
     signature = inspect.signature(orchestrate_demo_reset)
     assert list(signature.parameters) == ['reset']
     assert signature.parameters['reset'].default is False
@@ -134,7 +141,7 @@ def test_reset_rejects_mismatched_metadata_item_before_deleting(monkeypatch, ite
 
 @pytest.mark.parametrize('table,row', [
     ('METADATA_DATA_CATALOGUE', {'table_id': 'production-orders'}),
-    ('METADATA_PROCESSING_STATE', {'source_table_id': 'orders', 'target_table_id': 'production-target'}),
+    (API._DEMO_PROCESSING_STATE, {'source_table_id': 'orders', 'target_table_id': 'production-target'}),
     ('METADATA_DATA_CONTRACT', {'table_id': 'orders', 'contract_payload_json': '{"table":{"table_id":"other"}}'}),
     ('METADATA_PIPELINE_RUN', {'operations': '[{"table_id":"orders","source_table_ids":["other"]}]'}),
     ('METADATA_PIPELINE_ACTIVATION', {'package_json': '{"manifest":{"execution_workspace_id":"outside"}}'}),
@@ -150,7 +157,7 @@ def test_foreign_metadata_blocks_true_before_any_deletion(monkeypatch, table, ro
 
 def test_owned_contract_and_activation_references_are_in_scope(monkeypatch):
     state = _environment(monkeypatch).state
-    state._demo_table_ids = {'orders'}; state._demo_workspaces = {'dev', 'governance'}
+    state._demo_table_ids = {'orders'}; state._demo_source_ids = set(); state._demo_workspaces = {'dev', 'governance'}
     API._demo_check_metadata_scope(state, {'table_id': 'orders', 'workspace_id': 'DEV',
         'contract_payload_json': '{"table":{"table_id":"orders"}}',
         'package_json': '{"manifest":{"operations":[{"table_id":"orders"}]}}'})
@@ -159,7 +166,6 @@ def test_owned_contract_and_activation_references_are_in_scope(monkeypatch):
 @pytest.mark.parametrize('table,field,wrong_type', [
     ('METADATA_DATA_CATALOGUE', 'load_strategy_parameters_json', 'struct<watermark_column:string>'),
     ('METADATA_PIPELINE_RUN', 'operations', 'array<struct<table_id:string>>'),
-    ('METADATA_PROCESSING_STATE', 'row_count', 'string'),
 ])
 def test_schema_migration_must_precede_reset(monkeypatch, table, field, wrong_type):
     env = _environment(monkeypatch); expected = metadata_table_schema_registry()[table]
@@ -305,14 +311,15 @@ def test_output_cleanup_is_exact_and_repeatable(monkeypatch, initially_present):
 
 def test_true_clears_all_tables_children_first_and_repeated_reset_is_safe(monkeypatch, capsys):
     env = _ready(monkeypatch)
-    for table in env.rows: env.rows[table] = [{'table_id': 'orders'}]
+    for table in env.rows:
+        env.rows[table] = [{'table_id': 'orders', **({'lineage_version': 1} if table == 'METADATA_DATA_LINEAGE' else {})}]
     API.orchestrate_demo_reset(reset=True)
     assert not any(env.rows.values())
-    assert set(env.removed) == set(CANONICAL_METADATA_TABLES)
+    assert set(env.removed) == {*CANONICAL_METADATA_TABLES, API._DEMO_PROCESSING_STATE}
     assert env.removed.index('METADATA_DATA_PROFILED_FREQUENCY') < env.removed.index('METADATA_DATA_PROFILED')
     assert env.removed.index('METADATA_DATA_CONTRACT_ACTIVATION') < env.removed.index('METADATA_DATA_CONTRACT')
     API.orchestrate_demo_reset(reset=True)
-    assert len(env.removed) == len(CANONICAL_METADATA_TABLES)
+    assert len(env.removed) == len(env.rows)
     output = capsys.readouterr().out
     assert output.count('RESET COMPLETE') == 2
     assert all(f'{table}: removed 0' in output for table in env.rows)
@@ -327,7 +334,7 @@ def test_fixture_failure_precedes_metadata_or_output_deletion(monkeypatch):
 
 
 def test_incomplete_metadata_deletion_cannot_report_success(monkeypatch, capsys):
-    env = _ready(monkeypatch); env.rows['METADATA_PROCESSING_STATE'] = [{'source_table_id': 'orders'}]
+    env = _ready(monkeypatch); env.rows[API._DEMO_PROCESSING_STATE] = [{'source_table_id': 'orders'}]
     monkeypatch.setattr(API, '_demo_clear_metadata', lambda *a: None)
     with pytest.raises(RuntimeError, match='Metadata reset incomplete'):
         API.orchestrate_demo_reset(reset=True)
@@ -394,3 +401,13 @@ def test_reset_scope_rejects_foreign_file_source_ids(monkeypatch):
     API._demo_check_metadata_scope(state, {'source_id': 'file:demo-orders', 'workspace_id': 'dev'})
     with pytest.raises(RuntimeError, match='Non-demo file source'):
         API._demo_check_metadata_scope(state, {'source_ids': ['file:another-project']})
+
+
+def test_reset_preserves_archived_lineage_rows(monkeypatch):
+    """Retired activity history is outside the canonical and operational reset scope."""
+    env = _ready(monkeypatch)
+    historical = [{'lineage_id': 'archived-activity', 'table_id': 'retained'}]
+    env.rows['METADATA_DATA_LINEAGE'] = deepcopy(historical)
+    API.orchestrate_demo_reset(reset=True)
+    assert env.rows['METADATA_DATA_LINEAGE'] == historical
+    assert 'METADATA_DATA_LINEAGE' not in env.removed

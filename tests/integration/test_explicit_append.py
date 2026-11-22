@@ -36,9 +36,8 @@ def test_append_new_only_is_distributed_and_preserves_changed_rows(spark_session
 @pytest.mark.parametrize('strategy', ['overwrite', 'append_all', 'append_new_only', 'scd1', 'scd2'])
 def test_publication_identity_distinguishes_new_executions(spark_session, monkeypatch, strategy):
     incoming = spark_session.createDataFrame([(1,), (1,)], 'id int')
-    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *a, **kw: [])
+    monkeypatch.setattr(shared, 'read_processing_state', lambda **kw: [])
     monkeypatch.setattr(shared, '_find_applied_publication', lambda *a, **kw: None)
-    monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: None)
     ids = []
     for run_id in ('first', 'second', 'first'):
         context = dict(config=object(), scope_workspace_id='dev', execution_plan=SimpleNamespace(plan_id=run_id))
@@ -62,6 +61,7 @@ def test_02b_notebook_runs_independent_incremental_and_full_paths(spark_session,
     from pathlib import Path
     from pyspark.sql import functions as F
     from fabricops_kit import orchestrate_read, orchestrate_write
+    from fabricops_kit import setup_pipeline as public_setup_pipeline, read_lakehouse_table as public_read_table
 
     root = Path(__file__).resolve().parents[2]
     data = root / 'templates/DemoData'
@@ -75,7 +75,10 @@ def test_02b_notebook_runs_independent_incremental_and_full_paths(spark_session,
     def read_csv(path, **kwargs):
         return spark_session.read.csv(str(data / Path(path).name), header=True, inferSchema=True)
 
-    def read_table(*, table_name, store, schema):
+    def read_table(**kwargs):
+        bound = inspect.signature(public_read_table).bind(**kwargs)
+        bound.apply_defaults()
+        table_name, store, schema = (bound.arguments[key] for key in ('table_name', 'store', 'schema'))
         if (store, schema, table_name) == ('Bronze', 'demo', 'inventory_movements'):
             return bronze
         assert store == 'Silver' and schema == 'demo' and table_name in targets
@@ -88,9 +91,11 @@ def test_02b_notebook_runs_independent_incremental_and_full_paths(spark_session,
 
     def read(**kwargs):
         nonlocal pending_checkpoint
-        inspect.signature(orchestrate_read).bind(**kwargs)
+        bound = inspect.signature(orchestrate_read).bind(**kwargs)
+        bound.apply_defaults()
+        read_mode = bound.arguments['read_mode']
         assert (kwargs['store'], kwargs['schema'], kwargs['table_name']) == ('Bronze', 'demo', 'inventory_movements')
-        if kwargs['read_mode'] == 'incremental':
+        if read_mode == 'incremental':
             assert kwargs['read_parameters'] == {'watermark_column': 'modified_datetime'}
             assert kwargs['target_store'] == 'Silver'
             assert kwargs['target_schema'] == 'demo'
@@ -100,10 +105,10 @@ def test_02b_notebook_runs_independent_incremental_and_full_paths(spark_session,
             values = [row.modified_datetime for row in frame.select('modified_datetime').collect()]
             pending_checkpoint = max(values) if values else checkpoint
         else:
-            assert kwargs['read_mode'] == 'full'
+            assert read_mode == 'full'
             assert 'target_table_id' not in kwargs and 'read_parameters' not in kwargs
             frame = bronze
-        reads.append((kwargs['read_mode'], frame))
+        reads.append((read_mode, frame))
         return {'dataframe': frame}
 
     def write(frame, **kwargs):
@@ -130,7 +135,9 @@ def test_02b_notebook_runs_independent_incremental_and_full_paths(spark_session,
         return {'dataframe': frame, 'published': has_rows}
 
     def setup_pipeline(**kwargs):
-        assert kwargs == {
+        bound = inspect.signature(public_setup_pipeline).bind(**kwargs)
+        bound.apply_defaults()
+        assert bound.arguments == {
             'pipeline_mode': 'Ungoverned',
             'profiling_enabled': True, 'profiling_interval_days': 1, 'profiling_max_rows': None,
             'grain_discovery_enabled': False, 'frequency_enabled': False,

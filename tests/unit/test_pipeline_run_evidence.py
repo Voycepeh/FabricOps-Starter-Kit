@@ -16,6 +16,9 @@ from fabricops_kit.pipeline.shared import pipeline_physical_bindings, resolve_ph
 @pytest.fixture
 def runtime(monkeypatch):
     """Keep the real journal and persistence logic; simulate only Fabric/Delta I/O."""
+    monkeypatch.setattr(shared, "publish_column_lineage", lambda run, **kw: {
+        "status": "published", "row_count": len(shared.column_lineage_rows(run)),
+        "source_run_sha256": shared._metadata_hash(shared._column_lineage_snapshot(run))})
     from fabricops_kit.activated_pipeline import shared as activation
     monkeypatch.setattr(activation, "verify_governed_plan", lambda *a, **kw: None)
     from importlib import metadata
@@ -45,7 +48,7 @@ def runtime(monkeypatch):
     monkeypatch.setattr(shared, "resolve_physical_table_identity", lambda config, active_workspace_id, **kw:
                         {**kw, "table_id": kw["table_name"]})
     monkeypatch.setattr(shared, "pipeline_physical_bindings", lambda identities, **kw: {
-        key: {"workspace_id": "workspace", "item_id": item["store"], "kind": "lakehouse", "schema": item.get("schema"), "table_name": item["table_name"]}
+        key: {'asset_workspace_id': "workspace", "item_id": item["store"], "kind": "lakehouse", "schema": item.get("schema"), "table_name": item["table_name"]}
         for key, item in identities.items()
     })
 
@@ -70,7 +73,7 @@ def runtime(monkeypatch):
         plan = shared.PipelineExecutionPlan(mode, "canary", "notebook", f"run-{len(saved)}", json.dumps(identities),
                                             "{}", json.dumps({key: {"table_id": key, "contract_id": "contract-" + key, "contract_version": 1,
                             "status": "frozen", "contract_payload_json": json.dumps({"table": {"table_id": key, "columns": []}})} for key in identities}), {"config": {}, "scope_workspace_id": "canary", "user_id": "executor", "activity_id": activity, "notebook_name": notebook_name,
-                            "_pipeline_bindings": {key: {"workspace_id": "workspace", "item_id": item["store"], "kind": "lakehouse", "schema": item.get("schema"), "table_name": item["table_name"]}
+                            "_pipeline_bindings": {key: {'asset_workspace_id': "workspace", "item_id": item["store"], "kind": "lakehouse", "schema": item.get("schema"), "table_name": item["table_name"]}
                                                    for key, item in identities.items()}},
                                             pipeline_id="orders", pipeline_version=1, governed_notebook_id="notebook", promotion_id="approved-release" if mode == "governed" else "")
         contracts.extend(item for item in json.loads(plan.contracts_json).values() if item not in contracts)
@@ -610,3 +613,15 @@ def test_invalid_read_parameters_never_enter_run_json(runtime):
     with pytest.raises(ValueError, match="Invalid read_parameters"):
         operation(plan, 0, read_parameters={"password": "secret-value"})
     assert "secret-value" not in json.dumps(shared.pipeline_run_row(plan, status="failed"), default=str)
+
+
+def test_operation_asset_workspace_is_flat_and_independent_of_execution_workspace(runtime):
+    """Run operations carry the common physical asset key beside table_id and type."""
+    make, _operation, *_ = runtime
+    plan = make(mode='ungoverned', roles=('source',))
+    plan.runtime_context['_pipeline_bindings']['table0']['asset_workspace_id'] = 'physical-asset-workspace'
+    row = shared.pipeline_run_row(plan, status='incomplete')
+    operation = row['operations'][0]
+    assert operation['asset_workspace_id'] == 'physical-asset-workspace'
+    assert operation['asset_workspace_id'] != row['workspace_id']
+    assert not {'workspace_id', 'asset_workspace_id', 'table_id', 'asset_type'} & operation['destination'].keys()

@@ -90,7 +90,8 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: dict(identity))
     monkeypatch.setattr(module, "read_lakehouse_table", lambda *a, **k: pytest.fail("must not reread"))
-    monkeypatch.setattr(module, "_canonical_profiled_dataframe", lambda profile, **k: profile)
+    canonical = Mock(side_effect=lambda profile, **kwargs: profile)
+    monkeypatch.setattr(module, "_canonical_profiled_dataframe", canonical)
     monkeypatch.setattr(module, "_profile_snapshot_id", lambda **k: "snapshot-activity-1")
     monkeypatch.setattr(module, "_frequency_metadata_dataframe", lambda frequency, **k: frequency)
     monkeypatch.setattr(module, "write_lakehouse_table", lambda *a, **k: None)
@@ -98,19 +99,22 @@ def test_dataframe_plus_identity_does_not_reread(spark_session, monkeypatch, cap
     monkeypatch.setattr(module, "_replace_frequency_rows", lambda **k: None)
     monkeypatch.setattr(module, "_replace_snapshot_rows", lambda **k: None)
     monkeypatch.setattr(module, "_stage_catalogue_profile_retry", lambda **k: None)
-    monkeypatch.setattr(module, "_catalogue_dataframe_from_profiled", lambda *a, **k: object())
-    monkeypatch.setattr(module, "_upsert_catalogue_identities", lambda **k: None)
+    monkeypatch.setattr(module, "table_catalogue_observation", lambda *a, **kw: {"_committed_at": None})
+    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="remote", item_id="item"))
+    monkeypatch.setattr(module, "merge_catalogue_asset", lambda *a, **k: None)
 
     result = profile_table(dataframe=source, table_id=identity["table_id"], frequency_columns=[])
 
     assert result["profile"].count() == 1
+    assert canonical.call_args.kwargs["workspace_id"] == "remote"
+    assert canonical.call_args.kwargs["active_workspace_id"] == "dev"
     output = capsys.readouterr().out
     assert "1. Table → source.dbo.orders" in output
     assert "   Input → supplied DataFrame" in output
     assert "2. Profiling backend → PySpark" in output
     assert "5. Profile snapshot → created new activity snapshot" in output
     assert "6. Frequency profile metadata → skipped; no frequency profile generated" in output
-    assert "7. Catalogue → registered or updated table and column metadata" in output
+    assert "7. Catalogue → registered or updated table schema" in output
     assert "existing load strategy and parameters preserved" in output
 
 
@@ -166,8 +170,9 @@ def test_physical_warehouse_uses_compact_sql_profilers(spark_session, monkeypatc
     monkeypatch.setattr(module, "_replace_frequency_rows", lambda **k: None)
     monkeypatch.setattr(module, "_replace_snapshot_rows", lambda **k: None)
     monkeypatch.setattr(module, "_stage_catalogue_profile_retry", lambda **k: None)
-    monkeypatch.setattr(module, "_catalogue_dataframe_from_profiled", lambda *a, **k: object())
-    monkeypatch.setattr(module, "_upsert_catalogue_identities", lambda **k: None)
+    monkeypatch.setattr(module, "table_catalogue_observation", lambda *a, **kw: {"_committed_at": None})
+    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev", item_id="item"))
+    monkeypatch.setattr(module, "merge_catalogue_asset", lambda *a, **k: None)
 
     result = profile_table(table_id=identity["table_id"], frequency_enabled=True, frequency_columns=["status"], frequency_top_n=2)
 
@@ -469,8 +474,9 @@ def test_supplied_dataframe_with_warehouse_identity_stays_in_spark(spark_session
     monkeypatch.setattr(module, "_replace_frequency_rows", lambda **k: None)
     monkeypatch.setattr(module, "_replace_snapshot_rows", lambda **k: None)
     monkeypatch.setattr(module, "_stage_catalogue_profile_retry", lambda **k: None)
-    monkeypatch.setattr(module, "_catalogue_dataframe_from_profiled", lambda *a, **k: object())
-    monkeypatch.setattr(module, "_upsert_catalogue_identities", lambda **k: None)
+    monkeypatch.setattr(module, "table_catalogue_observation", lambda *a, **kw: {"_committed_at": None})
+    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev", item_id="item"))
+    monkeypatch.setattr(module, "merge_catalogue_asset", lambda *a, **k: None)
 
     result = profile_table(dataframe=source, table_id=identity["table_id"], frequency_columns=[])
 
@@ -480,6 +486,7 @@ def test_supplied_dataframe_with_warehouse_identity_stays_in_spark(spark_session
 def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
     """Keep table processing fields when structural profiling supplies null values."""
     module = importlib.import_module("fabricops_kit.pipeline.shared")
+    monkeypatch.setattr(module, "validate_metadata_merge", lambda *a, **kw: None)
     updates = []
 
     class Merge:
@@ -507,7 +514,7 @@ def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
             return self
 
         def first(self):
-            return {"workspace_id": "dev", "table_id": "target-id"}
+            return {"asset_workspace_id": "dev", "table_id": "target-id"}
 
         def alias(self, _name):
             return self
@@ -523,17 +530,16 @@ def test_profile_catalogue_refresh_preserves_target_processing(monkeypatch):
     monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/metadata/catalogue"))
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
 
-    module._upsert_catalogue_identities(
-        catalogue_df=Catalogue(), config={}, active_workspace_id="dev", spark_session=object()
+    spark = Mock()
+    spark.createDataFrame.return_value = Catalogue()
+    module.merge_catalogue_asset(
+        {"asset_workspace_id": "dev", "table_id": "target-id", "asset_type": "TABLE",
+         "columns_json": [], "last_observed_at": None}, context={"config": {}}, spark_session=spark,
     )
-
-    assert updates[0]["profile_key_candidates_json"] == (
-        "coalesce(source.profile_key_candidates_json, target.profile_key_candidates_json)"
-    )
-    assert updates[0]["load_strategy"] == "coalesce(source.load_strategy, target.load_strategy)"
-    assert updates[0]["load_strategy_parameters_json"] == (
-        "coalesce(source.load_strategy_parameters_json, target.load_strategy_parameters_json)"
-    )
+    assert "load_strategy" not in updates[0]
+    assert "load_strategy_parameters_json" not in updates[0]
+    assert "profile_key_candidates_json" not in updates[0]
+    assert "source.columns_json" in updates[0]["columns_json"]
 
 
 def test_profile_registration_rejects_partition_processing_parameter():
@@ -541,11 +547,7 @@ def test_profile_registration_rejects_partition_processing_parameter():
     module = importlib.import_module("fabricops_kit.pipeline.shared")
 
     with pytest.raises(ValueError, match="partition_column"):
-        module._processing_definition(
-            "target",
-            "overwrite",
-            {"partition_column": "business_date"},
-        )
+        module.validated_processing({"load_strategy": "overwrite", "partition_column": "business_date"})
 
 
 def test_profile_snapshot_identity_is_stable_per_activity_and_distinct_between_activities(monkeypatch):
@@ -575,32 +577,21 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(
     """Detect a same-activity retry before clearing its Catalogue completion marker."""
     module = importlib.import_module("fabricops_kit.pipeline.shared")
     updates = []
-    activities = spark_session.createDataFrame(
-        [("dev", "table-1", "activity-1")],
-        ["workspace_id", "table_id", "_activity_id"],
-    )
     catalogue = spark_session.createDataFrame(
         [("dev", "table-1", "activity-1")],
-        ["workspace_id", "table_id", "_activity_id"],
+        ["asset_workspace_id", "table_id", "_activity_id"],
     )
 
     class Merge:
         def toDF(self):
-            return catalogue
+            from pyspark.sql import functions as F
+            return (catalogue.withColumn("asset_type", F.lit("TABLE"))
+                    .withColumn("item_id", F.lit("item"))
+                    .withColumn("is_active", F.lit(True)))
 
-        def alias(self, _name):
-            return self
-
-        def merge(self, _source, condition):
-            assert "target._activity_id = source._activity_id" in condition
-            return self
-
-        def whenMatchedUpdate(self, *, set):
+        def update(self, *, condition, set):
+            assert "_activity_id" in str(condition)
             updates.append(set)
-            return self
-
-        def execute(self):
-            return None
 
     import sys
     import types
@@ -614,40 +605,29 @@ def test_same_activity_retry_clears_catalogue_completion_before_replacement(
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
 
     is_retry = module._stage_catalogue_profile_retry(
-        profiled_df=activities, config={}, active_workspace_id="dev", spark_session=spark_session
+        catalogue_asset={"asset_workspace_id": "dev", "table_id": "table-1", "item_id": "item", "_activity_id": "activity-1"},
+        context={"config": {}}, spark_session=spark_session,
     )
 
     assert is_retry is True
-    assert updates == [{"last_profiled_at": "CAST(NULL AS TIMESTAMP)"}]
+    assert len(updates) == 1 and set(updates[0]) == {"last_profiled_at"}
 
 
-def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypatch):
+@pytest.mark.parametrize("parent_exists", [True, False])
+def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypatch, parent_exists):
     """Distinguish a new profiling activity from an idempotent same-activity retry."""
     module = importlib.import_module("fabricops_kit.pipeline.shared")
-    activities = spark_session.createDataFrame(
-        [("dev", "table-1", "activity-2")],
-        ["workspace_id", "table_id", "_activity_id"],
-    )
     catalogue = spark_session.createDataFrame(
-        [("dev", "table-1", "activity-1")],
-        ["workspace_id", "table_id", "_activity_id"],
+        [("dev", "table-1", "activity-1")] if parent_exists else [],
+        "asset_workspace_id string, table_id string, _activity_id string",
     )
 
     class Merge:
         def toDF(self):
-            return catalogue
-
-        def alias(self, _name):
-            return self
-
-        def merge(self, *_args):
-            return self
-
-        def whenMatchedUpdate(self, **_kwargs):
-            return self
-
-        def execute(self):
-            return None
+            from pyspark.sql import functions as F
+            return (catalogue.withColumn("asset_type", F.lit("TABLE"))
+                    .withColumn("item_id", F.lit("item"))
+                    .withColumn("is_active", F.lit(True)))
 
     import sys
     import types
@@ -660,11 +640,15 @@ def test_first_profile_activity_is_not_reported_as_retry(spark_session, monkeypa
     monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "/catalogue"))
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *_a: None)
 
+    register = Mock()
+    monkeypatch.setattr(module, "merge_catalogue_asset", register)
     is_retry = module._stage_catalogue_profile_retry(
-        profiled_df=activities, config={}, active_workspace_id="dev", spark_session=spark_session
+        catalogue_asset={"asset_workspace_id": "dev", "table_id": "table-1", "item_id": "item", "_activity_id": "activity-2"},
+        context={"config": {}}, spark_session=spark_session,
     )
 
     assert is_retry is False
+    assert register.called is (not parent_exists)
 
 
 
@@ -702,11 +686,12 @@ def test_failed_governed_profile_removes_uncommitted_snapshot(
         lambda **k: (_ for _ in ()).throw(RuntimeError("frequency failed"))
         if failure_stage == "frequency" else events.append("frequency"),
     )
-    monkeypatch.setattr(module, "_catalogue_dataframe_from_profiled", lambda *a, **k: object())
+    monkeypatch.setattr(module, "table_catalogue_observation", lambda *a, **kw: {"_committed_at": None})
+    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev", item_id="item"))
     monkeypatch.setattr(
         module,
-        "_upsert_catalogue_identities",
-        lambda **k: (_ for _ in ()).throw(RuntimeError("catalogue failed"))
+        "merge_catalogue_asset",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("catalogue failed"))
         if failure_stage == "catalogue" else events.append("catalogue"),
     )
     def cleanup(**_kwargs):
@@ -760,6 +745,7 @@ def test_grain_discovery_can_be_disabled_and_reenabled_independently(
                 "table_name": "orders", "store_kind": backend}
     frame, profile = Mock(), Mock()
     profile.cache.return_value = profile
+    profile.first.return_value = None
     profile.select.return_value.first.return_value = {"row_count": 2}
     monkeypatch.setattr(module, "resolve_fabric_context", lambda: ({}, "dev", {}))
     monkeypatch.setattr(module, "resolve_catalogue_table_identity", lambda *a, **k: dict(identity))
@@ -777,10 +763,10 @@ def test_grain_discovery_can_be_disabled_and_reenabled_independently(
     monkeypatch.setattr(module, "_canonical_profiled_dataframe", lambda *a, **k: profile)
     monkeypatch.setattr(module, "_profile_snapshot_id", lambda **k: "snapshot")
     for name in ("_stage_catalogue_profile_retry", "_replace_snapshot_rows",
-                 "_replace_frequency_rows", "_frequency_metadata_dataframe", "_upsert_catalogue_identities"):
+                 "_replace_frequency_rows", "_frequency_metadata_dataframe", "merge_catalogue_asset"):
         monkeypatch.setattr(module, name, Mock())
-    catalogue = Mock()
-    monkeypatch.setattr(module, "_catalogue_dataframe_from_profiled", catalogue)
+    monkeypatch.setattr(module, "get_store", lambda *a, **k: Mock(workspace_id="dev", item_id="item"))
+    monkeypatch.setattr(module, "table_catalogue_observation", lambda *args, **kwargs: {"_committed_at": None})
     discovery = warehouse_discovery if backend == "warehouse" else spark_discovery
     kwargs = {} if backend == "warehouse" else {"dataframe": frame}
     for enabled in (True, False, True):
@@ -790,7 +776,7 @@ def test_grain_discovery_can_be_disabled_and_reenabled_independently(
                                grain_discovery_max_candidates=1, frequency_enabled=frequency_enabled, **kwargs)
         assert result["profile"] is profile
         assert discovery.call_count == int(enabled)
-        evidence = catalogue.call_args.kwargs["profile_key_candidates_json"]
+        evidence = module.merge_catalogue_asset.call_args.args[0].get("profile_key_candidates_json")
         if enabled:
             assert evidence["candidates"] == candidates
             assert evidence["status"] == "resolved"
@@ -937,15 +923,17 @@ def test_grain_catalogue_update_retries_only_aborted_conflicts(spark_session, mo
         return target
 
     monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=SimpleNamespace(forPath=for_path)))
-    monkeypatch.setattr("time.sleep", lambda _: None)
+    monkeypatch.setattr("fabricops_kit.io.shared.sleep", lambda _: None)
     monkeypatch.setattr(module, "resolve_configured_lakehouse_table", lambda *a, **kw: (None, None, None, "/metadata/catalogue"))
     monkeypatch.setattr(module, "metadata_table_physical_schema", lambda *a: "engineering")
     monkeypatch.setattr(module, "build_runtime_audit_fields", lambda **kw: {"_activity_id": "activity"})
     monkeypatch.setattr(module, "_key_candidate_evidence", lambda *a, **kw: {"candidates": []})
     monkeypatch.setattr(module, "encode_metadata_row", lambda table, row: {"profile_key_candidates_json": json.dumps(row)})
 
+    monkeypatch.setattr(module, "get_store", lambda *a, **kw: Mock(workspace_id="dev", item_id="item"))
+
     def persist():
-        module._persist_grain_candidates({"table_id": "orders"}, [], max_columns=3,
+        module._persist_grain_candidates({"table_id": "orders", "store": "Silver"}, [], max_columns=3,
             config={}, active_workspace_id="dev", context={}, spark_session=spark_session)
 
     if failure == "conflict":

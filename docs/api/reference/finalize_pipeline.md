@@ -74,7 +74,13 @@ dict
     requires inspection of immutable acceptance history before retrying.
     Each operation retains legacy rows_read/rows_written plus its available
     detailed Read or strategy-specific Write metrics. Missing fields on
-    historical records remain valid and display as not captured.
+    historical records remain valid and display as not captured. Prepared Writes
+    additionally retain operations[].lineage: a versioned graph of source columns,
+    transformations and explicit coverage gaps. Persistent finalization also
+    materializes scalar versioned dependency facts in METADATA_DATA_LINEAGE.
+    lineage_projection reports the separate projection outcome; a projection
+    failure after Run commit is retryable via finalize_pipeline(pipeline)
+    without replaying business Writes. Dry Run retains graphs only in memory.
     When no session is active, returns the resolved pipeline_id and handoff
     (the displayed controls and their state/actions), without a Run record.
 
@@ -85,7 +91,9 @@ ValueError
 RuntimeError
     If notebook setup is invalid, runtime identity has changed, another task
     owns the execution, or metadata publication fails. Run and Guardrail IDs
-    remain stable for supported publication retries.
+    remain stable for supported publication retries. A column-lineage projection
+    failure can occur after the immutable Run commits; retrying this function
+    with the retained session retries only that projection.
 
 ## Behavior and scope
 
@@ -102,6 +110,13 @@ A successful Write or cell never completes the whole pipeline by itself.
 Open sessions require the current initialized notebook configuration and
 runtime identity, whether passed explicitly or selected implicitly. Already
 closed sessions retain their recorded outcome for repeat finalization.
+
+The notebook summary identifies table and file operations. Files show their
+configured Store, path beneath Files, format and, for Writes, output layout,
+publication status and available output file/byte counts. Filesystem counts
+describe the output, not rows committed by this attempt. Missing historical
+details remain not captured. Rendering uses retained operation records and
+session metadata without reading source or target data again.
 
 Dry Run returns a session-only summary and persists no target, watermark,
 processing state, profile observation or run metadata. A completed captured
@@ -128,9 +143,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/pipeline/finalize_pipeline.py:192`
+`fabricops_kit/pipeline/finalize_pipeline.py:221`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L192-L304">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/finalize_pipeline.py#L221-L354">View on GitHub</a>
 </div>
 
 
@@ -146,7 +161,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 121 |
+| Live-critical dependencies | 135 |
 
 ### Release history
 
@@ -156,6 +171,7 @@ No related guides documented.
 | Live | 0.3.1 |
 | Live | 0.4.0 |
 | Live | 0.4.1 |
+| Live | 0.5.0 |
 
 ### Live-critical dependencies
 
@@ -200,6 +216,7 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.validate_file_execution_authorizations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_registry</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_submission</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.verify_governed_plan</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_promotion_integrity</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.verify_registry_approval</code></li>
 <li><code>fabricops_kit.config.audit._audit_timestamp_value</code></li>
@@ -212,12 +229,16 @@ No related guides documented.
 <li><code>fabricops_kit.config.metadata_schemas.audit_schema_fields</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.build_metadata_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.coerce_metadata_row_types</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.coerce_schema_row_types</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.decode_metadata_row</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.has_retained_asset_workspaces</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_json_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_schema_type_name</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_owner</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_physical_schema</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.metadata_table_schema_registry</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.migrate_asset_references</code></li>
+<li><code>fabricops_kit.config.metadata_schemas.operation_physical_binding</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.parse_metadata_json</code></li>
 <li><code>fabricops_kit.config.metadata_schemas.validate_metadata_value</code></li>
 <li><code>fabricops_kit.config.shared._get_fabric_runtime_context</code></li>
@@ -258,21 +279,30 @@ No related guides documented.
 <li><code>fabricops_kit.io.shared.resolve_warehouse_name</code></li>
 <li><code>fabricops_kit.io.shared.resolve_warehouse_table_location</code></li>
 <li><code>fabricops_kit.io.shared.retry_delta_metadata</code></li>
+<li><code>fabricops_kit.io.shared.validate_metadata_primary_key</code></li>
+<li><code>fabricops_kit.io.shared.write_delta_path</code></li>
+<li><code>fabricops_kit.io.shared.write_metadata_frame</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._elapsed_seconds</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._format_duration</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._operation_summary_rows</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._print_pipeline_summary</code></li>
+<li><code>fabricops_kit.pipeline.shared._column_lineage_snapshot</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
+<li><code>fabricops_kit.pipeline.shared._metadata_hash</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
+<li><code>fabricops_kit.pipeline.shared.column_lineage_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.current_pipeline_session</code></li>
 <li><code>fabricops_kit.pipeline.shared.file_binding_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.file_participant_source</code></li>
 <li><code>fabricops_kit.pipeline.shared.participant_id</code></li>
+<li><code>fabricops_kit.pipeline.shared.persistence_permitted</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_physical_bindings</code></li>
 <li><code>fabricops_kit.pipeline.shared.pipeline_record_content</code></li>
+<li><code>fabricops_kit.pipeline.shared.publish_column_lineage</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_file_participant</code></li>
 <li><code>fabricops_kit.pipeline.shared.resolve_physical_table_identity</code></li>
+<li><code>fabricops_kit.pipeline.shared.sync_pipeline_lineage</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_freshness_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_grain_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared.validate_pipeline_id</code></li>

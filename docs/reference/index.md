@@ -35,8 +35,8 @@ Use the finder below to search 29 public functions. Config classes stay out of t
     Maintainer inventory metrics:
 
     - Source Python files count: 53
-    - Total callables: 836
-    - Supporting functions: 450
+    - Total callables: 870
+    - Supporting functions: 484
     - Private helpers to review: 350
 
     - [Function Call Graph](../function-call-graph.md): explanatory page for the v4 normalized public-function call-flow architecture contract.
@@ -156,7 +156,7 @@ Expand a group to browse its public functions. Engineering Functions is open by 
 <article id="io.read_lakehouse_query-read_lakehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_lakehouse_query" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Run read-only Spark SQL against one configured Lakehouse table.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_lakehouse_query/"><code>read_lakehouse_query</code></a></h3>
   <p class="reference-catalogue-item-purpose">Run read-only Spark SQL against one configured Lakehouse table.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.4.2</span><span class="reference-chip">00C_demo_setup</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.5.0</span><span class="reference-chip">00C_demo_setup</span></p>
 </article>
 <article id="io.read_warehouse_query-read_warehouse_query" class="reference-catalogue-item" data-callable-row="true" data-callable-name="read_warehouse_query" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Read warehouse rows with SQL pushdown through a configured Fabric warehouse target.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/read_warehouse_query/"><code>read_warehouse_query</code></a></h3>
@@ -168,10 +168,10 @@ Expand a group to browse its public functions. Engineering Functions is open by 
   <p class="reference-catalogue-item-purpose">Read a table from a configured Fabric warehouse target.</p>
   <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.1.0</span><span class="reference-chip">00C_demo_setup</span></p>
 </article>
-<article id="io.write_lakehouse_file-write_lakehouse_file" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_file" data-callable-module="io" data-function-type="public-starter-kit" data-callable-purpose="Write CSV, Parquet or newline-delimited JSON to configured Lakehouse Files.">
+<article id="io.write_lakehouse_file-write_lakehouse_file" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_file" data-callable-module="io" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Write CSV, Parquet or newline-delimited JSON to configured Lakehouse Files.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_lakehouse_file/"><code>write_lakehouse_file</code></a></h3>
   <p class="reference-catalogue-item-purpose">Write CSV, Parquet or newline-delimited JSON to configured Lakehouse Files.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.5.0</span><span class="reference-chip">00C_demo_setup</span></p>
 </article>
 <article id="io.write_lakehouse_table-write_lakehouse_table" class="reference-catalogue-item" data-callable-row="true" data-callable-name="write_lakehouse_table" data-callable-module="io" data-callable-starter-path="00C_demo_setup, 02B_incremental_append_demo, 02C_scd_demo" data-callable-usage-source="00C_demo_setup, 02B_incremental_append_demo, 02C_scd_demo" data-function-type="public-starter-kit" data-callable-purpose="Write a Spark DataFrame to a configured Fabric lakehouse Delta table.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/write_lakehouse_table/"><code>write_lakehouse_table</code></a></h3>
@@ -193,7 +193,7 @@ Expand a group to browse its public functions. Engineering Functions is open by 
 <article id="config.orchestrate_demo_reset-orchestrate_demo_reset" class="reference-catalogue-item" data-callable-row="true" data-callable-name="orchestrate_demo_reset" data-callable-module="config.orchestrate_demo_reset" data-callable-starter-path="00C_demo_setup" data-callable-usage-source="00C_demo_setup" data-function-type="public-starter-kit" data-callable-purpose="Preview or reset the dedicated Guided Demo to Day 1.">
   <h3 class="reference-catalogue-item-name"><a class="reference-catalogue-item-title" href="../api/reference/orchestrate_demo_reset/"><code>orchestrate_demo_reset</code></a></h3>
   <p class="reference-catalogue-item-purpose">Preview or reset the dedicated Guided Demo to Day 1.</p>
-  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-preview reference-lifecycle-chip-prominent">Preview</span><span class="reference-chip">00C_demo_setup</span></p>
+  <p class="reference-catalogue-item-meta reference-catalogue-item-badges"><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live reference-lifecycle-chip-prominent">Live</span><span class="reference-chip reference-lifecycle-chip reference-lifecycle-live">Live since 0.5.0</span><span class="reference-chip">00C_demo_setup</span></p>
 </article>
 </div>
 </details>

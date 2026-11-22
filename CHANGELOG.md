@@ -6,6 +6,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-18
+
+### Added
+
+- Promote `write_lakehouse_file()` to Live for configured Lakehouse Files exports in CSV, Parquet, and newline-delimited JSON, with bounded single-file output and automatic dataset-folder overflow handling.
+- Promote `orchestrate_demo_reset()` to Live for previewing and restoring the dedicated Guided Demo environment with preflight checks and post-reset verification.
+- Add `read_lakehouse_query()` as the Lakehouse SQL counterpart to `read_warehouse_query()`.
+
+### Changed
+
+- Use `orchestrate_read()` for governed table, Lakehouse Files, and SQL-query sources, and `orchestrate_write()` for governed table and Lakehouse Files targets. The standard pipeline keeps one Read, Transform, Write flow.
+- Simplify incremental Read configuration: `orchestrate_read()` resolves the target Table ID from `target_store`, `target_schema` and `target_table_name` instead of accepting `target_table_id`.
+- Enable standard profiling by default in `setup_pipeline()`, with Grain discovery and frequency profiling off until selected. Show statistical profile tables by default after Read and Write, including when verbose diagnostics are off.
+- Improve notebook display clarity across setup, Governance, and pipeline workflows.
+
+### Removed
+
+- Remove `pipeline_read()` and `resolve_table_id()` from the supported public API. Use `orchestrate_read()` with physical source and target coordinates.
+
+### Upgrade instructions
+
+- Upgrade the package and use the matching v0.5.0 `00_env_config.ipynb` and `02_pipeline.ipynb` release snapshots. Update incremental `orchestrate_read()` calls to supply target store, schema and table name.
+- The current `00_env_config.ipynb`, `01_governance.ipynb`, and `02_pipeline.ipynb` templates were maintainer-tested with v0.5.0 in Microsoft Fabric on 18 Nov 2026.
+
 ## [0.4.1] - 2026-11-07
 
 ### Fixed

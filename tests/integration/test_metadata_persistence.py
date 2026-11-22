@@ -13,6 +13,19 @@ from tests.helpers import framework_config
 pytestmark = pytest.mark.integration
 
 
+@pytest.fixture(autouse=True)
+def key_enforcement_calls(monkeypatch):
+    """Isolate routing/schema tests from the separately tested Delta key protocol."""
+    from importlib import import_module
+    calls = []
+    monkeypatch.setattr(import_module("fabricops_kit.config.setup_metadata_tables"), "_setup_processing_state",
+        lambda **kwargs: {"status": "validated", "path": "Tables/misc/PROCESSING_STATE"})
+
+    monkeypatch.setattr(import_module("fabricops_kit.config.setup_metadata_tables"), "_enforce_metadata_primary_key",
+        lambda **kw: calls.append(kw["table_name"]))
+    return calls
+
+
 class Table:
     """Minimal table fake exposing columns and active steward count."""
 
@@ -30,7 +43,7 @@ class Table:
         return self._count
 
 
-def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
+def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch, key_enforcement_calls):
     """Verify central metadata setup preserves existing valid tables."""
     registry = metadata_table_schema_registry()
     reads = []
@@ -57,6 +70,7 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
 
     result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev")
 
+    assert key_enforcement_calls == CANONICAL_METADATA_TABLES
     assert result["status"] == "ready"
     assert result["tables"] == CANONICAL_METADATA_TABLES
     assert result["created_tables"] == []
@@ -68,8 +82,8 @@ def test_central_metadata_setup_preserves_existing_valid_tables(monkeypatch):
     assert all(row["_metadata_lakehouse_name"] == "Metadata" for row in historical.values())
 
 
-def test_central_metadata_setup_rejects_known_legacy_schema(monkeypatch):
-    """Verify central metadata setup still rejects known incompatible legacy schemas."""
+def test_central_metadata_setup_preserves_nonreleased_extension_columns(monkeypatch):
+    """A pre-0.5/PR-only column is an extension, not a declared release retirement."""
     setup_module = __import__("fabricops_kit.config.setup_metadata_tables", fromlist=["setup_metadata_tables"])
 
     class Spark:
@@ -86,6 +100,6 @@ def test_central_metadata_setup_rejects_known_legacy_schema(monkeypatch):
     monkeypatch.setattr(setup_module, "read_lakehouse_table", read_table)
 
     result = call_with_spark(Spark(), setup_metadata_tables,  config=framework_config(), workspace_id="dev", verbose=False)
-    assert result["status"] == "partial_failure"
-    assert result["failed_tables"] == ["METADATA_DATA_PROFILED"]
-    assert "frequency_json" in result["table_results"]["METADATA_DATA_PROFILED"]["message"]
+    assert result["status"] == "ready"
+    assert result["failed_tables"] == []
+    assert result["table_results"]["METADATA_DATA_PROFILED"]["status"] == "validated"

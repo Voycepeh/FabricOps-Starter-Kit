@@ -83,7 +83,7 @@ GOVERNANCE_METADATA_LAKEHOUSE_ID = "<item-id-of-your-manually-created-demo-lakeh
 GOVERNANCE_METADATA_LAKEHOUSE_NAME = "demo_metadata"
 ```
 
-Keep the existing logical store key `Metadata`; the physical item is named `demo_metadata`. Neither `00_env_config` nor 00C creates a Lakehouse item. `INITIALIZE_METADATA` only provisions or upgrades metadata tables inside the item you configured. 00C previews counts with `RESET_DEMO = False`; `True` clears all metadata in this dedicated item and restores Day 1.
+Keep the existing logical store key `Metadata`; the physical item is named `demo_metadata`. Neither `00_env_config` nor 00C creates a Lakehouse item. `INITIALIZE_METADATA` provisions canonical metadata tables and `misc.PROCESSING_STATE` inside the configured item. 00C previews counts with `RESET_DEMO = False`; `True` clears all metadata in this dedicated item and restores Day 1.
 
 By default, `setup_notebook()` loads `00_env_config` from the current workspace. Advanced callers can pass `config_workspace_id="<configuration-workspace-id>"` to `setup_notebook()` to load a shared deployment. The remote config must register the caller workspace, and cross-workspace execution and store permissions are required. See [Workspace configuration](https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/templates/notebooks/README.md#workspace-configuration).
 
@@ -129,7 +129,7 @@ Use the current walkthrough store keys exactly as they appear in `00_env_config`
 
 ## Setup the metadata tables
 
-In the Governance workspace, set `INITIALIZE_METADATA = True` and run `00_env_config` directly once, then restore `False`. Routine configuration loads return JSON without provisioning metadata tables.
+In the Governance workspace, run `00_env_config` directly with `INITIALIZE_METADATA = True` to bootstrap the shared Lakehouse. Routine configuration loads return JSON and skip bootstrap.
 
 </div>
 </div>
@@ -140,7 +140,7 @@ In the Governance workspace, set `INITIALIZE_METADATA = True` and run `00_env_co
 
 This initializes empty governance and engineering schemas in the dedicated demo lakehouse before `01_governance` creates Stewards and Agreements. Contract Enrichment and Guardrails live in `METADATA_DATA_CONTRACT.contract_payload_json`.
 
-`setup_metadata_tables()` initializes missing tables and applies compatible schema evolution while preserving existing rows. It is not a reset. For this walkthrough, use the dedicated `demo_metadata` lakehouse. Run 00C with `RESET_DEMO = True` before Step 1 creates Stewards and Agreements. For a complete restart, stop earlier demo/promoted copies and repeat that reset; it discards all metadata, including old Contracts and activations.
+`setup_metadata_tables()` initializes missing tables and applies compatible schema evolution while preserving existing rows. It is not a reset. For this walkthrough, use the dedicated `demo_metadata` lakehouse. Run 00C with `RESET_DEMO = True` before Step 1 creates Stewards and Agreements. For a complete restart, stop earlier demo/promoted copies and repeat that reset; it discards all metadata, including old Contracts and activations. The same bootstrap initializes `misc.PROCESSING_STATE`. [Processing State setup](../maintainer/processing-state.md)
 
 ![Metadata Tables Done](../assets/00B/Metadata-Tables-Created.png)
 

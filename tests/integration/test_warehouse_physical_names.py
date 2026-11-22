@@ -224,9 +224,9 @@ def test_external_warehouse_resolves_and_binds_physical_workspace_from_execution
         {source['table_id']: source, target['table_id']: target},
         config=config, workspace_id='execution-workspace',
     )
-    assert bindings[source['table_id']]['workspace_id'] == 'external-workspace'
+    assert bindings[source['table_id']]['asset_workspace_id'] == 'external-workspace'
     assert bindings[source['table_id']]['item_id'] == 'warehouse-item'
-    assert bindings[target['table_id']]['workspace_id'] == 'target-workspace'
+    assert bindings[target['table_id']]['asset_workspace_id'] == 'target-workspace'
     assert bindings[target['table_id']]['item_id'] == 'target-warehouse-item'
 
     # Exercise the actual Fabric connector boundary for both remote stores.

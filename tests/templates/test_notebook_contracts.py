@@ -89,6 +89,32 @@ def _fabricops_attribute_references(tree: ast.Module) -> set[str]:
     return references
 
 
+@pytest.mark.parametrize(
+    "initialize,caller_workspace_id,expected",
+    [(True, "", ["metadata"]), (True, "dev", []), (False, "", [])],
+)
+def test_lakehouse_bootstrap_initializes_processing_state_only_on_direct_runs(
+    initialize: bool, caller_workspace_id: str, expected: list[str],
+) -> None:
+    """Only the direct Lakehouse bootstrap provisions metadata and operational state."""
+    cell = _cell_by_id("00_env_config.ipynb", "f56e6cc7-6ef8-4562-b6e6-99a50996d735")
+    tree = ast.parse(cell.source)
+    calls = []
+    namespace = {
+        "CONFIG": object(),
+        "WORKSPACE_ID": "dev",
+        "caller_workspace_id": caller_workspace_id,
+        "INITIALIZE_METADATA": initialize,
+        "setup_metadata_tables": lambda **kwargs: calls.append("metadata"),
+    }
+    assert isinstance(tree.body[0], ast.Assign)
+    assert isinstance(tree.body[0].targets[0], ast.Name)
+    assert tree.body[0].targets[0].id == "INITIALIZE_METADATA"
+    tree.body.pop(0)  # Supply the operator's flag value from the test case.
+    exec(compile(tree, "00_env_config bootstrap", "exec"), namespace)
+    assert calls == expected
+
+
 @pytest.mark.parametrize("notebook_path", NOTEBOOKS, ids=lambda path: path.name)
 def test_template_notebooks_are_valid_and_code_cells_compile(notebook_path: Path):
     """Validate committed template notebooks and portable Python syntax."""
@@ -289,58 +315,80 @@ def test_demo_notebooks_are_valid_and_use_public_fabricops_apis(notebook_path: P
 
 
 def test_02_pipeline_is_a_small_reusable_scaffold():
-    """The living template keeps one clear Workspace -> Contract -> Read -> Transform -> Write path."""
-    source = _notebook_source("02_pipeline.ipynb")
-    headings = (
-        "# 0. Workspace",
-        "# 1. Setup Pipeline",
-        "# 2. Read",
-        "# 3. Transform",
-        "# 4. Write",
-    )
-    assert [source.index(heading) for heading in headings] == sorted(source.index(heading) for heading in headings)
-    code_source = "\n".join(source for _, source in _code_cells(NOTEBOOK_DIR / "02_pipeline.ipynb"))
-    assert code_source.count("setup_pipeline(") == 1
-    assert code_source.count("orchestrate_read(") == 1
-    assert code_source.count("orchestrate_write(") == 1
-    assert all(name not in source for name in ("orders", "products", "order_history", "customer_summary"))
-
-
-def test_02_pipeline_preserves_migration_surfaces_and_lineage_handoff():
-    """The standard template keeps stable cells and passes the Read result into the Write."""
+    """The reusable template has one active setup, read, write and finalization."""
     notebook = _load_notebook(NOTEBOOK_DIR / "02_pipeline.ipynb")
-    cell_ids = [cell.get("id") for cell in notebook.cells]
-    required_order = [
-        "contracts",
-        "read-setup",
-        "read-1",
-        "transform",
-        "write-setup",
-        "write-1",
+    trees = [
+        (cell, ast.parse(cell.source))
+        for cell in notebook.cells
+        if cell.cell_type == "code"
     ]
-    positions = [cell_ids.index(cell_id) for cell_id in required_order]
-    assert positions == sorted(positions)
 
-    read = _cell_by_id("02_pipeline.ipynb", "read-1").source
-    transform = _cell_by_id("02_pipeline.ipynb", "transform").source
-    write = _cell_by_id("02_pipeline.ipynb", "write-1").source
-    assert 'sources["source"] = source' in read
-    assert 'sources["source"]["dataframe"]' in transform
-    assert 'sources=' not in write
-    assert "orchestrate_read(" not in transform
-    assert "orchestrate_write(" not in transform
-    assert "READ_STORE =" not in read
-    assert "WRITE_STORE =" not in write
+    def calls_for(name):
+        return [
+            (cell, node)
+            for cell, tree in trees
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == name
+        ]
 
+    for name in ("setup_pipeline", "orchestrate_read", "orchestrate_write", "finalize_pipeline"):
+        assert len(calls_for(name)) == 1, name
 
-def test_02_pipeline_optional_inspection_stays_outside_orchestration():
-    """Bounded previews follow orchestration calls in the same cloneable cells."""
-    read = _cell_by_id("02_pipeline.ipynb", "read-1").source
-    write = _cell_by_id("02_pipeline.ipynb", "write-1").source
-    assert read.index("orchestrate_read(") < read.index('display(sources["source"]["dataframe"].limit(10))')
-    assert write.index("orchestrate_write(") < write.index('display(writes["target"]["dataframe"].limit(10))')
-    assert '# display(writes["target"].get("dq_result"))' in write
+    # Initialization is independent of the example, so users may duplicate read/write cells.
+    for variable, call in (("sources", "orchestrate_read"), ("writes", "orchestrate_write")):
+        initializer = [
+            index for index, (cell, tree) in enumerate(trees)
+            if len(tree.body) == 1
+            and isinstance(tree.body[0], ast.Assign)
+            and any(isinstance(target, ast.Name) and target.id == variable for target in tree.body[0].targets)
+            and isinstance(tree.body[0].value, ast.Dict)
+            and not tree.body[0].value.keys
+        ]
+        assert len(initializer) == 1, variable
+        call_cell = calls_for(call)[0][0]
+        call_index = next(index for index, (cell, _) in enumerate(trees) if cell is call_cell)
+        assert initializer[0] < call_index
 
+    # Read -> transformed DataFrame -> Write must remain intact without enforcing names.
+    read_call = calls_for("orchestrate_read")[0][1]
+    write_call = calls_for("orchestrate_write")[0][1]
+    assert isinstance(write_call.args[0], ast.Name)
+    transformed_name = write_call.args[0].id
+    assignments = [
+        (cell, node) for cell, tree in trees for node in ast.walk(tree)
+        if isinstance(node, ast.Assign)
+    ]
+    read_results = [
+        node.targets[0] for _, node in assignments
+        if isinstance(node.value, ast.Call) and node.value is read_call and len(node.targets) == 1
+    ]
+    assert len(read_results) == 1 and isinstance(read_results[0], ast.Subscript)
+    read_key = ast.unparse(read_results[0])
+    transforms = [
+        node for _, node in assignments
+        if any(isinstance(target, ast.Name) and target.id == transformed_name for target in node.targets)
+    ]
+    assert len(transforms) == 1
+    assert read_key in ast.unparse(transforms[0].value)
+
+    # The user-facing examples must stay bounded when previewing results.
+    for call_name in ("orchestrate_read", "orchestrate_write"):
+        cell = calls_for(call_name)[0][0]
+        tree = ast.parse(cell.source)
+        previews = [
+            node for node in tree.body
+            if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Name) and node.value.func.id == "display"
+        ]
+        assert len(previews) == 1
+        assert any(
+            isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "limit" and len(node.args) == 1
+            and isinstance(node.args[0], ast.Constant) and node.args[0].value == 10
+            for node in ast.walk(previews[0])
+        )
 
 def test_02_pipeline_scaffold_uses_public_fabricops_boundary():
     """The standard scaffold does not depend on private FabricOps modules."""
@@ -358,7 +406,6 @@ def test_02_pipeline_scaffold_uses_public_fabricops_boundary():
 def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
     """Each pipeline notebook defaults to bounded top-level Read and Write previews."""
     paths = [
-        NOTEBOOK_DIR / "02_pipeline.ipynb",
         DEMO_NOTEBOOK_DIR / "02A_full_refresh_demo.ipynb",
         DEMO_NOTEBOOK_DIR / "02B_incremental_append_demo.ipynb",
         DEMO_NOTEBOOK_DIR / "02C_scd_demo.ipynb",
@@ -394,7 +441,7 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
                 assert "read_lakehouse_table" not in calls
                 assert "read_warehouse_query" not in calls
                 assert cell.source.index(f"{orchestrator}(") < cell.source.index("display(")
-                if orchestrator == "orchestrate_write":
+                if orchestrator == "orchestrate_write" and "relative_path=" not in cell.source:
                     assert all(key in cell.source for key in ("dq_result", "sensitive_result", "support_mapping"))
                     if path.name != "02C_scd_demo.ipynb":
                         assert "# from fabricops_kit import read_" in cell.source
@@ -403,7 +450,7 @@ def test_four_pipeline_notebooks_have_consistent_bounded_dataframe_inspection():
 
 def test_four_pipeline_notebooks_follow_the_standard_02_layout_and_optional_inspection():
     """Demo variants retain the standard scaffold and its inspection choices."""
-    paths = [NOTEBOOK_DIR / "02_pipeline.ipynb", *DEMO_NOTEBOOKS]
+    paths = DEMO_NOTEBOOKS
     required_order = [
         "environment-heading",
         "imports",
@@ -428,12 +475,6 @@ def test_four_pipeline_notebooks_follow_the_standard_02_layout_and_optional_insp
                      for cell_id in required_order]
         assert positions == sorted(positions), path.name
         assert cells["environment-heading"].source.startswith("# 0. Workspace — Setup Notebook")
-        setup_cells = [cell for cell in notebook.cells
-                       if cell.cell_type == "code" and "setup_pipeline(" in cell.source]
-        for cell in setup_cells:
-            assert "source_drift_enabled=False" in cell.source
-            assert "source_drift_interval_days=1" in cell.source
-            assert "source_drift_block=True" in cell.source
 
         transform_cells = [cell for cell in notebook.cells
                            if cell.cell_type == "code" and cell.id.startswith("transform")]
@@ -450,6 +491,13 @@ def test_four_pipeline_notebooks_follow_the_standard_02_layout_and_optional_insp
                        if cell.cell_type == "code" and "orchestrate_write(" in cell.source]
         for cell in write_cells:
             assert cell.source.lstrip().startswith('writes["')
+            if 'relative_path=' in cell.source:
+                assert 'single_file=' not in cell.source
+                assert 'file_format="csv"' in cell.source
+                assert 'store="Silver"' in cell.source
+                assert 'relative_path="demo/curated_orders.csv"' in cell.source
+                assert '# from fabricops_kit import read_lakehouse_csv' in cell.source
+                continue
             assert "# Optional: inspect Data Quality diagnostics and caller-managed token mapping." in cell.source
             assert '.get("dq_result")' in cell.source
             assert '.get("sensitive_result")' in cell.source
@@ -468,9 +516,9 @@ def test_02a_preserves_the_full_refresh_pipeline():
         source for _, source in _code_cells(DEMO_NOTEBOOK_DIR / "02A_full_refresh_demo.ipynb")
     )
     assert code_source.count("orchestrate_read(") == 3
-    assert code_source.count('read_mode="full"') == 3
-    assert code_source.count("= orchestrate_write(") == 2
-    assert code_source.count('write_mode="overwrite"') == 2
+    assert 'read_mode="full"' not in code_source
+    assert code_source.count("= orchestrate_write(") == 3
+    assert code_source.count('write_mode="overwrite"') == 3
     assert 'sources=' not in code_source
     assert "FROM demo.order_history" in source
     assert "customer_summary_df" in source
@@ -496,7 +544,7 @@ def test_02b_has_ordered_independent_incremental_and_full_append_paths():
     assert '.dropDuplicates(["movement_id"])' in source
     assert 'mode="overwrite"' in _demo_cell(name, "read-csv").source
     assert source.count("orchestrate_read(") == 2
-    assert source.count('read_mode="full"') == 1
+    assert 'read_mode="full"' not in source
     assert source.count('read_mode="incremental"') == 1
 
     incremental_tree = ast.parse(_demo_cell(name, "read-1").source)
@@ -515,7 +563,7 @@ def test_02b_has_ordered_independent_incremental_and_full_append_paths():
     full_call = next(node for node in ast.walk(full_tree) if isinstance(node, ast.Call)
                      and isinstance(node.func, ast.Name) and node.func.id == "orchestrate_read")
     full_keywords = {keyword.arg: keyword.value for keyword in full_call.keywords}
-    assert ast.literal_eval(full_keywords["read_mode"]) == "full"
+    assert "read_mode" not in full_keywords
     assert "target_table_id" not in full_keywords and "read_parameters" not in full_keywords
 
     destinations = []
@@ -584,7 +632,7 @@ def test_02c_has_ordered_full_read_and_two_scd_writes():
     assert 'table_name="product_master_updates"' in source
     assert 'mode="overwrite"' in _demo_cell("02C_scd_demo.ipynb", "read-csv").source
     assert source.count("orchestrate_read(") == 1
-    assert 'read_mode="full"' in source
+    assert 'read_mode="full"' not in source
     assert 'write_mode="scd1"' in source
     assert 'write_mode="scd2"' in source
     assert 'sources=' not in _demo_cell('02C_scd_demo.ipynb', 'write-1').source
@@ -720,30 +768,34 @@ def test_finalization_is_one_call_without_manual_observation_profiling(notebook_
     assert "observation_profiles" not in source
 
 
-def test_02_templates_and_demo_variants_enable_orchestration_progress():
-    """Living 02 notebooks explicitly show Read/Write stage progress by default."""
-    import json
-    import ast
-    from pathlib import Path
+def test_02_pipeline_file_write_guidance_matches_automatic_layout_api():
+    """The parameter table describes current modes and the internal layout policy."""
+    notebook = _load_notebook(NOTEBOOK_DIR / '02_pipeline.ipynb')
+    guidance = next(cell.source for cell in notebook.cells if cell.id == 'write-heading')
+    assert '| `single_file` |' not in guidance
+    assert '| `max_single_file_rows` |' not in guidance
+    assert '| `max_single_file_bytes` |' not in guidance
+    assert 'one physical file by default' in guidance
+    assert '1,000,000 rows' in guidance and '100,000,000 encoded bytes (100 MB)' in guidance
+    assert 'exact requested path' in guidance
+    assert 'Files: `"overwrite"` or `"append_all"`' in guidance
+    assert 'omit the `Files/` prefix' in guidance
+    for field in ('output_layout', 'overflow_reason', 'file_count', 'output_bytes', 'publication_status'):
+        assert f'`{field}`' in guidance
 
-    paths = [Path("templates/notebooks/02_pipeline.ipynb"), *Path("templates/DemoData").glob("02*.ipynb")]
-    for path in paths:
-        notebook = json.loads(path.read_text(encoding="utf-8"))
-        calls = []
-        for cell in notebook["cells"]:
-            if cell["cell_type"] != "code":
-                continue
-            source = "".join(cell["source"])
-            if "orchestrate_read(" not in source and "orchestrate_write(" not in source:
-                continue
-            tree = ast.parse(source)
-            calls.extend(
-                node for node in ast.walk(tree)
-                if isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id in {"orchestrate_read", "orchestrate_write"}
-            )
-        assert calls, f"No Read/Write orchestration calls found in {path}"
-        for call in calls:
-            assert any(keyword.arg == "verbose" and isinstance(keyword.value, ast.Constant) and keyword.value.value is True
-                       for keyword in call.keywords), f"{path} must set verbose=True for every orchestrator call"
+
+@pytest.mark.parametrize('relative', [
+    'notebooks/02_pipeline.ipynb', 'DemoData/02A_full_refresh_demo.ipynb', 'DemoData/00C_demo_setup.ipynb',
+])
+def test_living_file_write_callers_use_current_public_keywords(relative):
+    """Demo and standard writer calls bind to the public API without removed knobs."""
+    import inspect
+    from fabricops_kit import orchestrate_write, write_lakehouse_file
+
+    functions = {'orchestrate_write': orchestrate_write, 'write_lakehouse_file': write_lakehouse_file}
+    for _, source in _code_cells(ROOT / 'templates' / relative):
+        for call in ast.walk(ast.parse(source)):
+            if isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id in functions:
+                signature = inspect.signature(functions[call.func.id])
+                keywords = {keyword.arg: object() for keyword in call.keywords if keyword.arg is not None}
+                signature.bind(*[object() for _ in call.args], **keywords)

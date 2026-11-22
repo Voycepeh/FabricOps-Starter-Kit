@@ -10,6 +10,7 @@
 
 :root {
   --md-main-width: min(96vw, 124rem);
+  --fabricops-content-width: 84rem;
 }
 
 /* Safe global container widening */
@@ -24,7 +25,7 @@
 
 .md-content__inner {
   margin: 0 auto;
-  max-width: min(100%, 108rem);
+  max-width: min(100%, var(--fabricops-content-width));
   box-sizing: border-box;
   padding-inline: clamp(0.8rem, 2vw, 2rem);
 }
@@ -94,7 +95,7 @@
   }
 
   .md-content__inner {
-    max-width: 118rem;
+    max-width: min(100%, var(--fabricops-content-width));
     padding-inline: clamp(1rem, 2.5vw, 2.5rem);
   }
 }

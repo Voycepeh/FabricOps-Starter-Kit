@@ -157,7 +157,8 @@ def test_destination_configuration_resolves_physical_workspace_and_item():
     identity = pipeline.resolve_physical_table_identity(config, "DEV", store="Silver", schema="demo", table_name="orders")
     op = operation(); op["table_id"] = identity["table_id"]
     resolved = service.resolve_promoted_operations([op], context={"config": config, "scope_workspace_id": "PROD"})
-    assert resolved[0]["destination"] == {"workspace_id": "REMOTE", "item_id": "approved-item", "kind": "lakehouse", "schema": "demo", "table_name": "orders"}
+    assert resolved[0]["asset_workspace_id"] == "REMOTE"
+    assert resolved[0]["destination"] == {"item_id": "approved-item", "kind": "lakehouse", "schema": "demo", "table_name": "orders"}
     assert resolved[0]["table_id"] == identity["table_id"]
     with pytest.raises(ValueError, match="not found"):
         service.resolve_promoted_operations([op], context={"config": config, "scope_workspace_id": "MISSING"})
@@ -232,4 +233,4 @@ def test_standard_template_saved_constants_are_frozen_in_cloned_setup():
 def test_cross_workspace_data_access_requires_an_effective_agreement():
     """An omitted Agreement cannot authorize physical data access in another workspace."""
     with pytest.raises(ValueError, match="effective Agreement"):
-        service.check_contract_agreement({"workspace_id": "REMOTE"}, execution_workspace_id="PROD", context={})
+        service.check_contract_agreement({"asset_workspace_id": "REMOTE"}, execution_workspace_id="PROD", context={})

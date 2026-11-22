@@ -24,8 +24,8 @@ def test_exact_contract_version_is_global():
 def test_create_draft_is_table_centric_and_reopens_one_version(monkeypatch):
     """Create one agreement-free table draft and reopen it without version churn."""
     catalogue = [{
-        "table_id": "orders", "workspace_id": "dev",
-        "metadata_level": "table", "is_active": True,
+        "table_id": "orders", "asset_workspace_id": "dev",
+        "asset_type": "TABLE", "columns_json": [], "is_active": True,
     }]
     contracts: list[dict] = []
     writes = []
@@ -81,7 +81,7 @@ def test_new_version_excludes_processing_from_scan_and_previous_contract(monkeyp
         "contract_payload_json": json.dumps(previous_payload),
     }
     catalogue = [{
-        "table_id": "orders", "workspace_id": "dev", "metadata_level": "table",
+        "table_id": "orders", "asset_workspace_id": "dev", "asset_type": "TABLE", "columns_json": [],
         "load_strategy": None, "load_strategy_parameters_json": {}, "is_active": True,
     }]
     rows = [frozen]
@@ -172,8 +172,8 @@ def test_authoring_state_resolves_contract_identity_in_requested_environment(mon
     tables = {
         service.DATA_CONTRACT_TABLE: contracts,
         "METADATA_DATA_CATALOGUE": [
-            {"table_id": "dev-t", "workspace_id": "dev", "metadata_level": "table"},
-            {"table_id": "prod-t", "workspace_id": "prod", "metadata_level": "table"},
+            {"table_id": "dev-t", "asset_workspace_id": "dev", "asset_type": "TABLE", "columns_json": []},
+            {"table_id": "prod-t", "asset_workspace_id": "prod", "asset_type": "TABLE", "columns_json": []},
         ],
         "enrichment": [],
         "guardrails": [],
@@ -381,7 +381,7 @@ def test_contract_payload_and_freeze_exclude_historical_scheduled_refresh():
     }
     tables = {
         "METADATA_DATA_CATALOGUE": [{
-            "table_id": "orders", "workspace_id": "dev", "metadata_level": "table",
+            "table_id": "orders", "asset_workspace_id": "dev", "asset_type": "TABLE", "columns_json": [],
             "schema_name": "sales", "table_name": "orders", "load_strategy": "append_all",
             "load_strategy_parameters_json": {}, "is_active": True,
         }],
@@ -420,7 +420,7 @@ def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):
     """Hydrate top values from the canonical profiled-frequency schema."""
     profiled = [{
         "profile_id": "profile-1", "profile_snapshot_id": "snapshot-1",
-        "table_id": "orders", "column_id": "amount", "_workspace_id": "dev",
+        "table_id": "orders", "column_id": "amount", "asset_workspace_id": "dev",
         "data_type": "double", "row_count": 120, "non_null_count": 120,
         "null_count": 0, "null_percent": 0.0, "distinct_count": 3,
         "distinct_percent": 2.5, "mean_value": 109.95, "stddev_value": 3.1,
@@ -444,7 +444,9 @@ def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):
     ]
 
     def read(name, **_kwargs):
-        return frequency if name == "METADATA_DATA_PROFILED_FREQUENCY" else profiled
+        return {"METADATA_DATA_PROFILED_FREQUENCY": [
+            {**row, "asset_workspace_id": "dev", "table_id": "orders", "column_id": "amount"} for row in frequency
+        ], "METADATA_DATA_PROFILED": profiled, "METADATA_PIPELINE_RUN": []}[name]
 
     monkeypatch.setattr(service, "read_lakehouse_table", read)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
@@ -462,18 +464,18 @@ def test_column_profile_context_uses_canonical_frequency_fields(monkeypatch):
         {"value": "113.15", "count": 30, "percent": 25.0},
     ]
 
-def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_lineage(monkeypatch):
-    """Summarize one logical table across workspaces without duplicating deployed pipelines."""
+def test_table_runtime_context_uses_exact_physical_profile_and_participation(monkeypatch):
+    """Use Run evidence for remote historical activity and exclude other physical assets."""
     profiled = [
         {
             "profile_id": "profile-dev", "profile_snapshot_id": "snapshot-dev",
-            "table_id": "orders", "column_id": "amount", "_workspace_id": "DEV",
+            "table_id": "orders", "column_id": "amount", "asset_workspace_id": "DEV",
             "_notebook_name": "02_pipeline", "_committed_by": "dev@example.com",
             "_committed_at": "2026-09-26T01:00:00", "_activity_id": "dev-profile",
         },
         {
             "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
-            "table_id": "orders", "column_id": "amount", "_workspace_id": "PROD",
+            "table_id": "orders", "column_id": "amount", "legacy_workspace_id": "CONFIG",
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 8, "distinct_percent": 6.667,
             "min_value": "29.9", "max_value": "438.6", "example_value": "109.95",
@@ -482,31 +484,31 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
         },
         {
             "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
-            "table_id": "orders", "column_id": "customer_id", "_workspace_id": "PROD",
+            "table_id": "orders", "column_id": "customer_id", "legacy_workspace_id": "CONFIG",
             "row_count": 120, "null_count": 0, "null_percent": 0.0,
             "distinct_count": 120, "distinct_percent": 100.0,
             "_notebook_name": "02_pipeline", "_committed_by": "prod@example.com",
             "_committed_at": "2026-09-26T02:45:00", "_activity_id": "prod-profile",
         },
     ]
-    lineage = [
+    participation = [
         {
             "lineage_id": "dev-writer-old", "table_id": "orders", "workspace_id": "DEV",
             "pipeline_role": "target", "_notebook_name": "02_pipeline",
             "_committed_at": "2026-09-25T10:00:00", "_activity_id": "1",
         },
         {
-            "lineage_id": "dev-writer-new", "table_id": "orders", "workspace_id": "DEV",
+            "lineage_id": "dev-writer-new", "table_id": "orders", "workspace_id": "DEV", "_workspace_id": "DEV",
             "pipeline_role": "target", "_notebook_name": "02_pipeline",
             "_committed_at": "2026-09-26T03:00:00", "_activity_id": "2",
         },
         {
-            "lineage_id": "prod-writer", "table_id": "orders", "workspace_id": "PROD",
+            "lineage_id": "prod-writer", "table_id": "orders", "workspace_id": "CONFIG",
             "pipeline_role": "target", "_notebook_name": "02_pipeline",
             "_committed_at": "2026-09-26T02:00:00", "_activity_id": "3",
         },
         {
-            "lineage_id": "prod-reader", "table_id": "orders", "workspace_id": "PROD",
+            "lineage_id": "prod-reader", "table_id": "orders", "workspace_id": "CONFIG",
             "pipeline_role": "source", "_notebook_name": "04_reporting",
             "_committed_at": "2026-09-26T02:30:00", "_activity_id": "4",
         },
@@ -514,11 +516,11 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
 
     frequency = [
         {
-            "_workspace_id": "PROD", "table_id": "orders", "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
+            "legacy_workspace_id": "CONFIG", "table_id": "orders", "profile_id": "profile-prod", "profile_snapshot_id": "snapshot-prod",
             "value": "109.95", "frequency_count": 50, "frequency_rank": 1,
         },
         {
-            "_workspace_id": "PROD", "table_id": "orders", "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
+            "legacy_workspace_id": "CONFIG", "table_id": "orders", "profile_id": "profile-prod-customer", "profile_snapshot_id": "snapshot-prod",
             "value": "C001", "frequency_count": 1, "frequency_rank": 1,
         },
     ]
@@ -528,24 +530,32 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
             return profiled
         if name == "METADATA_DATA_PROFILED_FREQUENCY":
             return frequency
-        if name == "METADATA_DATA_LINEAGE":
-            return lineage
+        if name == "METADATA_PIPELINE_RUN":
+            return [{"profiling": [{"table_id": "orders", "profile_snapshot_id": "snapshot-prod",
+                                    "status": "passed", "results_persisted": True,
+                                    "physical": {"workspace_id": "PROD"}}]}]
         raise AssertionError(name)
 
+    for row in participation:
+        row.update(execution_workspace_id=row["workspace_id"],
+                   pipeline_id="reporting" if row["pipeline_role"] == "source" else "pipeline",
+                   run_id=row["_activity_id"], operation_status="succeeded", run_status="succeeded",
+                   operation_completed_at=row["_committed_at"])
+    monkeypatch.setattr(service, "get_asset_pipeline_participation", lambda **kwargs: participation)
     monkeypatch.setattr(service, "read_lakehouse_table", read)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
 
-    context = service.get_table_runtime_context(
+    context = service.get_asset_runtime_context(
         config=object(), active_workspace_id="PROD", spark_session=object(), table_id="orders"
     )
 
     assert context["latest_profile"] == {
         "profile_snapshot_id": "snapshot-prod",
-        "workspace_id": "PROD",
+        "asset_workspace_id": "PROD",
         "pipeline_name": "02_pipeline",
         "committed_by": "prod@example.com",
         "committed_at": "2026-09-26T02:45:00",
-        "activity_id": "prod-profile", "notebook_id": "", "workspace_name": "",
+        "activity_id": "prod-profile", "notebook_id": "", "execution_workspace_name": "",
     }
     assert context["column_profiles"] == {
         "amount": {
@@ -562,14 +572,14 @@ def test_table_runtime_context_uses_latest_profile_and_groups_cross_environment_
     }
     assert context["writer_count"] == 1
     assert context["reader_count"] == 1
-    assert len(context["lineage"]) == 3
+    assert len(context["participation"]) == 3
     assert {
         (row["workspace_id"], row["relationship"], row["pipeline_name"], row["last_seen"])
-        for row in context["lineage"]
+        for row in context["participation"]
     } == {
         ("DEV", "Writer", "02_pipeline", "2026-09-26T03:00:00"),
-        ("PROD", "Writer", "02_pipeline", "2026-09-26T02:00:00"),
-        ("PROD", "Reader", "04_reporting", "2026-09-26T02:30:00"),
+        ("CONFIG", "Writer", "02_pipeline", "2026-09-26T02:00:00"),
+        ("CONFIG", "Reader", "04_reporting", "2026-09-26T02:30:00"),
     }
 
 
@@ -589,7 +599,7 @@ def test_saved_manifest_uses_block_for_mandatory_guardrails(guardrail_type):
         "action": "Warn", "is_active": True,
     }
     payload, _warnings = service.assemble_contract_payload(
-        draft=draft, workspace_id="dev", catalogue_rows=[{"table_id": "orders", "metadata_level": "table", "workspace_id": "dev", "is_active": True}], enrichment_rows=[], guardrail_rows=[rule],
+        draft=draft, workspace_id="dev", catalogue_rows=[{"table_id": "orders", "asset_type": "TABLE", "columns_json": [], "asset_workspace_id": "dev", "is_active": True}], enrichment_rows=[], guardrail_rows=[rule],
     )
     assert payload["guardrails"][0]["action"] == "Block"
     assert rule["action"] == "Warn"
@@ -620,29 +630,30 @@ def test_new_freeze_omits_profiling_and_preserves_historical_record():
 def test_runtime_context_bulk_profiles_match_column_reads(monkeypatch):
     """A wide table needs one read per metadata table, including older column snapshots."""
     profiles = [{"profile_id": f"p-{index}", "profile_snapshot_id": f"s-{index}",
-                 "table_id": "orders", "_workspace_id": "dev", "column_id": f"c-{index}",
+                 "table_id": "orders", "asset_workspace_id": "dev", "column_id": f"c-{index}",
                  "_committed_at": "2026-09-26T01:00:00Z", "row_count": 10}
                 for index in range(60)]
     profiles.append({**profiles[0], "profile_id": "failed", "status": "failed",
                      "_committed_at": "2026-09-27T01:00:00Z"})
     frequency = [{"profile_id": f"p-{index}", "profile_snapshot_id": f"s-{index}",
-                  "table_id": "orders", "_workspace_id": "dev", "column_id": f"c-{index}",
+                  "table_id": "orders", "asset_workspace_id": "dev", "column_id": f"c-{index}",
                   "value": f"v-{rank}", "frequency_count": 10 - rank,
                   "frequency_rank": rank, "frequency_percent": 10}
                  for index in range(60) for rank in (4, 2, 1, 3)]
-    frequency.extend([{**frequency[0], "_workspace_id": "other", "value": "foreign"},
+    frequency.extend([{**frequency[0], "workspace_id": "other", "value": "foreign"},
                       {**frequency[0], "profile_id": "old", "profile_snapshot_id": "old", "value": "old"}])
     reads = []
     def read(name, **_kwargs):
         reads.append(name)
         return {"METADATA_DATA_PROFILED": profiles,
                 "METADATA_DATA_PROFILED_FREQUENCY": frequency,
-                "METADATA_DATA_LINEAGE": []}[name]
+                "METADATA_PIPELINE_RUN": []}[name]
     monkeypatch.setattr(service, "read_lakehouse_table", read)
     monkeypatch.setattr(service, "metadata_table_physical_schema", lambda *_args: "engineering")
+    monkeypatch.setattr(service, "get_asset_pipeline_participation", lambda **kwargs: read("METADATA_PIPELINE_RUN"))
     kwargs = dict(config=object(), active_workspace_id="dev", spark_session=object(), table_id="orders")
-    bulk = service.get_table_runtime_context(**kwargs)["profile_contexts"]
-    assert len(reads) == 3
+    bulk = service.get_asset_runtime_context(**kwargs)["profile_contexts"]
+    assert len(reads) == 4
     assert len(bulk) == 60
     for column_id, context in bulk.items():
         assert context == service.get_column_profile_context(column_id=column_id, **kwargs)

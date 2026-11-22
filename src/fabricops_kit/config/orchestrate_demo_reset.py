@@ -18,7 +18,16 @@ from fabricops_kit.io.shared import (
     get_spark_session,
     resolve_configured_lakehouse_table,
 )
-from fabricops_kit.pipeline.shared import resolve_physical_table_identity
+from fabricops_kit.pipeline.shared import (
+    PROCESSING_STATE_SCHEMA,
+    PROCESSING_STATE_TABLE,
+    processing_state_path,
+    read_processing_state,
+    resolve_physical_table_identity,
+    validate_processing_state_schema,
+)
+
+_DEMO_PROCESSING_STATE = f"{PROCESSING_STATE_SCHEMA}.{PROCESSING_STATE_TABLE}"
 
 _DEMO_SOURCES = {
     ("Bronze", "orders"): ("demo/orders.csv", 120),
@@ -55,7 +64,10 @@ def _demo_metadata_counts(_state):
             raise RuntimeError(
                 f"{table} has missing columns or incompatible types: {', '.join(incompatible)}. Run the installed package metadata setup in the demo lakehouse, then restart 00C."
             )
-        counts[table] = frame.count()
+        counts[table] = (frame.where("lineage_version = 1") if table == "METADATA_DATA_LINEAGE" else frame).count()
+    state = read_processing_state(context=_state._demo_runtime)
+    validate_processing_state_schema(state.schema)
+    counts[_DEMO_PROCESSING_STATE] = state.count()
     return counts
 
 
@@ -76,7 +88,7 @@ def _demo_check_metadata_scope(_state, value):
     elif isinstance(value, dict):
         for key, item in value.items():
             if key in {"table_id", "source_table_id", "target_table_id", "incremental_target_table_id"}:
-                if item and item not in _state._demo_table_ids:
+                if item and item not in _state._demo_table_ids | _state._demo_source_ids:
                     raise RuntimeError(f"Non-demo table reference in {key}; metadata is preserved.")
             elif key == "source_id" and item:
                 if item not in _state._demo_source_ids:
@@ -89,10 +101,10 @@ def _demo_check_metadata_scope(_state, value):
                     raise RuntimeError("Non-demo source references; metadata is preserved.")
             elif key in {
                 "workspace_id",
+                "asset_workspace_id",
                 "_workspace_id",
                 "execution_workspace_id",
                 "source_workspace_id",
-                "evidence_workspace_id",
             }:
                 if item and str(item).casefold() not in _state._demo_workspaces:
                     raise RuntimeError("Non-demo workspace reference; metadata is preserved.")
@@ -226,13 +238,19 @@ def _demo_clear_metadata(_state, counts, order):
     from delta.tables import DeltaTable
 
     for _table in order:
-        _, _, _, _path = resolve_configured_lakehouse_table(
-            "Metadata", _table, metadata_table_physical_schema(_state._demo_config, _table)
-        )
+        if _table == _DEMO_PROCESSING_STATE:
+            _path = processing_state_path(_state._demo_runtime)
+        else:
+            _, _, _, _path = resolve_configured_lakehouse_table(
+                "Metadata", _table, metadata_table_physical_schema(_state._demo_config, _table)
+            )
         _removed = 0
         if counts[_table]:
             _delta = DeltaTable.forPath(_state.spark, _path)
-            _delta.delete()
+            if _table == "METADATA_DATA_LINEAGE":
+                _delta.delete("lineage_version = 1")
+            else:
+                _delta.delete()
             _removed = int(_delta.history(1).first()["operationMetrics"]["numDeletedRows"])
         print(f"{_table}: removed {_removed}")
 
@@ -272,10 +290,11 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     Notes
     -----
     True clears all current canonical metadata rows in the dedicated item,
-    including frozen Contracts, activations, approvals, promotion history,
-    Runs and Processing State. Saved submissions, Dry Run evidence and notebook
+    including frozen Contracts, activations, approvals, promotion history and
+    Runs. It also clears the dedicated Processing State table. Saved submissions, Dry Run evidence and notebook
     snapshots in its three native lifecycle folders are removed too. Table
-    definitions remain; no metadata migration is performed.
+    definitions remain; no metadata migration is performed. Historical Lineage
+    activity rows remain intact; only lineage_version=1 dependency facts are cleared.
 
     Four Day 1 tables are overwritten, Orders CSV is validated and retained,
     and five Silver outputs plus the obsolete Bronze Orders table are removed in the reserved
@@ -359,8 +378,8 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     }
     from fabricops_kit.data_contract.shared import file_source_identity
     _demo._demo_source_ids = {
-        file_source_identity(workspace_id=stores["Bronze"].workspace_id, item_id=stores["Bronze"].item_id,
-            relative_path=f"demo/orders.{extension}", file_format=kind)["source_id"]
+        file_source_identity(asset_workspace_id=stores["Bronze"].workspace_id, item_id=stores["Bronze"].item_id,
+            relative_path=f"demo/orders.{extension}", file_format=kind)["table_id"]
         for stores in _demo._demo_config.path_config.paths.values() if "Bronze" in stores
         for extension, kind in (("csv", "csv"), ("json", "json"), ("parquet", "parquet"), ("xlsx", "excel"))
     }
@@ -368,9 +387,9 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     _demo._demo_workspaces.update((store.workspace_id.casefold() for store in _demo.context.paths.values()))
     _demo_order = (
         "METADATA_GUARDRAIL_RESULTS",
-        "METADATA_PROCESSING_STATE",
-        "METADATA_DATA_LINEAGE",
+        _DEMO_PROCESSING_STATE,
         "METADATA_DATA_ACCESS",
+        "METADATA_DATA_LINEAGE",
         "METADATA_PIPELINE_RUN",
         "METADATA_PIPELINE_REGISTRY",
         "METADATA_PIPELINE_ACTIVATION",
@@ -385,9 +404,11 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     if set(_demo_counts) != set(_demo_order):
         raise RuntimeError("Metadata inventory changed. Review reset dependencies before deleting records.")
     for _table in _demo_counts:
-        for _row in read_lakehouse_table(
-            _table, store="Metadata", schema=metadata_table_physical_schema(_demo._demo_config, _table)
-        ).toLocalIterator():
+        _frame = (read_processing_state(context=runtime) if _table == _DEMO_PROCESSING_STATE else
+                  read_lakehouse_table(_table, store="Metadata", schema=metadata_table_physical_schema(_demo._demo_config, _table)))
+        if _table == "METADATA_DATA_LINEAGE":
+            _frame = _frame.where("lineage_version = 1")
+        for _row in _frame.toLocalIterator():
             _demo_check_metadata_scope(_demo, _row.asDict(recursive=True))
     _demo_file_counts = _demo_metadata_files(_demo)
     for _folder, _count in _demo_file_counts.items():

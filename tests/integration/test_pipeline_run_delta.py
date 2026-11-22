@@ -25,7 +25,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
     pytest.importorskip('delta.tables')
     if 'DeltaSparkSessionExtension' not in spark_session.conf.get('spark.sql.extensions', ''):
         pytest.skip('requires Delta Spark extensions')
-    tables = ('METADATA_PIPELINE_RUN', 'METADATA_GUARDRAIL_RESULTS', 'METADATA_DATA_CONTRACT', 'METADATA_DATA_AGREEMENT', 'METADATA_PIPELINE_REGISTRY')
+    tables = ('METADATA_DATA_LINEAGE', 'METADATA_PIPELINE_RUN', 'METADATA_GUARDRAIL_RESULTS', 'METADATA_DATA_CONTRACT', 'METADATA_DATA_AGREEMENT', 'METADATA_PIPELINE_REGISTRY')
     paths = {table: str(tmp_path / table) for table in tables}
     registry = metadata_table_schema_registry()
     for table in tables:
@@ -65,8 +65,8 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
                             'guardrail_type': 'schema', 'rule_type': 'required_columns',
                             'rule_parameters': {'required_columns': ['id-col']}, 'action': 'Block', 'is_active': True}]}
             contracts[table] = {'contract_id': 'contract-' + table, 'contract_version': 1, 'table_id': table,
-                'status': 'frozen', 'evidence_workspace_id': 'DEV', 'contract_payload_json': shared.canonical_pipeline_json(payload)}
-            bindings[table] = {'workspace_id': 'DEV', 'item_id': 'lakehouse', 'kind': 'lakehouse', 'schema': 'demo', 'table_name': table}
+                'status': 'frozen', 'asset_workspace_id': 'DEV', 'contract_payload_json': shared.canonical_pipeline_json(payload)}
+            bindings[table] = {'asset_workspace_id': 'DEV', 'item_id': 'lakehouse', 'kind': 'lakehouse', 'schema': 'demo', 'table_name': table}
         for contract in contracts.values():
             key = (contract['contract_id'], contract['contract_version'])
             if key not in retained:
@@ -80,14 +80,14 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
     def complete(plan):
         for key, operation in plan.evidence['operations'].items():
             operation.update(status='succeeded', read_mode='full' if key.startswith('source:') else None,
-                write_mode='overwrite' if key.startswith('target:') else None, source_table_ids=sorted(
-                    table for table, item in json.loads(plan.participants_json).items() if 'source' in item['roles']) if key.startswith('target:') else [],
+                write_mode='overwrite' if key.startswith('target:') else None, source_assets=sorted(
+                    [{'table_id': table, 'asset_type': 'TABLE'} for table, item in json.loads(plan.participants_json).items() if 'source' in item['roles']], key=lambda ref: ref['table_id']) if key.startswith('target:') else [],
                 stages=[{'stage': 'Read' if key.startswith('source:') else 'Processing', 'status': 'passed'},
                         {'stage': 'Schema', 'status': 'passed'}, {'stage': 'Profile', 'status': 'passed'}])
         plan.evidence['guardrail_history'] = [
             {'guardrail_result_id': str(uuid4()), 'guardrail_rule_id': 'schema-' + table, 'guardrail_version': 1,
              'table_id': table, 'table_name': table, 'contract_id': 'contract-' + table, 'contract_version': 1,
-             'execution_type': plan.execution_mode, 'run_id': plan.plan_id, 'workspace_id': 'DEV',
+             'execution_type': plan.execution_mode, 'run_id': plan.plan_id, 'execution_workspace_id': 'DEV',
              'status': 'passed', 'can_continue': True, 'severity': 'blocking', 'result_payload_json': '{}'}
             for table in json.loads(plan.participants_json)]
         plan.evidence['boundary_completed'] = True
@@ -253,3 +253,88 @@ def test_failed_run_publication_never_reports_success(runs_delta, monkeypatch):
         finalize_pipeline(shared.PipelineSession(plan, r.spark))
     assert r.rows() == before
     assert plan.evidence['persistence_failed'] and not plan.evidence.get('sealed')
+
+
+def _lineage_plan(runtime):
+    plan = runtime.make(mode='ungoverned')
+    runtime.complete(plan)
+    source = runtime.spark.createDataFrame([(1, 12)], 'id long, amount long')
+    shared.register_read_lineage(plan, {'table_id': 'table0', 'dataframe': source})
+    shared.capture_write_lineage(source.selectExpr('amount * 2 AS total'), context={'execution_plan': plan},
+                                table_id='table1', write_mode='overwrite')
+    plan.evidence['operations']['target:table1']['publication_status'] = 'published'
+    return plan
+
+
+def test_lineage_finalization_publishes_scalar_facts_and_retry_is_idempotent(runs_delta):
+    """Power BI facts persist through real Delta; rebuilding from physical Run JSON is stable."""
+    r = runs_delta
+    plan = _lineage_plan(r)
+    shared.finalize_pipeline_run(plan, spark_session=r.spark)
+    table = r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE'])
+    rows = table.collect()
+    assert rows and len({row.lineage_id for row in rows}) == len(rows)
+    assert any(row.source_table_id == 'table0' and row.source_column_name == 'amount'
+               and row.target_column_name == 'total' and row.dependency_type == 'VALUE' for row in rows)
+    assert all(not hasattr(field.dataType, 'elementType') and field.dataType.typeName() != 'struct' for field in table.schema)
+    assert all(row.run_id == plan.plan_id and row.lineage_version == 1 and row.publication_status == 'published' for row in rows)
+    physical_run = r.spark.read.format('delta').load(r.paths['METADATA_PIPELINE_RUN']).first().asDict(recursive=True)
+    first = shared.publish_column_lineage(physical_run, context=r.context, spark_session=r.spark)
+    second = shared.publish_column_lineage(physical_run, context=r.context, spark_session=r.spark)
+    assert first == second and first['row_count'] == len(rows)
+    assert r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).count() == len(rows)
+
+
+def test_lineage_failure_retries_projection_after_run_commit(runs_delta, monkeypatch):
+    """Projection permission failure leaves a finalized Run and can recover without business IO."""
+    r = runs_delta
+    plan = _lineage_plan(r)
+    write = shared.write_metadata_frame
+    def deny(frame, path, table, **kwargs):
+        if path == r.paths['METADATA_DATA_LINEAGE']:
+            raise PermissionError('test denial')
+        return write(frame, path, table, **kwargs)
+    monkeypatch.setattr(shared, 'write_metadata_frame', deny)
+    with pytest.raises(RuntimeError, match='Run .* is committed.*lineage projection failed') as caught:
+        shared.finalize_pipeline_run(plan, spark_session=r.spark)
+    assert caught.value.published is True and plan.evidence['sealed'] is True
+    assert r.rows()[0]['status'] == 'ungoverned_completed'
+    assert r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).count() == 0
+    monkeypatch.setattr(shared, 'write_metadata_frame', write)
+    shared.finalize_pipeline_run(plan, spark_session=r.spark)
+    assert plan.evidence['lineage_projection']['status'] == 'published'
+    assert r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).count() > 0
+
+
+def test_lineage_lost_append_acknowledgement_is_confirmed(runs_delta, monkeypatch):
+    """An acknowledged-by-read-back append never duplicates facts on retry."""
+    r = runs_delta
+    plan = _lineage_plan(r)
+    write = shared.write_metadata_frame
+    def lost_ack(frame, path, table, **kwargs):
+        result = write(frame, path, table, **kwargs)
+        if path == r.paths['METADATA_DATA_LINEAGE']:
+            raise OSError('test lost acknowledgement')
+        return result
+    monkeypatch.setattr(shared, 'write_metadata_frame', lost_ack)
+    shared.finalize_pipeline_run(plan, spark_session=r.spark)
+    assert plan.evidence['lineage_projection']['status'] == 'published'
+    monkeypatch.setattr(shared, 'write_metadata_frame', write)
+    shared.publish_column_lineage(r.rows()[0], context=r.context, spark_session=r.spark)
+    rows = r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).collect()
+    assert len(rows) == len({row.lineage_id for row in rows})
+
+
+def test_lineage_unknown_multi_column_outputs_publish_and_retry(runs_delta):
+    """Shared opaque boundaries still publish distinct output-column gap facts."""
+    r = runs_delta
+    plan = _lineage_plan(r)
+    rebuilt = r.spark.createDataFrame([(1, 12)], 'id long, amount long')
+    shared.capture_write_lineage(rebuilt, context={'execution_plan': plan}, table_id='table1', write_mode='overwrite')
+    shared.finalize_pipeline_run(plan, spark_session=r.spark)
+    shared.publish_column_lineage(r.rows()[0], context=r.context, spark_session=r.spark)
+    rows = r.spark.read.format('delta').load(r.paths['METADATA_DATA_LINEAGE']).collect()
+    assert {row.target_column_name for row in rows} == {'id', 'amount'}
+    assert all(row.record_type == 'GAP' and row.coverage == 'unknown' for row in rows)
+    assert all(row.source_column_id is None for row in rows)
+    assert len({row.lineage_id for row in rows}) == len(rows) == 2

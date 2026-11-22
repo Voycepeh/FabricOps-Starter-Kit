@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from fabricops_kit.config.metadata_schemas import decode_metadata_row
+
 import ast
 from datetime import UTC, datetime
 import logging
@@ -167,7 +169,7 @@ def _ai_usage_schema() -> Any:
             ("completed_at", "timestamp", False),
             ("duration_ms", "long", False),
             ("workspace_id", "string", False),
-            ("evidence_workspace_id", "string"),
+            ("asset_workspace_id", "string"),
             ("table_id", "string"),
             ("column_id", "string"),
             ("contract_id", "string"),
@@ -208,7 +210,7 @@ def _persist_ai_usage(record: dict[str, Any], *, spark: Any, runtime_context: di
     row.update(audit)
     row["workspace_id"] = audit["_workspace_id"]
     metadata = resolved.get("ai_usage_metadata") or {}
-    for name in ("evidence_workspace_id", "table_id", "column_id", "contract_id", "contract_version"):
+    for name in ("asset_workspace_id", "table_id", "column_id", "contract_id", "contract_version"):
         row[name] = metadata.get(name)
     stats = record.get("statistics") or []
     for name in ("input_tokens", "output_tokens", "cached_tokens", "reasoning_tokens",
@@ -412,6 +414,8 @@ def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
         "table_classification": str(state.get("table_classification") or ""),
         "contract_id": str(state.get("contract_id") or ""),
         "contract_version": int(state.get("contract_version") or 0),
+        "classification_levels": dict(state.get("classification_levels") or {}),
+        "classification_order": list(state.get("classification_levels") or {}),
         "columns": columns,
     }
 
@@ -470,6 +474,12 @@ def suggest_sensitive_data(
     """Return validated transient Sensitive Data rule suggestions."""
     if not str(prompt).strip():
         raise AIConfigurationError("An AI Sensitive Data prompt is required.")
+    classifications = context.get("classification_levels")
+    if not isinstance(classifications, dict) or not classifications or any(
+        not isinstance(label, str) or not label.strip() or not isinstance(explanation, str) or not explanation.strip()
+        for label, explanation in classifications.items()
+    ):
+        raise AIConfigurationError("Configured classification_levels labels and explanations are required.")
     allowed_columns = {
         str(row.get("column_name") or ""): str(row.get("column_id") or "")
         for row in context.get("columns", [])
@@ -479,7 +489,13 @@ def suggest_sensitive_data(
     instruction = (
         f"{prompt.strip()}\n\nSuggest advisory Sensitive Data rules using only this metadata context. "
         "Assess every supplied column as Direct PII, Indirect PII, or Not PII. "
-        "Return JSON only as a list of objects with column, pii_type, reason, treatment, action, and parameters. "
+        "Return JSON only as a list of objects with column, pii_type, reason, treatment, action, parameters, "
+        "output_classification, and classification_reason. "
+        "Choose output_classification from the supplied classification_levels keys using their definitions "
+        "and residual sensitivity after treatment. Explain it in classification_reason. Classification levels "
+        "are ranked from lowest to highest in classification_order. Never assume treatment automatically "
+        "makes data less sensitive. Not PII can still be business-sensitive and requires a classification. "
+        "For remove, output_classification must be null because the column is excluded from output. "
         "The column field must be the supplied column_name string, not a column object. "
         "Use pii_type values direct, indirect, or none. For none, treatment must be null, action must be null, "
         "and parameters must be an empty object. "
@@ -514,6 +530,19 @@ def suggest_sensitive_data(
         reason = str(candidate.get("reason") or "").strip()
         if not reason:
             raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} requires a reason.")
+        if "output_classification" not in candidate:
+            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} requires output_classification.")
+        output_classification = candidate["output_classification"]
+        classification_reason = candidate.get("classification_reason")
+        if not isinstance(classification_reason, str) or not classification_reason.strip():
+            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} requires classification_reason.")
+        classification_reason = classification_reason.strip()
+        if candidate.get("treatment") == "remove":
+            if output_classification is not None:
+                raise ValueError("Removed columns must have null output_classification.")
+        elif not isinstance(output_classification, str) or output_classification not in classifications:
+            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} has an unconfigured output_classification.")
+        classification = {"output_classification": output_classification, "classification_reason": classification_reason}
         if pii_type == "none":
             if candidate.get("treatment") not in (None, "") or candidate.get("action") not in (None, ""):
                 raise ValueError("Not PII suggestions cannot include a treatment or action.")
@@ -529,6 +558,7 @@ def suggest_sensitive_data(
                 "action": None,
                 "parameters": {},
                 "is_active": False,
+                **classification,
             })
             seen.add(column_name)
             continue
@@ -557,6 +587,7 @@ def suggest_sensitive_data(
             "action": action,
             "parameters": {key: value for key, value in parameters.items() if key != "scope"},
             "is_active": True,
+            **classification,
         })
         seen.add(column_name)
     return suggestions
@@ -1055,9 +1086,9 @@ def catalogue_table_options(catalogue_rows: Any, *, workspace_id: str) -> list[d
     """Return current table-level Catalogue options for one workspace_id."""
     latest: dict[str, dict[str, Any]] = {}
     for row in _rows(catalogue_rows):
-        if str(row.get("workspace_id") or "") != str(workspace_id):
+        if str(row.get("asset_workspace_id") or "") != str(workspace_id):
             continue
-        if str(row.get("metadata_level") or "").lower() != "table":
+        if row.get("asset_type") != "TABLE":
             continue
         table_id = str(row.get("table_id") or "").strip()
         if not table_id:
@@ -1132,53 +1163,21 @@ def catalogue_table_browser_state(
     contract_version: int,
     current_values: dict[tuple[str, str, int, str, str], dict[str, Any]],
 ) -> dict[str, Any]:
-    """Return one workspace-specific Catalogue table and its column history."""
-    rows = [
-        row
-        for row in _rows(catalogue_rows)
-        if str(row.get("workspace_id") or "") == str(workspace_id)
-        and str(row.get("table_id") or "") == str(table_id)
-    ]
-    if not rows:
-        raise ValueError(f"No Catalogue rows found for table_id={table_id!r} in workspace_id {workspace_id!r}.")
-    table_rows = [row for row in rows if str(row.get("metadata_level") or "").lower() == "table"]
-    if not table_rows:
-        raise ValueError(f"Catalogue table identity {table_id!r} has no table-level row in workspace_id {workspace_id!r}.")
-    table_row = max(
-        table_rows,
-        key=lambda row: (metadata_timestamp_sort_key(row.get("last_profiled_at")), str(row.get("_activity_id") or "")),
-    )
-    columns: list[dict[str, Any]] = []
-    latest_columns: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        if str(row.get("metadata_level") or "").lower() != "column":
-            continue
-        column_id = str(row.get("column_id") or "").strip()
-        if not column_id:
-            continue
-        order = (metadata_timestamp_sort_key(row.get("last_profiled_at")), str(row.get("_activity_id") or ""))
-        current = latest_columns.get(column_id)
-        if current is None or order > current["_sort_key"]:
-            latest_columns[column_id] = {**row, "_sort_key": order}
-    for column_id, row in latest_columns.items():
-        active = row.get("is_active") is not False
-        columns.append(
-            {
-                "column_id": column_id,
-                "column_name": str(row.get("column_name") or column_id),
-                "status": "current" if active else "removed",
-                "last_observed_at": row.get("last_profiled_at"),
-                "catalogue_row": dict(row),
-                "enrichment_values": _enrichment_values(
-                    current_values,
-                    level="column",
-                    contract_id=contract_id,
-                    contract_version=contract_version,
-                    column_id=column_id,
-                ),
-            }
-        )
-    columns.sort(key=lambda row: (row["status"] != "current", row["column_name"].casefold(), row["column_id"]))
+    """Return one physical Catalogue table and its current observed columns."""
+    rows = [row for row in _rows(catalogue_rows)
+            if row.get("asset_type") == "TABLE" and row.get("is_active") is not False
+            and row.get("asset_workspace_id") == workspace_id and row.get("table_id") == table_id]
+    if len(rows) != 1:
+        raise ValueError(f"Expected one active Catalogue TABLE {table_id!r} in workspace {workspace_id!r}.")
+    table_row = rows[0]
+    observed = decode_metadata_row("METADATA_DATA_CATALOGUE", table_row).get("columns_json")
+    columns = [{
+        "column_id": column["column_id"], "column_name": column["column_name"], "status": "current",
+        "last_observed_at": table_row.get("last_observed_at"), "catalogue_row": dict(column),
+        "enrichment_values": _enrichment_values(current_values, level="column", contract_id=contract_id,
+                                                contract_version=contract_version, column_id=column["column_id"]),
+    } for column in observed or []]
+    columns.sort(key=lambda row: (row["column_name"].casefold(), row["column_id"]))
     return {
         "table_id": table_id,
         "contract_id": contract_id,

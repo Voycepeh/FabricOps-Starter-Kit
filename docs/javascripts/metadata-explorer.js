@@ -6,42 +6,21 @@
   const definitions = [
     ["DATA_STEWARD", "governance", ["steward_id"], [], "metadata_data_steward/"],
     ["DATA_AGREEMENT", "governance", ["agreement_id", "agreement_version"], ["provider_steward_id", "recipient_steward_id"], "metadata_data_agreement/"],
-    ["DATA_CONTRACT", "governance", ["contract_id", "contract_version"], ["table_id"], "metadata_data_contract/"],
-    ["DATA_CONTRACT_ACTIVATION", "governance", ["workspace_id", "table_id", "revision"], ["contract_id/version", "agreement_id/version"], "metadata_data_contract_activation/"],
+    ["DATA_CONTRACT", "governance", ["contract_id", "contract_version"], [], "metadata_data_contract/"],
+    ["DATA_CONTRACT_ACTIVATION", "governance", ["activation_id"], ["contract_id/version", "agreement_id/version"], "metadata_data_contract_activation/"],
     ["PIPELINE_ACTIVATION", "governance", ["approval_id"], [], "metadata_pipeline_activation/"],
     ["PIPELINE_REGISTRY", "engineering", ["execution_workspace_id", "pipeline_id", "pipeline_version"], ["approval_id"], "metadata_pipeline_registry/"],
     ["PIPELINE_RUN", "engineering", ["run_id"], ["promotion_id", "operations[].contract_id/version"], "metadata_pipeline_run/"],
     ["GUARDRAIL_RESULTS", "engineering", ["guardrail_result_id"], ["run_id", "contract_id", "contract_version"], "metadata_guardrail_results/"],
-    ["DATA_CATALOGUE", "engineering", ["environment_name", "table_id", "column_id"], [], "metadata_data_catalogue/"],
-    ["DATA_PROFILED", "engineering", ["profile_id"], ["table_id", "column_id"], "metadata_data_profiled/"],
-    ["DATA_PROFILED_FREQUENCY", "engineering", ["frequency_id"], ["profile_id", "table_id"], "metadata_data_profiled_frequency/"],
-    ["DATA_LINEAGE", "engineering", ["lineage_id"], ["table_id"], "metadata_data_lineage/"],
-    ["PROCESSING_STATE", "engineering", ["record_id"], ["source_table_id", "target_table_id", "run_id", "publication_id"], "metadata_processing_state/"],
-    ["DATA_ACCESS", "engineering", ["access_id"], ["table_id"], "metadata_data_access/"]
+    ["DATA_CATALOGUE", "engineering", ["asset_workspace_id", "table_id", "asset_type"], [], "metadata_data_catalogue/"],
+    ["DATA_PROFILED", "engineering", ["profile_id"], [], "metadata_data_profiled/"],
+    ["DATA_PROFILED_FREQUENCY", "engineering", ["frequency_id"], ["profile_id"], "metadata_data_profiled_frequency/"],
+    ["DATA_LINEAGE", "engineering", ["lineage_id"], ["run_id"], "metadata_data_lineage/"],
+    ["DATA_ACCESS", "engineering", ["access_id"], [], "metadata_data_access/"]
   ];
 
-  // Cardinalities always follow the declared parent-to-child direction.
-  // Relationship tooltips identify that direction when inspecting either table.
-  // Registry cardinalities describe separate activation records; control is internal.
-  const links = [
-    ["DATA_STEWARD", "DATA_AGREEMENT", "1-N", "Provider or recipient"],
-    ["DATA_AGREEMENT", "DATA_CONTRACT_ACTIVATION", "1-N", "Exact Agreement governing a physical frozen Contract selection"],
-    ["PIPELINE_ACTIVATION", "PIPELINE_REGISTRY", "1-N", "Independent approval authorizes Engineering deployment"],
-    ["PIPELINE_REGISTRY", "DATA_CONTRACT_ACTIVATION", "N-N", "Logical physical workspace/Table ID association"],
-    ["DATA_CONTRACT_ACTIVATION", "DATA_CONTRACT", "N-1", "Independent exact frozen Contract activation"],
-    ["PIPELINE_RUN", "DATA_CONTRACT", "N-N", "Exact operation contracts"],
-    ["DATA_CATALOGUE", "DATA_CONTRACT", "1-N", "Contracts for a table"],
-    ["PIPELINE_REGISTRY", "PIPELINE_RUN", "1-N", "Captured immutable Pipeline Promotion; Fabric validation pending"],
-    ["PIPELINE_RUN", "GUARDRAIL_RESULTS", "1-N", "Run evaluations"],
-    ["PIPELINE_RUN", "PROCESSING_STATE", "1-N", "Run processing state"],
-    ["DATA_CATALOGUE", "PROCESSING_STATE", "1-N", "Source and target processing state"],
-    ["DATA_CATALOGUE", "DATA_PROFILED", "1-N", "Profile snapshots"],
-    ["DATA_CATALOGUE", "DATA_PROFILED_FREQUENCY", "1-N", "Frequency snapshots"],
-    ["DATA_PROFILED", "DATA_PROFILED_FREQUENCY", "1-N", "Optional statistical profile"],
-    ["DATA_CATALOGUE", "DATA_LINEAGE", "1-N", "Lineage records"],
-    ["DATA_CATALOGUE", "DATA_ACCESS", "1-N", "Access observations"],
-    ["DATA_CONTRACT", "GUARDRAIL_RESULTS", "1-N", "Contract evaluations"]
-  ];
+  // The approved SVG owns the overview's direct key relationships.
+  let links = [];
 
   const byName = new Map(definitions.map(row => [row[0], row]));
   const escapeHtml = value => String(value).replace(/[&<>"']/g, ch => ({
@@ -110,7 +89,7 @@
     root.innerHTML =
       '<div class="metadata-explorer-topbar">' +
       '<span class="metadata-explorer-legend"><i class="metadata-dot governance"></i> Governance <i class="metadata-dot engineering"></i> Engineering</span>' +
-      '<span class="metadata-explorer-hint">Solid: keyed joins · Dashed: conceptual references</span>' +
+      '<span class="metadata-explorer-hint">Application-level key references · Delta does not enforce PK/FK</span>' +
       '</div>' +
       '<div class="metadata-explorer-layout">' +
       '<div class="metadata-explorer-viewport" role="region" tabindex="0" aria-label="Scrollable metadata relationship diagram">' +
@@ -161,7 +140,6 @@
     const approvedDiagram = new URL("../../assets/fabricops-metadata-approved.svg", document.baseURI);
     graph.style.width = "100%";
     graph.style.minWidth = "860px";
-    graph.style.aspectRatio = "1540 / 980";
     fetch(approvedDiagram).then(response => {
       if (!response.ok) throw new Error("Approved diagram returned " + response.status);
       return response.text();
@@ -172,7 +150,7 @@
       svg.classList.add("metadata-explorer-approved-svg");
       svg.setAttribute("aria-label", "FabricOps metadata ERD. Select a table to inspect its details.");
       svg.querySelectorAll("a").forEach(link => {
-        const nativeTitle = link.querySelector("title");
+        const nativeTitle = link.querySelector(":scope > title");
         const caption = nativeTitle?.textContent || "";
         const name = caption.split("Open metadata documentation: ").pop().trim();
         if (!byName.has(name)) return;
@@ -199,15 +177,22 @@
         });
         buttons[name] = link;
       });
+      links = Array.from(svg.querySelectorAll(".metadata-er-relationship"), group => {
+        const from = group.getAttribute("data-from");
+        const to = group.getAttribute("data-to");
+        if (!byName.has(from) || !byName.has(to)) throw new Error("Unknown ERD relationship");
+        return [from, to, group.getAttribute("data-cardinality"), group.querySelector("title")?.textContent || "", group.getAttribute("data-kind")];
+      });
       if (Object.keys(buttons).length !== definitions.length) throw new Error("Unexpected approved diagram table count");
       graph.replaceChildren(svg);
       select("DATA_AGREEMENT");
     }).catch(() => {
+      graph.style.minWidth = "0";
       graph.innerHTML = '<p class="metadata-explorer-loading">Unable to load the diagram. Open a metadata table directly:</p>' +
-        '<nav aria-label="Metadata table references">' +
+        '<nav class="metadata-explorer-fallback" aria-label="Metadata table references">' +
         definitions.filter(row => row[4])
           .map(row => '<a href="' + escapeHtml(row[4]) + '">METADATA_' + escapeHtml(row[0]) + '</a>')
-          .join(" · ") + '</nav>';
+          .join("") + '</nav>';
       select("DATA_AGREEMENT");
     });
 
@@ -219,9 +204,6 @@
       return links.filter(edge => edge[0] === name || edge[1] === name);
     }
 
-    const logicalJoinKeys = {
-      "DATA_CATALOGUE|DATA_PROFILED_FREQUENCY": ["DATA_PROFILED_FREQUENCY.table_id + column_id → DATA_CATALOGUE.table_id + column_id (logical table/column reference)"]
-    };
     const keyJoinRows = (from, to) => {
       const rows = [];
       for (const child of [from, to]) {
@@ -239,7 +221,33 @@
         rows.push("PIPELINE_RUN.promotion_id → PIPELINE_REGISTRY.promotion_id (exact immutable per-workspace Pipeline Promotion)");
       }
       if (rows.length) return rows;
-      return logicalJoinKeys[from + "|" + to] || logicalJoinKeys[to + "|" + from] || ["Logical relationship; no physical FK declared"];
+      const assetTable = from === "DATA_CATALOGUE" ? to : to === "DATA_CATALOGUE" ? from : null;
+      if (assetTable === "PIPELINE_RUN") {
+        return [
+          "operations[].asset_workspace_id → DATA_CATALOGUE.asset_workspace_id",
+          "operations[].table_id → DATA_CATALOGUE.table_id",
+          "operations[].asset_type → DATA_CATALOGUE.asset_type",
+        ];
+      }
+      if (assetTable === "DATA_LINEAGE") {
+        return ["source_", "target_"].map(prefix =>
+          "DATA_LINEAGE.(" + ["asset_workspace_id", "table_id", "asset_type"].map(field => prefix + field).join(" + ") +
+          ") → DATA_CATALOGUE.(asset_workspace_id + table_id + asset_type)");
+      }
+      if (assetTable === "GUARDRAIL_RESULTS") {
+        return ["GUARDRAIL_RESULTS.(asset_workspace_id + table_id + asset_type) → DATA_CATALOGUE.(asset_workspace_id + table_id + asset_type) (when resolved)"];
+      }
+      if (assetTable) {
+        const model = modelFor(assetTable);
+        const physicalFields = model.catalogue_reference_fields || [];
+        if (physicalFields.length) {
+          const key = physicalFields.join(" + ");
+          return [assetTable + ".(" + key + ") → DATA_CATALOGUE.(" + key + ")"];
+        }
+        const identityFields = model.asset_identity_fields || [];
+        return identityFields.map(field => assetTable + "." + field + " → DATA_CATALOGUE.table_id (logical asset reference)");
+      }
+      return ["Logical relationship; no physical FK declared"];
     };
     function renderRelationships(name) {
       const relationshipsForTable = relationships(name);
@@ -249,10 +257,16 @@
           const other = edge[0] === name ? edge[1] : edge[0];
           const joinLines = keyJoinRows(edge[0], edge[1]);
           const referenceOnly = !edge[2];
+          const logicalAssetReference = edge[0] === "DATA_CATALOGUE" && !modelFor(edge[1]).catalogue_reference_fields?.length;
+          const relationshipKind = edge[0] === "DATA_CATALOGUE" && edge[1] === "DATA_CONTRACT"
+            ? "Required Catalogue reference checked at draft creation"
+            : edge[0] === "DATA_CATALOGUE" && edge[1] === "PIPELINE_RUN" ? "Asset participation via operations"
+            : edge[4] === "reference" ? "Asset reference by physical identity"
+            : logicalAssetReference ? "Logical asset reference" : "Application-enforced identity reference";
           return '<div class="metadata-explorer-related-row">' +
             '<span class="metadata-explorer-cardinality-text' +
             (referenceOnly ? ' metadata-explorer-reference-label' : '') +
-            '" title="' + escapeHtml(edge[0] + ' → ' + edge[1] + ': ' + edge[3] + '; Application-enforced identity reference') + '">' +
+            '" title="' + escapeHtml(edge[0] + ' → ' + edge[1] + ': ' + edge[3] + ' · ' + relationshipKind) + '">' +
             escapeHtml(cardinalityFrom(edge, name)) + '</span>' +
             '<button type="button" class="metadata-explorer-related-link" data-table="' + escapeHtml(other) + '">' +
             escapeHtml(other) + '</button>' +
@@ -302,7 +316,14 @@
         '<p class="metadata-explorer-purpose">' + escapeHtml(model.purpose || status || "") + '</p>' +
         '<div class="metadata-explorer-detail-facts">' +
         '<div><strong>One row represents</strong><span>' + escapeHtml(model.grain || "Logical release held in activation authority") + '</span></div>' +
-        '<div><strong>Primary key</strong><code>' + escapeHtml((model.primary_key || pk).join(" · ")) + '</code></div>' +
+        '<div><strong>' + ((model.primary_key || pk).length > 1 ? 'Composite primary key' : 'Primary key') +
+        '</strong><code>' + escapeHtml((model.primary_key || pk).join(" + ")) + '</code></div>' +
+        (model.catalogue_reference_fields?.length
+          ? '<div><strong>Composite foreign key to Data Catalogue</strong><code>' +
+            escapeHtml(model.catalogue_reference_fields.join(" + ")) + '</code></div>'
+          : (model.asset_identity_fields || []).length
+          ? '<div><strong>Asset identity fields</strong><code>' + escapeHtml(model.asset_identity_fields.join(" · ")) + '</code></div>'
+          : '') +
         '<div><strong>Written via</strong><span>' + (writers || "See activation authority") + '</span></div>' +
         '</div></div>' +
         '<div class="metadata-explorer-relationship-summary"><h4>Relationships</h4>' +

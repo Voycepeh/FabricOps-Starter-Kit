@@ -17,19 +17,17 @@ def snapshots(spark_session, monkeypatch, tmp_path):
     if 'DeltaSparkSessionExtension' not in spark_session.conf.get('spark.sql.extensions', ''):
         pytest.skip('requires Delta Spark extensions')
     spark_session.conf.set("spark.databricks.delta.snapshotPartitions", "2")
-    schema = shared.metadata_table_schema_registry()[shared._PROCESSING_STATE_TABLE]
-    path = str(tmp_path / 'configured-metadata' / 'engineering' / 'state')
+    schema = shared.processing_state_schema()
+    path = str(tmp_path / 'configured-metadata' / 'Tables' / shared.PROCESSING_STATE_SCHEMA / shared.PROCESSING_STATE_TABLE)
     spark_session.createDataFrame([], schema).write.format('delta').option('delta.isolationLevel', 'Serializable').save(path)
     sources = {'orders': spark_session.createDataFrame([(1, 'a'), (2, 'b'), (3, 'c')], 'id int, value string')}
-    def read(table, **kwargs):
-        return spark_session.read.format('delta').load(path) if table == shared._PROCESSING_STATE_TABLE else sources[table]
-    def write(frame, table, **kwargs):
-        assert table == shared._PROCESSING_STATE_TABLE and kwargs['store'] == 'Metadata' and kwargs['schema'] == 'engineering'
-        frame.write.format('delta').mode(kwargs['mode']).options(**(kwargs.get('options') or {})).save(path)
-    monkeypatch.setattr(shared, 'read_lakehouse_table', read)
+    def read_state(**kwargs):
+        return spark_session.read.format('delta').load(path)
+    monkeypatch.setattr(shared, 'read_lakehouse_table', lambda table, **kw: sources[table])
+    monkeypatch.setattr(shared, 'read_processing_state', read_state)
+    monkeypatch.setattr(shared, 'processing_state_path', lambda context: path)
     warehouse = Mock(side_effect=lambda schema, table, **kw: sources[table])
     monkeypatch.setattr(__import__('fabricops_kit.io', fromlist=['read_warehouse_table']), 'read_warehouse_table', warehouse)
-    monkeypatch.setattr(shared, 'write_lakehouse_table', write)
     monkeypatch.setattr(shared, 'metadata_table_physical_schema', lambda *a: 'engineering')
     monkeypatch.setattr(shared, 'resolve_configured_lakehouse_table', lambda *a, **kw: (None, None, None, path))
     monkeypatch.setattr(shared, 'pipeline_physical_bindings', lambda identities, config, workspace_id: {
@@ -52,7 +50,7 @@ def snapshots(spark_session, monkeypatch, tmp_path):
                 'operations': {}, 'source_drift_decision': {'can_continue': True},
                 'final_result': {'status': 'ungoverned_completed', 'boundary_completed': True}})
         return plan, {**runtime, 'execution_plan': plan}, identity
-    return SimpleNamespace(run=run, state=lambda: read(shared._PROCESSING_STATE_TABLE), sources=sources,
+    return SimpleNamespace(run=run, state=read_state, sources=sources,
         warehouse=warehouse, spark=spark_session, path=path, diagnostics=diagnostics)
 
 
@@ -91,6 +89,30 @@ def test_complete_source_first_baseline_shared_schedule_and_exact_changes(snapsh
     assert 'profiling' not in second.evidence
     if kind == 'warehouse':
         assert rt.warehouse.call_args.args == ('demo', 'orders')
+
+
+@pytest.mark.parametrize("failed_append", [0, 1], ids=["evidence", "manifest"])
+def test_snapshot_retries_only_the_aborted_append(snapshots, monkeypatch, failed_append):
+    class ConcurrentAppendException(RuntimeError):
+        pass
+
+    writes = []
+    write_delta_path = shared.write_delta_path
+
+    def write(frame, path, *, mode):
+        writes.append(frame)
+        if len(writes) - 1 == failed_append:
+            raise ConcurrentAppendException("aborted append")
+        write_delta_path(frame, path, mode=mode)
+
+    monkeypatch.setattr(shared, "write_delta_path", write)
+    monkeypatch.setattr("fabricops_kit.io.shared.sleep", lambda delay: None)
+    _, context, identity = snapshots.run()
+    assert shared.observe_full_source(identity, context=context)["status"] == "baseline_pending"
+    assert len(writes) == 3
+    assert writes[failed_append] is writes[failed_append + 1]
+    counts = {row["record_type"]: row["count"] for row in snapshots.state().groupBy("record_type").count().collect()}
+    assert counts == {"source_snapshot": 1, "source_row_evidence": 3}
 
 
 def test_dry_run_diagnostics_never_persist_or_consume_history(snapshots):

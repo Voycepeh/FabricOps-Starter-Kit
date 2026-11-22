@@ -13,6 +13,7 @@ from pyspark.sql import functions as F
 
 from fabricops_kit import orchestrate_demo_reset, read_lakehouse_csv, read_lakehouse_table, write_lakehouse_table
 from fabricops_kit.config.metadata_schemas import metadata_table_schema_registry
+from fabricops_kit.pipeline.shared import PROCESSING_STATE_SCHEMA, PROCESSING_STATE_TABLE, processing_state_schema
 from tests.unit.test_orchestrate_demo_reset import API, _environment
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -65,10 +66,23 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
         if table == 'METADATA_DATA_CONTRACT': record['status'] = 'frozen'
         if table in {'METADATA_DATA_CONTRACT_ACTIVATION', 'METADATA_PIPELINE_REGISTRY'}: record['status'] = 'active'
         write(run.spark.createDataFrame([record], schema), table_name=table, store='Metadata', schema='metadata', mode='overwrite')
+    state_path = str(run.root / "Metadata" / "Tables" / PROCESSING_STATE_SCHEMA / PROCESSING_STATE_TABLE)
+    state_schema = processing_state_schema()
+    audit = {
+        field.name: datetime(2026, 1, 1) if field.name == "_committed_at" else "dev"
+        for field in state_schema if field.name.startswith("_")
+    }
+    checkpoint = {**audit, "record_id": "observation", "record_type": "source_observation",
+                  "status": "observed", "workspace_id": "dev", "source_table_id": "orders"}
+    run.spark.createDataFrame([checkpoint], state_schema).write.format("delta").save(state_path)
+    monkeypatch.setattr(API, "processing_state_path", lambda context: state_path)
+    monkeypatch.setattr(API, "read_processing_state", lambda **kw: run.spark.read.format("delta").load(state_path))
     sentinel = run.spark.createDataFrame([(77,)], 'id int')
     write(sentinel, table_name='unrelated', store='Silver', schema='other', mode='overwrite')
     for store, table in API._DEMO_REMOVALS:
-        write(sentinel, table_name=table, store=store, schema='demo', mode='overwrite')
+        if store != "Gold":
+            write(sentinel, table_name=table, store=store, schema='demo', mode='overwrite')
+    monkeypatch.setattr(API, "read_warehouse_query", lambda *a, **kw: SimpleNamespace(first=lambda: {"n": 0}))
     # Only remote Fabric catalog/warehouse removal is replaced by equivalent local filesystem IO.
     def remove(self, *, preview=False):
         if preview: return
@@ -80,6 +94,7 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
     env.state._metadata = env.setup.paths['Metadata']
     env.state.spark = run.spark
     env.state._demo_table_ids = {table for store, table in [*API._DEMO_SOURCES, *API._DEMO_OUTPUTS]}
+    env.state._demo_source_ids = set()
     env.state._demo_workspaces = {'dev', 'governance'}
     monkeypatch.setattr(API, 'get_spark_session', lambda: run.spark)
     for name, function in {'read_lakehouse_table': read, 'read_warehouse_table': read,
@@ -104,7 +119,7 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
     monkeypatch.setattr(API, '_demo_remove_outputs', remove)
     for _ in range(2):
         orchestrate_demo_reset(reset=True)
-        assert API._demo_metadata_counts(env.state) == dict.fromkeys(registry, 0)
+        assert API._demo_metadata_counts(env.state) == dict.fromkeys([*registry, API._DEMO_PROCESSING_STATE], 0)
         assert API._demo_metadata_files(env.state) == dict.fromkeys(('submissions', 'dry_runs', 'pipeline_snapshots'), 0)
         for (store, table), (file, count) in API._DEMO_SOURCES.items():
             expected = read_lakehouse_csv(file, store='Bronze', header=True, inferSchema=True)
@@ -173,7 +188,7 @@ def test_02a_fixture_content_with_the_actual_notebook_transform(demo_csv):
 
 
 def test_unmigrated_native_catalogue_schema_is_rejected_without_changes(demo_delta, monkeypatch):
-    """The supported native-to-JSON migration belongs to metadata setup, before demo cleanup."""
+    """Unsupported native physical collections are rejected before demo cleanup."""
     run, state = demo_delta, _environment(monkeypatch).state
     table = 'METADATA_DATA_CATALOGUE'
     expected = metadata_table_schema_registry()[table]
@@ -181,7 +196,7 @@ def test_unmigrated_native_catalogue_schema_is_rejected_without_changes(demo_del
     now = datetime(2026, 1, 1)
     record = {f.name: None if f.nullable else now if f.dataType.simpleString() == 'timestamp' else 'demo'
               for f in native}
-    record.update(metadata_level='table', table_id='target', workspace_id='dev', _notebook_id='notebook',
+    record.update(asset_type='TABLE', workspace_name='Development', table_id='target', workspace_id='dev', _notebook_id='notebook',
                   load_strategy_parameters_json={'watermark_column': 'modified_datetime'})
     path = str(run.root / table)
     run.spark.createDataFrame([record], native).write.format('delta').save(path)
@@ -218,6 +233,7 @@ def test_artifact_scope_is_checked_before_deletion(demo_csv, tmp_path):
     state = SimpleNamespace(_demo_config=object(), context=object(), _demo_runtime={}, spark=demo_csv)
     state._metadata = SimpleNamespace(root=str(tmp_path))
     state._demo_table_ids = {'orders'}
+    state._demo_source_ids = set()
     state._demo_workspaces = {'dev'}
     folder = tmp_path / 'Files/fabricops/engineering/submissions'
     folder.mkdir(parents=True)

@@ -17,12 +17,22 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
   <a class="fabricops-card fabricops-card--governance" href="governance/">
     <strong>Governance</strong>
     <small>Turn steward decisions, Data Contracts, Enrichment and Guardrails into structured metadata connected to the real engineering flow.</small>
+    <span class="fabricops-card-media fabricops-card-media--placeholder" aria-hidden="true">Governance walkthrough coming soon</span>
+    <span class="fabricops-card-video-action fabricops-card-video-action--governance">Explore Governance →</span>
   </a>
   <a class="fabricops-card fabricops-card--engineering" href="engineering/">
     <strong>Engineering</strong>
     <small>Build portable Read → Transform → Write pipelines across Lakehouses and Warehouses, with incremental processing, recovery, profiling and lineage.</small>
+    <span class="fabricops-card-media" aria-hidden="true">
+      <video autoplay muted loop playsinline preload="metadata">
+        <source src="assets/plug-and-play-pipeline-preview.mp4" type="video/mp4">
+      </video>
+    </span>
+    <span class="fabricops-card-video-action">Watch the pipeline walkthrough →</span>
   </a>
 </div>
+
+<div class="fabricops-home-preview-grid">
 
 <a class="fabricops-metadata-preview fabricops-architecture-preview" href="architecture/" aria-label="Explore the FabricOps Architecture">
   <span class="fabricops-metadata-preview__body">
@@ -59,6 +69,8 @@ FabricOps keeps project-specific PySpark visible between governed boundaries. Go
     <img src="assets/fabricops-seven-step-lifecycle.png" alt="" loading="eager" decoding="async">
   </span>
 </a>
+
+</div>
 
 <section class="fabricops-metadata-preview fabricops-resource-preview" aria-labelledby="download-fabricops-title">
   <span class="fabricops-metadata-preview__body">

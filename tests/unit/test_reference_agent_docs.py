@@ -726,14 +726,14 @@ def test_concept_pages_link_back_to_key_callable_references() -> None:
     """Verify user-guide pages link back to key callable references."""
     metadata_tables_path = ROOT / "docs" / "reference" / "metadata.md"
     metadata_tables = metadata_tables_path.read_text(encoding="utf-8")
-    lineage_table = (ROOT / "docs" / "reference" / "metadata" / "metadata_data_lineage.md").read_text(
+    participation_table = (ROOT / "docs" / "reference" / "metadata" / "metadata_pipeline_run.md").read_text(
         encoding="utf-8"
     )
 
     if "setup_metadata_tables" in metadata_tables:
         assert "[`setup_metadata_tables`](../api/reference/setup_metadata_tables.md)" in metadata_tables
-    assert "[`orchestrate_read`](../../api/reference/orchestrate_read.md)" in lineage_table
-    assert "[`orchestrate_write`](../../api/reference/orchestrate_write.md)" in lineage_table
+    assert "[`orchestrate_read`](../../api/reference/orchestrate_read.md)" in participation_table
+    assert "[`orchestrate_write`](../../api/reference/orchestrate_write.md)" in participation_table
 
 
 def test_metadata_reference_overview_renders_interactive_explorer() -> None:
@@ -746,12 +746,13 @@ def test_metadata_reference_overview_renders_interactive_explorer() -> None:
     assert '<nav class="metadata-explorer-fallback"' in text
     assert "fabricops-metadata-model.png" not in text
     assert "metadata-table-grid" not in text
-    assert len(CANONICAL_METADATA_TABLES) == 14
+    assert len(CANONICAL_METADATA_TABLES) == 13
     for name in CANONICAL_METADATA_TABLES:
         assert f'href="{name.lower()}/"' in text
-    assert "`METADATA_DATA_CONTRACT.contract_payload_json` is the JSON string column" in text
-    assert "containing authored Guardrails and Enrichment" in text
-    assert "profiling is configured by setup_pipeline" in text
+    assert text.startswith("# List of Metadata Tables\n\n")
+    assert "Composite keys apply to the complete combination" in text
+    assert "## Workspace columns" not in text
+    assert "profiling is configured by setup_pipeline" not in text
     script = (ROOT / "docs" / "javascripts" / "metadata-explorer.js").read_text(encoding="utf-8")
     for name in CANONICAL_METADATA_TABLES:
         assert name.removeprefix("METADATA_") in script
@@ -2081,7 +2082,7 @@ def test_current_metadata_pages_match_reduced_registry_and_have_no_retired_links
 
     pages = {path.name for path in (REFERENCE_DIR / "metadata").glob("*.md")}
     assert pages == {name.lower() + ".md" for name in CANONICAL_METADATA_TABLES}
-    assert len(pages) == 14
+    assert len(pages) == 13
     for slug in ("metadata_enrichment", "metadata_guardrail", "metadata_table_profiling"):
         assert not (REFERENCE_DIR / "metadata" / f"{slug}.md").exists()
         assert f"metadata/{slug}.md" not in (ROOT / "mkdocs.yml").read_text()
@@ -2099,7 +2100,7 @@ def test_internal_links_to_current_metadata_reference_pages_resolve() -> None:
     reference_dir = docs_root / "reference" / "metadata"
     overview = docs_root / "reference" / "metadata.md"
     canonical_pages = {path.resolve() for path in reference_dir.glob("metadata_*.md")}
-    assert len(canonical_pages) == 14
+    assert len(canonical_pages) == 13
 
     inspected = []
     unresolved = []

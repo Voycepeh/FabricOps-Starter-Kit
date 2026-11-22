@@ -106,7 +106,7 @@ def check_freshness(
     import json
     from fabricops_kit.pipeline.shared import collect_freshness_evidence, evaluate_freshness_evidence, validate_freshness_parameters
     parameters = validate_freshness_parameters(json.loads(freshness_rule["rule_parameters_json"]))
-    if identity.get("source_type") == "file":
+    if identity.get("asset_type") == "FILE":
         from fabricops_kit.io.shared import resolve_configured_file_path
         from fabricops_kit.pipeline.shared import file_participant_source
         _, _, path = resolve_configured_file_path(identity["store"], identity["relative_path"], context=context)
