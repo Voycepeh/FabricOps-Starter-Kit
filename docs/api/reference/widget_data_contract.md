@@ -59,8 +59,8 @@ Required describes the Python signature. An optional parameter may still be need
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `table_id` | `str \| None` | No | `None` | Initial canonical governed table identity. If omitted, select it in the widget. |
-| `contract_version` | `int \| None` | No | `None` | Initial exact lifecycle version. If omitted, the newest version is selected. |
+| `table_id` | `str \| None` | No | `None` | Initial canonical governed dataset identity, applied after Workspace and Store selection. |
+| `contract_version` | `int \| None` | No | `None` | Initial exact lifecycle version. If omitted, choose a version or New draft explicitly. |
 | `context` | `Any` | No | `None` | FabricOps runtime context normally established by ``00_env_config``. |
 | `ai_model` | `str \| None` | No | `None` | Built-in Fabric model: ``gpt-5-mini`` or ``gpt-5.1``. Overrides configuration. |
 | `ai_reasoning_effort` | `str \| None` | No | `None` | ``minimal``, ``low``, ``medium``, or ``high``. Overrides configuration. |
@@ -113,7 +113,7 @@ Engineering processing is reviewed through Pipeline Activation and is not author
 Profile context remains read-only and is never added
 to the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and
 optional enforcement are independent. Enabling Grain defaults to Block.
-The sidebar includes collapsible read-only summaries of configured Read and Write
+Review includes collapsible read-only summaries of configured Read and Write
 rules. These summaries do not execute validation or navigate authoring controls.
 The Data Quality section is the single DQ authoring surface. Governance can add
 any supported deterministic rule manually, or generate transient proposals
@@ -122,7 +122,10 @@ and addition. Both paths create the same editable Guardrail records; the
 Columns section contains column metadata and non-DQ settings only.
 Open Data Contract loads a manual-first editor without AI inference or AI-only
 profile reads. Top navigation keeps Table (File for file sources), Columns, Data Quality, Review,
-and AI Usage above the editor; lifecycle actions remain in the sidebar.
+and AI Usage above one bounded content body; lifecycle actions remain in the header.
+Entry selects Workspace, Store, dataset, then version. Upstream changes clear dependent
+selections. Native searchable, paginated pickers wrap long dataset names without popup
+JavaScript. Optional profile and participation context loads when expanded.
 Every AI request requires an explicit Generate, Suggest or Re-run action.
 Suggestions persist during navigation and require explicit acceptance.
 Switching columns reuses cached profile reads and suggestions.
@@ -191,9 +194,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:994`
+`fabricops_kit/widgets/widget_data_contract.py:1004`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L994-L7486">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1004-L7504">View on GitHub</a>
 </div>
 
 
