@@ -43,15 +43,15 @@ def demo_delta(demo_csv, monkeypatch, tmp_path):
     return SimpleNamespace(spark=spark_session, root=tmp_path, DeltaTable=delta.DeltaTable)
 
 
-def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failure(demo_delta, monkeypatch, capsys):
+def test_public_reset_preserves_history_restores_sources_and_retries_partial_failure(demo_delta, monkeypatch, capsys):
     run = demo_delta
-    env = _environment(monkeypatch)
+    env = _environment(monkeypatch, mock_predicates=False)
     registry = metadata_table_schema_registry()
-    def read(table_name, *, store, schema):
+    def read(table_name, *, store, schema, **kwargs):
         return read_lakehouse_table(table_name, store=store, schema=schema)
     def write(frame, *, table_name, store, schema, mode):
         write_lakehouse_table(frame, table_name, store=store, schema=schema, mode=mode)
-    # Real canonical Delta schemas and rows, including frozen Contracts and retained activations.
+    # Real canonical rows, including frozen Contracts and approvals that must survive.
     for table, schema in registry.items():
         record = {f.name: None if f.nullable else datetime(2026, 1, 1)
                   if f.dataType.simpleString() == 'timestamp' else datetime(2026, 1, 1).date()
@@ -65,7 +65,7 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
             if key in {'package_json', 'contract_payload_json', 'destination_json'}: record[key] = '{}'
         if table == 'METADATA_DATA_CONTRACT': record['status'] = 'frozen'
         if table in {'METADATA_DATA_CONTRACT_ACTIVATION', 'METADATA_PIPELINE_REGISTRY'}: record['status'] = 'active'
-        write(run.spark.createDataFrame([record], schema), table_name=table, store='Metadata', schema='metadata', mode='overwrite')
+        run.spark.createDataFrame([record], schema).write.format('delta').save(str(run.root / 'Metadata' / table))
     state_path = str(run.root / "Metadata" / "Tables" / PROCESSING_STATE_SCHEMA / PROCESSING_STATE_TABLE)
     state_schema = processing_state_schema()
     audit = {
@@ -93,9 +93,6 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
     env.setup.paths['Metadata'].root = str(run.root / 'Metadata')
     env.state._metadata = env.setup.paths['Metadata']
     env.state.spark = run.spark
-    env.state._demo_table_ids = {table for store, table in [*API._DEMO_SOURCES, *API._DEMO_OUTPUTS]}
-    env.state._demo_source_ids = set()
-    env.state._demo_workspaces = {'dev', 'governance'}
     monkeypatch.setattr(API, 'get_spark_session', lambda: run.spark)
     for name, function in {'read_lakehouse_table': read, 'read_warehouse_table': read,
             'write_lakehouse_table': write, 'write_warehouse_table': write, 'read_lakehouse_csv': read_lakehouse_csv}.items():
@@ -103,12 +100,14 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
     monkeypatch.setattr(API, '_demo_remove_outputs', remove)
     monkeypatch.setattr(API, '_demo_verify_outputs', verify)
     monkeypatch.setattr(API, 'resolve_configured_lakehouse_table',
-        lambda store, table, schema: (store, table, schema, str(run.root / store / table)))
+        lambda store, table, schema, **kw: (store, table, schema, str(run.root / store / table)))
     artifacts = run.root / 'Metadata/Files/fabricops/engineering'
     (artifacts / 'submissions').mkdir(parents=True)
     (artifacts / 'submissions/demo.json').write_text('{"manifest":{"operations":[{"table_id":"orders"}]}}')
     orchestrate_demo_reset()  # False previews populated state without changing it.
     assert all(count == 1 for count in API._demo_metadata_counts(env.state).values())
+    retained = {table: read(table, store='Metadata', schema='metadata').collect()
+                for table in registry if table not in API._DEMO_RESET_METADATA}
     # Fail after metadata deletion to prove the same cell can recover without a new configuration.
     def fail(self, **kw):
         if not kw.get('preview'): raise RuntimeError('simulated Fabric transport failure')
@@ -119,8 +118,10 @@ def test_public_reset_clears_metadata_restores_sources_and_retries_partial_failu
     monkeypatch.setattr(API, '_demo_remove_outputs', remove)
     for _ in range(2):
         orchestrate_demo_reset(reset=True)
-        assert API._demo_metadata_counts(env.state) == dict.fromkeys([*registry, API._DEMO_PROCESSING_STATE], 0)
-        assert API._demo_metadata_files(env.state) == dict.fromkeys(('submissions', 'dry_runs', 'pipeline_snapshots'), 0)
+        assert API._demo_metadata_counts(env.state) == dict.fromkeys(API._DEMO_RESET_METADATA, 0)
+        assert (artifacts / 'submissions/demo.json').exists()
+        for table, rows in retained.items():
+            assert read(table, store='Metadata', schema='metadata').collect() == rows
         for (store, table), (file, count) in API._DEMO_SOURCES.items():
             expected = read_lakehouse_csv(file, store='Bronze', header=True, inferSchema=True)
             if (store, table) == ('Bronze', 'orders'):
@@ -187,62 +188,95 @@ def test_02a_fixture_content_with_the_actual_notebook_transform(demo_csv):
     assert sum(Decimal(str(r.total_order_net_amount)).quantize(Decimal('.01')) for r in customers) == Decimal('28539.15')
 
 
-def test_unmigrated_native_catalogue_schema_is_rejected_without_changes(demo_delta, monkeypatch):
-    """Unsupported native physical collections are rejected before demo cleanup."""
-    run, state = demo_delta, _environment(monkeypatch).state
-    table = 'METADATA_DATA_CATALOGUE'
-    expected = metadata_table_schema_registry()[table]
-    native = metadata_table_schema_registry(logical=True)[table]
-    now = datetime(2026, 1, 1)
-    record = {f.name: None if f.nullable else now if f.dataType.simpleString() == 'timestamp' else 'demo'
-              for f in native}
-    record.update(asset_type='TABLE', workspace_name='Development', table_id='target', workspace_id='dev', _notebook_id='notebook',
-                  load_strategy_parameters_json={'watermark_column': 'modified_datetime'})
-    path = str(run.root / table)
-    run.spark.createDataFrame([record], native).write.format('delta').save(path)
-    delta = run.DeltaTable.forPath(run.spark, path)
-    version = delta.history(1).first()['version']
-    before = run.spark.read.format('delta').load(path).collect()
-    monkeypatch.setattr(API, 'metadata_table_schema_registry', lambda: {table: expected})
-    monkeypatch.setattr(API, 'read_lakehouse_table', lambda *a, **kw: run.spark.read.format('delta').load(path))
-    with pytest.raises(RuntimeError, match='Run the installed package metadata setup'):
-        API._demo_metadata_counts(state)
-    assert delta.history(1).first()['version'] == version
-    assert run.spark.read.format('delta').load(path).collect() == before
-
-
 def test_additive_registry_column_uses_the_installed_package_schema(demo_delta, monkeypatch):
     """An already-applied compatible addition needs no notebook schema copy or new reset API."""
-    run, state = demo_delta, _environment(monkeypatch).state
-    table = 'METADATA_DATA_CATALOGUE'
+    run, state = demo_delta, _environment(monkeypatch, mock_predicates=False).state
+    table = 'METADATA_DATA_PROFILED'
     current = metadata_table_schema_registry()[table]
     upgraded = metadata_table_schema_registry()[table].add('new_package_field', 'string')
     frame = run.spark.createDataFrame([], current)
     monkeypatch.setattr(API, 'metadata_table_schema_registry', lambda: {table: upgraded})
     monkeypatch.setattr(API, 'read_lakehouse_table', lambda *a, **kw: frame)
     with pytest.raises(RuntimeError, match='new_package_field'):
-        API._demo_metadata_counts(state)
+        API._demo_metadata_frame(state, table)
     # Represent the physical result of the package's additive migration.
     frame = frame.withColumn('new_package_field', F.lit('migrated'))
-    counts = API._demo_metadata_counts(state)
-    assert counts == {table: 0}
+    assert API._demo_metadata_frame(state, table).count() == 0
 
 
 
-def test_artifact_scope_is_checked_before_deletion(demo_csv, tmp_path):
-    state = SimpleNamespace(_demo_config=object(), context=object(), _demo_runtime={}, spark=demo_csv)
-    state._metadata = SimpleNamespace(root=str(tmp_path))
-    state._demo_table_ids = {'orders'}
-    state._demo_source_ids = set()
-    state._demo_workspaces = {'dev'}
-    folder = tmp_path / 'Files/fabricops/engineering/submissions'
-    folder.mkdir(parents=True)
-    file = folder / 'foreign.json'
-    file.write_text('{"manifest":{"operations":[{"table_id":"production-table"}]}}')
-    with pytest.raises(RuntimeError, match='Non-demo'):
-        API._demo_metadata_files(state)
-    assert file.exists()
-    file.write_text('{"manifest":{"operations":[{"table_id":"orders"}]}}')
-    assert API._demo_metadata_files(state)['submissions'] == 1
-    assert API._demo_metadata_files(state, delete=True)['submissions'] == 1
-    assert not folder.exists()
+@pytest.mark.parametrize('boundary', [False, True])
+def test_real_spark_predicate_scopes_by_workspace_and_exact_endpoints(spark_session, monkeypatch, boundary):
+    env = _environment(monkeypatch, mock_predicates=False)
+    schema = 'record_id string, workspace_id string, source_table_id string, target_table_id string'
+    frame = spark_session.createDataFrame([
+        ('demo-source', 'dev', 'orders', None),
+        ('demo-receipt', 'dev', None, 'curated_orders'),
+        ('demo-pair', 'DEV', 'orders', 'curated_orders'),
+        ('foreign', 'dev', 'other', 'other-output'),
+        ('other-workspace', 'other', 'orders', 'curated_orders'),
+        ('outgoing', 'dev', 'orders', 'other-output'),
+        ('incoming', 'dev', 'other', 'curated_orders'),
+        ('empty', 'dev', None, None),
+        ('blank-source', 'dev', '', 'curated_orders'),
+    ], schema)
+    selected = frame.where(API._demo_metadata_predicate(env.state, API._DEMO_PROCESSING_STATE, boundary=boundary))
+    expected = {'outgoing', 'incoming'}
+    if not boundary:
+        expected |= {'demo-source', 'demo-receipt', 'demo-pair', 'blank-source'}
+    assert {row.record_id for row in selected.collect()} == expected
+
+
+def test_real_delta_delete_preserves_foreign_and_cross_workspace_progress(demo_delta, monkeypatch):
+    env = _environment(monkeypatch, mock_predicates=False)
+    run = demo_delta
+    env.state.spark = run.spark
+    state_schema = processing_state_schema()
+    audit = {field.name: datetime(2026, 1, 1) if field.name == '_committed_at' else 'dev'
+             for field in state_schema if field.name.startswith('_')}
+    rows = [dict(audit, record_id=key, record_type=kind, status='committed', workspace_id=workspace,
+                 source_table_id=source, target_table_id=target)
+            for key, kind, workspace, source, target in [
+                ('checkpoint', 'incremental_checkpoint', 'dev', 'inventory_movements', 'inventory_movements_append_all'),
+                ('receipt', 'publication_receipt', 'dev', None, 'inventory_movements_append_all'),
+                ('snapshot', 'source_snapshot', 'dev', 'orders', None),
+                ('baseline', 'source_drift_baseline', 'dev', 'orders', None),
+                ('unrelated', 'incremental_checkpoint', 'dev', 'other', 'other-output'),
+                ('remote', 'incremental_checkpoint', 'another-workspace', 'orders', 'curated_orders'),
+            ]]
+    path = str(run.root / 'progress')
+    run.spark.createDataFrame(rows, state_schema).write.format('delta').save(path)
+    monkeypatch.setattr(API, 'processing_state_path', lambda context: path)
+    monkeypatch.setattr(API, 'read_processing_state', lambda **kw: run.spark.read.format('delta').load(path))
+    registry = metadata_table_schema_registry()
+    for table in API._DEMO_RESET_METADATA:
+        if table == API._DEMO_PROCESSING_STATE:
+            continue
+        schema = registry[table]
+        base = {field.name: None if field.nullable else datetime(2026, 1, 1)
+                if field.dataType.simpleString() == 'timestamp' else 'demo' for field in schema}
+        profiles = [dict(base, asset_workspace_id=workspace, table_id=table_id, profile_snapshot_id=key)
+                    for key, workspace, table_id in [('demo', 'dev', 'orders'),
+                        ('other', 'dev', 'unrelated'), ('remote', 'elsewhere', 'orders')]]
+        run.spark.createDataFrame(profiles, schema).write.format('delta').save(str(run.root / table))
+    monkeypatch.setattr(API, 'resolve_configured_lakehouse_table',
+        lambda store, table, schema, **kw: (store, table, schema, str(run.root / table)))
+    monkeypatch.setattr(API, 'read_lakehouse_table',
+        lambda table, **kw: run.spark.read.format('delta').load(str(run.root / table)))
+    for _ in range(2):
+        API._demo_clear_metadata(env.state, API._demo_metadata_counts(env.state))
+        assert {row.record_id for row in run.spark.read.format('delta').load(path).collect()} == {'unrelated', 'remote'}
+        assert API._demo_metadata_counts(env.state) == dict.fromkeys(API._DEMO_RESET_METADATA, 0)
+        for table in API._DEMO_RESET_METADATA:
+            if table != API._DEMO_PROCESSING_STATE:
+                assert {row.profile_snapshot_id for row in run.spark.read.format('delta')
+                        .load(str(run.root / table)).collect()} == {'other', 'remote'}
+
+
+def test_profile_predicate_uses_asset_workspace_and_preserves_other_assets(spark_session, monkeypatch):
+    env = _environment(monkeypatch, mock_predicates=False)
+    frame = spark_session.createDataFrame([
+        ('demo', 'dev', 'orders'), ('other', 'dev', 'other'), ('remote', 'elsewhere', 'orders'),
+    ], 'profile_id string, asset_workspace_id string, table_id string')
+    for table in ('METADATA_DATA_PROFILED', 'METADATA_DATA_PROFILED_FREQUENCY'):
+        assert [row.profile_id for row in frame.where(API._demo_metadata_predicate(env.state, table)).collect()] == ['demo']

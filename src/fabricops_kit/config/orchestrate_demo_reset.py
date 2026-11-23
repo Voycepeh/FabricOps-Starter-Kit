@@ -1,9 +1,9 @@
 """Public orchestrator for the disposable FabricOps Guided Demo environment."""
 
 from __future__ import annotations
-import json
+from contextlib import ExitStack
 from types import SimpleNamespace
-from fabricops_kit.activated_pipeline.shared import FabricNotebookClient, snapshot_file
+from fabricops_kit.activated_pipeline.shared import FabricNotebookClient
 from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema, metadata_table_schema_registry
 from fabricops_kit.config.shared import resolve_fabric_context
 from fabricops_kit.io import (
@@ -28,6 +28,11 @@ from fabricops_kit.pipeline.shared import (
 )
 
 _DEMO_PROCESSING_STATE = f"{PROCESSING_STATE_SCHEMA}.{PROCESSING_STATE_TABLE}"
+_DEMO_RESET_METADATA = (
+    _DEMO_PROCESSING_STATE,
+    "METADATA_DATA_PROFILED_FREQUENCY",
+    "METADATA_DATA_PROFILED",
+)
 
 _DEMO_SOURCES = {
     ("Bronze", "orders"): ("demo/orders.csv", 120),
@@ -47,28 +52,101 @@ _DEMO_OUTPUTS = (
 _DEMO_REMOVALS = (*_DEMO_OUTPUTS, ("Bronze", "orders"))
 
 
-def _demo_metadata_counts(_state):
-    """Read every installed metadata schema without modifying its records or history."""
-    counts = {}
-    for table, expected in metadata_table_schema_registry().items():
+def _demo_reset_scope(_state):
+    """Resolve exact demo identities only for stores pointing at the reset destinations."""
+    from fabricops_kit.data_contract.shared import file_source_identity
+
+    _state._demo_execution_scope = {}
+    _state._demo_asset_scope = {}
+    for workspace, stores in _state._demo_config.path_config.paths.items():
+        ids = set()
+        for store, table in (*_DEMO_SOURCES, *_DEMO_OUTPUTS):
+            selected = _state.context.paths[store]
+            mapped = stores.get(store)
+            if mapped is None or (mapped.workspace_id, mapped.item_id) != (selected.workspace_id, selected.item_id):
+                continue
+            table_id = resolve_physical_table_identity(
+                _state._demo_config, workspace, store=store, schema="demo", table_name=table,
+            )["table_id"]
+            ids.add(table_id)
+            _state._demo_asset_scope.setdefault(selected.workspace_id.lower(), set()).add(table_id)
+        if ids:
+            _state._demo_execution_scope[workspace.lower()] = ids
+    # File selectors are retained, but their observations must not survive a data reset.
+    bronze = _state.context.paths["Bronze"]
+    files = {
+        file_source_identity(asset_workspace_id=bronze.workspace_id, item_id=bronze.item_id,
+            relative_path=f"demo/orders.{extension}", file_format=kind)["table_id"]
+        for extension, kind in (("csv", "csv"), ("json", "json"), ("parquet", "parquet"), ("xlsx", "excel"))
+    }
+    _state._demo_asset_scope.setdefault(bronze.workspace_id.lower(), set()).update(files)
+    for workspace, stores in _state._demo_config.path_config.paths.items():
+        mapped = stores.get("Bronze")
+        if mapped and (mapped.workspace_id, mapped.item_id) == (bronze.workspace_id, bronze.item_id):
+            _state._demo_execution_scope.setdefault(workspace.lower(), set()).update(files)
+
+
+def _demo_metadata_predicate(_state, table, *, boundary=False):
+    """Build one Spark predicate reused for preview, deletion and verification."""
+    from pyspark.sql import functions as F
+
+    result = F.lit(False)
+    processing = table == _DEMO_PROCESSING_STATE
+    scopes = _state._demo_execution_scope if processing else _state._demo_asset_scope
+    for workspace, ids in scopes.items():
+        if processing:
+            source = F.coalesce(F.col("source_table_id"), F.lit(""))
+            target = F.coalesce(F.col("target_table_id"), F.lit(""))
+            matches = source.isin(sorted(ids)) | target.isin(sorted(ids))
+            if boundary:
+                matches = matches & ((~source.isin(sorted(ids)) & (source != "")) |
+                                     (~target.isin(sorted(ids)) & (target != "")))
+            workspace_column = "workspace_id"
+        else:
+            matches = F.col("table_id").isin(sorted(ids))
+            workspace_column = "asset_workspace_id"
+        result = result | ((F.lower(F.col(workspace_column)) == workspace) & matches)
+    return result
+
+
+def _demo_metadata_frame(_state, table):
+    """Read only metadata that the data reset may mutate, through configured routing."""
+    if table == _DEMO_PROCESSING_STATE:
+        frame = read_processing_state(context=_state._demo_runtime)
+        validate_processing_state_schema(frame.schema)
+    else:
         schema = metadata_table_physical_schema(_state._demo_config, table)
-        try:
-            frame = read_lakehouse_table(table, store="Metadata", schema=schema)
-        except Exception as exc:
-            raise RuntimeError(
-                f"Cannot read {schema}.{table}. Check the demo Metadata mapping and run metadata setup in 00B."
-            ) from exc
+        frame = read_lakehouse_table(table, store="Metadata", schema=schema, context=_state._demo_runtime)
+        expected = metadata_table_schema_registry()[table]
         actual = {field.name: field.dataType.simpleString() for field in frame.schema}
         incompatible = [field.name for field in expected if actual.get(field.name) != field.dataType.simpleString()]
         if incompatible:
             raise RuntimeError(
-                f"{table} has missing columns or incompatible types: {', '.join(incompatible)}. Run the installed package metadata setup in the demo lakehouse, then restart 00C."
+                f"{table} has missing columns or incompatible types: {', '.join(incompatible)}. "
+                "Run the installed package metadata setup in the demo lakehouse, then restart 00C."
             )
-        counts[table] = (frame.where("lineage_version = 1") if table == "METADATA_DATA_LINEAGE" else frame).count()
-    state = read_processing_state(context=_state._demo_runtime)
-    validate_processing_state_schema(state.schema)
-    counts[_DEMO_PROCESSING_STATE] = state.count()
-    return counts
+    return frame
+
+
+def _demo_metadata_counts(_state):
+    """Count only matching demo progress and profile snapshots; history is retained."""
+    return {table: _demo_metadata_frame(_state, table).where(_demo_metadata_predicate(_state, table)).count()
+            for table in _DEMO_RESET_METADATA}
+
+
+def _demo_check_processing_boundary(_state):
+    """Refuse to reset a demo source/target shared with a non-demo publication."""
+    rows = (_demo_metadata_frame(_state, _DEMO_PROCESSING_STATE)
+        .where(_demo_metadata_predicate(_state, _DEMO_PROCESSING_STATE, boundary=True))
+        .select("record_id", "workspace_id", "source_table_id", "target_table_id").limit(1).collect())
+    if rows:
+        row = rows[0]
+        raise RuntimeError(
+            f"Demo reset blocked by shared processing record {row['record_id']!r} in workspace "
+            f"{row['workspace_id']!r}: {row['source_table_id']!r} -> {row['target_table_id']!r}. "
+            "A demo table participates in a non-demo publication. Separate those business tables before resetting; "
+            "no data has been changed."
+        )
 
 
 def _demo_assert_source(_state, actual, expected):
@@ -78,73 +156,6 @@ def _demo_assert_source(_state, actual, expected):
     actual = actual.select(*[F.col(field.name).cast(field.dataType).alias(field.name) for field in expected.schema])
     if actual.exceptAll(expected).limit(1).count() or expected.exceptAll(actual).limit(1).count():
         raise RuntimeError("Day 1 source verification failed: persisted content differs from the fixture. Rerun 00C.")
-
-
-def _demo_check_metadata_scope(_state, value):
-    """Reject references outside the configured demo before clearing its dedicated metadata."""
-    if isinstance(value, list):
-        for item in value:
-            _demo_check_metadata_scope(_state, item)
-    elif isinstance(value, dict):
-        for key, item in value.items():
-            if key in {"table_id", "source_table_id", "target_table_id", "incremental_target_table_id"}:
-                if item and item not in _state._demo_table_ids | _state._demo_source_ids:
-                    raise RuntimeError(f"Non-demo table reference in {key}; metadata is preserved.")
-            elif key == "source_id" and item:
-                if item not in _state._demo_source_ids:
-                    raise RuntimeError("Non-demo file source reference; metadata is preserved.")
-            elif key == "source_ids" and item:
-                if not set(item).issubset(_state._demo_source_ids):
-                    raise RuntimeError("Non-demo file source references; metadata is preserved.")
-            elif key == "source_table_ids" and item:
-                if not set(item).issubset(_state._demo_table_ids):
-                    raise RuntimeError("Non-demo source references; metadata is preserved.")
-            elif key in {
-                "workspace_id",
-                "asset_workspace_id",
-                "_workspace_id",
-                "execution_workspace_id",
-                "source_workspace_id",
-            }:
-                if item and str(item).casefold() not in _state._demo_workspaces:
-                    raise RuntimeError("Non-demo workspace reference; metadata is preserved.")
-            elif key in {
-                "operations",
-                "profiling",
-                "operations_json",
-                "package_json",
-                "contract_payload_json",
-                "destination_json",
-            }:
-                _demo_check_metadata_scope(_state, json.loads(item) if isinstance(item, str) else item)
-            elif isinstance(item, (dict, list)):
-                _demo_check_metadata_scope(_state, item)
-
-
-def _demo_metadata_files(_state, *, delete=False):
-    """Inspect or clear only the three native lifecycle artifact folders in demo Metadata."""
-    folders = {"submissions": ".json", "dry_runs": ".json", "pipeline_snapshots": ".ipynb"}
-    counts = {}
-    for folder, suffix in folders.items():
-        uri = _state._metadata.root + "/Files/fabricops/engineering/" + folder
-        path = _state.spark._jvm.org.apache.hadoop.fs.Path(uri)
-        fs = path.getFileSystem(_state.spark._jsc.hadoopConfiguration())
-        counts[folder] = 0
-        if not fs.exists(path):
-            continue
-        files = fs.listFiles(path, True)
-        while files.hasNext():
-            file = files.next().getPath()
-            if not str(file.getName()).endswith(suffix):
-                raise RuntimeError(f"Unexpected content in {uri}; metadata is preserved. Inspect it before resetting.")
-            payload = json.loads(snapshot_file(str(file), spark_session=_state.spark))
-            _demo_check_metadata_scope(_state, payload)
-            counts[folder] += 1
-        if delete and (not fs.delete(path, True) or fs.exists(path)):
-            raise RuntimeError(
-                f"Could not clear {uri}. Check permissions and rerun orchestrate_demo_reset(reset=True)."
-            )
-    return counts
 
 
 def _demo_gold_output_exists() -> bool:
@@ -233,88 +244,88 @@ def _demo_verify_outputs(_state):
             raise RuntimeError(f"Reset incomplete: {store}.demo.{table} remains. Check permissions and rerun 00C.")
 
 
-def _demo_clear_metadata(_state, counts, order):
-    """Clear only the validated demo inventory, retaining physical table definitions."""
+def _demo_clear_metadata(_state, counts):
+    """Delete only exact demo progress and profiles, retaining all other metadata."""
     from delta.tables import DeltaTable
 
-    for _table in order:
+    for _table in _DEMO_RESET_METADATA:
         if _table == _DEMO_PROCESSING_STATE:
             _path = processing_state_path(_state._demo_runtime)
         else:
             _, _, _, _path = resolve_configured_lakehouse_table(
-                "Metadata", _table, metadata_table_physical_schema(_state._demo_config, _table)
+                "Metadata", _table, metadata_table_physical_schema(_state._demo_config, _table),
+                context=_state._demo_runtime,
             )
         _removed = 0
         if counts[_table]:
             _delta = DeltaTable.forPath(_state.spark, _path)
-            if _table == "METADATA_DATA_LINEAGE":
-                _delta.delete("lineage_version = 1")
-            else:
-                _delta.delete()
+            _delta.delete(_demo_metadata_predicate(_state, _table))
             _removed = int(_delta.history(1).first()["operationMetrics"]["numDeletedRows"])
         print(f"{_table}: removed {_removed}")
 
 
 def orchestrate_demo_reset(*, reset: bool = False) -> None:
-    """Preview or reset the dedicated FabricOps Guided Demo to Day 1.
+    """Preview or reset the Guided Demo data and its processing progress to Day 1.
 
-    Call after ``setup_notebook()`` with the package being validated installed.
-    The configured logical ``Metadata`` store must select a manually created,
-    schema-enabled Lakehouse named ``demo_metadata``, reserved exclusively for
-    this walkthrough. Stop all demo executions and schedules before resetting.
+    Call after ``setup_notebook()``. Stop all executions and schedules using the
+    reserved demo business tables, including promoted copies, and start fresh
+    scenario notebook sessions after resetting. A dedicated demo environment
+    is recommended; the Metadata Lakehouse need not be empty or demo-only.
 
     Parameters
     ----------
     reset : bool, default=False
-        False prints configured store identities, metadata row counts and the
-        eleven business tables in scope without writing. True opts into the
-        destructive reset after all preflight checks pass. Only booleans are
-        accepted; strings and integers are rejected.
+        False prints configured destinations, scoped metadata counts and the
+        eleven business tables without writing. True resets only those demo
+        tables, their Processing State and profile snapshots after preflight.
+        Only booleans are accepted.
 
     Returns
     -------
     None
-        Prints a preview or verified reset summary, including actual removed
-        metadata counts. ``RESET COMPLETE`` is printed only after verification.
+        Prints actual removed counts and ``RESET COMPLETE`` after verification.
 
     Raises
     ------
     ValueError
         If reset is not a boolean.
     RuntimeError
-        If notebook setup is not ready, required stores or metadata schemas
-        are invalid, non-demo references are found, fixtures
-        are unavailable, or reset verification fails. Fabric/Spark permission,
-        transport and storage failures propagate; correct the cause and rerun.
+        If setup, store mappings, required schemas, fixtures or catalog locations
+        are invalid, a demo processing record links to a non-demo table, or
+        verification fails. Fabric/Spark permission and transport errors propagate.
 
     Notes
     -----
-    True clears all current canonical metadata rows in the dedicated item,
-    including frozen Contracts, activations, approvals, promotion history and
-    Runs. It also clears the dedicated Processing State table. Saved submissions, Dry Run evidence and notebook
-    snapshots in its three native lifecycle folders are removed too. Table
-    definitions remain; no metadata migration is performed. Historical Lineage
-    activity rows remain intact; only lineage_version=1 dependency facts are cleared.
+    Deletion is restricted by exact demo identities and workspace: execution
+    workspace for ``misc.PROCESSING_STATE`` and asset workspace for
+    ``METADATA_DATA_PROFILED`` and ``METADATA_DATA_PROFILED_FREQUENCY``. Only
+    configured mappings to the physical stores being reset participate. No
+    nested Run or Contract payloads are inspected to authorize deletion.
 
-    Four Day 1 tables are overwritten, Orders CSV is validated and retained,
-    and five Silver outputs plus the obsolete Bronze Orders table are removed in the reserved
-    ``demo`` schemas of the configured Bronze/Silver stores. The Gold customer_summary
-    table is retained with zero rows when present. Other business
-    tables and source files are preserved. Exact demo table/workspace references,
-    artifact contents, fixture counts and catalog locations are
-    checked before deletion. A dedicated name alone cannot prove ownership;
-    never share this Metadata item or these eleven tables with other projects.
+    Contracts, activations, approvals, promotion history, Catalogue, Runs,
+    Lineage, Guardrail results and saved submissions, Dry Runs and notebook
+    snapshots are retained, including demo history. Profile snapshots for demo
+    assets are discarded so standard profiling can run again. Historical grain
+    and empty-frequency completion markers remain in retained Runs; use a zero
+    profiling interval when those activities must run again immediately.
+    This is a data restart, not a restart of governance authoring; use a separate
+    environment for a fresh governance walkthrough.
 
-    Missing outputs and repeated resets are supported. A failure may leave a
-    partial reset: this operation is not atomic across tables/stores. Stop all
-    writers, correct the reported cause and rerun. Deployed notebooks, schedules
-    and apps are not removed. Live Fabric acceptance is still required.
+    Four Day 1 source tables are overwritten. Orders CSV is validated and
+    retained. Five Silver outputs and obsolete Bronze Orders are removed from
+    the reserved ``demo`` schemas. Gold customer_summary is retained with zero
+    rows when present. Other business tables and all source files are preserved.
+
+    Preview never writes. Missing outputs and repeated resets are supported.
+    The reset is not atomic across stores; after a partial failure stop writers,
+    correct the cause and rerun. Never use it as production recovery. Actual
+    Microsoft Fabric validation remains required.
 
     Examples
     --------
     >>> from fabricops_kit import setup_notebook, orchestrate_demo_reset
     >>> context = setup_notebook()
-    >>> RESET_DEMO = False  # Set True only to discard the dedicated demo state.
+    >>> RESET_DEMO = False  # Preview before resetting demo data and progress.
     >>> orchestrate_demo_reset(reset=RESET_DEMO)
 
     """
@@ -327,6 +338,12 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     missing = {"Metadata", "Bronze", "Silver", "Gold"} - set(setup.paths)
     if missing:
         raise RuntimeError(f"Required demo store mappings are missing: {sorted(missing)}. Check 00_env_config.")
+    configured = config.path_config.paths.get(workspace, {})
+    for key in ("Metadata", "Bronze", "Silver", "Gold"):
+        mapped = configured.get(key)
+        selected = setup.paths[key]
+        if mapped is None or (mapped.workspace_id, mapped.item_id) != (selected.workspace_id, selected.item_id):
+            raise RuntimeError(f"{key} mapping changed since notebook setup. Rerun setup_notebook() before resetting.")
     for key, kind in {"Bronze": "lakehouse", "Silver": "lakehouse", "Gold": "warehouse"}.items():
         store = setup.paths[key]
         if store.kind != kind or (kind == "lakehouse" and (not store.schema_enabled)):
@@ -338,15 +355,17 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     for _key in ("Metadata", "Bronze", "Silver", "Gold"):
         _store = _demo.context.paths[_key]
         print(f"{_key}: {_store.name} | workspace {_store.workspace_id} | item {_store.item_id}")
+    _demo_reset_scope(_demo)
     _demo_counts = _demo_metadata_counts(_demo)
     for _table, _count in _demo_counts.items():
-        print(f"{_table}: {_count} rows")
+        print(f"{_table}: {_count} demo rows to remove")
     for _store, _table in _DEMO_SOURCES:
         if (_store, _table) != ("Bronze", "orders"):
             print(f"Restore Day 1: {_store}.demo.{_table}")
     print("Validate and retain Files/demo/orders.csv (120 rows); remove obsolete Bronze.demo.orders on full reset.")
     for _store, _table in _DEMO_OUTPUTS:
         print(f"Remove output: {_store}.demo.{_table}")
+    print("Preserve Contracts, activations, Catalogue, Runs, Lineage, Guardrail results and saved lifecycle artifacts.")
     if not reset:
         print("Preview only. Stop demo executions and set reset=True to reset.")
         return
@@ -368,51 +387,7 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
         )
     ):
         raise RuntimeError("Metadata must be separate from the business stores.")
-    _demo._demo_table_ids = {
-        resolve_physical_table_identity(_demo._demo_config, workspace, store=store, schema="demo", table_name=table)[
-            "table_id"
-        ]
-        for workspace, stores in _demo._demo_config.path_config.paths.items()
-        for store, table in [*_DEMO_SOURCES, *_DEMO_OUTPUTS]
-        if store in stores
-    }
-    from fabricops_kit.data_contract.shared import file_source_identity
-    _demo._demo_source_ids = {
-        file_source_identity(asset_workspace_id=stores["Bronze"].workspace_id, item_id=stores["Bronze"].item_id,
-            relative_path=f"demo/orders.{extension}", file_format=kind)["table_id"]
-        for stores in _demo._demo_config.path_config.paths.values() if "Bronze" in stores
-        for extension, kind in (("csv", "csv"), ("json", "json"), ("parquet", "parquet"), ("xlsx", "excel"))
-    }
-    _demo._demo_workspaces = {workspace.casefold() for workspace in _demo._demo_config.path_config.paths}
-    _demo._demo_workspaces.update((store.workspace_id.casefold() for store in _demo.context.paths.values()))
-    _demo_order = (
-        "METADATA_GUARDRAIL_RESULTS",
-        _DEMO_PROCESSING_STATE,
-        "METADATA_DATA_ACCESS",
-        "METADATA_DATA_LINEAGE",
-        "METADATA_PIPELINE_RUN",
-        "METADATA_PIPELINE_REGISTRY",
-        "METADATA_PIPELINE_ACTIVATION",
-        "METADATA_DATA_CONTRACT_ACTIVATION",
-        "METADATA_DATA_PROFILED_FREQUENCY",
-        "METADATA_DATA_PROFILED",
-        "METADATA_DATA_CONTRACT",
-        "METADATA_DATA_CATALOGUE",
-        "METADATA_DATA_AGREEMENT",
-        "METADATA_DATA_STEWARD",
-    )
-    if set(_demo_counts) != set(_demo_order):
-        raise RuntimeError("Metadata inventory changed. Review reset dependencies before deleting records.")
-    for _table in _demo_counts:
-        _frame = (read_processing_state(context=runtime) if _table == _DEMO_PROCESSING_STATE else
-                  read_lakehouse_table(_table, store="Metadata", schema=metadata_table_physical_schema(_demo._demo_config, _table)))
-        if _table == "METADATA_DATA_LINEAGE":
-            _frame = _frame.where("lineage_version = 1")
-        for _row in _frame.toLocalIterator():
-            _demo_check_metadata_scope(_demo, _row.asDict(recursive=True))
-    _demo_file_counts = _demo_metadata_files(_demo)
-    for _folder, _count in _demo_file_counts.items():
-        print(f"Metadata Files/{_folder}: {_count} artifacts")
+    _demo_check_processing_boundary(_demo)
     _silver = _demo.context.paths["Silver"]
     _workspace_name = _demo._demo_client.request("GET", f"/workspaces/{_silver.workspace_id}")["displayName"]
     _item_name = _demo._demo_client.request("GET", f"/workspaces/{_silver.workspace_id}/items/{_silver.item_id}")[
@@ -425,41 +400,34 @@ def orchestrate_demo_reset(*, reset: bool = False) -> None:
     _bronze_workspace = _demo._demo_client.request("GET", f"/workspaces/{_bronze.workspace_id}")["displayName"]
     _bronze_item = _demo._demo_client.request("GET", f"/workspaces/{_bronze.workspace_id}/items/{_bronze.item_id}")["displayName"]
     _demo._demo_bronze_catalog = ".".join("`" + name.replace("`", "``") + "`" for name in (_bronze_workspace, _bronze_item, "demo"))
-    _demo_day1 = {}
-    for (_store, _table), (_file, _count) in _DEMO_SOURCES.items():
-        _frame = read_lakehouse_csv(_file, store="Bronze", header=True, inferSchema=True).cache()
-        if _frame.count() != _count:
-            raise RuntimeError(f"{_file} must contain {_count} rows. Restore the fixture before resetting.")
-        _demo_day1[_store, _table] = _frame
-    _demo_remove_outputs(_demo, preview=True)
-    # Resolve the existing Gold schema before changing metadata or business data.
-    # A missing demo output needs no write and must stay missing on repeat reset.
-    _demo._demo_gold_empty_output = _demo_prepare_gold_empty_output()
-    _demo_clear_metadata(_demo, _demo_counts, _demo_order)
-    if any(_demo_metadata_counts(_demo).values()):
-        raise RuntimeError(
-            "Metadata reset incomplete. Stop all demo writers and rerun orchestrate_demo_reset(reset=True)."
-        )
-    _demo_removed_files = _demo_metadata_files(_demo, delete=True)
-    for _folder, _count in _demo_removed_files.items():
-        print(f"Metadata Files/{_folder}: removed {_count}")
-    _demo_remove_outputs(_demo)
-    for (_store, _table), _expected in _demo_day1.items():
-        if (_store, _table) == ("Bronze", "orders"):
-            continue  # Validated CSV is the source; never recreate its redundant table.
-        _writer = write_warehouse_table if _store == "Gold" else write_lakehouse_table
-        _reader = read_warehouse_table if _store == "Gold" else read_lakehouse_table
-        _writer(_expected, table_name=_table, store=_store, schema="demo", mode="overwrite")
-        _demo_assert_source(_demo, _reader(table_name=_table, store=_store, schema="demo"), _expected)
-    _demo_verify_outputs(_demo)
-    if any(_demo_metadata_counts(_demo).values()):
-        raise RuntimeError(
-            "Metadata changed during preparation. Stop demo writers and rerun orchestrate_demo_reset(reset=True)."
-        )
-    if any(_demo_metadata_files(_demo).values()):
-        raise RuntimeError(
-            "Lifecycle artifacts remain. Stop demo writers and rerun orchestrate_demo_reset(reset=True)."
-        )
-    for _frame in _demo_day1.values():
-        _frame.unpersist()
+    with ExitStack() as cleanup:
+        _demo_day1 = {}
+        for (_store, _table), (_file, _count) in _DEMO_SOURCES.items():
+            _frame = read_lakehouse_csv(_file, store="Bronze", header=True, inferSchema=True).cache()
+            cleanup.callback(_frame.unpersist)
+            if _frame.count() != _count:
+                raise RuntimeError(f"{_file} must contain {_count} rows. Restore the fixture before resetting.")
+            _demo_day1[_store, _table] = _frame
+        _demo_remove_outputs(_demo, preview=True)
+        # Resolve the existing Gold schema before changing metadata or business data.
+        # A missing demo output needs no write and must stay missing on repeat reset.
+        _demo._demo_gold_empty_output = _demo_prepare_gold_empty_output()
+        _demo_clear_metadata(_demo, _demo_counts)
+        if any(_demo_metadata_counts(_demo).values()):
+            raise RuntimeError(
+                "Metadata reset incomplete. Stop all demo writers and rerun orchestrate_demo_reset(reset=True)."
+            )
+        _demo_remove_outputs(_demo)
+        for (_store, _table), _expected in _demo_day1.items():
+            if (_store, _table) == ("Bronze", "orders"):
+                continue  # Validated CSV is the source; never recreate its redundant table.
+            _writer = write_warehouse_table if _store == "Gold" else write_lakehouse_table
+            _reader = read_warehouse_table if _store == "Gold" else read_lakehouse_table
+            _writer(_expected, table_name=_table, store=_store, schema="demo", mode="overwrite")
+            _demo_assert_source(_demo, _reader(table_name=_table, store=_store, schema="demo"), _expected)
+        _demo_verify_outputs(_demo)
+        if any(_demo_metadata_counts(_demo).values()):
+            raise RuntimeError(
+                "Metadata changed during preparation. Stop demo writers and rerun orchestrate_demo_reset(reset=True)."
+            )
     print("RESET COMPLETE")

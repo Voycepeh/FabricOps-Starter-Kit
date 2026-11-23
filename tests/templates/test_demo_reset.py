@@ -103,6 +103,7 @@ def test_guided_demo_puts_the_single_boolean_reset_before_io_examples():
     assert page.index('## Reset, rerun and validate a package') < page.index('## Read the same Orders')
     assert 'RESET_DEMO = False' in page and 'RESET COMPLETE' in page
     assert 'RESET_CONFIRMATION' not in page and 'EXTRA_DEMO_NOTEBOOK_IDS' not in page
-    assert 'current rows in the 13 canonical metadata tables' in page
-    assert 'Historical `METADATA_DATA_LINEAGE` rows are retained' in page
+    assert 'deletes only matching demo rows' in page
+    assert 'preserves Contracts' in page
+    assert 'Runs, Lineage, Guardrail results' in page
     assert 'saved submissions' in page and 'manually created' in page

@@ -43,7 +43,7 @@ Retry `finalize_pipeline(pipeline)` with the retained session to retry projectio
 
 Migration support follows released versions. Release `0.5.0` shipped the 13-column participation layout; the intermediate 40-column projection was unreleased and has no migration path. Fresh installations use the 26-column schema, and released participation layouts receive the additive upgrade described above.
 
-Legacy reports must select null `lineage_version` before treating rows as activity. Keep the evolved data intact when rolling back; do not drop/rebuild a supported released table. The explicitly requested demo reset clears version 1 facts while retaining historical activity rows.
+Legacy reports must select null `lineage_version` before treating rows as activity. Keep the evolved data intact when rolling back; do not drop/rebuild a supported released table. The demo data reset preserves both version 1 dependency facts and historical activity rows.
 
 ## Automatic capture
 
