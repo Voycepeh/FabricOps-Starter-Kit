@@ -6614,8 +6614,8 @@ def publish_column_lineage(run, *, context, spark_session=None):
     stored = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
         schema=metadata_table_physical_schema(context["config"], "METADATA_PIPELINE_RUN"),
         context={**context, "_spark_session": spark, "_fabricops_suppress_io_log": True})
-    matches = stored.where(F.col("run_id") == run["run_id"]).limit(2).collect()
-    if len(matches) != 1 or _column_lineage_snapshot(matches[0].asDict(recursive=True)) != _column_lineage_snapshot(run):
+    matches = _collect_pipeline_metadata_rows(stored.where(F.col("run_id") == run["run_id"]).limit(2))
+    if len(matches) != 1 or _column_lineage_snapshot(matches[0]) != _column_lineage_snapshot(run):
         raise ValueError("Lineage requires the exact committed finalized Run snapshot.")
     _store, _table, _schema, path = resolve_configured_lakehouse_table("Metadata", table,
         metadata_table_physical_schema(context["config"], table), context=context)
@@ -6625,8 +6625,8 @@ def publish_column_lineage(run, *, context, spark_session=None):
 
     def confirmed():
         observed = (spark.read.format("delta").load(path).where((F.col("run_id") == run["run_id"])
-            & (F.col("lineage_version") == 1)).select(*schema.fieldNames()).collect())
-        values = [pipeline_record_content(row.asDict(recursive=True)) for row in observed]
+            & (F.col("lineage_version") == 1)).select(*schema.fieldNames()))
+        values = [pipeline_record_content(row) for row in _collect_pipeline_metadata_rows(observed)]
         return len(values) == len(expected) and {row["lineage_id"]: row for row in values} == expected
 
     frame = spark.createDataFrame(physical, schema)
@@ -6706,12 +6706,33 @@ def pipeline_run_row(plan, *, status, completed_at=None, durable=False):
     return coerce_metadata_row_types("METADATA_PIPELINE_RUN", row)
 
 
+def _collect_pipeline_metadata_rows(frame):
+    """Collect physical pipeline metadata timestamps as unambiguous UTC instants."""
+    from pyspark.sql import functions as F
+    from pyspark.sql.types import TimestampType
+
+    # TimestampType.collect() returns driver-local naive datetimes, whereas
+    # timestamps inside Run JSON are UTC. Collect physical instants as integer
+    # microseconds to avoid local-time ambiguity (including DST overlaps). Keep
+    # aware UTC values in the CAS snapshot so createDataFrame preserves instants.
+    timestamps = {field.name for field in frame.schema.fields if isinstance(field.dataType, TimestampType)}
+    frame = frame.select(*[F.unix_micros(F.col(name)).alias(name) if name in timestamps else F.col(name)
+                           for name in frame.columns])
+    epoch = datetime(1970, 1, 1, tzinfo=UTC)
+    rows = [_row_to_dict(row) for row in frame.collect()]
+    for row in rows:
+        for name in timestamps:
+            if row[name] is not None:
+                row[name] = epoch + timedelta(microseconds=row[name])
+    return rows
+
+
 def _read_pipeline_run_rows(plan, *, spark_session=None):
     frame = read_lakehouse_table("METADATA_PIPELINE_RUN", store="Metadata",
         schema=metadata_table_physical_schema(plan.runtime_context["config"], "METADATA_PIPELINE_RUN"),
         context={**(plan.runtime_context or {}), "_spark_session": spark_session, "_fabricops_suppress_io_log": True})
-    return [_row_to_dict(row) for row in frame.filter(
-        "`run_id` = '" + plan.plan_id.replace("'", "''") + "'").limit(2).collect()]
+    return _collect_pipeline_metadata_rows(frame.filter(
+        "`run_id` = '" + plan.plan_id.replace("'", "''") + "'").limit(2))
 
 
 def _merge_pipeline_run_row(plan, row, *, spark_session=None):
@@ -6750,8 +6771,15 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
     stored = _read_pipeline_run_rows(plan, spark_session=spark_session)
     observed = validate_pipeline_run(stored[0]) if len(stored) == 1 else {}
     wanted = validate_pipeline_run(physical)
-    if not observed or pipeline_record_content(observed) != pipeline_record_content(wanted):
-        raise RuntimeError("Pipeline Run publication was not confirmed.")
+    observed_content, wanted_content = pipeline_record_content(observed), pipeline_record_content(wanted)
+    if not observed or observed_content != wanted_content:
+        differing = sorted(name for name in observed_content.keys() | wanted_content.keys()
+                           if name not in observed_content or name not in wanted_content
+                           or observed_content[name] != wanted_content[name])
+        # Field names diagnose canonical differences without logging metadata values.
+        raise RuntimeError("Pipeline Run publication was not confirmed. "
+                           + ("Differing fields: " + ", ".join(differing) if len(stored) == 1
+                              else f"Expected one Run row; observed {len(stored)}."))
     plan.evidence["persisted_run_row"] = stored[0]
 
 
@@ -6897,7 +6925,10 @@ class PipelineOperation:
                 plan.lock.release()
                 session = plan.evidence.get("session")
                 if session is not None:
-                    session.close(failed=True)
+                    try:
+                        session.close(failed=True)
+                    except Exception as cleanup_error:
+                        exc.add_note(f"Pipeline session cleanup also failed ({type(cleanup_error).__name__}).")
             raise
 
     def capture_metrics(self, metrics):
@@ -6953,6 +6984,7 @@ class PipelineOperation:
     def __exit__(self, exc_type, exc, traceback):
         """Persist the outcome and release the plan even when storage fails."""
         plan = self.plan
+        active_error = exc
         try:
             if exc is not None:
                 self.record["status"] = "failed"
@@ -6967,6 +6999,7 @@ class PipelineOperation:
             try:
                 persist_pipeline_run(plan, spark_session=self.arguments.get("spark_session"))
             except RuntimeError as persistence_error:
+                active_error = persistence_error
                 for name in ("published", "table_id", "write_metrics", "failed_stage", "persistence_status",
                            "recovery_paths", "resolved_path", "publication_status", "output_layout", "overflow_occurred", "overflow_reason"):
                     if exc is not None and hasattr(exc, name):
@@ -6980,9 +7013,13 @@ class PipelineOperation:
             plan.lock.release()
             session = plan.evidence.get("session")
             if session is not None:
-                session.refresh()
-                if exc is not None:
-                    session.close(failed=True)
+                if active_error is not None:
+                    try:
+                        session.close(failed=True)
+                    except Exception as cleanup_error:
+                        active_error.add_note(f"Pipeline session cleanup also failed ({type(cleanup_error).__name__}).")
+                else:
+                    session.refresh()
         return False
 
 
