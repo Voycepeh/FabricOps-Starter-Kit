@@ -473,3 +473,85 @@ def test_canonical_readback_mismatch_still_fails_closed(runs_delta, monkeypatch,
     assert [item for item in r.rows() if item['run_id'] == retained.plan_id] == [before]
     with pytest.raises(RuntimeError, match='persistence failed'):
         shared.finalize_pipeline_run(plan, spark_session=r.spark)
+
+
+@pytest.fixture
+def retained_run_columns(runs_delta):
+    """Retain historical governance columns and populated history in the physical table."""
+    from pyspark.sql import functions as F
+
+    r = runs_delta
+    path = r.paths['METADATA_PIPELINE_RUN']
+    r.spark.sql(f"ALTER TABLE delta.`{path}` ADD COLUMNS (approval_id STRING, activation_revision STRING)")
+    retained = r.make(mode='ungoverned')
+    row = shared.pipeline_run_row(retained, status='incomplete', durable=True)
+    frame = r.spark.createDataFrame([encode_metadata_row('METADATA_PIPELINE_RUN', row)],
+                                    metadata_table_schema_registry()['METADATA_PIPELINE_RUN'])
+    frame.withColumn('approval_id', F.lit('retained-approval')).withColumn(
+        'activation_revision', F.lit('retained-revision')).write.format('delta').mode('append').save(path)
+    r.history = r.rows()[0]
+    return r
+
+
+def test_run_publication_with_retained_governance_columns(retained_run_columns):
+    """Confirm/update/finalize a new Run without changing historical schema or values."""
+    r = retained_run_columns
+    plan = r.make(mode='ungoverned')
+    shared.persist_pipeline_run(plan, spark_session=r.spark)
+    saved = plan.evidence['persisted_run_row']
+    assert saved['approval_id'] is None and saved['activation_revision'] is None
+    stale = replace(plan, evidence=deepcopy(plan.evidence))
+    r.complete(plan)
+    shared.persist_pipeline_run(plan, spark_session=r.spark)
+    before = r.rows()
+    stale.evidence.setdefault('warnings', []).append({'code': 'stale'})
+    with pytest.raises(RuntimeError, match='persistence failed'):
+        shared.persist_pipeline_run(stale, spark_session=r.spark)
+    assert r.rows() == before
+    assert shared.finalize_pipeline_run(plan, spark_session=r.spark)['status'] == 'ungoverned_completed'
+    rows = r.rows()
+    assert len(rows) == 2
+    assert [row for row in rows if row['run_id'] == r.history['run_id']] == [r.history]
+    assert {'approval_id', 'activation_revision'} <= set(r.spark.read.format('delta').load(
+        r.paths['METADATA_PIPELINE_RUN']).columns)
+
+
+def test_retained_columns_lost_append_acknowledgement(retained_run_columns, monkeypatch):
+    """Confirm a committed Run with NULL retired fields after its append acknowledgement is lost."""
+    r = retained_run_columns
+    plan = r.make(mode='ungoverned')
+    write = shared.write_metadata_frame
+    def lost_ack(*args, **kwargs):
+        write(*args, **kwargs)
+        raise OSError('test lost append acknowledgement')
+    monkeypatch.setattr(shared, 'write_metadata_frame', lost_ack)
+    assert shared.persist_pipeline_run(plan, spark_session=r.spark)['status'] == 'incomplete'
+    assert plan.evidence['persisted_run_row']['approval_id'] is None
+    assert not plan.evidence['persistence_failed']
+    monkeypatch.setattr(shared, 'write_metadata_frame', write)
+    r.complete(plan)
+    assert shared.finalize_pipeline_run(plan, spark_session=r.spark)['status'] == 'ungoverned_completed'
+    rows = r.rows()
+    assert len(rows) == 2
+    assert [row for row in rows if row['run_id'] == r.history['run_id']] == [r.history]
+
+
+@pytest.mark.parametrize('column', ['approval_id', 'activation_revision'])
+def test_retained_column_concurrent_mutation_is_fenced(retained_run_columns, column):
+    """The whole-row CAS also fences NULL retired fields retained in the physical snapshot."""
+    from delta.tables import DeltaTable
+    from pyspark.sql import functions as F
+
+    r = retained_run_columns
+    plan = r.make(mode='ungoverned')
+    shared.persist_pipeline_run(plan, spark_session=r.spark)
+    DeltaTable.forPath(r.spark, r.paths['METADATA_PIPELINE_RUN']).update(
+        condition=F.col('run_id') == plan.plan_id, set={column: F.lit('concurrent-value')})
+    before = r.rows()
+    plan.evidence.setdefault('warnings', []).append({'code': 'must_not_commit'})
+    with pytest.raises(RuntimeError, match='persistence failed'):
+        shared.persist_pipeline_run(plan, spark_session=r.spark)
+    assert r.rows() == before
+    assert plan.evidence['persistence_failed']
+    with pytest.raises(RuntimeError, match='persistence failed'):
+        shared.finalize_pipeline_run(plan, spark_session=r.spark)

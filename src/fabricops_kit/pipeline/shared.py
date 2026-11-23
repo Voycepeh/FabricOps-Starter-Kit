@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fabricops_kit.config.metadata_schemas import migrate_asset_references, has_retained_asset_workspaces, operation_physical_binding
+from fabricops_kit.config.metadata_schemas import migrate_asset_references, has_retained_asset_workspaces, operation_physical_binding, RETIRED_METADATA_COLUMNS
 
 from fabricops_kit.io.shared import retry_delta_metadata, validate_metadata_merge, write_metadata_frame
 
@@ -6735,6 +6735,13 @@ def _read_pipeline_run_rows(plan, *, spark_session=None):
         "`run_id` = '" + plan.plan_id.replace("'", "''") + "'").limit(2))
 
 
+def _pipeline_run_publication_content(row):
+    """Treat absent and SQL NULL declared retired Run fields as equivalent."""
+    retirements = RETIRED_METADATA_COLUMNS["METADATA_PIPELINE_RUN"]
+    return {name: value for name, value in pipeline_record_content(row).items()
+            if not (name in retirements and retirements[name] is None and value is None)}
+
+
 def _merge_pipeline_run_row(plan, row, *, spark_session=None):
     from delta.tables import DeltaTable
     from pyspark.sql.types import StructField, StructType
@@ -6763,15 +6770,19 @@ def _merge_pipeline_run_row(plan, row, *, spark_session=None):
         validate_metadata_merge(table, frame.drop("_expected"), path)
         previous = "struct(" + ",".join("target.`" + name + "`" for name in schema.fieldNames()) + ")"
         changes = {name: "source.`" + name + "`" for name in schema.fieldNames()}
+        # Newly published Runs leave retained retired columns NULL. Fence those
+        # values too: another writer must not add a historical approval mid-run.
+        retired_nulls = "".join(" AND target.`" + name + "` IS NULL" for name in sorted(
+            set(expected) & set(RETIRED_METADATA_COLUMNS[table])))
         changes["run_id"] = ("CASE WHEN target.completed_at IS NULL AND "
-            "(target.status <> 'failed' OR source.status = 'failed') AND (" + previous + " <=> source._expected) "
+            "(target.status <> 'failed' OR source.status = 'failed') AND (" + previous + " <=> source._expected) " + retired_nulls + " "
             "THEN source.run_id ELSE CAST(raise_error('Stale or terminal Pipeline Run') AS STRING) END")
         retry_delta_metadata(lambda: DeltaTable.forPath(spark, path).alias("target")
             .merge(frame.alias("source"), "target.run_id = source.run_id").whenMatchedUpdate(set=changes).execute())
     stored = _read_pipeline_run_rows(plan, spark_session=spark_session)
     observed = validate_pipeline_run(stored[0]) if len(stored) == 1 else {}
     wanted = validate_pipeline_run(physical)
-    observed_content, wanted_content = pipeline_record_content(observed), pipeline_record_content(wanted)
+    observed_content, wanted_content = _pipeline_run_publication_content(observed), _pipeline_run_publication_content(wanted)
     if not observed or observed_content != wanted_content:
         differing = sorted(name for name in observed_content.keys() | wanted_content.keys()
                            if name not in observed_content or name not in wanted_content
@@ -6801,7 +6812,7 @@ def persist_pipeline_run(plan, *, spark_session=None, status="incomplete", compl
                 matches = _read_pipeline_run_rows(plan, spark_session=spark_session)
                 if len(matches) == 1:
                     observed = validate_pipeline_run(matches[0])
-                    if pipeline_record_content(observed) == pipeline_record_content(row):
+                    if _pipeline_run_publication_content(observed) == _pipeline_run_publication_content(row):
                         plan.evidence["persisted_run_row"] = matches[0]
                         return row
             except Exception:

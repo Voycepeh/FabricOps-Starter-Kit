@@ -21,9 +21,13 @@ ROOT = Path(__file__).resolve().parents[2]
 pytestmark = pytest.mark.spark
 
 
-def test_reset_then_02a_reads_and_finalizes_in_fresh_sessions(files, runs_delta, monkeypatch):
+@pytest.mark.parametrize('retained_columns', [False, True])
+def test_reset_then_02a_reads_and_finalizes_in_fresh_sessions(files, runs_delta, monkeypatch, retained_columns):
     """Keep Run history across reset, then update one Run per fresh-session file read."""
     r = runs_delta
+    if retained_columns:
+        path = r.paths['METADATA_PIPELINE_RUN']
+        r.spark.sql(f"ALTER TABLE delta.`{path}` ADD COLUMNS (approval_id STRING, activation_revision STRING)")
     monkeypatch.setattr(shared, '_merge_pipeline_run_row', MERGE_RUN)
     monkeypatch.setattr(shared, 'get_spark_session', lambda supplied=None, **kw: supplied or r.spark)
     r.audit['_committed_at'] = datetime.now(UTC)
