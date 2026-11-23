@@ -31,7 +31,7 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
     for table in tables:
         initial = []
         spark_session.createDataFrame(initial, registry[table]).write.format('delta').option('delta.isolationLevel', 'Serializable').save(paths[table])
-    audit = {name: datetime.now() if name == '_committed_at' else 'test-runtime' for name, *_ in AUDIT_SCHEMA_FIELDS}
+    audit = {name: datetime.now(UTC) if name == '_committed_at' else 'test-runtime' for name, *_ in AUDIT_SCHEMA_FIELDS}
     audit.update(_workspace_id='DEV', _notebook_id='notebook')
     context = {'config': {}, 'scope_workspace_id': 'DEV', 'workspace_id': 'DEV', 'notebook_id': 'notebook', 'user_id': 'executor'}
     # Explicit plans isolate Delta persistence from Fabric notebook initialization.
@@ -338,3 +338,136 @@ def test_lineage_unknown_multi_column_outputs_publish_and_retry(runs_delta):
     assert all(row.record_type == 'GAP' and row.coverage == 'unknown' for row in rows)
     assert all(row.source_column_id is None for row in rows)
     assert len({row.lineage_id for row in rows}) == len(rows) == 2
+
+
+@pytest.mark.parametrize('process_zone', ['UTC', 'Asia/Singapore'])
+def test_run_confirmation_with_offset_audit_and_nested_timestamps(runs_delta, monkeypatch, process_zone):
+    """Compare every field after a real Delta commit, independent of driver timezone."""
+    import os
+    import time
+    from zoneinfo import ZoneInfo
+
+    r = runs_delta
+    previous_zone = os.environ.get('TZ')
+    os.environ['TZ'] = process_zone
+    time.tzset()
+    try:
+        from fabricops_kit.config.audit import build_runtime_audit_fields
+        r.audit.update(build_runtime_audit_fields(
+            config={'audit_timezone': 'Asia/Singapore'}, metadata_lakehouse_name='test-metadata',
+            runtime_context={**r.context, 'workspace_name': 'test-workspace', 'notebook_name': 'test-notebook',
+                             'activity_id': 'test-activity'},
+            committed_at=datetime(2026, 11, 23, 12, 34, 56, 123456, tzinfo=ZoneInfo('Asia/Singapore'))))
+        plan = r.make(mode='ungoverned')
+        plan.evidence['operations']['source:table0'].update(
+            started_at='2026-11-23T12:34:56.123456+08:00', read_mode='full')
+        wanted = shared.pipeline_run_row(plan, status='incomplete', durable=True)
+        # Recover a successful physical append whose acknowledgement was lost.
+        write = shared.write_metadata_frame
+        def lost_ack(*args, **kwargs):
+            write(*args, **kwargs)
+            raise OSError('test lost acknowledgement')
+        monkeypatch.setattr(shared, 'write_metadata_frame', lost_ack)
+        error = None
+        try:
+            shared.persist_pipeline_run(plan, spark_session=r.spark)
+        except RuntimeError as exc:
+            error = exc
+        observed = shared._read_pipeline_run_rows(plan, spark_session=r.spark)[0]
+        expected = shared.pipeline_record_content(shared.validate_pipeline_run(wanted))
+        actual = shared.pipeline_record_content(shared.validate_pipeline_run(observed))
+        differences = {key: (expected.get(key), actual.get(key)) for key in expected.keys() | actual.keys()
+                       if expected.get(key) != actual.get(key)}
+        assert error is None, differences
+        assert actual == expected
+        monkeypatch.setattr(shared, 'write_metadata_frame', write)
+        stale = replace(plan, evidence=deepcopy(plan.evidence))
+        r.complete(plan)
+        shared.persist_pipeline_run(plan, spark_session=r.spark)
+        before = r.rows()
+        stale.evidence.setdefault('warnings', []).append({'code': 'stale'})
+        with pytest.raises(RuntimeError, match='persistence failed'):
+            shared.persist_pipeline_run(stale, spark_session=r.spark)
+        assert r.rows() == before
+        final = shared.finalize_pipeline_run(plan, spark_session=r.spark)
+        assert final['status'] == 'ungoverned_completed'
+        assert len(r.rows()) == 1
+        assert r.rows()[0]['run_id'] == plan.plan_id
+        assert r.rows()[0]['completed_at'] is not None
+    finally:
+        if previous_zone is None:
+            os.environ.pop('TZ', None)
+        else:
+            os.environ['TZ'] = previous_zone
+        time.tzset()
+
+
+@pytest.mark.parametrize('process_zone', ['UTC', 'Asia/Singapore', 'America/New_York'])
+def test_run_readback_preserves_physical_instants_in_fresh_session(spark_session, monkeypatch, process_zone):
+    """Exercise the timestamp boundary in ordinary Spark CI without optional Delta jars."""
+    import os
+    import time
+    from pyspark.sql import functions as F
+
+    previous_zone = os.environ.get('TZ')
+    os.environ['TZ'] = process_zone
+    time.tzset()
+    try:
+        # Both instants in New York's repeated DST hour must remain distinct.
+        instants = [datetime.fromisoformat(value) for value in (
+            '2026-11-01T01:30:00.123456-04:00', '2026-11-01T01:30:00.123456-05:00')]
+        fresh = spark_session.newSession()
+        fresh.conf.set('spark.sql.session.timeZone', 'Asia/Singapore')
+        frame = fresh.createDataFrame([('run', instants[0], None, instants[1], '[{"started_at":"2026-11-01T05:30:00.123456"}]')],
+            'run_id string, started_at timestamp, completed_at timestamp, _committed_at timestamp, operations string')
+        monkeypatch.setattr(shared, 'read_lakehouse_table', lambda *a, **kw: frame)
+        plan = SimpleNamespace(plan_id='run', runtime_context={'config': {}})
+        result = shared._read_pipeline_run_rows(plan, spark_session=fresh)[0]
+        assert result['started_at'] == instants[0]
+        assert result['_committed_at'] == instants[1]
+        assert result['completed_at'] is None
+        assert result['operations'] == frame.first().operations
+        # Recreating the CAS input must preserve the precise physical microseconds.
+        restored = fresh.createDataFrame([result], frame.schema)
+        assert restored.select(F.unix_micros('started_at'), F.unix_micros('_committed_at')).collect() == (
+            frame.select(F.unix_micros('started_at'), F.unix_micros('_committed_at')).collect())
+    finally:
+        if previous_zone is None:
+            os.environ.pop('TZ', None)
+        else:
+            os.environ['TZ'] = previous_zone
+        time.tzset()
+
+
+@pytest.mark.parametrize('field', ['_committed_by', 'warnings_json', 'operations', 'started_at'])
+def test_canonical_readback_mismatch_still_fails_closed(runs_delta, monkeypatch, field):
+    """Never accept altered audit, JSON, nested facts or physical timestamp instants."""
+    from pyspark.sql import functions as F
+
+    r = runs_delta
+    retained = r.make(mode='ungoverned')
+    shared.persist_pipeline_run(retained, spark_session=r.spark)
+    before = r.rows()[0]
+    plan = r.make(mode='ungoverned')
+    row = shared.pipeline_run_row(plan, status='incomplete', durable=True)
+    altered = deepcopy(row)
+    altered['_committed_by'] = 'different-executor'
+    altered['warnings_json'] = '["different"]'
+    altered['operations'][0]['destination']['table_name'] = 'different-table'
+    physical = encode_metadata_row('METADATA_PIPELINE_RUN', altered)
+    read = shared.read_lakehouse_table
+    def mismatch(table, **kwargs):
+        frame = read(table, **kwargs)
+        if table == 'METADATA_PIPELINE_RUN':
+            replacement = F.col(field) + F.expr('INTERVAL 1 MICROSECOND') if field == 'started_at' else F.lit(physical[field])
+            frame = frame.withColumn(field, replacement)
+        return frame
+    monkeypatch.setattr(shared, 'read_lakehouse_table', mismatch)
+    with pytest.raises(RuntimeError, match='persistence failed') as caught:
+        shared.persist_pipeline_run(plan, spark_session=r.spark)
+    assert field in str(caught.value.__cause__)
+    assert plan.evidence['persistence_failed']
+    assert 'persisted_run_row' not in plan.evidence
+    assert [item for item in r.rows() if item['run_id'] == retained.plan_id] == [before]
+    with pytest.raises(RuntimeError, match='persistence failed'):
+        shared.finalize_pipeline_run(plan, spark_session=r.spark)
