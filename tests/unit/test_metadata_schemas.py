@@ -249,6 +249,9 @@ def test_stage3_data_access_schema_records_observed_sql_permissions():
         "schema_name",
         "object_name",
         "object_type",
+        "principal_object_id",
+        "access_verification_status",
+        "permission_details_json",
         *[name for name, _kind, _nullable in audit_schema_fields()],
     ]
     field_by_name = {field.name: field for field in schema.fields}

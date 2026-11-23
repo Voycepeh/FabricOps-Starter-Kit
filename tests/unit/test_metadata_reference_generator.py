@@ -379,7 +379,7 @@ def test_audited_metadata_writers_cover_all_tables() -> None:
     assert "profile_table" in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_PROFILED"]
     assert "scan_effective_access" not in METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_ACCESS"]
     assert set(METADATA_EXPLORER_WRITE_ENTRYPOINTS["METADATA_DATA_ACCESS"]) == {
-        "scan_workspace_access", "scan_onelake_access", "scan_sql_access"
+        "scan_onelake_role_members"
     }
 
 

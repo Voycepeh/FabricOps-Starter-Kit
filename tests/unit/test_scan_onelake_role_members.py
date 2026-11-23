@@ -258,3 +258,204 @@ def test_changed_portal_response_is_rejected(monkeypatch):
     monkeypatch.setattr(m, "build_opener", lambda *args: Opener())
     with pytest.raises(RuntimeError, match="response changed"):
         m._portal_access(ORIGIN, "test-token")
+
+
+def test_role_user_type_reconciles_back_to_item_access(monkeypatch):
+    """A known User must have the same identity on every observed surface."""
+    _sources(
+        monkeypatch,
+        members={
+            "microsoftEntraMembers": [
+                {"objectId": "group-1", "objectType": "User", "userPrincipalName": "alice@example.com"}
+            ]
+        },
+    )
+    result = _scan()
+    assert result["item_access"][0]["principal_type"] == "USER"
+    assert {row["permission_source"] for row in result["users"]} == {"ITEM_ACCESS", "ONELAKE_ROLE"}
+    assert {row["user_principal"] for row in result["users"]} == {"alice@example.com"}
+    assert not any(row["status"] == "PRINCIPAL_TYPE_UNRESOLVED" for row in result["coverage"])
+
+
+def test_conflicting_identity_types_never_expand_to_users(monkeypatch):
+    """Conflicting API types must not be resolved by source order or mappings."""
+    _sources(
+        monkeypatch,
+        assignments=[{"principal": {"id": "group-1", "type": "Group"}, "role": "Member"}],
+        members={"microsoftEntraMembers": [{"objectId": "group-1", "objectType": "User"}]},
+    )
+    result = _scan(group_memberships={"group-1": ["alice@example.com"]})
+    assert result["users"] == []
+    assert any(row["status"] == "CONFLICTING_PRINCIPAL_TYPES" for row in result["coverage"])
+
+
+def test_only_one_scanner_export_remains():
+    """Removed scanners must not remain callable through old module imports."""
+    import fabricops_kit as kit
+    from fabricops_kit import access_scanner
+
+    assert access_scanner.__all__ == ["scan_onelake_role_members"]
+    assert kit.ACCESS_EXPORTS == ("scan_onelake_role_members",)
+    for name in ("scan_effective_access", "scan_workspace_access", "scan_sql_access", "scan_onelake_access"):
+        assert not hasattr(kit, name)
+        with pytest.raises(ModuleNotFoundError):
+            importlib.import_module(f"fabricops_kit.access_scanner.{name}")
+
+
+def test_persistence_requires_catalogue_before_authentication(monkeypatch):
+    """Reject an unconfigured write before requesting a bearer token."""
+    monkeypatch.setattr(m, "fabric_access_token", lambda token: pytest.fail("must not authenticate"))
+    with pytest.raises(ValueError, match="catalogue_df"):
+        _scan(persist=True)
+
+
+def _catalogue_setup(monkeypatch, spark):
+    from datetime import datetime
+    from types import SimpleNamespace
+    from fabricops_kit.config.shared import build_table_id
+
+    shared = importlib.import_module("fabricops_kit.access_scanner.shared")
+    config_module = importlib.import_module("fabricops_kit.config.shared")
+    audit_module = importlib.import_module("fabricops_kit.config.audit")
+    config = {"configured": True}
+    runtime = {"config": config, "scope_workspace_id": "execution"}
+    store = SimpleNamespace(kind="lakehouse", workspace_id=WORKSPACE, item_id=ITEM)
+    monkeypatch.setattr(config_module, "resolve_fabric_context", lambda **kw: (config, "execution", runtime))
+    monkeypatch.setattr(config_module, "get_store", lambda *a: store)
+    monkeypatch.setattr(shared, "get_store", lambda *a: store)
+    monkeypatch.setattr(
+        audit_module,
+        "build_runtime_audit_fields",
+        lambda **kw: {
+            "_committed_by": "scanner@example.com",
+            "_committed_at": datetime(2026, 1, 1),
+            "_workspace_id": "execution",
+            "_workspace_name": "Execution",
+            "_notebook_id": "notebook",
+            "_notebook_name": "Scan",
+            "_metadata_lakehouse_name": "Metadata",
+            "_activity_id": "activity",
+        },
+    )
+    schema = "asset_workspace_id string, item_id string, store_type string, table_id string, schema_name string, table_name string, asset_type string, is_active boolean"
+    frame = spark.createDataFrame(
+        [
+            (
+                WORKSPACE,
+                ITEM,
+                "lakehouse",
+                build_table_id("lakehouse", "Silver", "dbo", name),
+                "dbo",
+                name,
+                "TABLE",
+                True,
+            )
+            for name in ("orders", "customers")
+        ]
+        + [
+            (
+                "different-workspace",
+                ITEM,
+                "lakehouse",
+                build_table_id("lakehouse", "Silver", "dbo", "orders"),
+                "dbo",
+                "orders",
+                "TABLE",
+                True,
+            )
+        ],
+        schema,
+    )
+    return frame
+
+
+def test_catalogue_mapping_preserves_scope_restrictions_and_supplied_users(monkeypatch, spark_session):
+    """Persist only canonical tables in the scanned physical workspace and item."""
+    catalogue = _catalogue_setup(monkeypatch, spark_session)
+    _sources(monkeypatch)
+    rules = [
+        {
+            "effect": "Permit",
+            "permission": [
+                {"attributeName": "Path", "attributeValueIncludedIn": ["Tables/dbo/orders", "Files/export.csv"]},
+                {"attributeName": "Action", "attributeValueIncludedIn": ["Read"]},
+            ],
+            "constraints": {"row": "restricted"},
+        }
+    ]
+    monkeypatch.setattr(
+        m,
+        "_collection",
+        lambda url, token: (
+            [
+                {
+                    "name": "Readers",
+                    "decisionRules": rules,
+                    "members": {"microsoftEntraMembers": [{"objectId": "group-1"}]},
+                }
+            ]
+            if url.endswith("dataAccessRoles")
+            else []
+        ),
+    )
+    writes = []
+    monkeypatch.setattr(m, "persist_access_rows", lambda df, **kw: writes.append((df, kw)))
+    result = _scan(
+        group_memberships={"Data Readers": ["alice@example.com"]},
+        catalogue_df=catalogue,
+        target="Silver",
+        persist=True,
+        access_snapshot_id="snapshot",
+    )
+    rows = result["access"].collect()
+    role_rows = [row for row in rows if row.permission_source == "ONELAKE_ROLE"]
+    assert {row.table_name for row in role_rows} == {"orders"}
+    assert {row.user_principal for row in role_rows} == {"group-1", "alice@example.com"}
+    assert {row.asset_workspace_id for row in rows} == {WORKSPACE}
+    assert {row._workspace_id for row in rows} == {"execution"}
+    assert {row.access_verification_status for row in rows} == {"UNVERIFIED"}
+    supplied = next(row for row in role_rows if row.user_principal == "alice@example.com")
+    assert supplied.principal_object_id is None
+    provenance = json.loads(supplied.permission_details_json)
+    assert provenance["principal_object_id"] == "group-1"
+    assert json.loads(provenance["decision_rules_json"])[0]["constraints"] == {"row": "restricted"}
+    assert result["unmatched"].where("path = 'Files/export.csv'").count() == 2
+    assert writes[0][1]["workspace_id"] == "execution"
+    assert writes[0][1]["transaction_id"] == f"onelake-access:{WORKSPACE}:{ITEM}:snapshot"
+    # Same immutable observations and snapshot produce the same primary keys.
+    repeated = _scan(
+        group_memberships={"Data Readers": ["alice@example.com"]},
+        catalogue_df=catalogue,
+        target="Silver",
+        access_snapshot_id="snapshot",
+    )
+    assert {row.access_id for row in rows} == {row.access_id for row in repeated["access"].collect()}
+
+
+def test_empty_roles_produce_stable_empty_metadata_frames(monkeypatch, spark_session):
+    """A valid empty scan must retain its schema and avoid invented access."""
+    catalogue = _catalogue_setup(monkeypatch, spark_session)
+    monkeypatch.setattr(m, "_collection", lambda *a: [])
+    monkeypatch.setattr(m, "_portal_access", lambda *a: {"detail": []})
+    writes = []
+    monkeypatch.setattr(m, "persist_access_rows", lambda df, **kw: writes.append(kw))
+    result = _scan(catalogue_df=catalogue, target="Silver")
+    assert result["access"].isEmpty()
+    assert result["unmatched"].isEmpty()
+    assert writes[0]["persist"] is False
+
+
+def test_catalogue_target_must_match_physical_item(monkeypatch, spark_session):
+    """Do not associate access with another configured Lakehouse's Catalogue."""
+    from types import SimpleNamespace
+
+    catalogue = _catalogue_setup(monkeypatch, spark_session)
+    config_module = importlib.import_module("fabricops_kit.config.shared")
+    monkeypatch.setattr(
+        config_module,
+        "get_store",
+        lambda *a: SimpleNamespace(kind="lakehouse", workspace_id=WORKSPACE, item_id="other-item"),
+    )
+    _sources(monkeypatch)
+    with pytest.raises(ValueError, match="physical Lakehouse"):
+        _scan(catalogue_df=catalogue, target="Silver")

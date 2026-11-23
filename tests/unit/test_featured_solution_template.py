@@ -46,7 +46,15 @@ def test_featured_solution_pages_follow_shared_presentation_contract():
             assert '??? info "' in example, page
             assert "<details" not in under_hood, page
             assert "<details" not in example, page
-            assert ".svg){ .fabricops-solution-diagram }" in under_hood, page
+            if page.name == "effective-data-access.md":
+                # The consolidated inventory replaces the old SQL/effective-access
+                # diagrams with the actual observation and persistence contract.
+                assert "permission_details_json" in under_hood
+                assert "UNVERIFIED" in under_hood
+                assert "scan_onelake_role_members" in example
+                assert "persist=True" in example
+            else:
+                assert ".svg){ .fabricops-solution-diagram }" in under_hood, page
 
 
 def test_absorbed_solution_pages_redirect_to_canonical_capability_sections():

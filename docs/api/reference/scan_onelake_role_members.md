@@ -40,6 +40,11 @@ def scan_onelake_role_members(
     portal_base_url: str,
     group_memberships: dict[str, list[str]] | None=None,
     access_token: str | None=None,
+    catalogue_df=None,
+    target: str | None=None,
+    persist: bool=False,
+    access_snapshot_id: str | None=None,
+    context: dict[str, Any] | None=None,
 ) -> dict[str, Any]:
 ```
 
@@ -60,6 +65,11 @@ Required describes the Python signature. An optional parameter may still be need
 | `portal_base_url` | `str` | Yes | `—` | HTTPS wabi-*.analysis.windows.net origin observed in the portal Network panel. No tenant-specific host is inferred or built into the package. Redirects are refused; obtain the current origin if the portal moves. |
 | `group_memberships` | `dict[str, list[str]] \| None` | No | `None` | Group object ID or exact display name mapped to user UPN strings, for example {"Data Readers": ["alice@example.com", "bob@example.com"]}. IDs take precedence over names. Ambiguous names are not expanded. Values are caller-supplied direct membership, not directory-verified. An UNKNOWN principal with a matching key is a caller-declared group. Nested groups are not expanded; provide their final user membership. An empty list means no users supplied, not a verified empty group. |
 | `access_token` | `str \| None` | No | `None` | Current caller token; otherwise NotebookUtils getToken("pbi") is used. Never paste a browser bearer token into a shared notebook. |
+| `catalogue_df` | `pyspark.sql.DataFrame` | No | `None` | Active METADATA_DATA_CATALOGUE rows. Required for mapping or persistence. |
+| `target` | `str \| None` | No | `None` | Configured Lakehouse store key. Must match workspace_id and item_id. |
+| `persist` | `bool` | No | `False` | Write mapped observations to METADATA_DATA_ACCESS. Requires Catalogue, target, configured Metadata Lakehouse, metadata write permission, and setup_metadata_tables() after upgrading the package. Permissions remain unchanged. |
+| `access_snapshot_id` | `str \| None` | No | `None` | Snapshot identity, generated when omitted. Reuse only to retry the same immutable observation set; writes use a transaction identity to avoid duplication. |
+| `context` | `dict[str, Any] \| None` | No | `None` | FabricOps configured metadata routing and notebook audit context. |
 
 </div>
 
@@ -76,6 +86,13 @@ import pandas as pd
 display(pd.DataFrame(result["role_members"]))
 display(pd.DataFrame(result["users"]))
 display(pd.DataFrame(result["coverage"]))
+saved = scan_onelake_role_members(
+    workspace_id, lakehouse_id, portal_base_url=portal_origin,
+    group_memberships={"Data Readers": ["alice@example.com"]},
+    catalogue_df=catalogue_df, target="Silver", persist=True,
+)
+display(saved["access"])
+display(saved["unmatched"])
 ```
 
 </div>
@@ -91,8 +108,13 @@ dict[str, Any]
     Rule JSON retains paths, actions, and restrictions unchanged. Automatic
     membership stays a selector, not a list of users. Portal permission
     bitmasks stay raw and are never interpreted. Always inspect coverage;
-    missing rows do not establish absence of access. No tables are written,
-    including METADATA_DATA_ACCESS, and no permissions are changed.
+    missing rows do not establish absence of access. With catalogue_df,
+    access and unmatched are Spark DataFrames; otherwise both are None.
+    access_snapshot_id identifies the scan. persist=True saves mapped rows
+    including unresolved groups/selectors and supplied users, with original
+    rules and assignment provenance in permission_details_json. Every saved
+    row is UNVERIFIED effective access. Item bitmasks are stored as observations,
+    never converted into table data grants. No permissions are changed.
 
 ## Raises / Errors
 
@@ -125,11 +147,12 @@ access. The current caller token never grants additional permissions.
 
 <div class="reference-docstring-intro" markdown="1">
 
-This is an unstable, read-only workaround, not a supported Microsoft API
+This is an unstable inventory workaround, not a supported Microsoft API
 integration or an effective-access verifier. It joins public OneLake roles
 and Workspace assignments to names returned by the undocumented Power BI
 portal item-access endpoint. No Graph or tenant-admin API is called.
-No FabricOps setup, Catalogue, Spark session, or metadata persistence is needed.
+Inspection requires no FabricOps setup or Spark. Optional Catalogue mapping
+writes observed permission snapshots through the configured Metadata Lakehouse.
 
 </div>
 
@@ -140,9 +163,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/access_scanner/scan_onelake_role_members.py:229`
+`fabricops_kit/access_scanner/scan_onelake_role_members.py:417`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_onelake_role_members.py#L229-L370">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/access_scanner/scan_onelake_role_members.py#L417-L618">View on GitHub</a>
 </div>
 
 
