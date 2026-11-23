@@ -215,6 +215,7 @@ must use the same protocol. Re-run setup before using upgraded writers.
 | Live | 0.4.0 |
 | Live | 0.4.1 |
 | Live | 0.5.0 |
+| Live | 0.5.1 |
 
 ### Live-critical dependencies
 

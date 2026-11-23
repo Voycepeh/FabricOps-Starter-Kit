@@ -348,8 +348,8 @@ def test_release_notes_are_sourced_from_changelog():
     """Verify release notes come from the matching changelog section."""
     notes = ri.extract_changelog_notes(ri.read_package_version())
 
-    assert "Promote `write_lakehouse_file()` to Live" in notes
-    assert "`read_lakehouse_query()`" in notes
+    assert "`METADATA_DATA_CATALOGUE`" in notes
+    assert "`misc.PROCESSING_STATE`" in notes
 
 
 def test_missing_release_notes_fail_generation_clearly(tmp_path):
@@ -371,7 +371,8 @@ def test_release_manifest_lifecycle_counts_include_live_orchestrators():
     setup = next(item for item in manifest["functions"] if item["name"] == "setup_notebook")
     assert setup["status"] == "live"
     assert setup["live_since"] == "0.1.0"
-    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 13
+    assert sum(1 for item in manifest["metadata_tables"] if item["status"] == "live") == 12
+    assert next(item for item in manifest["metadata_tables"] if item["name"] == "METADATA_PROCESSING_STATE")["status"] == "discontinued"
     assert "templates" not in manifest
     assert "dq_rules" not in manifest
     assert any(item["status"] == "preview" for item in manifest["functions"])
