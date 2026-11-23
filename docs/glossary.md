@@ -210,7 +210,7 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 
 <details id="effective-data-access">
 <summary><strong>Effective Data Access</strong> — The resolved access people have to Fabric data after combining supported access paths.</summary>
-<p>FabricOps combines applicable item-level access with Workspace, SQL endpoint, or OneLake Security data permissions, then resolves principals to people while preserving verification state, restrictions, and inheritance paths.</p>
+<p>Effective data access requires validating applicable item access, data permissions and identity membership. The OneLake scanner inventories observed assignments and supplied memberships; its UNVERIFIED rows do not establish effective access.</p>
 <p><strong>Also known as:</strong> effective access</p>
 </details>
 
