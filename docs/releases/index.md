@@ -1,4 +1,4 @@
-<!-- Generated file. Edit docs/releases/manifests/0.5.0.yml or the authoritative source metadata and regenerate. -->
+<!-- Generated file. Edit docs/releases/manifests/0.5.1.yml or the authoritative source metadata and regenerate. -->
 
 # Releases
 
@@ -6,6 +6,7 @@
 
 | Release | Release date | Description |
 | --- | --- | --- |
+| [FabricOps Starter Kit 0.5.1](0.5.1/index.md) | 2026-11-23 | Backend metadata identity and reliability fixes for governed table and file workflows. |
 | [FabricOps Starter Kit 0.5.0](0.5.0/index.md) | 2026-11-18 | FabricOps 0.5.0 adds Lakehouse SQL query reads, promotes Lakehouse Files writing and Guided Demo reset to Live, and improves notebook display clarity. |
 | [FabricOps Starter Kit 0.4.1](0.4.1/index.md) | 2026-11-07 | FabricOps 0.4.1 fixes concurrency conflicts in metadata Delta mutations across Catalogue, profiling, and configured metadata authoring. |
 | [FabricOps Starter Kit 0.4.0](0.4.0/index.md) | 2026-11-05 | FabricOps 0.4.0 repairs metadata structures that did not work correctly in Microsoft Fabric, replaces native-viewer-incompatible array and struct storage with validated SQL-compatible JSON, preserves existing metadata through automatic migration, and corrects execution metric and logging defects. |

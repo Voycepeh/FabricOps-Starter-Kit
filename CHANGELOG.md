@@ -6,6 +6,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-23
+
+### Changed
+
+- Use physical workspace, Table ID and asset type to identify table and file assets consistently across Catalogue, Contracts, profiling and Pipeline Runs. Keep each file's selector identity and latest observed columns in `METADATA_DATA_CATALOGUE`.
+- Store Pipeline participation in typed `METADATA_PIPELINE_RUN.operations` and project versioned column lineage to `METADATA_DATA_LINEAGE` at finalization.
+- Move Processing State to `misc.PROCESSING_STATE` in the configured shared Lakehouse; metadata setup initializes that operational table.
+- Remove redundant approval fields and legacy workspace placeholders from current metadata schemas while preserving supported v0.5.0 rows through the automatic setup upgrade.
+- Consolidate preview OneLake role membership scanning in `scan_onelake_role_members()` and persist its access snapshots in `METADATA_DATA_ACCESS`.
+
+### Fixed
+
+- Preserve file Catalogue and profile metadata through governed reads and writes, including file write row counts and profile stage ordering.
+- Retry confirmed metadata write conflicts, and correct Pipeline Run confirmation for retained Governance columns and differing driver timezones.
+
+### Upgrade instructions
+
+- Upgrade the package and run `setup_metadata_tables()` against the configured Metadata Lakehouse. The supported v0.5.0 upgrade preserves retained rows while applying the current schema and initializing `misc.PROCESSING_STATE`.
+
 ## [0.5.0] - 2026-11-18
 
 ### Added
