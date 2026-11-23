@@ -43,7 +43,8 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
         monkeypatch.setattr(module, 'build_runtime_audit_fields', lambda **kwargs: dict(audit))
         monkeypatch.setattr(module, 'resolve_configured_lakehouse_table',
             lambda store, table, schema, **kwargs: (store, table, 'engineering', paths[table]))
-        monkeypatch.setattr(module, 'read_lakehouse_table', lambda table, **kwargs: spark_session.read.format('delta').load(paths[table]))
+        monkeypatch.setattr(module, 'read_lakehouse_table', lambda table, **kwargs:
+            ((kwargs.get('context') or {}).get('_spark_session') or spark_session).read.format('delta').load(paths[table]))
     def append(table, rows):
         spark_session.createDataFrame([encode_metadata_row(table, coerce_metadata_row_types(table, {**row, **audit})) for row in rows], registry[table]).write.format('delta').mode('append').save(paths[table])
     agreement = {'agreement_id': 'agreement', 'agreement_version': '1', 'start_date': '2020-01-01',
