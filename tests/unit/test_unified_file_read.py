@@ -390,3 +390,22 @@ def test_persisted_file_guardrail_uses_explicit_nullable_identity_schema(files, 
     assert frame.schema['table_id'].nullable and 'source_id' not in frame.columns
     row = frame.first()
     assert row['table_id'] == source['table_id'] and row['asset_type'] == 'FILE'
+
+
+def test_run_persistence_failure_survives_file_session_cleanup(files, monkeypatch):
+    """Session cleanup retains the original storage cause and releases failed ownership."""
+    session = setup_pipeline(pipeline_mode='Ungoverned')
+    storage_error = OSError('test storage failure')
+    def unavailable(*args, **kwargs):
+        raise storage_error
+    monkeypatch.setattr(shared, '_merge_pipeline_run_row', unavailable)
+    monkeypatch.setattr(shared, '_read_pipeline_run_rows', lambda *a, **kw: [])
+    with pytest.raises(RuntimeError, match='Pipeline run evidence persistence failed') as caught:
+        orchestrate_read(store='Bronze', relative_path='demo/orders.csv', file_format='csv')
+    assert caught.value.__cause__ is storage_error
+    assert session.closed and session.plan.evidence['persistence_failed']
+    assert shared._ACTIVE_PIPELINE.get() is None
+    assert not session.plan.evidence.get('sealed')
+    files.readers['csv'].assert_not_called()
+    with pytest.raises(RuntimeError, match='persistence failed'):
+        shared.finalize_pipeline_run(session.plan)

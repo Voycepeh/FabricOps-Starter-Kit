@@ -228,7 +228,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 302 |
+| Live-critical dependencies | 303 |
 
 ### Release history
 
@@ -387,6 +387,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._canonical_profiled_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._catalogue_columns</code></li>
 <li><code>fabricops_kit.pipeline.shared._catalogue_value</code></li>
+<li><code>fabricops_kit.pipeline.shared._collect_pipeline_metadata_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
 <li><code>fabricops_kit.pipeline.shared._custom_expression_column</code></li>
 <li><code>fabricops_kit.pipeline.shared._custom_expression_columns</code></li>

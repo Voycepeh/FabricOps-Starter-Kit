@@ -56,6 +56,12 @@ def runtime(monkeypatch):
         if failure["read_unavailable"]:
             raise OSError("read unavailable")
         class Rows:
+            schema = SimpleNamespace(fields=[])
+            columns = []
+
+            def select(self, *columns):
+                return self
+
             def filter(self, expression):
                 self.run_id = expression.split("'")[1]
                 return self
@@ -108,6 +114,12 @@ def test_internal_pipeline_run_recovery_read_suppresses_io_log(monkeypatch):
     seen = {}
 
     class Frame:
+        schema = SimpleNamespace(fields=[])
+        columns = []
+
+        def select(self, *columns):
+            return self
+
         def filter(self, _expression):
             return self
 
