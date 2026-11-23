@@ -55,7 +55,7 @@ nav:
       - Function Call Graph & Architecture Explorer: function-call-graph.md
       - Work in Progress:
           - Production Table to Data Agent: solutions/production-table-to-data-agent.md
-          - Scan Effective Data Access: solutions/effective-data-access.md
+          - Inspect OneLake Access: solutions/effective-data-access.md
       - Initial Specs: maintainer/product-definition.md
       - Release Guide: maintainer/index.md
       - Public API & Architecture: maintainer/public-api-architecture.md

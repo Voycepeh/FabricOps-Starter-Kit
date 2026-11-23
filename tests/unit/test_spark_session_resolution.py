@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from fabricops_kit import profile_table, scan_sql_access, orchestrate_read, orchestrate_write
+from fabricops_kit import profile_table, scan_onelake_role_members, orchestrate_read, orchestrate_write
 from fabricops_kit.pipeline.check_dq import check_dq
 from fabricops_kit.pipeline.check_freshness import check_freshness
 from fabricops_kit.pipeline.check_schema import check_schema
@@ -74,7 +74,7 @@ def test_get_spark_session_raises_when_no_session_is_available(monkeypatch):
         profile_table,
         pipeline_read,
         pipeline_write,
-        scan_sql_access,
+        scan_onelake_role_members,
         orchestrate_read,
         orchestrate_write,
     ],
