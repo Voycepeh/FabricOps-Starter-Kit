@@ -228,7 +228,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 303 |
+| Live-critical dependencies | 304 |
 
 ### Release history
 
@@ -427,6 +427,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._parse_rule_parameters</code></li>
 <li><code>fabricops_kit.pipeline.shared._persist_grain_candidates</code></li>
 <li><code>fabricops_kit.pipeline.shared._persist_profile_observation</code></li>
+<li><code>fabricops_kit.pipeline.shared._pipeline_run_publication_content</code></li>
 <li><code>fabricops_kit.pipeline.shared._pipeline_write_state_records</code></li>
 <li><code>fabricops_kit.pipeline.shared._processing_state_id</code></li>
 <li><code>fabricops_kit.pipeline.shared._processing_state_rows</code></li>

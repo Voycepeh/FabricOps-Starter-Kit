@@ -637,3 +637,30 @@ def test_operation_asset_workspace_is_flat_and_independent_of_execution_workspac
     assert operation['asset_workspace_id'] == 'physical-asset-workspace'
     assert operation['asset_workspace_id'] != row['workspace_id']
     assert not {'workspace_id', 'asset_workspace_id', 'table_id', 'asset_type'} & operation['destination'].keys()
+
+
+@pytest.mark.parametrize('extra,confirmed', [
+    ({'approval_id': None, 'activation_revision': None}, True),
+    ({'approval_id': 'unexpected-approval', 'activation_revision': None}, False),
+    ({'approval_id': None, 'activation_revision': 'unexpected-revision'}, False),
+    ({'unrecognized_column': None}, False),
+])
+def test_lost_acknowledgement_checks_retained_run_columns(runtime, monkeypatch, extra, confirmed):
+    """Only declared SQL NULL retirements may differ during full commit confirmation."""
+    make, operation, saved, _, failure = runtime
+    plan = make(roles=('source',))
+    operation(plan, 0)
+    read = shared._read_pipeline_run_rows
+    monkeypatch.setattr(shared, '_read_pipeline_run_rows', lambda *args, **kwargs:
+        [{**row, **extra} for row in read(*args, **kwargs)])
+    failure['after_commit'] = True
+    plan.evidence['boundary_completed'] = True
+    if confirmed:
+        result = finalize_pipeline_run(plan)
+        assert result == saved[plan.plan_id] and result['status'] == 'succeeded'
+        assert not plan.evidence['persistence_failed']
+        assert all(name in plan.evidence['persisted_run_row'] for name in extra)
+    else:
+        with pytest.raises(RuntimeError, match='persistence failed'):
+            finalize_pipeline_run(plan)
+        assert plan.evidence['persistence_failed'] and not plan.evidence.get('sealed')
