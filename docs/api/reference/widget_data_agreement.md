@@ -125,6 +125,7 @@ appends one complete agreement row only after final validation.
 | Status | Version |
 | --- | --- |
 | Live | 0.5.0 |
+| Live | 0.5.1 |
 
 ### Live-critical dependencies
 

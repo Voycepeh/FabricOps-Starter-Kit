@@ -147,6 +147,7 @@ No session is created; Spark-dependent work raises
 | Live | 0.4.0 |
 | Live | 0.4.1 |
 | Live | 0.5.0 |
+| Live | 0.5.1 |
 
 ### Live-critical dependencies
 

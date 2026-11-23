@@ -138,6 +138,7 @@ No related guides documented.
 | Live | 0.4.0 |
 | Live | 0.4.1 |
 | Preview | 0.5.0 |
+| Preview | 0.5.1 |
 
 
 </details>

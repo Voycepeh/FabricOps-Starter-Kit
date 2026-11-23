@@ -161,6 +161,7 @@ is recommended; the Metadata Lakehouse need not be empty or demo-only.
 | Status | Version |
 | --- | --- |
 | Live | 0.5.0 |
+| Live | 0.5.1 |
 
 ### Live-critical dependencies
 
