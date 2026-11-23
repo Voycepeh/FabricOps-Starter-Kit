@@ -191,7 +191,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 284 |
+| Live-critical dependencies | 285 |
 
 ### Release history
 
@@ -328,6 +328,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._catalogue_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._coerce_date</code></li>
 <li><code>fabricops_kit.pipeline.shared._coerce_datetime</code></li>
+<li><code>fabricops_kit.pipeline.shared._collect_pipeline_metadata_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._compact_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._compact_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>

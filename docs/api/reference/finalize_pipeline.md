@@ -161,7 +161,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 136 |
+| Live-critical dependencies | 138 |
 
 ### Release history
 
@@ -287,9 +287,11 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.finalize_pipeline._format_duration</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._operation_summary_rows</code></li>
 <li><code>fabricops_kit.pipeline.finalize_pipeline._print_pipeline_summary</code></li>
+<li><code>fabricops_kit.pipeline.shared._collect_pipeline_metadata_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared._column_lineage_snapshot</code></li>
 <li><code>fabricops_kit.pipeline.shared._contract_payload</code></li>
 <li><code>fabricops_kit.pipeline.shared._metadata_hash</code></li>
+<li><code>fabricops_kit.pipeline.shared._row_to_dict</code></li>
 <li><code>fabricops_kit.pipeline.shared.canonical_pipeline_json</code></li>
 <li><code>fabricops_kit.pipeline.shared.column_lineage_rows</code></li>
 <li><code>fabricops_kit.pipeline.shared.contract_guardrail_rows</code></li>

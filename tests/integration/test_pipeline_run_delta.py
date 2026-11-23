@@ -92,7 +92,8 @@ def runs_delta(monkeypatch, spark_session, tmp_path):
             for table in json.loads(plan.participants_json)]
         plan.evidence['boundary_completed'] = True
     def rows():
-        return [decode_metadata_row('METADATA_PIPELINE_RUN', row.asDict(recursive=True)) for row in spark_session.read.format('delta').load(paths['METADATA_PIPELINE_RUN']).collect()]
+        frame = spark_session.read.format('delta').load(paths['METADATA_PIPELINE_RUN'])
+        return [decode_metadata_row('METADATA_PIPELINE_RUN', row) for row in shared._collect_pipeline_metadata_rows(frame)]
     return SimpleNamespace(spark=spark_session, paths=paths, context=context, make=make, complete=complete,
                            rows=rows, append=append, audit=audit)
 
@@ -278,7 +279,7 @@ def test_lineage_finalization_publishes_scalar_facts_and_retry_is_idempotent(run
                and row.target_column_name == 'total' and row.dependency_type == 'VALUE' for row in rows)
     assert all(not hasattr(field.dataType, 'elementType') and field.dataType.typeName() != 'struct' for field in table.schema)
     assert all(row.run_id == plan.plan_id and row.lineage_version == 1 and row.publication_status == 'published' for row in rows)
-    physical_run = r.spark.read.format('delta').load(r.paths['METADATA_PIPELINE_RUN']).first().asDict(recursive=True)
+    physical_run = shared._read_pipeline_run_rows(plan, spark_session=r.spark)[0]
     first = shared.publish_column_lineage(physical_run, context=r.context, spark_session=r.spark)
     second = shared.publish_column_lineage(physical_run, context=r.context, spark_session=r.spark)
     assert first == second and first['row_count'] == len(rows)
