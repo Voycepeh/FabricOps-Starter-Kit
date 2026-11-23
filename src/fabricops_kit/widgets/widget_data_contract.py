@@ -70,7 +70,7 @@ def _set_selection_value(
             f"control={control_name!r}, value={value!r}, {location}, "
             f"valid_options={valid_options!r}"
         ) from exc
-_TABS = ("Table", "Columns", "Data Quality", "Review", "AI Usage")
+_TABS = ("Table", "Columns", "Data Quality", "Review", "Logs")
 _CONTRACT_STYLE = """<style>
 .fabricops-data-contract {
     --contract-accent:var(--form-accent); --contract-border:var(--form-border);
@@ -110,12 +110,20 @@ _CONTRACT_STYLE = """<style>
 .fabricops-data-contract .fabricops-contract-sidebar {
     position:relative; align-self:stretch; height:auto; min-height:0; overflow:visible; padding:10px; gap:4px;
 }
-.fabricops-data-contract .fabricops-contract-sidebar .widget-vbox { gap:8px; }
+.fabricops-data-contract .fabricops-contract-sidebar .widget-vbox { gap:4px; }
+.fabricops-data-contract .fabricops-contract-header-row {
+    display:flex; flex-flow:row wrap; align-items:center; gap:6px 16px;
+}
+.fabricops-data-contract .fabricops-contract-identity { flex:1 1 260px; width:auto !important; }
+.fabricops-data-contract .fabricops-contract-sidebar :is(p,.widget-html-content) { margin:0; }
+.fabricops-data-contract .fabricops-contract-sidebar .widget-button { min-height:32px; padding:5px 12px; }
+.fabricops-data-contract .fabricops-contract-actions .fabricops-actions { gap:6px; }
+
 .fabricops-data-contract .fabricops-contract-workspace {
-    gap:16px; min-height:0; align-items:start; overflow:visible;
+    gap:8px; min-height:0; align-items:start; overflow:visible;
 }
 .fabricops-data-contract .fabricops-contract-detail {
-    height:clamp(240px, calc(100vh - 440px), 560px); min-height:0; max-height:none; border:0; padding:0;
+    height:calc(100vh - 190px); min-height:480px; max-height:none; border:0; padding:0;
     gap:16px; overflow-x:hidden; overflow-y:auto; scrollbar-gutter:stable;
     overscroll-behavior:contain;
 }
@@ -1071,10 +1079,12 @@ def widget_data_contract(
     Columns section contains column metadata and non-DQ settings only.
     Open Data Contract loads a manual-first editor without AI inference or AI-only
     profile reads. Top navigation keeps Table (File for file sources), Columns, Data Quality, Review,
-    and AI Usage above one bounded content body; lifecycle actions remain in the header.
+    and Logs above one full-height scrolling work pane; lifecycle actions remain in a compact header.
+    Table or File context appears at the top of Table or File and Review only. Logs combines
+    kernel performance timings, AI configuration, and AI usage.
     Entry selects Workspace, Store, dataset, then version. Upstream changes clear dependent
-    selections. Native searchable, paginated pickers wrap long dataset names without popup
-    JavaScript. Optional profile and participation context loads when expanded.
+    selections. Searchable dropdowns wrap long dataset names. Optional profile and
+    participation context loads when expanded.
     Every AI request requires an explicit Generate, Suggest or Re-run action.
     Suggestions persist during navigation and require explicit acceptance.
     Switching columns reuses cached profile reads and suggestions.
@@ -1156,12 +1166,12 @@ def widget_data_contract(
             for item in timing_log
         )
         timing_panel.value = (
-            "<details style='font-size:12px;margin:8px 0'><summary style='cursor:pointer'>"
-            "Performance timings (kernel elapsed seconds)</summary>"
+            "<h4 style='margin:0 0 8px'>Performance timings</h4>"
+            "<p>Kernel elapsed seconds</p>"
             "<table><thead><tr><th align='left'>Operation</th><th>Seconds</th><th>Status</th></tr></thead>"
             + "<tbody>" + rows + "</tbody></table>"
             "<div style='color:#667085'>Includes Spark execution and Python work; "
-            "browser paint and notebook cold start are not measured. Nested timings overlap their parent operation.</div></details>"
+            "browser paint and notebook cold start are not measured. Nested timings overlap their parent operation.</div>"
         )
     with startup.phase("initialization", "Resolving FabricOps configuration…"):
         config, active_workspace_id, resolved = resolve_fabric_context(context=context)
@@ -1238,6 +1248,7 @@ def widget_data_contract(
     }
     widgets = shared.require_ipywidgets()
     status = shared.status_message(widgets)
+    status.layout.min_height = "20px"
     operation_progress = widgets.HTML(layout=widgets.Layout(width="100%"))
     operation_progress.add_class("fabricops-operation-progress")
     timing_panel = widgets.HTML(layout=widgets.Layout(width="100%"))
@@ -1315,14 +1326,14 @@ def widget_data_contract(
     left = widgets.VBox(
         layout=widgets.Layout(
             width="100%", min_width="0", max_width="100%",
-            border="1px solid #e1e6eb", padding="14px", gap="8px",
+            gap="4px",
             align_items="stretch",
         )
     )
     right = widgets.VBox(
         layout=widgets.Layout(
             width="100%", min_width="0", max_width="100%",
-            border="1px solid #e1e6eb", padding="20px 24px", gap="10px",
+            gap="12px",
             align_items="stretch",
         )
     )
@@ -1336,7 +1347,7 @@ def widget_data_contract(
         layout=widgets.Layout(
             width="100%", min_width="0", max_width="100%",
             grid_template_columns="minmax(0, 1fr)",
-            grid_gap="12px", align_items="flex-start", overflow="visible",
+            grid_gap="8px", align_items="flex-start", overflow="visible",
         ),
     )
     workspace.add_class("fabricops-contract-workspace")
@@ -1368,7 +1379,8 @@ def widget_data_contract(
         left_children, right_children = view_content.get(selected_view, ((), ()))
         left.children = sidebar_content
         section_heading.value = f"<h3 style='margin:0;'>{html.escape(selected_label)}</h3>"
-        right.children = (section_heading, *left_children, *right_children, context_slot)
+        context = (context_slot,) if selected_view in {"Table", "Review"} else ()
+        right.children = (section_heading, *context, *left_children, *right_children)
         if selected_view == "Data Quality":
             refresh_dq_rules = state.get("_refresh_dq_rules")
             if callable(refresh_dq_rules):
@@ -1746,9 +1758,11 @@ def widget_data_contract(
             set_status(message)
 
     def dynamic_selector(*, placeholder: str, empty_label: str | None = None) -> dict[str, Any]:
-        return shared.render_inline_selector(
-            widgets=widgets, label=(empty_label or placeholder).removeprefix("Select "),
-            placeholder=empty_label or placeholder,
+        return shared.render_searchable_selector(
+            widgets=widgets, label="", rows=[],
+            label_fn=lambda row: str(row["label"]),
+            value_fn=lambda row: str(row["value"]),
+            placeholder=empty_label or placeholder, empty_label=empty_label,
         )
 
     table_selector = dynamic_selector(
@@ -2646,6 +2660,7 @@ def widget_data_contract(
             return identity_html + "</div>"
 
         table_summary = widgets.HTML()
+        table_summary.add_class("fabricops-contract-identity")
         table_context_content = widgets.HTML()
         table_context_accordion = widgets.Accordion([table_context_content], selected_index=None)
         table_context_accordion.set_title(0, "File context" if is_file_source else "Table context")
@@ -4979,7 +4994,7 @@ def widget_data_contract(
 
         def refresh_column_view() -> None:
             if str(top_nav.value) == "Columns":
-                right.children = (section_heading, *column_left, *(column_right if column_select.value else (empty_column,)), context_slot)
+                right.children = (section_heading, *column_left, *(column_right if column_select.value else (empty_column,)))
         state["_refresh_column_view"] = refresh_column_view
 
         render_table_ai()
@@ -7018,16 +7033,17 @@ def widget_data_contract(
             ),
         )
         view_content["Review"] = (review_left, review_right)
-        view_content["AI Usage"] = (
+        view_content["Logs"] = (
             (),
-            (editor_ai_information, ai_usage_view),
+            (timing_panel, editor_ai_information, ai_usage_view),
         )
         nonlocal sidebar_content
-        sidebar_content = (
-            table_summary, widgets.HBox([sidebar_actions, table_exit_row],
-                layout=widgets.Layout(width="100%", flex_flow="row wrap", justify_content="space-between")),
-            operation_progress, status, table_exit_confirm,
+        header_row = widgets.HBox(
+            [table_summary, sidebar_actions, table_exit_row],
+            layout=widgets.Layout(width="100%", flex_flow="row wrap", align_items="center"),
         )
+        header_row.add_class("fabricops-contract-header-row")
+        sidebar_content = (header_row, operation_progress, status, table_exit_confirm)
         context_slot.children = (table_context_accordion,)
         apply_view()
 
@@ -7180,7 +7196,7 @@ def widget_data_contract(
 
         def dispose_editor() -> None:
             close_sidebar_widgets(editor_roots, preserve=(
-                table_exit_row, table_exit_confirm, editor_ai_information, ai_usage_view,
+                table_exit_row, table_exit_confirm, editor_ai_information, ai_usage_view, timing_panel,
                 contract_nav_row, top_nav, sidebar_actions, operation_progress, status, section_heading,
             ))
         state["_dispose_editor"] = dispose_editor
@@ -7312,20 +7328,20 @@ def widget_data_contract(
             workspaces = sorted({str(row.get("asset_workspace_id") or "") for row in all_rows} - {""})
             workspace_control.refresh_rows([
                 {"label": workspace_names.get(value) or value, "value": value} for value in workspaces
-            ], state.get("workspace_id"))
+            ], state.get("workspace_id") or "")
             scoped = [row for row in all_rows
                       if str(row.get("asset_workspace_id") or "") == workspace_control.value]
             stores = {str(row.get("store") or row.get("layer") or row.get("item_id") or ""): configured_item_name(row)
                       for row in scoped}
             stores.pop("", None)
             store_control.refresh_rows([{"label": name or key, "value": key} for key, name in sorted(stores.items())],
-                                       state.get("pending_store"))
+                                       state.get("pending_store") or "")
             eligible = [row for row in scoped if str(row.get("store") or row.get("layer") or row.get("item_id") or "") == store_control.value]
             datasets = {str(row["table_id"]): row for row in eligible}
             table_control.refresh_rows([
                 {"label": table_selector_label(row), "value": key} for key, row in
                 sorted(datasets.items(), key=lambda pair: table_selector_label(pair[1]).casefold())
-            ], state.get("pending_dataset_id"))
+            ], state.get("pending_dataset_id") or "")
             selected = str(table_control.value or "")
             state["pending_dataset_id"] = selected or None
             matches = sorted([row for row in state["contracts"] if str(row.get("table_id") or "") == selected
@@ -7336,13 +7352,12 @@ def widget_data_contract(
             if selected:
                 versions.append({"label": "New draft", "value": "new"})
             preferred = str(state.get("pending_contract_version") or "")
-            contract_control.refresh_rows(versions, preferred if preferred else None)
+            contract_control.refresh_rows(versions, preferred)
             store_control.disabled = not bool(workspace_control.value)
             table_control.disabled = not bool(workspace_control.value and store_control.value)
             contract_control.disabled = not bool(selected)
-            # Explicitly sync native picker state (also works with the in-memory widget fixture).
+            # Sync the visible dropdowns as well as their stable-value controls.
             for picker in (workspace_selector, store_selector, table_selector, contract_selector):
-                picker["trigger"].disabled = picker["selector"].disabled
                 picker["search"].disabled = picker["selector"].disabled
             open_button.disabled = not bool(selected and contract_control.value and store_control.value)
         finally:
@@ -7479,7 +7494,7 @@ def widget_data_contract(
     page = shared.form_page(
         widgets, title="Data Contract", tone="governance",
         description="Select, author, review, and freeze one governed dataset contract.",
-        children=[selector_panel, editor_shell, timing_panel],
+        children=[selector_panel, editor_shell],
     )
     page.layout.height = "auto"
     page.layout.overflow = "visible"
@@ -7496,7 +7511,7 @@ def widget_data_contract(
         "open": open_button, "open_progress": open_progress,
         "operation_progress": operation_progress,
         "selector_ai_information": selector_ai_information, "editor_ai_information": editor_ai_information,
-        "ai_usage": ai_usage_view,
+        "ai_usage": ai_usage_view, "timing_panel": timing_panel,
         "change_table": change_table_button,
         "table_exit_row": table_exit_row,
         "table_exit_confirm": table_exit_confirm,

@@ -60,8 +60,8 @@ def contract_browser(tmp_path):
         thread.join(timeout=5)
 
 
-def test_native_entry_labels_wrap_without_popup_javascript(monkeypatch, contract_browser):
-    """Long options and selected labels fit at notebook widths with no custom popup installation."""
+def test_searchable_entry_dropdown_wraps_and_filters_without_expanding_form(monkeypatch, contract_browser):
+    """Open and search one dropdown; long labels fit without shifting adjacent fields."""
     widgets, show = contract_browser
     runtime = widget_runtime.__wrapped__(monkeypatch)
     runtime["catalogue"][0]["table_name"] = "inventory_movements_append_all_" * 7
@@ -70,20 +70,32 @@ def test_native_entry_labels_wrap_without_popup_javascript(monkeypatch, contract
     controls = state["_controls"]
     controls["workspace_select"].value = "dev"
     controls["store_select"].value = "Silver"
-    picker = controls["entry_pickers"][2]
-    picker["trigger"].click()
+    from fabricops_kit.widgets import _FABRIC_NOTEBOOK_UX_JAVASCRIPT
     for width in (1440, 1050, 700, 420):
-        page = show(controls["page"], width, "entry-options")
-        option = page.locator(".fabricops-inline-selector-option").filter(has_text="inventory_movements").first
+        page = show(controls["page"], width, "entry-dropdown")
+        page.evaluate(_FABRIC_NOTEBOOK_UX_JAVASCRIPT)
+        field = page.locator(".fabricops-searchable-selector-v2 input").nth(2)
+        contract = page.locator(".fabricops-searchable-selector-v2").nth(3)
+        before = contract.evaluate("e => [e.offsetTop, e.offsetLeft, e.offsetWidth, e.offsetHeight]")
+        field.click()
+        option = page.locator(".fabricops-selector-popup [role=option]").filter(has_text="inventory_movements").first
         option.wait_for()
         assert option.evaluate("e => e.scrollWidth <= e.clientWidth + 1")
         assert option.evaluate("e => getComputedStyle(e).whiteSpace === 'normal'")
+        field.fill("no-such-dataset")
+        assert page.locator(".fabricops-selector-popup [role=option]").count() == 0
+        field.fill("inventory_movements")
+        option.wait_for()
+        assert contract.evaluate("e => [e.offsetTop, e.offsetLeft, e.offsetWidth, e.offsetHeight]") == before
+        if os.environ.get("FABRICOPS_WIDGET_SCREENSHOT_DIR"):
+            page.screenshot(path=str(Path(os.environ["FABRICOPS_WIDGET_SCREENSHOT_DIR"]) / f"dropdown-open-{width}.png"), full_page=True)
         assert not page.evaluate("document.documentElement.scrollWidth > innerWidth")
-    picker["results"].children[0].click()
-    for width in (1440, 700, 420):
-        page = show(controls["page"], width, "entry-selected")
-        selected = page.locator(".fabricops-inline-selector-trigger").filter(has_text="inventory_movements").first
-        assert selected.evaluate("e => e.scrollWidth <= e.clientWidth + 1 && e.scrollHeight <= e.clientHeight + 1")
+        field.press("ArrowDown")
+        field.press("Enter")
+        assert page.locator(".fabricops-selector-popup").count() == 0
+        assert "inventory_movements" in field.input_value()
+        selected = page.locator(".fabricops-selector-value").nth(2)
+        assert selected.evaluate("e => e.scrollWidth <= e.clientWidth + 1")
     controls["page"].close()
 
 
@@ -108,7 +120,8 @@ def test_single_content_body_keeps_actions_and_navigation_outside_scroll(monkeyp
                 detail.scrollTop = detail.scrollHeight;
                 return {
                     overflow: document.documentElement.scrollWidth > innerWidth,
-                    bounded: detail.clientHeight <= 562,
+                    bounded: detail.clientHeight >= innerHeight * .7 && detail.clientHeight <= innerHeight,
+                    compactHeader: innerWidth < 700 || root.querySelector(".fabricops-contract-sidebar").getBoundingClientRect().height < 150,
                     stable: before[0] === nav.getBoundingClientRect().top && before[1] === actions.getBoundingClientRect().top,
                     outside: !detail.contains(actions) && !detail.contains(nav),
                     actionVisible: actions.getBoundingClientRect().bottom <= innerHeight,
@@ -116,9 +129,12 @@ def test_single_content_body_keeps_actions_and_navigation_outside_scroll(monkeyp
             }""")
             assert not result["overflow"], (section, width, result)
             assert result["bounded"] and result["stable"] and result["outside"], (section, width, result)
-            assert result["actionVisible"], (section, width, result)
+            assert result["actionVisible"] and result["compactHeader"], (section, width, result)
+    controls["top_nav"].value = "Table"
     controls["table_context"].selected_index = 0
     page = show(controls["page"], 700, "expanded-context")
-    assert page.locator(".fabricops-contract-detail").evaluate("e => e.clientHeight <= 562")
+    assert page.locator(".fabricops-contract-detail").evaluate("e => e.clientHeight >= 630")
+    page.set_viewport_size({"width": 1440, "height": 1200})
+    assert page.locator(".fabricops-contract-detail").evaluate("e => e.clientHeight >= 1000")
     state["_dispose_editor"]()
     controls["page"].close()
