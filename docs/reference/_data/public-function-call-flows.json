@@ -17522,9 +17522,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._ai_usage_html",
-      "source_end_line": 1001,
+      "source_end_line": 1009,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 875,
+      "source_start_line": 883,
       "usage": "public_flow_reachable"
     },
     {
@@ -17538,9 +17538,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._bucket_treatment_example",
-      "source_end_line": 366,
+      "source_end_line": 374,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 339,
+      "source_start_line": 347,
       "usage": "public_flow_reachable"
     },
     {
@@ -17555,9 +17555,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._expose_manifest",
-      "source_end_line": 298,
+      "source_end_line": 306,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 284,
+      "source_start_line": 292,
       "usage": "public_flow_reachable"
     },
     {
@@ -17571,9 +17571,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._format_decimal",
-      "source_end_line": 317,
+      "source_end_line": 325,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 312,
+      "source_start_line": 320,
       "usage": "public_flow_reachable"
     },
     {
@@ -17587,9 +17587,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._format_widget_exception",
-      "source_end_line": 281,
+      "source_end_line": 289,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 268,
+      "source_start_line": 276,
       "usage": "public_flow_reachable"
     },
     {
@@ -17603,9 +17603,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._latest",
-      "source_end_line": 483,
+      "source_end_line": 491,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 465,
+      "source_start_line": 473,
       "usage": "public_flow_reachable"
     },
     {
@@ -17620,9 +17620,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_html",
-      "source_end_line": 785,
+      "source_end_line": 793,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 779,
+      "source_start_line": 787,
       "usage": "unused"
     },
     {
@@ -17637,9 +17637,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._manifest_sections",
-      "source_end_line": 777,
+      "source_end_line": 785,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 486,
+      "source_start_line": 494,
       "usage": "public_flow_reachable"
     },
     {
@@ -17653,9 +17653,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._mask_treatment_example",
-      "source_end_line": 336,
+      "source_end_line": 344,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 320,
+      "source_start_line": 328,
       "usage": "public_flow_reachable"
     },
     {
@@ -17670,9 +17670,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._parameters",
-      "source_end_line": 309,
+      "source_end_line": 317,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 301,
+      "source_start_line": 309,
       "usage": "public_flow_reachable"
     },
     {
@@ -17686,9 +17686,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._profile_html",
-      "source_end_line": 873,
+      "source_end_line": 881,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 788,
+      "source_start_line": 796,
       "usage": "public_flow_reachable"
     },
     {
@@ -17702,9 +17702,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._sensitive_treatment_guidance",
-      "source_end_line": 462,
+      "source_end_line": 470,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 405,
+      "source_start_line": 413,
       "usage": "public_flow_reachable"
     },
     {
@@ -17718,9 +17718,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.widgets.widget_data_contract._sensitive_treatment_review",
-      "source_end_line": 402,
+      "source_end_line": 410,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 369,
+      "source_start_line": 377,
       "usage": "public_flow_reachable"
     },
     {
@@ -17833,12 +17833,12 @@
       ],
       "returns_documentation": "dict\n    Current selector, editor, lifecycle state, and callable authoring actions.\n    Retain this exact instance for ``ai_settings``, ``ai_usage``, and\n    ``_ai_diagnostics`` (keyed by contract/version and operation). Raw exception\n    chains in diagnostics are for maintainers and can include provider context;\n    review before sharing. Opening makes no AI requests.",
       "signature": "def widget_data_contract(*, table_id: str | None=None, contract_version: int | None=None, context: Any=None, ai_model: str | None=None, ai_reasoning_effort: str | None=None, ai_verbosity: str | None=None) -> dict[str, Any]",
-      "source_end_line": 7512,
+      "source_end_line": 7526,
       "source_path": "src/fabricops_kit/widgets/widget_data_contract.py",
-      "source_start_line": 1004,
+      "source_start_line": 1012,
       "summary": "Open the unified governance authoring and lifecycle experience for Data Contracts.",
       "usage": "public_flow_reachable",
-      "usage_notes": "Authoring, review, and freezing route through the configured central Governance\nMetadata Lakehouse even when the notebook workspace is not a pipeline environment.\nTables retain their selected Catalogue observation. Named file datasets share\nthe selector; enter a validated configured Files path and reader settings to\nobserve a new file schema without registering a table. File contracts preserve\ncommon Table ID, asset type and exact format/options through Save, Freeze and Activation.\nReturned state uses table_id and asset_type for either kind;\ndataset_id identifies either selection. File column profiles load by the shared asset and Column IDs from the configured Metadata Lakehouse when available.\nActivation and governed execution still require configured environment mapping.\nSave overwrites the complete canonical JSON for the selected draft version, then reloads\nthat exact version. A new draft is seeded from the previous frozen version when one exists.\nEngineering processing is reviewed through Pipeline Activation and is not authored in contracts.\nProfile context remains read-only and is never added\nto the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and\noptional enforcement are independent. Enabling Grain defaults to Block.\nReview includes collapsible read-only summaries of configured Read and Write\nrules. These summaries do not execute validation or navigate authoring controls.\nThe Data Quality section is the single DQ authoring surface. Governance can add\nany supported deterministic rule manually, or generate transient proposals\nfrom business language when AI is enabled. Proposals require explicit review\nand addition. Both paths create the same editable Guardrail records; the\nColumns section contains column metadata and non-DQ settings only.\nOpen Data Contract loads a manual-first editor without AI inference or AI-only\nprofile reads. Top navigation keeps Table (File for file sources), Columns, Data Quality, Review,\nand AI Usage above one bounded content body; lifecycle actions remain in the header.\nEntry selects Workspace, Store, dataset, then version. Upstream changes clear dependent\nselections. Native searchable, paginated pickers wrap long dataset names without popup\nJavaScript. Optional profile and participation context loads when expanded.\nEvery AI request requires an explicit Generate, Suggest or Re-run action.\nSuggestions persist during navigation and require explicit acceptance.\nSwitching columns reuses cached profile reads and suggestions.\nLong operations show an animated progress indicator and record elapsed seconds in\n``_operation_timings``. Spark stays on the notebook thread. Text authoring updates\non blur or Enter, while searches remain live. Full Review content is built on demand.\nSave and Freeze validate pending editor input through both buttons and returned actions.\nOptional AI request failures do not block valid manually authored contracts.\nManual Completeness, Uniqueness, Value Set, Range, and Pattern authoring can\nstage the same configuration as one independent rule per selected column.\nUniqueness can instead treat selected columns as one composite key.\nDQ authoring uses Warn/Block and accepted failure rate percent.\nCompleteness counts missing rows; Uniqueness counts all duplicate-group rows.\nLegacy distinct-key limits retain their runtime meaning and require an explicit\nfailure rate when edited.\nAllowed values, range, pattern, relationship, and custom row rules can use\nmaximum failure percent. Conditional rules use matching applicable rows;\nnull values ignored by value checks are not counted as passing rows.\nProhibited-value lists remain strict. Required/Schema, Grain, Sensitive\nData and Freshness do not gain a DQ row-percentage setting.\nActual violation counts remain visible even when within the authored limit.\nMissing AI configuration disables AI actions for the widget session while\nmanual authoring remains available. Execution and provider failures show a\nretryable message. Technical failure details are retained in the returned\nstate rather than shown in the editor.\nWhen enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,\nSensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or\nNot PII from governed metadata and profile evidence. Editable draft state remains\nseparate until Governance accepts a suggestion. Manual Description or Classification\nedits mark dependent advice stale for explicit re-run. AI never saves, freezes,\nactivates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.\nSensitive Data offers Mask for categorical/text columns, Bucket for numeric\ncolumns, and Tokenize/Remove for either. Dates offer Tokenize/Remove; complex\ntypes offer Remove. Text defaults to full masking; partial preservation is optional.\nNumeric buckets use approved fixed ranges or an anchored interval width.\nText grouping and distribution-derived boundaries belong in Engineering\nexploration and transformations. AI suggestions always receive governed\nschema and contract metadata. When profiling exists, they also receive profile\nsummaries including min/max and the three most frequent values.\nTreatment failures always block.\n\nFabricOps AI helper requests automatically append measured token usage to\n``misc.AI_TOKEN_USAGE`` in the configured Metadata Lakehouse. This standalone\nwidget telemetry table is created on its first write; it is excluded from\n``setup_metadata_tables()`` and the canonical Metadata model.\n``gpt-5-mini`` is the default; ``ai_model`` can explicitly select ``gpt-5.1``.\nPrompts and generated text are not stored. Missing usage statistics remain\nunavailable. Audit write failures are shown in AI usage without replaying requests."
+      "usage_notes": "Authoring, review, and freezing route through the configured central Governance\nMetadata Lakehouse even when the notebook workspace is not a pipeline environment.\nTables retain their selected Catalogue observation. Named file datasets share\nthe selector; enter a validated configured Files path and reader settings to\nobserve a new file schema without registering a table. File contracts preserve\ncommon Table ID, asset type and exact format/options through Save, Freeze and Activation.\nReturned state uses table_id and asset_type for either kind;\ndataset_id identifies either selection. File column profiles load by the shared asset and Column IDs from the configured Metadata Lakehouse when available.\nActivation and governed execution still require configured environment mapping.\nSave overwrites the complete canonical JSON for the selected draft version, then reloads\nthat exact version. A new draft is seeded from the previous frozen version when one exists.\nEngineering processing is reviewed through Pipeline Activation and is not authored in contracts.\nProfile context remains read-only and is never added\nto the canonical payload. Immutable versions are review-only. Grain description, selected key combination, and\noptional enforcement are independent. Enabling Grain defaults to Block.\nReview includes collapsible read-only summaries of configured Read and Write\nrules. These summaries do not execute validation or navigate authoring controls.\nThe Data Quality section is the single DQ authoring surface. Governance can add\nany supported deterministic rule manually, or generate transient proposals\nfrom business language when AI is enabled. Proposals require explicit review\nand addition. Both paths create the same editable Guardrail records; the\nColumns section contains column metadata and non-DQ settings only.\nOpen Data Contract loads a manual-first editor without AI inference or AI-only\nprofile reads. Top navigation keeps Table (File for file sources), Columns, Data Quality, Review,\nand Logs above one full-height scrolling work pane; lifecycle actions remain in a compact header.\nTable or File context appears at the top of Table or File and Review only. Logs combines\nkernel performance timings, AI configuration, and AI usage.\nEntry selects Workspace, Store, dataset, then version. Upstream changes clear dependent\nselections. Searchable dropdowns wrap long dataset names. Optional profile and\nparticipation context loads when expanded.\nEvery AI request requires an explicit Generate, Suggest or Re-run action.\nSuggestions persist during navigation and require explicit acceptance.\nSwitching columns reuses cached profile reads and suggestions.\nLong operations show an animated progress indicator and record elapsed seconds in\n``_operation_timings``. Spark stays on the notebook thread. Text authoring updates\non blur or Enter, while searches remain live. Full Review content is built on demand.\nSave and Freeze validate pending editor input through both buttons and returned actions.\nOptional AI request failures do not block valid manually authored contracts.\nManual Completeness, Uniqueness, Value Set, Range, and Pattern authoring can\nstage the same configuration as one independent rule per selected column.\nUniqueness can instead treat selected columns as one composite key.\nDQ authoring uses Warn/Block and accepted failure rate percent.\nCompleteness counts missing rows; Uniqueness counts all duplicate-group rows.\nLegacy distinct-key limits retain their runtime meaning and require an explicit\nfailure rate when edited.\nAllowed values, range, pattern, relationship, and custom row rules can use\nmaximum failure percent. Conditional rules use matching applicable rows;\nnull values ignored by value checks are not counted as passing rows.\nProhibited-value lists remain strict. Required/Schema, Grain, Sensitive\nData and Freshness do not gain a DQ row-percentage setting.\nActual violation counts remain visible even when within the authored limit.\nMissing AI configuration disables AI actions for the widget session while\nmanual authoring remains available. Execution and provider failures show a\nretryable message. Technical failure details are retained in the returned\nstate rather than shown in the editor.\nWhen enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,\nSensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or\nNot PII from governed metadata and profile evidence. Editable draft state remains\nseparate until Governance accepts a suggestion. Manual Description or Classification\nedits mark dependent advice stale for explicit re-run. AI never saves, freezes,\nactivates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.\nSensitive Data offers Mask for categorical/text columns, Bucket for numeric\ncolumns, and Tokenize/Remove for either. Dates offer Tokenize/Remove; complex\ntypes offer Remove. Text defaults to full masking; partial preservation is optional.\nNumeric buckets use approved fixed ranges or an anchored interval width.\nText grouping and distribution-derived boundaries belong in Engineering\nexploration and transformations. AI suggestions always receive governed\nschema and contract metadata. When profiling exists, they also receive profile\nsummaries including min/max and the three most frequent values.\nTreatment failures always block.\n\nFabricOps AI helper requests automatically append measured token usage to\n``misc.AI_TOKEN_USAGE`` in the configured Metadata Lakehouse. This standalone\nwidget telemetry table is created on its first write; it is excluded from\n``setup_metadata_tables()`` and the canonical Metadata model.\n``gpt-5-mini`` is the default; ``ai_model`` can explicitly select ``gpt-5.1``.\nPrompts and generated text are not stored. Missing usage statistics remain\nunavailable. Audit write failures are shown in AI usage without replaying requests."
     },
     {
       "architecture_classification": "internal",

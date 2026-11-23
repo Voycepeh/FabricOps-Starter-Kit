@@ -631,8 +631,8 @@ def test_file_labels_and_context_use_the_same_names_as_tables(widget_runtime, mo
     assert "File tab" in _sidebar_text(controls["right_pane"])
     controls["top_nav"].value = "Table"
     sidebar = controls["left_pane"].children
-    assert "v1 · DRAFT" in sidebar[0].value
-    assert sidebar[2:4] == (controls["operation_progress"], controls["status"])
+    assert "v1 · DRAFT" in sidebar[0].children[0].value
+    assert sidebar[1:3] == (controls["operation_progress"], controls["status"])
     assert state["current"]["payload"]["source"] == source
     assert state["dirty"] is False
 
@@ -776,7 +776,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     controls = state["_controls"]
     assert "fabricops-form" in controls["page"]._dom_classes
     assert tuple(controls["top_nav"].options) == (
-        "Table", "Columns", "Data Quality", "Review", "AI Usage"
+        "Table", "Columns", "Data Quality", "Review", "Logs"
     )
     assert controls["workspace"].layout.grid_template_columns == "minmax(0, 1fr)"
     assert len(controls["workspace"].children) == 2
@@ -794,7 +794,7 @@ def test_shared_layout_and_existing_state_hydrate(widget_runtime):
     assert controls["row_key_columns"].value == ()
     assert controls["business_enabled"].description == "Enabled"
     assert controls["business_block"].description == "On failure"
-    table_summary = controls["left_pane"].children[0].value
+    table_summary = controls["left_pane"].children[0].children[0].value
     assert "Scheduled refresh" not in table_summary
 
 
@@ -963,7 +963,7 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
 
     controls["top_nav"].value = "Table"
     table_context = controls["left_pane"].children[0]
-    assert "v1 · DRAFT" in table_context.value
+    assert "v1 · DRAFT" in table_context.children[0].value
     assert controls["table_context"].selected_index is None
     controls["table_context"].selected_index = 0
     table_summary = controls["table_context"].children[0].value
@@ -1001,14 +1001,14 @@ def test_sidebar_navigation_switches_content_and_retains_identity(widget_runtime
     assert "white-space:nowrap; overflow-wrap:normal" in page_style
     assert "Expected source refresh" not in table_summary
     assert "table_save" not in controls
-    table_sections = controls["right_pane"].children[1:-1]
+    table_sections = controls["right_pane"].children[2:]
     assert [section.children[0].value for section in table_sections[:4]] == [
         "<div class=\"fabricops-section-heading\">Grain &amp; Row Key</div>",
         "<div class=\"fabricops-section-heading\">Table definition</div>",
         "<div class=\"fabricops-section-heading\">Freshness</div>",
     ]
 
-    grain_section = controls["right_pane"].children[1]
+    grain_section = controls["right_pane"].children[2]
     grain_controls = grain_section.children[1]
     assert grain_controls.children == (controls["grain_enabled"], controls["grain_policy"])
     assert "fabricops-grain-controls" in grain_controls._dom_classes
@@ -1066,7 +1066,7 @@ def test_schedule_does_not_affect_authoring_save_or_freeze(widget_runtime, monke
     widget_runtime["catalogue"][0]["scheduled_refresh_json"] = schedule
     state = widget_runtime["open"]()
     controls = state["_controls"]
-    summary = controls["left_pane"].children[0].value
+    summary = controls["left_pane"].children[0].children[0].value
     assert "Scheduled refresh" not in summary
     assert "scheduled_refresh" not in state
     assert controls["table_guardrails"]["freshness"]["enabled"].value is True
@@ -1282,7 +1282,7 @@ def test_discard_changes_restores_canonical_state_without_writes(widget_runtime)
 
 
 @pytest.mark.parametrize(
-    "tab", ["Table", "Columns", "Data Quality", "Review", "AI Usage"]
+    "tab", ["Table", "Columns", "Data Quality", "Review", "Logs"]
 )
 def test_sidebar_saves_and_clears_from_every_section(
     widget_runtime, monkeypatch, tab
@@ -1293,7 +1293,7 @@ def test_sidebar_saves_and_clears_from_every_section(
     controls["top_nav"].value = tab
     controls["table_description"].value = f"Saved from {tab}"
 
-    assert controls["sidebar_actions"] in controls["left_pane"].children[1].children
+    assert controls["sidebar_actions"] in controls["left_pane"].children[0].children
     assert controls["sidebar_actions"].layout.display == ""
     controls["save_data_contract"].click()
 
@@ -1308,7 +1308,7 @@ def test_sidebar_saves_and_clears_from_every_section(
 
 
 @pytest.mark.parametrize(
-    "tab", ["Table", "Columns", "Data Quality", "Review", "AI Usage"]
+    "tab", ["Table", "Columns", "Data Quality", "Review", "Logs"]
 )
 def test_sidebar_preserves_state_when_save_fails(
     widget_runtime, monkeypatch, tab
@@ -1334,7 +1334,7 @@ def test_sidebar_preserves_state_when_save_fails(
 
 
 @pytest.mark.parametrize(
-    "tab", ["Table", "Columns", "Data Quality", "Review", "AI Usage"]
+    "tab", ["Table", "Columns", "Data Quality", "Review", "Logs"]
 )
 def test_shared_footer_discards_and_clears_from_every_tab(
     widget_runtime, monkeypatch, tab
@@ -1487,7 +1487,7 @@ def test_data_contract_uses_bounded_desktop_workspace_and_natural_sections(
     assert controls["page"].layout.overflow == "visible"
     assert "height:500px" not in style
     assert "max-height:500px" not in style
-    assert "height:clamp(240px, calc(100vh - 440px), 560px)" in style
+    assert "height:calc(100vh - 190px)" in style
     assert "position:relative; align-self:stretch" in style
     assert "flex-direction:row; flex-wrap:wrap" in style
     assert "align-items:stretch !important; overflow:hidden !important" not in module._CONTRACT_STYLE
@@ -1536,7 +1536,7 @@ def test_technical_columns_are_excluded_from_contract_authoring(widget_runtime):
     ]
 
     controls["top_nav"].value = "Review"
-    exact_json = controls["right_pane"].children[-2].children[1]
+    exact_json = controls["right_pane"].children[-1].children[1]
     assert exact_json.layout.height == "auto"
     assert exact_json.layout.overflow == "visible"
 
@@ -2465,7 +2465,7 @@ def test_data_quality_tab_supports_manual_authoring_without_ai(widget_runtime):
     controls = state["_controls"]
 
     assert tuple(controls["top_nav"].options) == (
-        "Table", "Columns", "Data Quality", "Review", "AI Usage"
+        "Table", "Columns", "Data Quality", "Review", "Logs"
     )
     controls["top_nav"].value = "Columns"
     assert controls["dq_panel"] not in controls["right_pane"].children
@@ -3107,7 +3107,7 @@ def test_table_description_matches_grain_ai_layout(widget_runtime, monkeypatch):
 
     expected_ai_grid = "minmax(0, 68fr) minmax(240px, 32fr)"
     table_content = controls["table_definition"].children[1]
-    grain_content = controls["right_pane"].children[1].children[3]
+    grain_content = controls["right_pane"].children[2].children[3]
     assert table_content.layout.grid_template_columns == expected_ai_grid
     assert grain_content.layout.grid_template_columns == expected_ai_grid
     assert table_content.children[1].children[0].value == "<b>AI suggestion</b>"
@@ -3518,7 +3518,7 @@ def test_sidebar_state_is_replaced_when_another_table_is_opened(widget_runtime, 
     assert "GRAIN — Uniqueness · column_1 · Block" in _sidebar_text(controls["guardrail_sidebar"])
     assert "sidebar_rule_buttons" not in controls
     assert len(controls["right_pane"].children) > 1
-    assert "inventory" in controls["left_pane"].children[0].value
+    assert "inventory" in controls["left_pane"].children[0].children[0].value
 
 
 def test_sidebar_expand_controls_preserve_state_during_live_updates(widget_runtime):
@@ -4019,7 +4019,7 @@ def test_ai_information_is_contained_in_its_own_editor_tab(widget_runtime):
     assert controls["editor_ai_information"] not in controls["editor_shell"].children
     assert controls["ai_usage"] not in controls["editor_shell"].children
 
-    controls["top_nav"].value = "AI Usage"
+    controls["top_nav"].value = "Logs"
 
     assert controls["editor_ai_information"] in controls["right_pane"].children
     assert controls["ai_usage"] in controls["right_pane"].children
@@ -4479,7 +4479,7 @@ def test_empty_column_search_hides_editor_and_disables_ai(widget_runtime, monkey
     before = {key: len(value) for key, value in captures.items()}
     controls["column_search"].value = "no-such-column"
     assert controls["column_select"].value is None
-    assert controls["right_pane"].children[-2] is controls["empty_column"]
+    assert controls["right_pane"].children[-1] is controls["empty_column"]
     assert controls["column_select"] in controls["right_pane"].children
     for key in ("rerun_column_description", "rerun_sensitive", "accept_column_description", "accept_sensitive"):
         assert controls[key].disabled
@@ -4488,7 +4488,7 @@ def test_empty_column_search_hides_editor_and_disables_ai(widget_runtime, monkey
     assert "" not in next(iter(state["_ai_suggestions"].values()))["columns"]
     controls["top_nav"].value = "Table"
     controls["top_nav"].value = "Columns"
-    assert controls["right_pane"].children[-2] is controls["empty_column"]
+    assert controls["right_pane"].children[-1] is controls["empty_column"]
     assert controls["column_select"] in controls["right_pane"].children
     controls["column_search"].value = ""
     assert controls["column_select"].value == "col-0"
@@ -4784,3 +4784,41 @@ def test_constructor_hints_are_consumed_before_later_upstream_changes(widget_run
     controls["store_select"].value = "Silver"
     assert controls["table"].value == controls["contract"].value == ""
     assert controls["open"].disabled
+
+
+@pytest.mark.parametrize("tab", module._TABS)
+def test_context_only_leads_table_and_review_and_timings_live_in_logs(widget_runtime, tab):
+    """Context and diagnostics occupy their chosen tabs without adding global chrome."""
+    controls = widget_runtime["open"]()["_controls"]
+    controls["top_nav"].value = tab
+    children = controls["right_pane"].children
+    if tab in {"Table", "Review"}:
+        assert children[1].children == (controls["table_context"],)
+    else:
+        assert not any(controls["table_context"] in getattr(child, "children", ()) for child in children)
+    assert (controls["timing_panel"] in children) == (tab == "Logs")
+    assert controls["timing_panel"] not in controls["page"].children
+    if tab == "Logs":
+        assert "Performance timings" in controls["timing_panel"].value
+        assert controls["ai_usage"] in children
+        assert controls["editor_ai_information"] in children
+
+
+@pytest.mark.parametrize("real_widgets", [False, True])
+def test_logs_timing_widget_survives_reopening_editor(widget_runtime, monkeypatch, real_widgets):
+    """Diagnostics keep their comm while disposable editor controls are replaced."""
+    if real_widgets:
+        import ipywidgets as widgets
+        monkeypatch.setattr(module.shared, "require_ipywidgets", lambda: widgets)
+    state = widget_runtime["open"]()
+    controls = state["_controls"]
+    timings = controls["timing_panel"]
+    controls["top_nav"].value = "Logs"
+    controls["change_table"].click()
+    _choose_entry(controls)
+    controls["open"].click()
+    controls["top_nav"].value = "Logs"
+    assert timings in controls["right_pane"].children
+    assert not getattr(timings, "closed", False)
+    if real_widgets:
+        assert timings.comm is not None

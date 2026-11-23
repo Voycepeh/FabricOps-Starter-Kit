@@ -120,7 +120,8 @@ def test_single_content_body_keeps_actions_and_navigation_outside_scroll(monkeyp
                 detail.scrollTop = detail.scrollHeight;
                 return {
                     overflow: document.documentElement.scrollWidth > innerWidth,
-                    bounded: detail.clientHeight <= 562,
+                    bounded: detail.clientHeight >= innerHeight * .7 && detail.clientHeight <= innerHeight,
+                    compactHeader: innerWidth < 700 || root.querySelector(".fabricops-contract-sidebar").getBoundingClientRect().height < 150,
                     stable: before[0] === nav.getBoundingClientRect().top && before[1] === actions.getBoundingClientRect().top,
                     outside: !detail.contains(actions) && !detail.contains(nav),
                     actionVisible: actions.getBoundingClientRect().bottom <= innerHeight,
@@ -128,9 +129,12 @@ def test_single_content_body_keeps_actions_and_navigation_outside_scroll(monkeyp
             }""")
             assert not result["overflow"], (section, width, result)
             assert result["bounded"] and result["stable"] and result["outside"], (section, width, result)
-            assert result["actionVisible"], (section, width, result)
+            assert result["actionVisible"] and result["compactHeader"], (section, width, result)
+    controls["top_nav"].value = "Table"
     controls["table_context"].selected_index = 0
     page = show(controls["page"], 700, "expanded-context")
-    assert page.locator(".fabricops-contract-detail").evaluate("e => e.clientHeight <= 562")
+    assert page.locator(".fabricops-contract-detail").evaluate("e => e.clientHeight >= 630")
+    page.set_viewport_size({"width": 1440, "height": 1200})
+    assert page.locator(".fabricops-contract-detail").evaluate("e => e.clientHeight >= 1000")
     state["_dispose_editor"]()
     controls["page"].close()

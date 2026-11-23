@@ -122,10 +122,12 @@ and addition. Both paths create the same editable Guardrail records; the
 Columns section contains column metadata and non-DQ settings only.
 Open Data Contract loads a manual-first editor without AI inference or AI-only
 profile reads. Top navigation keeps Table (File for file sources), Columns, Data Quality, Review,
-and AI Usage above one bounded content body; lifecycle actions remain in the header.
+and Logs above one full-height scrolling work pane; lifecycle actions remain in a compact header.
+Table or File context appears at the top of Table or File and Review only. Logs combines
+kernel performance timings, AI configuration, and AI usage.
 Entry selects Workspace, Store, dataset, then version. Upstream changes clear dependent
-selections. Native searchable, paginated pickers wrap long dataset names without popup
-JavaScript. Optional profile and participation context loads when expanded.
+selections. Searchable dropdowns wrap long dataset names. Optional profile and
+participation context loads when expanded.
 Every AI request requires an explicit Generate, Suggest or Re-run action.
 Suggestions persist during navigation and require explicit acceptance.
 Switching columns reuses cached profile reads and suggestions.
@@ -194,9 +196,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:1004`
+`fabricops_kit/widgets/widget_data_contract.py:1012`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1004-L7512">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1012-L7526">View on GitHub</a>
 </div>
 
 
