@@ -1746,9 +1746,11 @@ def widget_data_contract(
             set_status(message)
 
     def dynamic_selector(*, placeholder: str, empty_label: str | None = None) -> dict[str, Any]:
-        return shared.render_inline_selector(
-            widgets=widgets, label=(empty_label or placeholder).removeprefix("Select "),
-            placeholder=empty_label or placeholder,
+        return shared.render_searchable_selector(
+            widgets=widgets, label="", rows=[],
+            label_fn=lambda row: str(row["label"]),
+            value_fn=lambda row: str(row["value"]),
+            placeholder=empty_label or placeholder, empty_label=empty_label,
         )
 
     table_selector = dynamic_selector(
@@ -7312,20 +7314,20 @@ def widget_data_contract(
             workspaces = sorted({str(row.get("asset_workspace_id") or "") for row in all_rows} - {""})
             workspace_control.refresh_rows([
                 {"label": workspace_names.get(value) or value, "value": value} for value in workspaces
-            ], state.get("workspace_id"))
+            ], state.get("workspace_id") or "")
             scoped = [row for row in all_rows
                       if str(row.get("asset_workspace_id") or "") == workspace_control.value]
             stores = {str(row.get("store") or row.get("layer") or row.get("item_id") or ""): configured_item_name(row)
                       for row in scoped}
             stores.pop("", None)
             store_control.refresh_rows([{"label": name or key, "value": key} for key, name in sorted(stores.items())],
-                                       state.get("pending_store"))
+                                       state.get("pending_store") or "")
             eligible = [row for row in scoped if str(row.get("store") or row.get("layer") or row.get("item_id") or "") == store_control.value]
             datasets = {str(row["table_id"]): row for row in eligible}
             table_control.refresh_rows([
                 {"label": table_selector_label(row), "value": key} for key, row in
                 sorted(datasets.items(), key=lambda pair: table_selector_label(pair[1]).casefold())
-            ], state.get("pending_dataset_id"))
+            ], state.get("pending_dataset_id") or "")
             selected = str(table_control.value or "")
             state["pending_dataset_id"] = selected or None
             matches = sorted([row for row in state["contracts"] if str(row.get("table_id") or "") == selected
@@ -7336,13 +7338,12 @@ def widget_data_contract(
             if selected:
                 versions.append({"label": "New draft", "value": "new"})
             preferred = str(state.get("pending_contract_version") or "")
-            contract_control.refresh_rows(versions, preferred if preferred else None)
+            contract_control.refresh_rows(versions, preferred)
             store_control.disabled = not bool(workspace_control.value)
             table_control.disabled = not bool(workspace_control.value and store_control.value)
             contract_control.disabled = not bool(selected)
-            # Explicitly sync native picker state (also works with the in-memory widget fixture).
+            # Sync the visible dropdowns as well as their stable-value controls.
             for picker in (workspace_selector, store_selector, table_selector, contract_selector):
-                picker["trigger"].disabled = picker["selector"].disabled
                 picker["search"].disabled = picker["selector"].disabled
             open_button.disabled = not bool(selected and contract_control.value and store_control.value)
         finally:

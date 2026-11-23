@@ -521,13 +521,11 @@ def test_initial_table_search_does_not_filter_by_selection_prompt(widget_runtime
     controls["workspace_select"].value = "dev"
     controls["store_select"].value = "Silver"
     picker = controls["entry_pickers"][2]
-    picker["trigger"].click()
-    picker["search"].value = "sales.orders"
-    assert len(picker["results"].children) == 1
+    assert tuple(picker["container"].children) == (picker["search"],)
+    picker["search"].value = "sales.ord"
     assert controls["table"].value == ""
-    picker["results"].children[0].click()
+    picker["search"].value = "sales.orders"
     assert controls["table"].value == "orders"
-    assert picker["panel"].layout.display == "none"
 
 
 def test_configured_workspace_routes_authoring_to_its_metadata_mapping(widget_runtime):
@@ -4718,28 +4716,26 @@ def test_file_runtime_profiles_are_reused_by_column_name(widget_runtime, monkeyp
     assert state['load_profile_context']('col-0') == profile
 
 
-def test_inline_picker_paginates_and_filtering_preserves_selection():
-    """Filtering and paging long names never change the canonical value until chosen."""
+def test_searchable_picker_exposes_all_options_and_keeps_stable_selection():
+    """Search and choose in one field, including values beyond the former page size."""
     import ipywidgets as widgets
-    picker = module.shared.render_inline_selector(widgets=widgets, label="Dataset", placeholder="Select dataset")
-    picker["selector"].refresh_rows([
-        {"value": str(index), "label": f"schema.dataset_{index:02d}_with_a_long_name"} for index in range(13)
-    ])
-    picker["trigger"].click()
-    assert len(picker["results"].children) == 5
-    picker["panel"].children[-1].children[-1].click()
-    assert "dataset_05" in picker["results"].children[0].description
-    picker["results"].children[0].click()
-    assert picker["selector"].value == "5"
-    picker["trigger"].click()
+    picker = module.shared.render_searchable_selector(
+        widgets=widgets, label="Dataset", rows=[],
+        label_fn=lambda row: row["label"], value_fn=lambda row: row["value"],
+        empty_label="Select dataset",
+    )
+    rows = [{"value": str(index), "label": f"schema.dataset_{index:02d}_with_a_long_name"} for index in range(13)]
+    picker["selector"].refresh_rows(rows, "5")
+    assert tuple(picker["container"].children) == (picker["search"],)
+    assert len(picker["search"].options) == 14
     picker["search"].value = "dataset_12"
     assert picker["selector"].value == "5"
-    assert len(picker["results"].children) == 1
-    picker["results"].children[0].click()
+    picker["search"].value = rows[12]["label"]
     assert picker["selector"].value == "12"
     picker["selector"].disabled = True
-    assert picker["trigger"].disabled
-    assert picker["panel"].layout.display == "none"
+    assert picker["search"].disabled
+    picker["selector"].disabled = False
+    assert not picker["search"].disabled
 
 
 def test_rule_creation_modes_retain_unsaved_manual_input(widget_runtime, monkeypatch):

@@ -124,16 +124,6 @@ _FORM_STYLE = """<style>
 }
 .fabricops-selector-popup [role=option]:hover,
 .fabricops-selector-popup [aria-selected=true] { background:#eaf3fb; outline:1px solid #0f6cbd; outline-offset:-1px; }
-.fabricops-form .fabricops-inline-selector-trigger,
-.fabricops-form .fabricops-inline-selector-option {
-    white-space:normal; overflow-wrap:anywhere; text-align:left; line-height:1.5;
-    padding:8px 12px; max-width:100%;
-}
-.fabricops-form .fabricops-inline-selector-pagination .widget-html { width:auto !important; flex:1 1 80px; text-align:center; }
-.fabricops-form .fabricops-inline-selector-pagination .widget-button { min-width:0; }
-.fabricops-form .fabricops-inline-selector-panel {
-    padding:8px; border:1px solid var(--form-border); background:#fff; gap:4px;
-}
 .fabricops-form .widget-textarea textarea { height:110px; min-height:96px; resize:vertical; }
 .fabricops-form .widget-select select { height:130px; padding:5px; }
 .fabricops-form .widget-select-multiple select { height:96px; }
@@ -575,108 +565,6 @@ def _html_escape(value: Any) -> str:
     return html.escape(str(value or ""))
 
 
-def render_inline_selector(*, widgets: Any, label: str, placeholder: str) -> dict[str, Any]:
-    """Select stable IDs using wrapping, paginated native controls without browser popups."""
-    selector = widgets.Select(options=[("", "")], value="")
-    trigger = widgets.Button(description=placeholder, tooltip=label,
-                             layout=widgets.Layout(width="100%", height="auto", min_height="36px"))
-    trigger.add_class("fabricops-inline-selector-trigger")
-    search = widgets.Text(value="", placeholder="Filter " + label.lower(),
-                          **widget_common(widgets, label))
-    results = widgets.VBox(layout=widgets.Layout(width="100%", min_width="0"))
-    previous = widgets.Button(description="Previous", layout=widgets.Layout(width="auto"))
-    following = widgets.Button(description="Next", layout=widgets.Layout(width="auto"))
-    count = widgets.HTML()
-    pagination = widgets.HBox([previous, count, following], layout=widgets.Layout(width="100%"))
-    pagination.add_class("fabricops-inline-selector-pagination")
-    panel = widgets.VBox([search, results, pagination],
-                         layout=widgets.Layout(width="100%", min_width="0", display="none"))
-    panel.add_class("fabricops-inline-selector-panel")
-    container = widgets.VBox([trigger, panel], layout=widgets.Layout(width="100%", min_width="0"))
-    labels: dict[str, str] = {}
-    cursor = 0
-    page_size = 5
-
-    def draw(*_args: Any) -> None:
-        nonlocal cursor
-        matches = [(key, text) for key, text in labels.items()
-                   if str(search.value or "").casefold() in text.casefold()]
-        cursor = min(cursor, max(0, (len(matches) - 1) // page_size))
-        old = results.children
-        buttons = []
-        for key, text in matches[cursor * page_size:(cursor + 1) * page_size]:
-            button = widgets.Button(description=text, tooltip=text,
-                                    layout=widgets.Layout(width="100%", height="auto", min_height="36px"))
-            button.add_class("fabricops-inline-selector-option")
-
-            def choose(_button: Any, value: str = key) -> None:
-                selector.value = value
-                panel.layout.display = "none"
-
-            button.on_click(choose)
-            buttons.append(button)
-        results.children = tuple(buttons) or (widgets.HTML("No matches. Try another search."),)
-        for node in old:
-            node.layout.close()
-            style_close = getattr(getattr(node, "style", None), "close", None)
-            if callable(style_close):
-                style_close()
-            node.close()
-        previous.disabled = cursor == 0
-        following.disabled = (cursor + 1) * page_size >= len(matches)
-        count.value = f"<span role='status' aria-live='polite'>{len(matches)} matches · page {cursor + 1}</span>"
-
-    def selected(change: dict[str, Any]) -> None:
-        if change.get("name") != "value":
-            return
-        trigger.description = labels.get(str(selector.value or ""), placeholder)
-        panel.layout.display = "none"
-
-    def disabled(change: dict[str, Any]) -> None:
-        if change.get("name") != "disabled":
-            return
-        trigger.disabled = selector.disabled
-        search.disabled = selector.disabled
-        if selector.disabled:
-            panel.layout.display = "none"
-
-    def toggle(_button: Any) -> None:
-        panel.layout.display = "" if panel.layout.display == "none" else "none"
-        if panel.layout.display != "none":
-            draw()
-
-    def filter_changed(_change: Any) -> None:
-        nonlocal cursor
-        cursor = 0
-        draw()
-
-    def move(delta: int) -> None:
-        nonlocal cursor
-        cursor += delta
-        draw()
-
-    def refresh_rows(rows: list[dict[str, Any]], selected_value: str | None = None) -> None:
-        nonlocal cursor
-        labels.clear()
-        labels.update((str(row["value"]), str(row["label"])) for row in rows)
-        selector.options = [("", ""), *((text, key) for key, text in labels.items())]
-        selector.value = selected_value if selected_value in labels else ""
-        cursor = 0
-        search.value = ""
-        selected({"name": "value"})
-        draw()
-
-    selector.observe(selected, names="value")
-    selector.observe(disabled, names="disabled")
-    search.observe(filter_changed, names="value")
-    trigger.on_click(toggle)
-    previous.on_click(lambda _button: move(-1))
-    following.on_click(lambda _button: move(1))
-    selector.refresh_rows = refresh_rows
-    return {"container": container, "selector": selector, "search": search,
-            "trigger": trigger, "results": results, "panel": panel}
-
-
 def render_searchable_selector(
     *,
     widgets: Any,
@@ -790,6 +678,9 @@ def render_searchable_selector(
         if change.get("name") == "value" and not syncing:
             _sync_visible_value()
 
+    def _on_disabled(change: dict[str, Any]) -> None:
+        combobox.disabled = bool(change["new"])
+
     def _refresh_rows(new_rows: list[dict[str, Any]], selected: str | None = None) -> None:
         nonlocal selected_value
         selected_value = selected
@@ -798,6 +689,7 @@ def render_searchable_selector(
 
     combobox.observe(_on_combobox, names="value")
     selector.observe(_on_select, names="value")
+    selector.observe(_on_disabled, names="disabled")
     _set_rows(rows)
     _refresh_options()
     selector.refresh_rows = _refresh_rows
