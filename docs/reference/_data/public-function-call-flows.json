@@ -9,9 +9,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit.__getattr__",
-      "source_end_line": 113,
+      "source_end_line": 120,
       "source_path": "src/fabricops_kit/__init__.py",
-      "source_start_line": 103,
+      "source_start_line": 110,
       "usage": "detached"
     },
     {
@@ -25,9 +25,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "none",
       "qualified_name": "fabricops_kit._load_package_version",
-      "source_end_line": 126,
+      "source_end_line": 133,
       "source_path": "src/fabricops_kit/__init__.py",
-      "source_start_line": 116,
+      "source_start_line": 123,
       "usage": "detached"
     },
     {
@@ -804,6 +804,123 @@
     {
       "architecture_classification": "internal",
       "contract_classification": "preview_only_internal",
+      "function_name": "_collection",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members._collection",
+      "source_end_line": 58,
+      "source_path": "src/fabricops_kit/access_scanner/scan_onelake_role_members.py",
+      "source_start_line": 39,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_memberships",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members._memberships",
+      "source_end_line": 74,
+      "source_path": "src/fabricops_kit/access_scanner/scan_onelake_role_members.py",
+      "source_start_line": 61,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_portal_access",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members._portal_access",
+      "source_end_line": 36,
+      "source_path": "src/fabricops_kit/access_scanner/scan_onelake_role_members.py",
+      "source_start_line": 22,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "_resolve_members",
+      "function_type": "private_function",
+      "inbound_source_references": [
+        "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members._resolve_members",
+      "source_end_line": 226,
+      "source_path": "src/fabricops_kit/access_scanner/scan_onelake_role_members.py",
+      "source_start_line": 77,
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "capability",
+      "contract_classification": "preview_public_function",
+      "contract_risk": "preview",
+      "examples": ">>> result = scan_onelake_role_members(\n...     workspace_id, lakehouse_id, portal_base_url=portal_origin,\n...     group_memberships={\"Data Readers\": [\"alice@example.com\"]},\n... )\n>>> import pandas as pd\n>>> display(pd.DataFrame(result[\"role_members\"]))\n>>> display(pd.DataFrame(result[\"users\"]))\n>>> display(pd.DataFrame(result[\"coverage\"]))",
+      "function_name": "scan_onelake_role_members",
+      "function_type": "public_function",
+      "lifecycle_status": "preview",
+      "live_impact_level": "preview_only",
+      "parameters": [
+        {
+          "description": "Physical workspace UUID containing the Lakehouse.",
+          "name": "workspace_id",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Lakehouse item UUID, not its SQL endpoint UUID.",
+          "name": "item_id",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "HTTPS wabi-*.analysis.windows.net origin observed in the portal Network panel. No tenant-specific host is inferred or built into the package. Redirects are refused; obtain the current origin if the portal moves.",
+          "name": "portal_base_url",
+          "required": "Yes",
+          "type": "str"
+        },
+        {
+          "description": "Group object ID or exact display name mapped to user UPN strings, for example {\"Data Readers\": [\"alice@example.com\", \"bob@example.com\"]}. IDs take precedence over names. Ambiguous names are not expanded. Values are caller-supplied direct membership, not directory-verified. An UNKNOWN principal with a matching key is a caller-declared group. Nested groups are not expanded; provide their final user membership. An empty list means no users supplied, not a verified empty group.",
+          "name": "group_memberships",
+          "required": "No",
+          "type": "dict[str, list[str]] | None"
+        },
+        {
+          "description": "Current caller token; otherwise NotebookUtils getToken(\"pbi\") is used. Never paste a browser bearer token into a shared notebook.",
+          "name": "access_token",
+          "required": "No",
+          "type": "str | None"
+        }
+      ],
+      "public_import_path": "fabricops_kit.scan_onelake_role_members",
+      "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+      "raises_documentation": "ValueError\n    If UUIDs, the portal origin, or membership mappings are invalid.\nRuntimeError\n    If authentication or the primary OneLake role read fails. Workspace\n    and portal failures instead appear in coverage with available role\n    observations retained; partial source pages are discarded on failure.",
+      "returns_documentation": "dict[str, Any]\n    Python records: role_members, workspace_assignments, item_access, users, coverage,\n    raw_roles, raw_workspace_assignments, and raw_item_access. The users\n    records retain the originating principal fields; user_principal names\n    the resolved user and identity_source distinguishes API users from\n    supplied membership. Email and principal type can remain unknown.\n    Rule JSON retains paths, actions, and restrictions unchanged. Automatic\n    membership stays a selector, not a list of users. Portal permission\n    bitmasks stay raw and are never interpreted. Always inspect coverage;\n    missing rows do not establish absence of access. No tables are written,\n    including METADATA_DATA_ACCESS, and no permissions are changed.",
+      "signature": "def scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None=None, access_token: str | None=None) -> dict[str, Any]",
+      "source_end_line": 370,
+      "source_path": "src/fabricops_kit/access_scanner/scan_onelake_role_members.py",
+      "source_start_line": 229,
+      "summary": "Inspect named OneLake role assignments using a Preview portal workaround.",
+      "usage": "public_flow_reachable",
+      "usage_notes": "Workspace assignment listing requires Member or Admin plus Workspace API\nscope; Contributor is insufficient. OneLake role listing documents item\nRead permission plus OneLake API scope. The undocumented portal endpoint's\nminimum rights and stability are unverified: a successful caller test does\nnot establish support for all Members. Notebook and Environment access are\nseparate prerequisites. Scheduled/service-principal execution is untested.\nPublic API permission references:\nhttps://learn.microsoft.com/rest/api/fabric/core/workspaces/list-workspace-role-assignments\nand https://learn.microsoft.com/rest/api/fabric/core/onelake-data-access-security/list-data-access-roles.\nGroup expansion describes supplied assignments, not confirmed effective\naccess. The current caller token never grants additional permissions."
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
       "function_name": "_access_rows",
       "function_type": "private_function",
       "inbound_source_references": [
@@ -1184,6 +1301,8 @@
         "fabricops_kit.access_scanner.scan_effective_access::<module>",
         "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access",
         "fabricops_kit.access_scanner.scan_onelake_access::<module>",
+        "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+        "fabricops_kit.access_scanner.scan_onelake_role_members::<module>",
         "fabricops_kit.access_scanner.scan_workspace_access.scan_workspace_access",
         "fabricops_kit.access_scanner.scan_workspace_access::<module>",
         "fabricops_kit.config.shared.resolve_asset_workspace_name"
@@ -1235,6 +1354,8 @@
         "fabricops_kit.access_scanner.scan_effective_access._mapping_rows",
         "fabricops_kit.access_scanner.scan_effective_access::<module>",
         "fabricops_kit.access_scanner.scan_onelake_access::<module>",
+        "fabricops_kit.access_scanner.scan_onelake_role_members._resolve_members",
+        "fabricops_kit.access_scanner.scan_onelake_role_members::<module>",
         "fabricops_kit.access_scanner.scan_sql_access._map_to_catalogue",
         "fabricops_kit.access_scanner.scan_sql_access::<module>",
         "fabricops_kit.access_scanner.scan_workspace_access::<module>",
@@ -1334,6 +1455,8 @@
       "function_name": "request_fabric_json",
       "function_type": "shared_function",
       "inbound_source_references": [
+        "fabricops_kit.access_scanner.scan_onelake_role_members._collection",
+        "fabricops_kit.access_scanner.scan_onelake_role_members::<module>",
         "fabricops_kit.access_scanner.shared.list_fabric_pages",
         "fabricops_kit.access_scanner.shared.search_fabric_catalog",
         "fabricops_kit.config.shared.resolve_asset_workspace_name"
@@ -19685,6 +19808,18 @@
       ]
     },
     {
+      "files_touched": [
+        "src/fabricops_kit/access_scanner/scan_onelake_role_members.py",
+        "src/fabricops_kit/access_scanner/shared.py"
+      ],
+      "metrics": {
+        "depth": 2,
+        "scope": 7,
+        "width": 5
+      },
+      "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members"
+    },
+    {
       "architecture_violation_count": 1,
       "files_touched": [
         "src/fabricops_kit/access_scanner/scan_sql_access.py",
@@ -20898,6 +21033,34 @@
     {
       "callee_qualified_name": "fabricops_kit.config.shared.resolve_fabric_context",
       "caller_qualified_name": "fabricops_kit.access_scanner.scan_onelake_access.scan_onelake_access"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.access_scanner.shared.request_fabric_json",
+      "caller_qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members._collection"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.access_scanner.shared.normalise_principal_type",
+      "caller_qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members._resolve_members"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members._collection",
+      "caller_qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members._memberships",
+      "caller_qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members._portal_access",
+      "caller_qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members._resolve_members",
+      "caller_qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members"
+    },
+    {
+      "callee_qualified_name": "fabricops_kit.access_scanner.shared.fabric_access_token",
+      "caller_qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members"
     },
     {
       "callee_qualified_name": "fabricops_kit.config.metadata_schemas.metadata_table_schema_registry",

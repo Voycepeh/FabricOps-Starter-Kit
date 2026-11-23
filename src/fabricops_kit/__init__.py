@@ -5,7 +5,13 @@ import tomllib
 from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
 
-from .access_scanner import scan_onelake_access, scan_sql_access, scan_workspace_access, scan_effective_access
+from .access_scanner import (
+    scan_effective_access,
+    scan_onelake_access,
+    scan_onelake_role_members,
+    scan_sql_access,
+    scan_workspace_access,
+)
 from .config import (
     ConfigSmokeCheckResult,
     DataAgreementConfig,
@@ -42,6 +48,7 @@ from .pipeline import (
 )
 
 ACCESS_EXPORTS = (
+    "scan_onelake_role_members",
     "scan_effective_access",
     "scan_workspace_access",
     "scan_onelake_access",

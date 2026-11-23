@@ -4520,6 +4520,18 @@
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
           "reasons": [
             "Public API added."
@@ -5061,13 +5073,13 @@
         }
       ],
       "summary": {
-        "added": 19,
+        "added": 20,
         "modified": 10,
-        "nonbreaking": 19,
+        "nonbreaking": 20,
         "potentially_breaking": 10,
         "removed": 16,
         "review_required": 16,
-        "total": 45
+        "total": 46
       },
       "target": "working-tree"
     },
@@ -8839,6 +8851,18 @@
           "classification": "nonbreaking",
           "lifecycle_after": "Preview",
           "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
           "qualified_name": "fabricops_kit.access_scanner.scan_sql_access.scan_sql_access",
           "reasons": [
             "Public API added."
@@ -9327,13 +9351,13 @@
         }
       ],
       "summary": {
-        "added": 16,
+        "added": 17,
         "modified": 11,
-        "nonbreaking": 16,
+        "nonbreaking": 17,
         "potentially_breaking": 16,
         "removed": 15,
         "review_required": 10,
-        "total": 42
+        "total": 43
       },
       "target": "working-tree"
     },
@@ -13054,6 +13078,18 @@
           "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
         },
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
           "change_type": "modified",
           "classification": "potentially_breaking",
           "lifecycle_after": "Preview",
@@ -13565,13 +13601,13 @@
         }
       ],
       "summary": {
-        "added": 8,
+        "added": 9,
         "modified": 18,
-        "nonbreaking": 8,
+        "nonbreaking": 9,
         "potentially_breaking": 23,
         "removed": 13,
         "review_required": 8,
-        "total": 39
+        "total": 40
       },
       "target": "working-tree"
     },
@@ -15680,6 +15716,18 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
@@ -15899,13 +15947,13 @@
         }
       ],
       "summary": {
-        "added": 6,
+        "added": 7,
         "modified": 6,
-        "nonbreaking": 7,
+        "nonbreaking": 8,
         "potentially_breaking": 6,
         "removed": 4,
         "review_required": 3,
-        "total": 16
+        "total": 17
       },
       "target": "working-tree"
     },
@@ -18014,6 +18062,18 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
@@ -18233,13 +18293,13 @@
         }
       ],
       "summary": {
-        "added": 6,
+        "added": 7,
         "modified": 6,
-        "nonbreaking": 7,
+        "nonbreaking": 8,
         "potentially_breaking": 6,
         "removed": 4,
         "review_required": 3,
-        "total": 16
+        "total": 17
       },
       "target": "working-tree"
     },
@@ -20300,6 +20360,18 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
@@ -20479,13 +20551,13 @@
         }
       ],
       "summary": {
-        "added": 5,
+        "added": 6,
         "modified": 4,
-        "nonbreaking": 5,
+        "nonbreaking": 6,
         "potentially_breaking": 6,
         "removed": 4,
         "review_required": 2,
-        "total": 13
+        "total": 14
       },
       "target": "working-tree"
     },
@@ -22546,6 +22618,18 @@
         {
           "change_type": "added",
           "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
           "lifecycle_after": "Live",
           "lifecycle_before": null,
           "qualified_name": "fabricops_kit.config.orchestrate_demo_reset.orchestrate_demo_reset",
@@ -22725,13 +22809,13 @@
         }
       ],
       "summary": {
-        "added": 5,
+        "added": 6,
         "modified": 4,
-        "nonbreaking": 5,
+        "nonbreaking": 6,
         "potentially_breaking": 6,
         "removed": 4,
         "review_required": 2,
-        "total": 13
+        "total": 14
       },
       "target": "working-tree"
     },
@@ -25287,15 +25371,28 @@
     },
     {
       "baseline": "v0.5.0",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]",
+          "signature_before": null
+        }
+      ],
       "summary": {
-        "added": 0,
+        "added": 1,
         "modified": 0,
-        "nonbreaking": 0,
+        "nonbreaking": 1,
         "potentially_breaking": 0,
         "removed": 0,
         "review_required": 0,
-        "total": 0
+        "total": 1
       },
       "target": "working-tree"
     },
@@ -27937,6 +28034,18 @@
       "baseline": "main",
       "changes": [
         {
+          "change_type": "added",
+          "classification": "nonbreaking",
+          "lifecycle_after": "Preview",
+          "lifecycle_before": null,
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Public API added."
+          ],
+          "signature_after": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]",
+          "signature_before": null
+        },
+        {
           "change_type": "removed",
           "classification": "review_required",
           "lifecycle_after": null,
@@ -27950,13 +28059,13 @@
         }
       ],
       "summary": {
-        "added": 0,
+        "added": 1,
         "modified": 0,
-        "nonbreaking": 0,
+        "nonbreaking": 1,
         "potentially_breaking": 0,
         "removed": 1,
         "review_required": 1,
-        "total": 1
+        "total": 2
       },
       "target": "working-tree"
     },
@@ -27986,6 +28095,18 @@
           ],
           "signature_after": null,
           "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -28537,9 +28658,9 @@
         "modified": 10,
         "nonbreaking": 16,
         "potentially_breaking": 21,
-        "removed": 19,
-        "review_required": 8,
-        "total": 45
+        "removed": 20,
+        "review_required": 9,
+        "total": 46
       },
       "target": "v0.1.0"
     },
@@ -28581,6 +28702,18 @@
           ],
           "signature_after": null,
           "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "removed",
@@ -29079,9 +29212,9 @@
         "modified": 11,
         "nonbreaking": 15,
         "potentially_breaking": 20,
-        "removed": 16,
-        "review_required": 7,
-        "total": 42
+        "removed": 17,
+        "review_required": 8,
+        "total": 43
       },
       "target": "v0.2.0"
     },
@@ -29100,6 +29233,18 @@
           ],
           "signature_after": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], environment_name: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]",
           "signature_before": "scan_onelake_access(catalogue_df, *, targets: str | list[str] | tuple[str, ...], workspace_id: str | None = None, access_snapshot_id: str | None = None, access_token: str | None = None, persist: bool = True, context: dict[str, Any] | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]"
         },
         {
           "change_type": "modified",
@@ -29617,9 +29762,9 @@
         "modified": 18,
         "nonbreaking": 14,
         "potentially_breaking": 24,
-        "removed": 8,
-        "review_required": 1,
-        "total": 39
+        "removed": 9,
+        "review_required": 2,
+        "total": 40
       },
       "target": "v0.2.5"
     },
@@ -29628,6 +29773,18 @@
       "changes": [
         {
           "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
           "classification": "potentially_breaking",
           "lifecycle_after": null,
           "lifecycle_before": "Live",
@@ -29852,9 +30009,9 @@
         "modified": 6,
         "nonbreaking": 4,
         "potentially_breaking": 9,
-        "removed": 6,
-        "review_required": 3,
-        "total": 16
+        "removed": 7,
+        "review_required": 4,
+        "total": 17
       },
       "target": "v0.3.0"
     },
@@ -29863,6 +30020,18 @@
       "changes": [
         {
           "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
           "classification": "potentially_breaking",
           "lifecycle_after": null,
           "lifecycle_before": "Live",
@@ -30087,9 +30256,9 @@
         "modified": 6,
         "nonbreaking": 4,
         "potentially_breaking": 9,
-        "removed": 6,
-        "review_required": 3,
-        "total": 16
+        "removed": 7,
+        "review_required": 4,
+        "total": 17
       },
       "target": "v0.3.1"
     },
@@ -30098,6 +30267,18 @@
       "changes": [
         {
           "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
           "classification": "potentially_breaking",
           "lifecycle_after": null,
           "lifecycle_before": "Live",
@@ -30282,9 +30463,9 @@
         "modified": 4,
         "nonbreaking": 4,
         "potentially_breaking": 8,
-        "removed": 5,
-        "review_required": 1,
-        "total": 13
+        "removed": 6,
+        "review_required": 2,
+        "total": 14
       },
       "target": "v0.4.0"
     },
@@ -30293,6 +30474,18 @@
       "changes": [
         {
           "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]"
+        },
+        {
+          "change_type": "removed",
           "classification": "potentially_breaking",
           "lifecycle_after": null,
           "lifecycle_before": "Live",
@@ -30477,29 +30670,54 @@
         "modified": 4,
         "nonbreaking": 4,
         "potentially_breaking": 8,
-        "removed": 5,
-        "review_required": 1,
-        "total": 13
+        "removed": 6,
+        "review_required": 2,
+        "total": 14
       },
       "target": "v0.4.1"
     },
     {
       "baseline": "working-tree",
-      "changes": [],
+      "changes": [
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]"
+        }
+      ],
       "summary": {
         "added": 0,
         "modified": 0,
         "nonbreaking": 0,
         "potentially_breaking": 0,
-        "removed": 0,
-        "review_required": 0,
-        "total": 0
+        "removed": 1,
+        "review_required": 1,
+        "total": 1
       },
       "target": "v0.5.0"
     },
     {
       "baseline": "working-tree",
       "changes": [
+        {
+          "change_type": "removed",
+          "classification": "review_required",
+          "lifecycle_after": null,
+          "lifecycle_before": "Preview",
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "reasons": [
+            "Preview public API removed."
+          ],
+          "signature_after": null,
+          "signature_before": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]"
+        },
         {
           "change_type": "added",
           "classification": "nonbreaking",
@@ -30518,9 +30736,9 @@
         "modified": 0,
         "nonbreaking": 1,
         "potentially_breaking": 0,
-        "removed": 0,
-        "review_required": 0,
-        "total": 1
+        "removed": 1,
+        "review_required": 1,
+        "total": 2
       },
       "target": "main"
     }
@@ -46269,6 +46487,58 @@
           "lifecycle": "Preview",
           "parameters": [
             {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "workspace_id",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "positional_or_keyword",
+              "name": "item_id",
+              "required": true
+            },
+            {
+              "annotation": "str",
+              "default": null,
+              "has_default": false,
+              "kind": "keyword_only",
+              "name": "portal_base_url",
+              "required": true
+            },
+            {
+              "annotation": "dict[str, list[str]] | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "group_memberships",
+              "required": false
+            },
+            {
+              "annotation": "str | None",
+              "default": "None",
+              "has_default": true,
+              "kind": "keyword_only",
+              "name": "access_token",
+              "required": false
+            }
+          ],
+          "qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members",
+          "return_annotation": "dict[str, Any]",
+          "signature": "scan_onelake_role_members(workspace_id: str, item_id: str, *, portal_base_url: str, group_memberships: dict[str, list[str]] | None = None, access_token: str | None = None) -> dict[str, Any]",
+          "source_path": "src/fabricops_kit/access_scanner/scan_onelake_role_members.py",
+          "source_qualified_name": "fabricops_kit.access_scanner.scan_onelake_role_members.scan_onelake_role_members"
+        },
+        {
+          "certainty": "certain",
+          "extraction_error": null,
+          "lifecycle": "Preview",
+          "parameters": [
+            {
               "annotation": null,
               "default": null,
               "has_default": false,
@@ -47930,7 +48200,7 @@
         "This logical target represents the package working tree used for generation. It does not assert a Git branch identity; source_digest identifies its exact source content."
       ],
       "revision": null,
-      "source_digest": "sha256:e2c2839dd80e50713c7337c9cef3eee32ff369f09d8dd8ebe7c636f532e127d8",
+      "source_digest": "sha256:ef78ab979bb74ba042ccf07673dbf05a19a109294c6da7fa64b52d722b99ed0e",
       "source_kind": "working_tree",
       "version": "working-tree"
     }

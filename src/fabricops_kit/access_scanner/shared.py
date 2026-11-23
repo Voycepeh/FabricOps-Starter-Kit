@@ -6,7 +6,7 @@ import json
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, urlopen
 
 from fabricops_kit.config.metadata_schemas import _require_catalogue_assets, metadata_table_physical_schema
 from fabricops_kit.config.shared import FabricStore, build_table_id, get_store
@@ -424,3 +424,11 @@ def catalogue_tables(catalogue_df, *, config, workspace_id: str, target_store_ki
         )
         .dropDuplicates(["_catalogue_workspace_id", "_catalogue_table_id"])
     )
+
+
+class PortalNoRedirect(HTTPRedirectHandler):
+    """Refuse portal redirects to keep bearer tokens on the selected host."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """Require the caller to select the current portal origin explicitly."""
+        return None

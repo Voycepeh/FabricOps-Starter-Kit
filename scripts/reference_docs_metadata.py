@@ -2127,3 +2127,25 @@ PUBLIC_SYMBOL_DOCS.append({
     "preferred_example": 'write_lakehouse_file(dataframe=final_df, relative_path="Exports/orders.csv", store="Silver", file_format="csv", write_options={"header": True})',
     "related_functions": ["orchestrate_write", "write_lakehouse_table", "read_lakehouse_csv"],
 })
+
+
+PUBLIC_SYMBOL_DOCS.append({
+    "kind": "function",
+    "module": "access_scanner.scan_onelake_role_members",
+    "symbol_name": "scan_onelake_role_members",
+    "function_type": "callable",
+    "summary_override": "Preview workaround for named OneLake role assignments with supplied group membership.",
+    "template_notebook": "ad hoc Fabric notebook",
+    "template_segment": "OneLake membership inspection",
+    "purpose": "Join OneLake role members to visible item-access names without Graph or tenant-admin APIs.",
+    "use_when": "Use for exploratory read-only inspection when the caller can read the observed portal endpoint.",
+    "do_not_use_when": "Do not use as a stable production API, directory membership verifier, or proof of effective access.",
+    "usage_notes": "UNSTABLE WORKAROUND: name resolution uses an undocumented regional Power BI portal endpoint. Its contract, minimum permissions, and availability can change. Supply the observed portal origin explicitly. Group membership is caller-supplied and unverified; automatic selectors remain unresolved.",
+    "parameters": "workspace_id, item_id, portal_base_url, optional group_memberships dictionary, and optional access_token.",
+    "returns": "Python records for role_members, workspace_assignments, item_access, users, coverage, and raw source responses.",
+    "side_effects": "Reads permission metadata only; never changes permissions or writes METADATA_DATA_ACCESS.",
+    "fabric_context": "Workspace listing requires Member/Admin plus appropriate scopes. OneLake roles require item Read plus appropriate scopes. Portal minimum rights are unverified. Notebook and Environment access are separate.",
+    "ai_verification": "Preserve unknown principal types, review coverage, and distinguish API identities from supplied group memberships. Never decode undocumented permission bitmasks by assumption.",
+    "preferred_example": "result = scan_onelake_role_members(workspace_id, lakehouse_id, portal_base_url=portal_origin, group_memberships={\"Data Readers\": [\"alice@example.com\"]})",
+    "related_functions": ["scan_onelake_access", "scan_workspace_access"],
+})
