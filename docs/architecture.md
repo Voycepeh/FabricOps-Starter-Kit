@@ -57,7 +57,7 @@ FabricOps separates Governance, Engineering and Consumption responsibilities. A 
 
 ## Shared metadata model
 
-<a class="fabricops-metadata-preview fabricops-metadata-preview--compact" href="reference/metadata/" aria-label="Explore the interactive FabricOps metadata relationship map">
+<a class="fabricops-metadata-preview fabricops-metadata-preview--compact" href="../reference/metadata/" aria-label="Explore the interactive FabricOps metadata relationship map">
   <span class="fabricops-metadata-preview__body">
     <span class="fabricops-metadata-preview__eyebrow">Interactive relationship map</span>
     <strong class="fabricops-metadata-preview__title">13-table metadata relationship map</strong>
@@ -67,12 +67,12 @@ FabricOps separates Governance, Engineering and Consumption responsibilities. A 
   <span class="fabricops-metadata-preview__image" aria-hidden="true"><img src="../assets/fabricops-metadata-approved.svg" alt="" loading="lazy" decoding="async"></span>
 </a>
 
-The configured Metadata Lakehouse holds five Governance-owned tables and eight Engineering-owned tables. The ownership boundary identifies authoritative writers; it does not imply separate physical Lakehouses. Governance owns the central Lakehouse itself; schema ownership describes which workflow is authoritative for each record.
+The configured Metadata Lakehouse holds 13 canonical metadata tables: five Governance-owned and eight Engineering-owned. Processing State is maintained separately as operational state. The ownership boundary identifies authoritative writers; it does not imply separate physical Lakehouses. Governance owns the central Lakehouse itself; schema ownership describes which workflow is authoritative for each record.
 
 | Group | Canonical tables |
 | --- | --- |
 | Governance | [`METADATA_DATA_STEWARD`](reference/metadata/metadata_data_steward.md), [`METADATA_DATA_AGREEMENT`](reference/metadata/metadata_data_agreement.md), [`METADATA_DATA_CONTRACT`](reference/metadata/metadata_data_contract.md), [`METADATA_DATA_CONTRACT_ACTIVATION`](reference/metadata/metadata_data_contract_activation.md), [`METADATA_PIPELINE_ACTIVATION`](reference/metadata/metadata_pipeline_activation.md) |
-| Engineering and operations | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md), [`METADATA_DATA_ACCESS`](reference/metadata/metadata_data_access.md), [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md), [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md), [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
+| Engineering and operations | [`METADATA_DATA_CATALOGUE`](reference/metadata/metadata_data_catalogue.md), [`METADATA_DATA_PROFILED`](reference/metadata/metadata_data_profiled.md), [`METADATA_DATA_PROFILED_FREQUENCY`](reference/metadata/metadata_data_profiled_frequency.md), [`METADATA_DATA_ACCESS`](reference/metadata/metadata_data_access.md), [`METADATA_DATA_LINEAGE`](reference/metadata/metadata_data_lineage.md), [`METADATA_PIPELINE_REGISTRY`](reference/metadata/metadata_pipeline_registry.md), [`METADATA_PIPELINE_RUN`](reference/metadata/metadata_pipeline_run.md), [`METADATA_GUARDRAIL_RESULTS`](reference/metadata/metadata_guardrail_results.md) |
 
 ??? info "Under the Hood — identity, timing and transaction boundaries"
 

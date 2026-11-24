@@ -403,7 +403,7 @@ def test_metadata_explorer_full_text_and_prominent_navigation() -> None:
     assert 'class="fabricops-metadata-preview" href="reference/metadata/"' in homepage
     assert 'src="assets/fabricops-metadata-approved.svg"' in homepage
     assert 'class="fabricops-metadata-preview fabricops-metadata-preview--compact"' in architecture
-    assert 'href="reference/metadata/"' in architecture
+    assert 'href="../reference/metadata/"' in architecture
     assert 'src="../assets/fabricops-metadata-approved.svg"' in architecture
     assert ".fabricops-metadata-preview__image" in styles
     assert architecture.index('class="fabricops-metadata-preview') > architecture.index(
