@@ -1,0 +1,19 @@
+table DimMode
+	lineageTag: c4abefdb-cc74-5bf4-9a1b-cab0ffe0710e
+
+	column 'Execution mode'
+		dataType: string
+		sourceColumn: Mode
+		summarizeBy: none
+		lineageTag: 95efb73f-b8b8-5181-a7ee-3ab85c2199ba
+		isKey
+
+	partition DimMode = m
+		mode: import
+		source =
+			let
+			    Source = Table.TransformColumns(Table.Distinct(Table.SelectColumns(Runs, {"Mode"})), {{"Mode", each _ ?? "Not captured"}}),
+			    Projected = Table.SelectColumns(Source, {"Mode"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"Mode", type text}}, "en-US")
+			in
+			    Typed

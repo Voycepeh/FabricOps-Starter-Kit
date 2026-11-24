@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 876" role="img" aria-labelledby="model-title model-desc">
+<title id="model-title">Engineering Analytics semantic model</title>
+<desc id="model-desc">A unique Run filters execution details. Physical asset and date dimensions filter verified snapshots. A table root filters downstream reachability.</desc>
+<defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#52627A"/></marker></defs>
+<rect x="0" y="0" width="768" height="876" rx="0" fill="#FFFFFF" stroke="none"/>
+<g font-family="Segoe UI, Arial, sans-serif">
+<text x="24" y="37" font-size="28" font-weight="650" text-anchor="start" fill="#19243A">Engineering Analytics semantic model</text>
+<text x="24" y="62" font-size="15" font-weight="400" text-anchor="start" fill="#52627A">Active one-to-many relationships • filter direction follows the arrow</text>
+<text x="24" y="111" font-size="21" font-weight="600" text-anchor="start" fill="#19243A">Execution history</text>
+<path d="M88 212 V244 Q88 252 96 252 H240 Q248 252 248 260 V288" fill="none" stroke="#52627A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="102" y="230" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">1</text>
+<text x="268" y="280" font-size="12" font-weight="400" text-anchor="end" fill="#52627A">N</text>
+<path d="M296 212 V288" fill="none" stroke="#52627A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="308" y="230" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">1</text>
+<text x="282" y="280" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">N</text>
+<path d="M496 212 V244 Q496 252 488 252 H352 Q344 252 344 260 V288" fill="none" stroke="#52627A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="510" y="230" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">1</text>
+<text x="362" y="280" font-size="12" font-weight="400" text-anchor="end" fill="#52627A">N</text>
+<line x1="400" y1="320" x2="476" y2="320" stroke="#52627A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="412" y="312" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">1</text>
+<text x="468" y="312" font-size="12" font-weight="400" text-anchor="end" fill="#52627A">N</text>
+<path d="M248 356 V392 Q248 400 240 400 H100 Q92 400 92 408 V432" fill="none" stroke="#52627A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="234" y="376" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">1</text>
+<text x="110" y="425" font-size="12" font-weight="400" text-anchor="end" fill="#52627A">N</text>
+<path d="M296 356 V432" fill="none" stroke="#52627A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="310" y="376" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">1</text>
+<text x="310" y="425" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">N</text>
+<path d="M344 356 V392 Q344 400 352 400 H460 Q468 400 468 408 V432" fill="none" stroke="#52627A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="359" y="376" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">1</text>
+<text x="485" y="425" font-size="12" font-weight="400" text-anchor="end" fill="#52627A">N</text>
+<path d="M592 356 V432" fill="none" stroke="#52627A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="606" y="376" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">1</text>
+<text x="606" y="425" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">N</text>
+<rect x="24" y="148" width="144" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="36" y="173" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">DimDate</text>
+<text x="36" y="196" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">UTC calendar</text>
+<rect x="216" y="148" width="160" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="228" y="173" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">DimPipeline</text>
+<text x="228" y="196" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">Scoped pipeline</text>
+<rect x="432" y="148" width="128" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="444" y="173" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">DimMode</text>
+<text x="444" y="196" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">Mode</text>
+<rect x="608" y="148" width="136" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="620" y="173" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">Workspace</text>
+<text x="620" y="196" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">Run workspace</text>
+<path d="M608 180 H580 Q572 180 572 172 V136 Q572 128 564 128 H328 Q320 128 320 136 V144" fill="none" stroke="#52627A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="596" y="172" font-size="12" font-weight="400" text-anchor="end" fill="#52627A">1</text>
+<text x="334" y="144" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">N</text>
+<rect x="192" y="292" width="208" height="64" rx="6" fill="#F6F8FF" stroke="#2563EB"/>
+<text x="204" y="317" font-size="17" font-weight="600" text-anchor="start" fill="#1D4ED8">FactPipelineRun</text>
+<text x="204" y="340" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">One row per Run ID</text>
+<rect x="480" y="292" width="224" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="492" y="317" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">FactRunOperation</text>
+<text x="492" y="340" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">Run ID and operation key</text>
+<rect x="24" y="436" width="172" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="36" y="461" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">Guardrails</text>
+<text x="36" y="484" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">Guardrail Result ID</text>
+<rect x="216" y="436" width="160" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="228" y="461" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">Profile events</text>
+<text x="228" y="484" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">Run and ordinal</text>
+<rect x="396" y="436" width="144" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="408" y="461" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">Run failures</text>
+<text x="408" y="484" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">Run and ordinal</text>
+<rect x="560" y="436" width="184" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="572" y="461" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">Operation stages</text>
+<text x="572" y="484" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">Operation and order</text>
+<text x="24" y="530" font-size="15" font-weight="400" text-anchor="start" fill="#52627A">DimOperation filters Run operations. DimTable filters asset-aware detail.</text>
+<path d="M24 556 H744 M24 710 H744" fill="none" stroke="#DDE3F3"/>
+<text x="24" y="592" font-size="21" font-weight="600" text-anchor="start" fill="#19243A">Physical table size</text>
+<line x1="168" y1="656" x2="260" y2="656" stroke="#52627A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="180" y="648" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">1</text>
+<text x="252" y="648" font-size="12" font-weight="400" text-anchor="end" fill="#52627A">N</text>
+<line x1="600" y1="656" x2="500" y2="656" stroke="#52627A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="508" y="648" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">N</text>
+<text x="588" y="648" font-size="12" font-weight="400" text-anchor="end" fill="#52627A">1</text>
+<rect x="24" y="624" width="144" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="36" y="649" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">DimTable</text>
+<text x="36" y="672" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">Physical binding</text>
+<rect x="264" y="624" width="232" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="276" y="649" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">FactTableProfile</text>
+<text x="276" y="672" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">One full-table snapshot</text>
+<rect x="600" y="624" width="144" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="612" y="649" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">DimDate</text>
+<text x="612" y="672" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">Snapshot UTC</text>
+<text x="24" y="746" font-size="21" font-weight="600" text-anchor="start" fill="#19243A">Dependency lookup</text>
+<line x1="208" y1="808" x2="284" y2="808" stroke="#52627A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="220" y="800" font-size="12" font-weight="400" text-anchor="start" fill="#52627A">1</text>
+<text x="276" y="800" font-size="12" font-weight="400" text-anchor="end" fill="#52627A">N</text>
+<rect x="24" y="776" width="184" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="36" y="801" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">DimLineageRoot</text>
+<text x="36" y="824" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">Selected table</text>
+<rect x="288" y="776" width="248" height="64" rx="6" fill="#FFFFFF" stroke="#DDE3F3"/>
+<text x="300" y="801" font-size="17" font-weight="600" text-anchor="start" fill="#19243A">FactDependencyReach</text>
+<text x="300" y="824" font-size="14" font-weight="400" text-anchor="start" fill="#52627A">Distinct reachable node</text>
+<text x="552" y="803" font-size="15" font-weight="400" text-anchor="start" fill="#52627A">BridgeLineage holds</text>
+<text x="552" y="824" font-size="15" font-weight="400" text-anchor="start" fill="#52627A">direct observed edges.</text>
+</g></svg>

@@ -1,0 +1,125 @@
+table FactProfileEvent
+	lineageTag: 46ef9a04-91bd-52cc-98e5-ed59f022e08c
+
+	measure 'Profiling Activities' =
+			COALESCE ( CALCULATE ( COUNTROWS ( FactProfileEvent ), KEEPFILTERS ( FactProfileEvent[Profile status] IN { "passed", "failed" } ) ), 0 )
+		lineageTag: 2013c557-ef4a-52cd-8fb6-b846e70f9841
+		formatString: #,0
+
+	column 'Run ID'
+		dataType: string
+		sourceColumn: RunId
+		summarizeBy: none
+		lineageTag: 9bacad37-c42e-5470-939b-ee6d241ad587
+
+	column 'Event order'
+		dataType: int64
+		sourceColumn: Ordinal
+		summarizeBy: none
+		lineageTag: 37586e28-5520-5982-a890-d3532bae0ed2
+		formatString: #,0
+
+	column 'Asset key'
+		dataType: string
+		sourceColumn: AssetKey
+		summarizeBy: none
+		lineageTag: 08359ec5-792f-516b-9f24-6bf6e5f5d52c
+		isHidden
+
+	column 'Data asset'
+		dataType: string
+		sourceColumn: AssetLabel
+		summarizeBy: none
+		lineageTag: 080daef2-fdf2-567c-8b61-0c787615a583
+
+	column 'Activity'
+		dataType: string
+		sourceColumn: Activity
+		summarizeBy: none
+		lineageTag: 14a4f909-87c0-57bc-bf7a-2b1d3b7c8dc3
+
+	column 'Profile context'
+		dataType: string
+		sourceColumn: ContextKey
+		summarizeBy: none
+		lineageTag: 4c113fa4-1281-54cd-887a-ab30cba1e66d
+
+	column 'Profile status'
+		dataType: string
+		sourceColumn: Status
+		summarizeBy: none
+		lineageTag: 745bccd8-a8bd-5056-91c0-15b999eef2a0
+
+	column 'Persisted'
+		dataType: boolean
+		sourceColumn: Persisted
+		summarizeBy: none
+		lineageTag: 7d0d5de1-a5d1-5c08-abcb-6f3d06960b85
+
+	column 'Empty result'
+		dataType: boolean
+		sourceColumn: EmptyResult
+		summarizeBy: none
+		lineageTag: 63d49139-0142-56c9-8cf2-746e17b64a1e
+
+	column 'Snapshot ID'
+		dataType: string
+		sourceColumn: Snapshot
+		summarizeBy: none
+		lineageTag: 13eaae4b-4436-5044-8aac-55fb03f40ee6
+
+	column 'Executed UTC'
+		dataType: dateTime
+		sourceColumn: Executed
+		summarizeBy: none
+		lineageTag: b1662da5-8382-5616-83a4-fc4c46511871
+		formatString: yyyy-MM-dd HH:mm:ss
+
+	column 'Completion UTC'
+		dataType: dateTime
+		sourceColumn: Completed
+		summarizeBy: none
+		lineageTag: 0f5f8b0c-c8b7-5c41-b73b-93c4ae9d4ac5
+		formatString: yyyy-MM-dd HH:mm:ss
+
+	column 'Reason'
+		dataType: string
+		sourceColumn: Reason
+		summarizeBy: none
+		lineageTag: 2b6fa830-5c3e-5336-b39c-21b020d8515a
+
+	column 'Profile scope'
+		dataType: string
+		sourceColumn: ProfileScope
+		summarizeBy: none
+		lineageTag: 228444dd-7cad-5fbe-9795-3eb57d1fd115
+
+	column 'Profile rows'
+		dataType: int64
+		sourceColumn: RowCount
+		summarizeBy: none
+		lineageTag: bc96c9ab-e173-5647-a02f-8855bd52488d
+		formatString: #,0
+
+	column 'Profile limit'
+		dataType: int64
+		sourceColumn: Limit
+		summarizeBy: none
+		lineageTag: 1a8348cb-b59b-5393-8745-1372365ecee6
+		formatString: #,0
+
+	column 'Trigger'
+		dataType: string
+		sourceColumn: Trigger
+		summarizeBy: none
+		lineageTag: 1f125d2c-b1b5-5f4c-998c-2f6c63aa4158
+
+	partition FactProfileEvent = m
+		mode: import
+		source =
+			let
+			    Source = ProfileEvents,
+			    Projected = Table.SelectColumns(Source, {"RunId", "Ordinal", "AssetKey", "AssetLabel", "Activity", "ContextKey", "Status", "Persisted", "EmptyResult", "Snapshot", "Executed", "Completed", "Reason", "ProfileScope", "RowCount", "Limit", "Trigger"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"RunId", type text}, {"Ordinal", Int64.Type}, {"AssetKey", type text}, {"AssetLabel", type text}, {"Activity", type text}, {"ContextKey", type text}, {"Status", type text}, {"Persisted", type logical}, {"EmptyResult", type logical}, {"Snapshot", type text}, {"Executed", type datetime}, {"Completed", type datetime}, {"Reason", type text}, {"ProfileScope", type text}, {"RowCount", Int64.Type}, {"Limit", Int64.Type}, {"Trigger", type text}}, "en-US")
+			in
+			    Typed

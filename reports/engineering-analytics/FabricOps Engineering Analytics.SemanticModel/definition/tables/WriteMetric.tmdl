@@ -1,0 +1,49 @@
+table WriteMetric
+	lineageTag: 3c62af20-b752-5ced-9bdb-d19aef37be87
+
+	column 'Write metric'
+		dataType: string
+		lineageTag: 72750f49-0035-5965-929e-899507343916
+		summarizeBy: none
+		isDataTypeInferred
+		sourceColumn: [Value1]
+		sortByColumn: 'Metric order'
+
+		relatedColumnDetails
+			groupByColumn: 'Metric field'
+
+	column 'Metric field'
+		dataType: string
+		lineageTag: 1b807a05-1146-5d22-82ec-9e70dc301ef0
+		isHidden
+		summarizeBy: none
+		isDataTypeInferred
+		sourceColumn: [Value2]
+		sortByColumn: 'Metric order'
+
+		extendedProperty ParameterMetadata =
+				{ "version": 3, "kind": 2 }
+
+	column 'Metric order'
+		dataType: int64
+		lineageTag: d788b547-bbd7-5ec2-a0bb-fcf2a556f95a
+		isHidden
+		summarizeBy: none
+		isDataTypeInferred
+		sourceColumn: [Value3]
+
+	partition WriteMetric = calculated
+		mode: import
+		source =
+				{
+				    ("Rows Committed", NAMEOF(FactRunOperation[Rows Committed]), 0),
+				    ("Rows Inserted", NAMEOF(FactRunOperation[Rows Inserted]), 1),
+				    ("Rows Updated", NAMEOF(FactRunOperation[Rows Updated]), 2),
+				    ("Rows Unchanged", NAMEOF(FactRunOperation[Rows Unchanged]), 3),
+				    ("Versions Inserted", NAMEOF(FactRunOperation[Versions Inserted]), 4),
+				    ("Versions Expired", NAMEOF(FactRunOperation[Versions Expired]), 5),
+				    ("Input Rows", NAMEOF(FactRunOperation[Input Rows]), 6),
+				    ("Total Target Rows", NAMEOF(FactRunOperation[Total Target Rows]), 7),
+				    ("Output Files", NAMEOF(FactRunOperation[Output Files]), 8),
+				    ("Output Bytes", NAMEOF(FactRunOperation[Output Bytes]), 9)
+				}

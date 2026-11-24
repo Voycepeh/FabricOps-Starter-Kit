@@ -1,0 +1,202 @@
+table DimPipeline
+	lineageTag: 6c1a05db-86e7-59c3-b359-3ec35f191f0e
+
+	measure 'Latest Pipeline Visible' =
+			VAR Id = SELECTEDVALUE ( DimPipeline[Latest Run ID] )
+			VAR MatchCount = CALCULATE ( [Started Operations], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimDate ),
+			    REMOVEFILTERS ( DimMode ), TREATAS ( { Id }, FactPipelineRun[Run ID] ), VALUES ( DimTable[Asset key] ) )
+			RETURN IF ( NOT ISBLANK ( Id ) && ( NOT ISCROSSFILTERED ( DimTable[Asset key] ) || MatchCount > 0 ), 1 )
+		lineageTag: 0761fb05-b75a-548c-86a7-a51c5ea64366
+		formatString: #,0
+
+	measure 'Current Failed Pipelines' =
+			COALESCE ( COUNTROWS ( FILTER ( VALUES ( DimPipeline[Pipeline key] ),
+			    CALCULATE ( SELECTEDVALUE ( DimPipeline[Latest status] ) ) = "failed" && [Latest Pipeline Visible] = 1 ) ), 0 )
+		lineageTag: 3bb52312-e98f-55dd-a7f7-92bdef9029bc
+		formatString: #,0
+
+	measure 'Latest Read Attempts' =
+			VAR Id = SELECTEDVALUE ( DimPipeline[Latest Run ID] )
+			VAR Assets = VALUES ( DimTable[Asset key] )
+			VAR Filtered = ISCROSSFILTERED ( DimTable[Asset key] )
+			VAR CountForRun = CALCULATE ( [Started Operations], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimMode ), REMOVEFILTERS ( DimDate ),
+			    TREATAS ( { Id }, FactPipelineRun[Run ID] ), FactRunOperation[Role] = "Read" )
+			VAR CountForAsset = CALCULATE ( [Started Operations], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimMode ), REMOVEFILTERS ( DimDate ),
+			    TREATAS ( { Id }, FactPipelineRun[Run ID] ), TREATAS ( Assets, DimTable[Asset key] ), FactRunOperation[Role] = "Read" )
+			RETURN IF ( NOT ISBLANK ( Id ), IF ( Filtered, CountForAsset, CountForRun ) )
+		lineageTag: 54df56a3-999c-5779-9670-d28ebf076fb2
+		formatString: #,0
+
+	measure 'Latest Write Attempts' =
+			VAR Id = SELECTEDVALUE ( DimPipeline[Latest Run ID] )
+			VAR Assets = VALUES ( DimTable[Asset key] )
+			VAR Filtered = ISCROSSFILTERED ( DimTable[Asset key] )
+			VAR CountForRun = CALCULATE ( [Started Operations], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimMode ), REMOVEFILTERS ( DimDate ),
+			    TREATAS ( { Id }, FactPipelineRun[Run ID] ), FactRunOperation[Role] = "Write" )
+			VAR CountForAsset = CALCULATE ( [Started Operations], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimMode ), REMOVEFILTERS ( DimDate ),
+			    TREATAS ( { Id }, FactPipelineRun[Run ID] ), TREATAS ( Assets, DimTable[Asset key] ), FactRunOperation[Role] = "Write" )
+			RETURN IF ( NOT ISBLANK ( Id ), IF ( Filtered, CountForAsset, CountForRun ) )
+		lineageTag: 2d24df76-8d40-508b-a5dd-c1346a435026
+		formatString: #,0
+
+	measure 'Latest Rows Read' =
+			VAR Id = SELECTEDVALUE ( DimPipeline[Latest Run ID] )
+			VAR Assets = VALUES ( DimTable[Asset key] )
+			VAR Filtered = ISCROSSFILTERED ( DimTable[Asset key] )
+			VAR CountForRun = CALCULATE ( [Rows Read], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimMode ), REMOVEFILTERS ( DimDate ),
+			    TREATAS ( { Id }, FactPipelineRun[Run ID] ), FactRunOperation[Role] = "Read" )
+			VAR CountForAsset = CALCULATE ( [Rows Read], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimMode ), REMOVEFILTERS ( DimDate ),
+			    TREATAS ( { Id }, FactPipelineRun[Run ID] ), TREATAS ( Assets, DimTable[Asset key] ), FactRunOperation[Role] = "Read" )
+			RETURN IF ( NOT ISBLANK ( Id ), IF ( Filtered, CountForAsset, CountForRun ) )
+		lineageTag: 1a6d7110-33bf-52e8-b286-cb65dcf13cd8
+		formatString: #,0
+
+	measure 'Latest Rows Committed' =
+			VAR Id = SELECTEDVALUE ( DimPipeline[Latest Run ID] )
+			VAR Assets = VALUES ( DimTable[Asset key] )
+			VAR Filtered = ISCROSSFILTERED ( DimTable[Asset key] )
+			VAR CountForRun = CALCULATE ( [Rows Committed], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimMode ), REMOVEFILTERS ( DimDate ),
+			    TREATAS ( { Id }, FactPipelineRun[Run ID] ), FactRunOperation[Role] = "Write" )
+			VAR CountForAsset = CALCULATE ( [Rows Committed], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimMode ), REMOVEFILTERS ( DimDate ),
+			    TREATAS ( { Id }, FactPipelineRun[Run ID] ), TREATAS ( Assets, DimTable[Asset key] ), FactRunOperation[Role] = "Write" )
+			RETURN IF ( NOT ISBLANK ( Id ), IF ( Filtered, CountForAsset, CountForRun ) )
+		lineageTag: 1e1ca959-bcba-521a-813a-e3057c8f0dbe
+		formatString: #,0
+
+	measure 'Latest Rows Inserted' =
+			VAR Id = SELECTEDVALUE ( DimPipeline[Latest Run ID] )
+			VAR Assets = VALUES ( DimTable[Asset key] )
+			VAR Filtered = ISCROSSFILTERED ( DimTable[Asset key] )
+			VAR CountForRun = CALCULATE ( [Rows Inserted], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimMode ), REMOVEFILTERS ( DimDate ),
+			    TREATAS ( { Id }, FactPipelineRun[Run ID] ), FactRunOperation[Role] = "Write" )
+			VAR CountForAsset = CALCULATE ( [Rows Inserted], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimMode ), REMOVEFILTERS ( DimDate ),
+			    TREATAS ( { Id }, FactPipelineRun[Run ID] ), TREATAS ( Assets, DimTable[Asset key] ), FactRunOperation[Role] = "Write" )
+			RETURN IF ( NOT ISBLANK ( Id ), IF ( Filtered, CountForAsset, CountForRun ) )
+		lineageTag: c0286ee1-9b38-50f0-8ccc-95eceb156820
+		formatString: #,0
+
+	measure 'Latest Rows Updated' =
+			VAR Id = SELECTEDVALUE ( DimPipeline[Latest Run ID] )
+			VAR Assets = VALUES ( DimTable[Asset key] )
+			VAR Filtered = ISCROSSFILTERED ( DimTable[Asset key] )
+			VAR CountForRun = CALCULATE ( [Rows Updated], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimMode ), REMOVEFILTERS ( DimDate ),
+			    TREATAS ( { Id }, FactPipelineRun[Run ID] ), FactRunOperation[Role] = "Write" )
+			VAR CountForAsset = CALCULATE ( [Rows Updated], REMOVEFILTERS ( FactPipelineRun ), REMOVEFILTERS ( DimMode ), REMOVEFILTERS ( DimDate ),
+			    TREATAS ( { Id }, FactPipelineRun[Run ID] ), TREATAS ( Assets, DimTable[Asset key] ), FactRunOperation[Role] = "Write" )
+			RETURN IF ( NOT ISBLANK ( Id ), IF ( Filtered, CountForAsset, CountForRun ) )
+		lineageTag: 55ca0328-fd12-56de-967b-632f3188b3da
+		formatString: #,0
+
+	measure 'Current Latest status' =
+			SELECTEDVALUE ( DimPipeline[Latest status] )
+		lineageTag: a8dfc31a-88f1-584d-819a-a72005a32522
+
+	measure 'Current Latest Run ID' =
+			SELECTEDVALUE ( DimPipeline[Latest Run ID] )
+		lineageTag: 18fc20ed-205e-580c-af98-1a86fbf8680c
+
+	measure 'Current Latest Run UTC' =
+			SELECTEDVALUE ( DimPipeline[Latest Run UTC] )
+		lineageTag: b2b3c0ed-eac2-549b-8ddc-2ebfc4180e5e
+		formatString: yyyy-MM-dd HH:mm:ss
+
+	measure 'Current Latest elapsed seconds' =
+			SELECTEDVALUE ( DimPipeline[Latest elapsed seconds] )
+		lineageTag: 27148f98-f3bb-5af0-ba7a-454863823a49
+		formatString: #,0.00
+
+	measure 'Current Latest failure codes' =
+			SELECTEDVALUE ( DimPipeline[Latest failure codes] )
+		lineageTag: 738e685c-ed18-56f1-b335-fb71900b6c1d
+
+	measure 'Current Status Color' =
+			SWITCH ( SELECTEDVALUE ( DimPipeline[Latest outcome] ),
+			    "Failed", "#B91C1C", "Success", "#15803D", "Incomplete", "#B45309", "#52627A" )
+		lineageTag: 33a1cadf-512b-5c09-94ac-fd44e6a00c98
+
+	column 'Pipeline key'
+		dataType: string
+		sourceColumn: PipelineKey
+		summarizeBy: none
+		lineageTag: d22cea6d-a827-5747-9565-3ad48b2b9983
+		isHidden
+		isKey
+
+	column 'Workspace ID'
+		dataType: string
+		sourceColumn: WorkspaceId
+		summarizeBy: none
+		lineageTag: 68bf682d-43b1-59a1-ae6e-657d3102e920
+		isHidden
+
+	column 'Pipeline ID'
+		dataType: string
+		sourceColumn: PipelineId
+		summarizeBy: none
+		lineageTag: 144976b8-a43d-57e5-8dd6-5da480fc51ba
+
+	column 'Workspace'
+		dataType: string
+		sourceColumn: Workspace
+		summarizeBy: none
+		lineageTag: e834583f-d38f-5307-b4f9-6aa2d379a597
+
+	column 'Pipeline'
+		dataType: string
+		sourceColumn: Label
+		summarizeBy: none
+		lineageTag: 27c0e15e-327c-596e-b519-32355b30ce93
+
+	column 'Latest Run ID'
+		dataType: string
+		sourceColumn: LatestRunId
+		summarizeBy: none
+		lineageTag: f87f1fc4-23a8-5983-9144-887a1305d72b
+
+	column 'Latest status'
+		dataType: string
+		sourceColumn: LatestStatus
+		summarizeBy: none
+		lineageTag: 5aabdc6a-bb59-51c9-8be2-e30f13742b73
+
+	column 'Latest outcome'
+		dataType: string
+		sourceColumn: LatestOutcome
+		summarizeBy: none
+		lineageTag: 89859ddb-63ce-58f2-9567-437910816f85
+
+	column 'Latest Run UTC'
+		dataType: dateTime
+		sourceColumn: LatestUtc
+		summarizeBy: none
+		lineageTag: 37c868f0-4fb7-5a34-a7f4-07ecf5226777
+		formatString: yyyy-MM-dd HH:mm:ss
+
+	column 'Latest elapsed seconds'
+		dataType: double
+		sourceColumn: LatestDuration
+		summarizeBy: none
+		lineageTag: 4edcd8b0-663f-5eb6-af6c-1f875686f054
+		formatString: #,0.00
+
+	column 'Latest failure codes'
+		dataType: string
+		sourceColumn: LatestFailure
+		summarizeBy: none
+		lineageTag: 4ea35886-53eb-54dc-82c5-cc0b34f2451a
+
+	column 'Notebook'
+		dataType: string
+		sourceColumn: Notebook
+		summarizeBy: none
+		lineageTag: 31251509-81ef-5713-bd6e-64f7bf061547
+
+	partition DimPipeline = m
+		mode: import
+		source =
+			let
+			    Source = Pipelines,
+			    Projected = Table.SelectColumns(Source, {"PipelineKey", "WorkspaceId", "PipelineId", "Workspace", "Label", "LatestRunId", "LatestStatus", "LatestOutcome", "LatestUtc", "LatestDuration", "LatestFailure", "Notebook"}),
+			    Typed = Table.TransformColumnTypes(Projected, {{"PipelineKey", type text}, {"WorkspaceId", type text}, {"PipelineId", type text}, {"Workspace", type text}, {"Label", type text}, {"LatestRunId", type text}, {"LatestStatus", type text}, {"LatestOutcome", type text}, {"LatestUtc", type datetime}, {"LatestDuration", type number}, {"LatestFailure", type text}, {"Notebook", type text}}, "en-US")
+			in
+			    Typed

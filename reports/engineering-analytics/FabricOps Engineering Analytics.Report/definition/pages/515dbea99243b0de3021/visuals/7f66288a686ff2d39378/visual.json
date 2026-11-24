@@ -1,0 +1,615 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.0.0/schema.json",
+  "name": "7f66288a686ff2d39378",
+  "position": {
+    "x": 24,
+    "y": 226,
+    "z": 50,
+    "height": 267,
+    "width": 1392,
+    "tabOrder": 50
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "drillFilterOtherVisuals": true,
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Run operation key"
+                }
+              },
+              "queryRef": "FactRunOperation.Run operation key",
+              "nativeQueryRef": "Run operation key (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Data asset"
+                }
+              },
+              "queryRef": "FactRunOperation.Data asset",
+              "nativeQueryRef": "Data asset (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Asset type"
+                }
+              },
+              "queryRef": "FactRunOperation.Asset type",
+              "nativeQueryRef": "Asset type (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Role"
+                }
+              },
+              "queryRef": "FactRunOperation.Role",
+              "nativeQueryRef": "Role (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Operation mode"
+                }
+              },
+              "queryRef": "FactRunOperation.Operation mode",
+              "nativeQueryRef": "Operation mode (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Operation status"
+                }
+              },
+              "queryRef": "FactRunOperation.Operation status",
+              "nativeQueryRef": "Operation status (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Operation start UTC"
+                }
+              },
+              "queryRef": "FactRunOperation.Operation start UTC",
+              "nativeQueryRef": "Operation start UTC (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Operation completion UTC"
+                }
+              },
+              "queryRef": "FactRunOperation.Operation completion UTC",
+              "nativeQueryRef": "Operation completion UTC (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Elapsed seconds"
+                }
+              },
+              "queryRef": "FactRunOperation.Elapsed seconds",
+              "nativeQueryRef": "Elapsed seconds (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Read row count"
+                }
+              },
+              "queryRef": "FactRunOperation.Read row count",
+              "nativeQueryRef": "Read row count (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Read columns"
+                }
+              },
+              "queryRef": "FactRunOperation.Read columns",
+              "nativeQueryRef": "Read columns (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Input row count"
+                }
+              },
+              "queryRef": "FactRunOperation.Input row count",
+              "nativeQueryRef": "Input row count (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Committed rows"
+                }
+              },
+              "queryRef": "FactRunOperation.Committed rows",
+              "nativeQueryRef": "Committed rows (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Inserted rows"
+                }
+              },
+              "queryRef": "FactRunOperation.Inserted rows",
+              "nativeQueryRef": "Inserted rows (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Updated rows"
+                }
+              },
+              "queryRef": "FactRunOperation.Updated rows",
+              "nativeQueryRef": "Updated rows (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Unchanged rows"
+                }
+              },
+              "queryRef": "FactRunOperation.Unchanged rows",
+              "nativeQueryRef": "Unchanged rows (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Inserted versions"
+                }
+              },
+              "queryRef": "FactRunOperation.Inserted versions",
+              "nativeQueryRef": "Inserted versions (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Expired versions"
+                }
+              },
+              "queryRef": "FactRunOperation.Expired versions",
+              "nativeQueryRef": "Expired versions (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "File count"
+                }
+              },
+              "queryRef": "FactRunOperation.File count",
+              "nativeQueryRef": "File count (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Byte count"
+                }
+              },
+              "queryRef": "FactRunOperation.Byte count",
+              "nativeQueryRef": "Byte count (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "File publication status"
+                }
+              },
+              "queryRef": "FactRunOperation.File publication status",
+              "nativeQueryRef": "File publication status (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Measurement source"
+                }
+              },
+              "queryRef": "FactRunOperation.Measurement source",
+              "nativeQueryRef": "Measurement source (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Table ID"
+                }
+              },
+              "queryRef": "FactRunOperation.Table ID",
+              "nativeQueryRef": "Table ID (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "File Source ID"
+                }
+              },
+              "queryRef": "FactRunOperation.File Source ID",
+              "nativeQueryRef": "File Source ID (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Contract ID"
+                }
+              },
+              "queryRef": "FactRunOperation.Contract ID",
+              "nativeQueryRef": "Contract ID (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Contract version"
+                }
+              },
+              "queryRef": "FactRunOperation.Contract version",
+              "nativeQueryRef": "Contract version (FactRunOperation)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "FactRunOperation"
+                    }
+                  },
+                  "Property": "Total Target Rows"
+                }
+              },
+              "queryRef": "FactRunOperation.Total Target Rows",
+              "nativeQueryRef": "Total Target Rows (FactRunOperation)"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Recorded Reads and Writes'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "13L"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#19243A'"
+                    }
+                  }
+                }
+              }
+            },
+            "alignment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'left'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#FFFFFF'"
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0L"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#DDE3F3'"
+                    }
+                  }
+                }
+              }
+            },
+            "radius": {
+              "expr": {
+                "Literal": {
+                  "Value": "5L"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "padding": [
+        {
+          "properties": {
+            "top": {
+              "expr": {
+                "Literal": {
+                  "Value": "8L"
+                }
+              }
+            },
+            "bottom": {
+              "expr": {
+                "Literal": {
+                  "Value": "8L"
+                }
+              }
+            },
+            "left": {
+              "expr": {
+                "Literal": {
+                  "Value": "10L"
+                }
+              }
+            },
+            "right": {
+              "expr": {
+                "Literal": {
+                  "Value": "10L"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "Filteref592622d67f505759b91ce3",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "FactPipelineRun"
+              }
+            },
+            "Property": "Show Run Detail"
+          }
+        },
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "m",
+              "Entity": "FactPipelineRun",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Comparison": {
+                  "ComparisonKind": 0,
+                  "Left": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Source": "m"
+                        }
+                      },
+                      "Property": "Show Run Detail"
+                    }
+                  },
+                  "Right": {
+                    "Literal": {
+                      "Value": "1L"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User",
+        "isHiddenInViewMode": true,
+        "isLockedInViewMode": true
+      }
+    ]
+  }
+}

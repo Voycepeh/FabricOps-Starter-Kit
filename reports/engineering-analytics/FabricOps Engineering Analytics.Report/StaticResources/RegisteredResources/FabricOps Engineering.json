@@ -1,0 +1,35 @@
+{
+  "name": "FabricOps Engineering",
+  "dataColors": [
+    "#2563EB",
+    "#60A5FA",
+    "#1E40AF",
+    "#64748B",
+    "#0891B2",
+    "#334155"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#19243A",
+  "tableAccent": "#2563EB",
+  "good": "#15803D",
+  "neutral": "#B45309",
+  "bad": "#B91C1C",
+  "textClasses": {
+    "callout": {
+      "fontFace": "Segoe UI",
+      "color": "#19243A"
+    },
+    "title": {
+      "fontFace": "Segoe UI",
+      "color": "#19243A"
+    },
+    "header": {
+      "fontFace": "Segoe UI",
+      "color": "#19243A"
+    },
+    "label": {
+      "fontFace": "Segoe UI",
+      "color": "#52627A"
+    }
+  }
+}
