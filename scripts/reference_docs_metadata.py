@@ -2009,3 +2009,18 @@ PUBLIC_SYMBOL_DOCS.append({
     "preferred_example": "result = scan_onelake_role_members(workspace_id, lakehouse_id, portal_base_url=portal_origin, group_memberships={\"Data Readers\": [\"alice@example.com\"]})",
     "related_functions": ["setup_metadata_tables", "read_lakehouse_table"],
 })
+
+
+PUBLIC_SYMBOL_DOCS.append({
+    "kind": "function", "module": "data_contract.assess_data_sensitivity",
+    "function_type": "callable", "symbol_name": "assess_data_sensitivity",
+    "summary_override": "Assess personal and non-personal data sensitivity using profile and verified governance evidence.",
+    "template_notebook": "01_governance", "template_segment": "Data Sensitivity Assessment",
+    "use_when": "Use after profiling, during Data Contract authoring, or when reviewing the actual output of a treatment.",
+    "returns": "Advisory dictionary with column and dataset findings, profile scope, minimum handling and conditional treatments.",
+    "side_effects": "Reads relevant metadata. Explicit local scans run on Spark. Opted-in AI uses existing operational telemetry.",
+    "fabric_context": "A standalone profile row needs no Fabric configuration. Governed resolution and local Spark scans need their existing Fabric context.",
+    "preferred_example": "assessment = assess_data_sensitivity(profile_result, description='Staff payroll review')",
+    "related_functions": ["profile_table", "widget_data_contract", "orchestrate_read", "orchestrate_write"],
+    "related_guides": [{"title": "Sensitive data decisions", "path": "../../governance.md#sensitive-data-discovery-classification-and-treatment"}],
+})

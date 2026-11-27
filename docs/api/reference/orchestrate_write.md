@@ -187,6 +187,7 @@ known table publication status survives later operation or notebook failure.
 A successful Write does not imply successful completion of the notebook.
 
 Dry Run profiles the prepared DataFrame in memory without publishing the target.
+For Data Sensitivity Assessment, profile_result identifies the coverage and subject.
 Persistent table writes profile the physical target after successful publication,
 bounded only by setup_pipeline(profiling_max_rows=...).
 Pipeline-owned settings apply independently of selected Contracts; Dry Run observations
@@ -212,7 +213,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_write.py:41`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L41-L374">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_write.py#L41-L375">View on GitHub</a>
 </div>
 
 
@@ -228,7 +229,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 304 |
+| Live-critical dependencies | 307 |
 
 ### Release history
 
@@ -263,6 +264,7 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_activation_contract</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_promoted_operations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_activation_contract_payload</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_approvals</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_file_execution_authorizations</code></li>
@@ -404,6 +406,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._dq_sample_record</code></li>
 <li><code>fabricops_kit.pipeline.shared._dq_tagged_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._evaluate_dq_rules</code></li>
+<li><code>fabricops_kit.pipeline.shared._file_assessment_reference</code></li>
 <li><code>fabricops_kit.pipeline.shared._file_profiling_event</code></li>
 <li><code>fabricops_kit.pipeline.shared._format_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._frequency_metadata_dataframe</code></li>
@@ -455,6 +458,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._stage_catalogue_profile_retry</code></li>
 <li><code>fabricops_kit.pipeline.shared._string_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._summarize_dq_guardrail</code></li>
+<li><code>fabricops_kit.pipeline.shared._table_assessment_reference</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_token_mapping</code></li>
 <li><code>fabricops_kit.pipeline.shared._warehouse_columns</code></li>

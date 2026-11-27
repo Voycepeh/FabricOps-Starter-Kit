@@ -669,6 +669,19 @@
     ]
   },
   {
+    "id": "data-sensitivity-assessment",
+    "term": "data sensitivity assessment",
+    "aliases": [],
+    "category": "FabricOps concepts",
+    "short_definition": "Advisory assessment of personal and non-personal data sensitivity.",
+    "long_definition": "Data Sensitivity Assessment uses profile evidence, applicable Data Contracts and verified column lineage. It reports provisional classification and minimum handling and can recommend treatment for an explicitly requested lower classification.",
+    "preferred_usage": "Use Data Sensitivity Assessment for the callable and widget workflow.",
+    "avoid_usage": "Use Information Classification for the approved descriptive Enrichment.",
+    "tooltip_labels": [
+      "Data Sensitivity Assessment"
+    ]
+  },
+  {
     "id": "information-classification",
     "term": "information classification",
     "aliases": [

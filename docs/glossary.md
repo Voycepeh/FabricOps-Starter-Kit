@@ -180,6 +180,11 @@ Terms are grouped by where their meaning comes from: FabricOps, Microsoft Fabric
 <p><strong>Also known as:</strong> classification</p>
 </details>
 
+<details id="data-sensitivity-assessment">
+<summary><strong>Data Sensitivity Assessment</strong> — Advisory assessment of personal and non-personal data sensitivity.</summary>
+<p>Data Sensitivity Assessment uses profile evidence, applicable Data Contracts and verified column lineage. It reports provisional classification and minimum handling and can recommend treatment for an explicitly requested lower classification.</p>
+</details>
+
 <details id="processing-state">
 <summary><strong>Processing State</strong> — Typed source observations, accepted checkpoints, Source Drift baselines and publication receipts.</summary>
 <p>The operational Processing State table holds incremental source observations/checkpoints and target-specific publication receipts, plus immutable source_snapshot manifests, distributed source_row_evidence hash multiplicities, shared source_drift_baseline heads and immutable source_snapshot_acceptance history. Checkpoints follow verified target publication; Source Drift heads wait for successful whole-run finalization and all required verified publications. Historical rows remain retained.</p>

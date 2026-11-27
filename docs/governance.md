@@ -158,7 +158,11 @@ disables AI actions. AI Settings and usage reporting remain accessible from the 
 
 ![Sensitive Data governance from classification to deterministic treatment](assets/sensitive-data-governance.svg){ .fabricops-section-evidence }
 
-Governance can classify a column as Direct PII, Indirect PII or Not PII, choose **Mask**, **Bucket**, **Tokenize** or **Remove**, and record the post-treatment information classification. AI can suggest from governed schema and bounded profile evidence; a person reviews the decision. Runtime treatment is deterministic and does not call AI.
+Use **Data Sensitivity Assessment** in the Data Contract widget or call `assess_data_sensitivity()` with an existing profile result. It assesses the selected column or all columns, uses draft descriptions as context, and reports classification, minimum handling, and the evidence that needs further review. Configure business categories and handling floors in `00_env_config`. Optional AI requires an approved Fabric AI configuration and explicit opt-in for each request.
+
+Verified value-preserving paths, including renames and filters, can reuse applicable upstream classifications. For a whole persisted target, automatic inheritance requires a verifiable current Lakehouse replacement. The assessment can follow a bounded chain of verified replacements to an approved upstream column. An append or SCD graph describes the Write input, so it can inform protection but cannot establish classification for retained versions. Evaluate combined sensitivity for joins, filtered populations and identifying combinations.
+
+Enter a lower target to review treatment recommendations. Governance can stage **Mask**, **Bucket**, **Tokenize** or **Remove** as supported by the datatype and publish through the existing Data Contract lifecycle. Profile the actual persisted output before any authorised classification reduction. The runtime applies the approved Guardrails deterministically.
 
 ??? info "Under the Hood — sensitive-data authoring and enforcement"
 

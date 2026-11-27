@@ -5728,6 +5728,12 @@ def _file_profiling_event(plan, source_id, operation, activity, *, executed_at, 
             "executed_at": executed_at, **outcome}
 
 
+def _file_assessment_reference(plan, source_id, operation):
+    binding = plan.runtime_context.get("_pipeline_bindings", {}).get(source_id, {})
+    return {"table_id": source_id, "asset_type": "FILE", "asset_workspace_id": binding.get("asset_workspace_id"),
+            "run_id": plan.plan_id, "operation": operation, "profile_subject": "file_selection"}
+
+
 def schedule_file_profiling(dataframe, *, source_id, context, presentations, operation="read"):
     """Calculate typed file snapshots; commit them only after operation success.
 
@@ -5750,7 +5756,8 @@ def schedule_file_profiling(dataframe, *, source_id, context, presentations, ope
                {"reason": "Not due for this operation" if enabled else "disabled"})))
     if not due:
         return {"status": "not_due" if any(policy[name]["enabled"] for name in policy) else "disabled",
-                "table_id": source_id, "results_persisted": False}
+                "table_id": source_id, "results_persisted": False,
+                "assessment_reference": _file_assessment_reference(plan, source_id, operation)}
     limit = settings["profiling_max_rows"]
     scope = {"profile_scope": "bounded_selection" if limit is not None else "supplied_dataframe", "profiling_max_rows": limit}
     selected = dataframe.limit(limit) if limit is not None else dataframe
@@ -5783,6 +5790,7 @@ def schedule_file_profiling(dataframe, *, source_id, context, presentations, ope
                 "profile": captured if plan.permits_persistence else profile, "row_count": row_count,
                 "results_persisted": False, **scope, "grain_candidates": candidates,
                 "frequency_profile": captured_frequency if plan.permits_persistence else frequency,
+                "assessment_reference": _file_assessment_reference(plan, source_id, operation),
                 "activities": sorted(due)}
         if plan.permits_persistence:
             plan.evidence["pending_file_profiles"][(source_id, operation)]["result"] = result
@@ -7592,7 +7600,8 @@ def skip_table_profiling(table_id, operation, reason, *, context, spark_session=
             "trigger": operation, "pipeline_run_id": context["execution_plan"].plan_id,
             "executed_at": datetime.now(UTC).isoformat()}, context=context, spark_session=spark_session)
         activities[activity] = outcome
-    return {"status": "skipped", "reason": reason, "activities": activities}
+    return {"status": "skipped", "reason": reason, "activities": activities,
+            "assessment_reference": _table_assessment_reference(descriptor, context, operation)}
 
 
 # Preview bounds apply to column-level aggregates, never to source profiling.
@@ -7803,6 +7812,13 @@ def _show_previous_table_profile(table_id, previous, *, context, spark_session, 
         pass
 
 
+def _table_assessment_reference(descriptor, context, operation):
+    return {**{key: descriptor.get(key) for key in ("table_id", "asset_workspace_id", "asset_type")},
+            "run_id": context["execution_plan"].plan_id, "operation": operation,
+            "profile_subject": "prepared_input" if operation == "write" and not persistence_permitted(context)
+            else "physical_source" if operation == "read" else "persisted_output"}
+
+
 def schedule_table_profiling(table_id, operation, *, context, spark_session=None, dataframe=None, verbose=False, presentations=None):
     """Profile due work using successful completion history as the schedule."""
     if operation not in {"read", "write"}:
@@ -7852,7 +7868,8 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
                 "executed_at": datetime.now(UTC).isoformat()}, context=context, spark_session=spark_session)
         return {**profile, "status": "passed", "activities": outcomes, "persistence_status": "disabled",
                 "row_count": profile.get("row_count") if scope != "bounded_selection" else None, **profile_scope,
-                "profiled_row_count": profile.get("row_count")}
+                "profiled_row_count": profile.get("row_count"),
+                "assessment_reference": _table_assessment_reference(descriptor, context, operation)}
     key, descriptor = profiling_context_key(table_id, context=context, spark_session=spark_session)
     policy = pipeline_profiling_policy(context=context)
     for activity in PROFILING_ACTIVITIES:
@@ -7892,6 +7909,7 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
                 spark_session=spark_session, verbose=False, activities={activity}, presentations=presentations)
             completed_at = datetime.now(UTC).isoformat()
             outcomes[activity] = {"status": "passed", "profile_snapshot_id": profile_snapshot_id if activity != "grain" and not outcome.get("empty_result") else None,
+                                   "executed_at": base["executed_at"],
                                   "row_count": outcome.get("row_count"), **profile_scope, "results_persisted": True,
                                   "empty_result": outcome.get("empty_result", False),
                                   "completed_at": completed_at}
@@ -7910,7 +7928,8 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
                 profile.unpersist()
     counts = [outcome.get("row_count") for outcome in outcomes.values() if outcome.get("row_count") is not None]
     return {"status": "passed", "activities": outcomes, "row_count": counts[0] if counts and scope == "full_table" else None, **profile_scope,
-            "profiled_row_count": counts[0] if counts else None}
+            "profiled_row_count": counts[0] if counts else None,
+            "assessment_reference": _table_assessment_reference(descriptor, context, operation)}
 
 
 # Persisted-table profiling implementation shared by standalone and scheduled calls.
@@ -8835,6 +8854,7 @@ def execute_table_profile(
         raise ValueError("frequency_top_n must be greater than zero when supplied.")
     spark_session = get_spark_session(spark_session, dataframe=dataframe, context=context)
     identity = None
+    assessment_started_at = datetime.now(UTC).isoformat()
     config = active_workspace_id = None
     warehouse_fields = None
     warehouse_physical = False
@@ -8963,6 +8983,17 @@ def execute_table_profile(
                 display_profile_presentations([presentation])
             elif presentation is not None:
                 presentations.append(presentation)
+        if activities is None:
+            result["profile_scope"] = scope["profile_scope"]
+            result["profiling_max_rows"] = scope["profiling_max_rows"]
+            reference = {"started_at": assessment_started_at, "profile_subject": "supplied_dataframe"}
+            if identity is not None:
+                reference.update(table_id=identity["table_id"], asset_type="TABLE",
+                    asset_workspace_id=identity.get("asset_workspace_id") or get_store(
+                        config, active_workspace_id, identity["store"]).workspace_id)
+                if profile_input_label != "supplied DataFrame":
+                    reference["profile_subject"] = "physical_table"
+            result["assessment_reference"] = reference
         return result
     finally:
         if transient_profile is not None:

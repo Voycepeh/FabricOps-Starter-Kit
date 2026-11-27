@@ -4,30 +4,21 @@ from __future__ import annotations
 
 from fabricops_kit.config.metadata_schemas import decode_metadata_row
 
-import ast
-from datetime import UTC, datetime
-import logging
-from time import perf_counter
-from uuid import uuid4
-from contextlib import redirect_stderr, redirect_stdout
-from io import StringIO
 from functools import partial
-import importlib
 import json
 from typing import Any
-import warnings
 
-from fabricops_kit.config.audit import build_runtime_audit_fields
-from fabricops_kit.config.metadata_schemas import metadata_table_physical_schema, build_metadata_schema, audit_schema_fields
-from fabricops_kit.io.write_lakehouse_table import write_lakehouse_table
 from fabricops_kit.pipeline.shared import dq_tolerance_parameter
-from fabricops_kit.config.shared import metadata_timestamp_sort_key, validate_ai_enrichment, resolve_fabric_context
+from fabricops_kit.config.shared import metadata_timestamp_sort_key
 from fabricops_kit.data_contract.shared import (
+    AIConfigurationError,
+    AIExecutionError,
+    AIProviderError,
+    ai_failure_diagnostic,
+    invoke_fabric_ai,
+    parse_ai_json,
     normalize_guardrail_action,
-    validate_sensitive_data_parameters,
-    sensitive_data_treatments_for_type,
 )
-from fabricops_kit.io.shared import get_spark_session
 
 CATALOGUE_TABLE = "METADATA_DATA_CATALOGUE"
 _PROFILE_CONTEXT_FIELDS = (
@@ -37,7 +28,6 @@ _PROFILE_CONTEXT_FIELDS = (
         "min_value", "percentile_25_value", "median_value",
         "percentile_75_value", "max_value",
 )
-PII_TYPES = frozenset({"direct", "indirect", "none"})
 PII_LABELS = {"direct": "Direct PII", "indirect": "Indirect PII", "none": "Not PII"}
 STANDARD_DQ_TYPES = frozenset({"completeness", "value_set", "range", "pattern"})
 BUSINESS_RULE_TYPES = frozenset({
@@ -82,268 +72,6 @@ def build_ai_enrichment_context(
     }
 
 
-class AIConfigurationError(RuntimeError):
-    """Report an unavailable or incomplete Fabric AI Functions configuration."""
-
-
-class AIProviderError(RuntimeError):
-    """Report a response failure returned by the configured AI provider."""
-
-
-class AIExecutionError(RuntimeError):
-    """Report a local failure while executing a configured AI request."""
-
-
-def ai_failure_diagnostic(exc: Exception) -> dict[str, Any]:
-    """Return a user-safe AI diagnostic while retaining the original exception detail."""
-    details = []
-    current: BaseException | None = exc
-    while current is not None and len(details) < 4:
-        detail = f"{type(current).__name__}: {current}"
-        if detail not in details:
-            details.append(detail)
-        current = current.__cause__
-    if isinstance(exc, (AIConfigurationError, ImportError, ModuleNotFoundError)):
-        return {
-            "category": "configuration",
-            "message": (
-                "AI suggestions are not configured for this notebook. Verify that Fabric AI "
-                "Functions and the required runtime are enabled. Manual editing remains available."
-            ),
-            "recoverable": False,
-            "exception_type": type(exc).__name__,
-            "detail": " <- ".join(details),
-        }
-    if isinstance(exc, AIProviderError):
-        # Only known categories are shown. Never echo arbitrary provider text:
-        # it may contain prompts, identifiers, tokens, URLs or sampled values.
-        raw = str(exc).lower()
-        reason = "Provider rejected the request or returned no usable response."
-        for markers, explanation in (
-            (("temperature", "unsupported_parameter", "invalid_parameter"), "Provider rejected a request parameter; verify Runtime 2.0 settings."),
-            (("capacity", "429", "rate_limit"), "Provider capacity or rate limit was reached; wait and retry."),
-            (("401", "403", "unauthorized", "forbidden", "permission"), "Provider access was denied; check tenant permissions and region eligibility."),
-            (("content_filter", "content filter"), "Provider content filtering blocked the request."),
-            (("empty response", "no result row"), "Provider returned an empty response; retry."),
-        ):
-            if any(marker in raw for marker in markers):
-                reason = explanation
-                break
-        return {
-            "category": "provider",
-            "message": "The AI provider could not return a suggestion. " + reason,
-            "recoverable": True,
-            "exception_type": type(exc).__name__,
-            "detail": " <- ".join(details),
-        }
-    if isinstance(exc, ValueError):
-        return {
-            "category": "validation",
-            "message": "AI returned a suggestion that failed response validation. Retry or edit manually.",
-            "recoverable": True, "exception_type": type(exc).__name__, "detail": " <- ".join(details),
-        }
-    return {
-        "category": "execution",
-        "message": "The AI suggestion could not be generated. Retry, or continue editing manually.",
-        "recoverable": True,
-        "exception_type": type(exc).__name__,
-        "detail": " <- ".join(details),
-    }
-
-
-def _ai_usage_schema() -> Any:
-    """Define the standalone widget telemetry table, outside canonical Metadata setup."""
-    audit = audit_schema_fields()
-    return build_metadata_schema(
-        "AI_TOKEN_USAGE",
-        [
-            ("usage_id", "string", False),
-            ("provider", "string", False),
-            ("operation", "string", False),
-            ("model", "string", False),
-            ("reasoning_effort", "string"),
-            ("verbosity", "string"),
-            ("status", "string", False),
-            ("statistics_status", "string", False),
-            ("started_at", "timestamp", False),
-            ("completed_at", "timestamp", False),
-            ("duration_ms", "long", False),
-            ("workspace_id", "string", False),
-            ("asset_workspace_id", "string"),
-            ("table_id", "string"),
-            ("column_id", "string"),
-            ("contract_id", "string"),
-            ("contract_version", "long"),
-            ("input_tokens", "long"),
-            ("output_tokens", "long"),
-            ("cached_tokens", "long"),
-            ("reasoning_tokens", "long"),
-            ("num_successful", "long"),
-            ("num_exceptions", "long"),
-            ("num_unevaluated", "long"),
-            ("num_harmful", "long"),
-            ("error_type", "string"),
-            ("statistics_json", "string"),
-            *audit,
-        ],
-    )
-
-
-def _persist_ai_usage(record: dict[str, Any], *, spark: Any, runtime_context: dict[str, Any] | None) -> None:
-    """Create or append standalone AI telemetry in the configured lakehouse, without request content."""
-    config, scope, resolved = resolve_fabric_context(context=runtime_context)
-    path_config = config.get("path_config") if isinstance(config, dict) else config.path_config
-    paths = path_config.get("paths", path_config) if isinstance(path_config, dict) else path_config.paths
-    routes = sorted(str(key) for key, stores in paths.items() if "Metadata" in stores)
-    if scope not in routes:
-        if not routes:
-            raise ValueError("AI token usage requires a configured Metadata Lakehouse.")
-        scope = routes[0]
-    resolved.update(config=config, scope_workspace_id=scope, _spark_session=spark)
-    audit = build_runtime_audit_fields(config=config, active_workspace_id=scope, runtime_context=resolved)
-    table = "AI_TOKEN_USAGE"
-    schema = _ai_usage_schema()
-    row = {field.name: None for field in schema.fields}
-    for name in row:
-        if name in record:
-            row[name] = record[name]
-    row.update(audit)
-    row["workspace_id"] = audit["_workspace_id"]
-    metadata = resolved.get("ai_usage_metadata") or {}
-    for name in ("asset_workspace_id", "table_id", "column_id", "contract_id", "contract_version"):
-        row[name] = metadata.get(name)
-    stats = record.get("statistics") or []
-    for name in ("input_tokens", "output_tokens", "cached_tokens", "reasoning_tokens",
-                 "num_successful", "num_exceptions", "num_unevaluated", "num_harmful"):
-        values = [item.get(name) for item in stats]
-        row[name] = sum(values) if values and all(type(value) is int and value >= 0 for value in values) else None
-    row["statistics_json"] = json.dumps(stats, sort_keys=True) if stats else None
-    write_lakehouse_table(
-        spark.createDataFrame([row], schema=schema), table, store="Metadata",
-        schema="misc", mode="append", verbose=False,
-        options={"txnAppId": record["usage_id"], "txnVersion": "0"}, context=resolved,
-    )
-
-
-def _invoke_fabric_ai(
-    prompt: str, *, ai_config: dict[str, Any] | None = None, spark_session: Any = None,
-    runtime_context: dict[str, Any] | None = None,
-    usage: list[dict[str, Any]] | None = None, operation: str = "authoring",
-) -> str:
-    """Invoke Microsoft Fabric PySpark AI Functions without nesting notebook event loops."""
-    settings = validate_ai_enrichment(ai_config)
-    # SynapseML imports legacy generated protobuf services while registering the
-    # Spark AI accessor. Keep this suppression local so other dependency warnings
-    # and import failures remain visible.
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore",
-            message=r"google\.protobuf\.service module is deprecated.*",
-            category=UserWarning,
-        )
-        try:
-            aifunc = importlib.import_module("synapse.ml.spark.aifunc")
-        except (ImportError, ModuleNotFoundError) as exc:
-            raise AIConfigurationError(
-                "Microsoft Fabric PySpark AI Functions are unavailable in this runtime."
-            ) from exc
-    try:
-        # Reapply before every request: other notebook cells can mutate defaults.
-        conf = aifunc.default_conf
-        conf.reset_URL()
-        conf.reset_subscription_key()
-        conf.set_deployment_name(settings["model_deployment_name"])
-        conf.set_reasoning_effort(settings["reasoning_effort"])
-        if settings["verbosity"] is None:
-            conf.reset_verbosity()
-        else:
-            conf.set_verbosity(settings["verbosity"])
-        conf.reset_temperature()
-    except Exception as exc:
-        raise AIConfigurationError("Could not apply Fabric Runtime 2.0 AI Functions settings.") from exc
-    try:
-        spark = spark_session if spark_session is not None else get_spark_session()
-    except (AttributeError, RuntimeError, TypeError, ValueError) as exc:
-        raise AIConfigurationError(
-            "A running Microsoft Fabric Spark session is required for AI suggestions."
-        ) from exc
-    try:
-        frame = spark.createDataFrame([{"fabricops_prompt": prompt}])
-    except Exception as exc:
-        raise AIExecutionError("Could not create the Fabric AI request DataFrame.") from exc
-    ai = getattr(frame, "ai", None)
-    if ai is None or not hasattr(ai, "generate_response"):
-        raise AIConfigurationError(
-            "Microsoft Fabric PySpark AI Functions are unavailable. Run in an enabled Fabric runtime or disable AI Enrichment."
-        )
-    # Persist the one-row result before reading response and stats, so statistics
-    # cannot trigger another billable model execution through Spark lazy evaluation.
-    record = {"operation": operation, "model": settings["model_deployment_name"],
-              "reasoning_effort": settings["reasoning_effort"], "verbosity": settings["verbosity"],
-              "statistics": None, "statistics_status": "unavailable"}
-    if usage is not None:
-        usage.append(record)
-    record.update(usage_id=str(uuid4()), provider="fabric_ai_functions", status="execution_error",
-                  started_at=datetime.now(UTC))
-    started = perf_counter()
-    result = None
-    try:
-        try:
-            with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
-                result = ai.generate_response(
-                    prompt="{fabricops_prompt}", is_prompt_template=True,
-                    output_col="fabricops_response", error_col="fabricops_ai_error",
-                ).persist()
-                rows = result.collect()
-                row = rows[0] if rows else None
-                try:
-                    stats = result.ai.stats.collect()
-                    fields = {"num_successful", "num_exceptions", "num_unevaluated", "num_harmful",
-                              "cached_tokens", "input_tokens", "output_tokens", "reasoning_tokens", "model"}
-                    record["statistics"] = [
-                        {key: value for key, value in item.asDict().items() if key in fields}
-                        for item in stats
-                    ]
-                    record["statistics_status"] = "available" if record["statistics"] else "unavailable"
-                except Exception:
-                    # Telemetry is optional; never hide a successful authoring response.
-                    pass
-        except Exception as exc:
-            raise AIExecutionError("Fabric AI Functions execution failed.") from exc
-        finally:
-            if result is not None:
-                try:
-                    result.unpersist()
-                except Exception:
-                    pass
-        if row is None:
-            raise AIProviderError("Fabric AI Functions returned no result row.")
-        error = row["fabricops_ai_error"]
-        if error:
-            raise AIProviderError(str(error))
-        response = str(row["fabricops_response"] or "").strip()
-        if not response:
-            raise AIProviderError("Fabric AI Functions returned an empty response.")
-        record["status"] = "succeeded"
-        return response
-    except AIProviderError as exc:
-        record.update(status="provider_error", error_type=type(exc).__name__)
-        raise
-    except Exception as exc:
-        record["error_type"] = type(exc).__name__
-        raise
-    finally:
-        record.update(completed_at=datetime.now(UTC), duration_ms=int((perf_counter() - started) * 1000))
-        try:
-            _persist_ai_usage(record, spark=spark, runtime_context=runtime_context)
-            record["persistence_status"] = "saved"
-        except Exception as exc:
-            record.update(persistence_status="unconfirmed", persistence_error_type=type(exc).__name__)
-            logging.getLogger(__name__).warning(
-                "AI token usage write unconfirmed (%s); the AI request will not be replayed.", type(exc).__name__,
-            )
-
-
 def suggest_enrichment(
     context: dict[str, Any],
     *,
@@ -357,7 +85,7 @@ def suggest_enrichment(
     if not str(description_prompt).strip():
         raise AIConfigurationError("An AI Enrichment description prompt is required.")
     call = invoke or partial(
-        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation, runtime_context=runtime_context,
+        invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation, runtime_context=runtime_context,
     )
     context_json = json.dumps(context, sort_keys=True, default=str)
     guidance = ""
@@ -372,225 +100,6 @@ def suggest_enrichment(
         call(f"{description_prompt.strip()}{guidance}\n\nContext:\n{context_json}")
     ).strip()
     return {"Description": description}
-
-
-def build_ai_sensitive_data_context(state: dict[str, Any]) -> dict[str, Any]:
-    """Build approved profile summaries and up to three frequent-value samples."""
-    fields = (
-        "profile_scope", "profiling_max_rows",
-        "row_count", "non_null_count", "null_count", "null_percent",
-        "distinct_count", "distinct_percent", "mean_value", "stddev_value",
-        "min_value", "percentile_25_value", "median_value",
-        "percentile_75_value", "max_value",
-    )
-    columns = []
-    for row in state.get("catalogue_profile_rows", []):
-        frequencies = sorted(
-            (item for item in (row.get("frequency_evidence") or []) if isinstance(item, dict)),
-            key=lambda item: float(item.get("count") or 0), reverse=True,
-        )[:3]
-        columns.append({
-            "column_id": str(row.get("column_id") or ""),
-            "column_name": str(row.get("column_name") or ""),
-            "data_type": str(row.get("data_type") or ""),
-            "description": str(row.get("description") or ""),
-            "classification": str(row.get("classification") or ""),
-            "profile_evidence": {
-                name: row.get(name, (row.get("profile_evidence") or {}).get(name))
-                for name in fields
-                if row.get(name, (row.get("profile_evidence") or {}).get(name)) is not None
-            },
-            "frequency_evidence": [
-                {name: item[name] for name in ("value", "count", "percent") if name in item}
-                for item in frequencies
-            ],
-        })
-    return {
-        "table_id": str(state.get("table_id") or ""),
-        "table_name": str(state.get("table_name") or ""),
-        "schema_name": str(state.get("schema_name") or ""),
-        "layer": str(state.get("layer") or ""),
-        "table_description": str(state.get("table_description") or ""),
-        "table_classification": str(state.get("table_classification") or ""),
-        "contract_id": str(state.get("contract_id") or ""),
-        "contract_version": int(state.get("contract_version") or 0),
-        "classification_levels": dict(state.get("classification_levels") or {}),
-        "classification_order": list(state.get("classification_levels") or {}),
-        "columns": columns,
-    }
-
-
-def _normalize_ai_column_reference(
-    value: Any, allowed_columns: dict[str, str]
-) -> str:
-    """Return a canonical known column name from tolerant AI output."""
-    by_id = {column_id: column_name for column_name, column_id in allowed_columns.items()}
-
-    def from_mapping(mapping: dict[str, Any]) -> str:
-        name = str(mapping.get("column_name") or mapping.get("name") or "").strip()
-        if name in allowed_columns:
-            return name
-        column_id = str(mapping.get("column_id") or "").strip()
-        return by_id.get(column_id, "")
-
-    if isinstance(value, dict):
-        return from_mapping(value)
-
-    text = str(value or "").strip()
-    if text in allowed_columns:
-        return text
-    if text in by_id:
-        return by_id[text]
-    if text.startswith("{") and text.endswith("}"):
-        parsed: Any = None
-        try:
-            parsed = json.loads(text)
-        except json.JSONDecodeError:
-            try:
-                parsed = ast.literal_eval(text)
-            except (SyntaxError, ValueError):
-                parsed = None
-        if isinstance(parsed, dict):
-            return from_mapping(parsed)
-    return ""
-
-
-def _parse_ai_json(raw: str, label: str) -> Any:
-    """Decode structured suggestions consistently without exposing response content."""
-    text = str(raw).strip()
-    if text.startswith("```"):
-        text = text.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError as exc:
-        raise ValueError(f"{label} was not valid JSON.") from exc
-
-
-def suggest_sensitive_data(
-    context: dict[str, Any], *, prompt: str, invoke: Any = None, ai_config: dict[str, Any] | None = None,
-    spark_session: Any = None, runtime_context: dict[str, Any] | None = None,
-    usage: list[dict[str, Any]] | None = None, operation: str = "suggest_sensitive_data"
-) -> list[dict[str, Any]]:
-    """Return validated transient Sensitive Data rule suggestions."""
-    if not str(prompt).strip():
-        raise AIConfigurationError("An AI Sensitive Data prompt is required.")
-    classifications = context.get("classification_levels")
-    if not isinstance(classifications, dict) or not classifications or any(
-        not isinstance(label, str) or not label.strip() or not isinstance(explanation, str) or not explanation.strip()
-        for label, explanation in classifications.items()
-    ):
-        raise AIConfigurationError("Configured classification_levels labels and explanations are required.")
-    allowed_columns = {
-        str(row.get("column_name") or ""): str(row.get("column_id") or "")
-        for row in context.get("columns", [])
-        if str(row.get("column_name") or "") and str(row.get("column_id") or "")
-    }
-    context = build_ai_sensitive_data_context({**context, "catalogue_profile_rows": context.get("columns", [])})
-    instruction = (
-        f"{prompt.strip()}\n\nSuggest advisory Sensitive Data rules using only this metadata context. "
-        "Assess every supplied column as Direct PII, Indirect PII, or Not PII. "
-        "Return JSON only as a list of objects with column, pii_type, reason, treatment, action, parameters, "
-        "output_classification, and classification_reason. "
-        "Choose output_classification from the supplied classification_levels keys using their definitions "
-        "and residual sensitivity after treatment. Explain it in classification_reason. Classification levels "
-        "are ranked from lowest to highest in classification_order. Never assume treatment automatically "
-        "makes data less sensitive. Not PII can still be business-sensitive and requires a classification. "
-        "For remove, output_classification must be null because the column is excluded from output. "
-        "The column field must be the supplied column_name string, not a column object. "
-        "Use pii_type values direct, indirect, or none. For none, treatment must be null, action must be null, "
-        "and parameters must be an empty object. "
-        "Allowed treatments: tokenize, mask, bucket, remove. Action must be Block. "
-        "Bucket is numeric only; Mask is for text or categorical columns. Tokenize works for numeric or categorical identifiers; Remove works for either. "
-        "Use fixed approved ranges, never inferred quantiles. "
-        "Prefer full mask with preserve_start=0, preserve_end=0, mask_character='*'. "
-        "Classification is only an input signal, not an automatic rule. Use the supplied profile summaries and top-three frequent values as evidence. Do not include raw values in the response.\n\n"
-        f"Context:\n{json.dumps(context, sort_keys=True, default=str)}"
-    )
-    call = invoke or partial(
-        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation, runtime_context=runtime_context,
-    )
-    raw = str(call(instruction)).strip()
-    candidates = _parse_ai_json(raw, "AI Sensitive Data suggestion")
-    if not isinstance(candidates, list):
-        raise ValueError("AI Sensitive Data suggestion must be a JSON list.")
-    suggestions = []
-    seen = set()
-    for candidate in candidates:
-        if not isinstance(candidate, dict):
-            raise ValueError("Each AI Sensitive Data suggestion must be a JSON object.")
-        column_ref = candidate.get("column")
-        column_name = _normalize_ai_column_reference(column_ref, allowed_columns)
-        if not column_name:
-            continue
-        if column_name in seen:
-            continue
-        pii_type = str(candidate.get("pii_type") or "").strip().lower()
-        if pii_type not in PII_TYPES:
-            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} has an invalid pii_type.")
-        reason = str(candidate.get("reason") or "").strip()
-        if not reason:
-            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} requires a reason.")
-        if "output_classification" not in candidate:
-            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} requires output_classification.")
-        output_classification = candidate["output_classification"]
-        classification_reason = candidate.get("classification_reason")
-        if not isinstance(classification_reason, str) or not classification_reason.strip():
-            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} requires classification_reason.")
-        classification_reason = classification_reason.strip()
-        if candidate.get("treatment") == "remove":
-            if output_classification is not None:
-                raise ValueError("Removed columns must have null output_classification.")
-        elif not isinstance(output_classification, str) or output_classification not in classifications:
-            raise ValueError(f"AI Sensitive Data suggestion for {column_name!r} has an unconfigured output_classification.")
-        classification = {"output_classification": output_classification, "classification_reason": classification_reason}
-        if pii_type == "none":
-            if candidate.get("treatment") not in (None, "") or candidate.get("action") not in (None, ""):
-                raise ValueError("Not PII suggestions cannot include a treatment or action.")
-            if candidate.get("parameters") not in (None, {}):
-                raise ValueError("Not PII suggestions cannot include treatment parameters.")
-            suggestions.append({
-                "column_name": column_name,
-                "column_id": allowed_columns[column_name],
-                "pii_type": pii_type,
-                "pii_label": PII_LABELS[pii_type],
-                "reason": reason,
-                "treatment": None,
-                "action": None,
-                "parameters": {},
-                "is_active": False,
-                **classification,
-            })
-            seen.add(column_name)
-            continue
-        try:
-            parameters = validate_sensitive_data_parameters({
-                "scope": "column",
-                "treatment": candidate.get("treatment"),
-                **dict(candidate.get("parameters") or {}),
-            })
-            column_type = next(row.get("data_type", "") for row in context["columns"] if row["column_name"] == column_name)
-            if parameters["treatment"] not in sensitive_data_treatments_for_type(column_type):
-                raise ValueError("Treatment does not apply to the column datatype.")
-            normalize_guardrail_action(candidate.get("action"))
-            action = "Block"
-        except (TypeError, ValueError) as exc:
-            raise ValueError(
-                f"AI Sensitive Data suggestion for {column_name!r} is invalid: {exc}"
-            ) from exc
-        suggestions.append({
-            "column_name": column_name,
-            "column_id": allowed_columns[column_name],
-            "pii_type": pii_type,
-            "pii_label": PII_LABELS[pii_type],
-            "reason": reason,
-            "treatment": parameters.pop("treatment"),
-            "action": action,
-            "parameters": {key: value for key, value in parameters.items() if key != "scope"},
-            "is_active": True,
-            **classification,
-        })
-        seen.add(column_name)
-    return suggestions
 
 
 def build_ai_dq_context(state: dict[str, Any]) -> dict[str, Any]:
@@ -671,10 +180,10 @@ Profiled row-key candidate:
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
     call = invoke or partial(
-        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation, runtime_context=runtime_context,
+        invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation, runtime_context=runtime_context,
     )
     raw = str(call(instruction)).strip()
-    candidate = _parse_ai_json(raw, "AI Grain suggestion")
+    candidate = parse_ai_json(raw, "AI Grain suggestion")
     if not isinstance(candidate, dict):
         raise ValueError("AI Grain suggestion must be a JSON object.")
     return {
@@ -706,7 +215,7 @@ Pattern requires a regex only for clearly structured text. Use governed evidence
 
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
-    raw = str((invoke or partial(_invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session,
+    raw = str((invoke or partial(invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session,
                                       runtime_context=runtime_context, usage=usage, operation="suggest_dq_rules"))(instruction)).strip()
     if raw.startswith("```"):
         raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
@@ -908,10 +417,10 @@ Do not force a known pattern when it would weaken, broaden, or otherwise change 
 Context:
 {json.dumps(context, sort_keys=True, default=str)}"""
     call = invoke or partial(
-        _invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation, runtime_context=runtime_context,
+        invoke_fabric_ai, ai_config=ai_config, spark_session=spark_session, usage=usage, operation=operation, runtime_context=runtime_context,
     )
     raw = str(call(instruction)).strip()
-    candidates = _parse_ai_json(raw, "AI DQ Rule proposal")
+    candidates = parse_ai_json(raw, "AI DQ Rule proposal")
     if not isinstance(candidates, list) or not candidates:
         raise ValueError("AI DQ Rule proposal must be a non-empty JSON array.")
 
@@ -1209,8 +718,5 @@ __all__ = [
     "suggest_enrichment",
     "suggest_dq_rules",
     "suggest_business_rule",
-    "build_ai_sensitive_data_context",
-    "suggest_sensitive_data",
     "PII_LABELS",
-    "PII_TYPES",
 ]

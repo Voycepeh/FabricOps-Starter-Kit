@@ -93,7 +93,8 @@ def profile_table(
         ``frequency_profile`` contains the applicable canonical frequency
         Spark DataFrame, or ``None`` when no columns were selected. Governed
         ``profile`` rows additionally contain persisted snapshot identities
-        and audit fields.
+        and audit fields. ``profile_scope`` and ``assessment_reference`` identify
+        the coverage and subject for Data Sensitivity Assessment.
 
     Notes
     -----

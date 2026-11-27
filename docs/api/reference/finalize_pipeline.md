@@ -161,7 +161,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 138 |
+| Live-critical dependencies | 139 |
 
 ### Release history
 
@@ -211,6 +211,7 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.review_submission_policy</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.reviewed_contracts</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_activation_contract_payload</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_activations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_approvals</code></li>

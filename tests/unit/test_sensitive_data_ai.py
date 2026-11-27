@@ -1,263 +1,12 @@
-"""Focused validation tests for advisory Sensitive Data AI suggestions."""
+"""Exercise the shared Fabric AI invocation in notebook runtimes."""
 
 from __future__ import annotations
 
-import json
 import warnings
 
 import pytest
 
-from fabricops_kit.widgets import enrichment_shared as module
-
-
-def _context() -> dict:
-    return {
-        "table_id": "customers",
-        "table_name": "customers",
-        "classification_levels": {"Public": "Approved for external sharing", "Restricted": "Internal use", "Confidential": "Sensitive business or personal data"},
-        "columns": [
-            {"column_id": "email-id", "column_name": "EMAIL", "data_type": "string"},
-            {"column_id": "postal-id", "column_name": "POSTAL_CODE", "data_type": "long"},
-            {"column_id": "total-id", "column_name": "ORDER_TOTAL", "data_type": "decimal"},
-        ],
-    }
-
-
-def _invoke(payload):
-    if isinstance(payload, list):
-        payload = [{"output_classification": None if item.get("treatment") == "remove" else "Restricted",
-                    "classification_reason": "The output meets the internal-use policy.", **item}
-                   if isinstance(item, dict) else item for item in payload]
-    return lambda _prompt: json.dumps(payload)
-
-
-def test_custom_classification_definitions_and_rank_reach_ai_unchanged():
-    """Custom policy meanings and the explicit rank survive JSON serialization."""
-    context = _context()
-    context["classification_levels"] = {"Open": "External sharing", "Team": "Approved internal users", "Secret": "Strictly limited"}
-    prompts = []
-    candidate = {"column": "EMAIL", "pii_type": "direct", "reason": "Identifies a person.",
-                 "treatment": "tokenize", "action": "Block", "parameters": {},
-                 "output_classification": "Team", "classification_reason": "Tokenized output still has internal business sensitivity."}
-    result = module.suggest_sensitive_data(context, prompt="Our policy", invoke=lambda prompt: prompts.append(prompt) or json.dumps([candidate]))
-    supplied = json.loads(prompts[0].split("Context:\n", 1)[1])
-    assert supplied["classification_levels"] == context["classification_levels"]
-    assert supplied["classification_order"] == ["Open", "Team", "Secret"]
-    assert result[0]["output_classification"] == "Team"
-    assert result[0]["classification_reason"] == candidate["classification_reason"]
-
-
-@pytest.mark.parametrize("label", [None, "", "Unconfigured", {"label": "Restricted"}])
-def test_ai_cannot_introduce_unconfigured_output_classifications(label):
-    """A usable treatment does not make an invented classification acceptable."""
-    candidate = {"column": "EMAIL", "pii_type": "direct", "reason": "Identifies a person.",
-                 "treatment": "tokenize", "action": "Block", "parameters": {},
-                 "output_classification": label, "classification_reason": "Internal business data."}
-    with pytest.raises(ValueError, match="output_classification"):
-        module.suggest_sensitive_data(_context(), prompt="Policy", invoke=lambda _: json.dumps([candidate]))
-
-
-def test_ai_requires_a_classification_rationale_and_handles_business_sensitivity():
-    """Not PII still needs a governed output label and an explanation."""
-    candidate = {"column": "ORDER_TOTAL", "pii_type": "none", "reason": "No identifying information.",
-                 "treatment": None, "action": None, "parameters": {}, "output_classification": "Confidential"}
-    with pytest.raises(ValueError, match="classification_reason"):
-        module.suggest_sensitive_data(_context(), prompt="Policy", invoke=lambda _: json.dumps([candidate]))
-    candidate["classification_reason"] = "Commercially sensitive sales figures."
-    result = module.suggest_sensitive_data(_context(), prompt="Policy", invoke=lambda _: json.dumps([candidate]))
-    assert result[0]["output_classification"] == "Confidential"
-    assert result[0]["is_active"] is False
-
-
-def test_removal_has_no_output_classification_and_definitions_are_required_before_invocation():
-    """Removed values are not reclassified; unconfigured classification requests never invoke AI."""
-    candidate = {"column": "EMAIL", "pii_type": "direct", "reason": "Identifies a person.",
-                 "treatment": "remove", "action": "Block", "parameters": {},
-                 "output_classification": None, "classification_reason": "No column is written."}
-    result = module.suggest_sensitive_data(_context(), prompt="Policy", invoke=lambda _: json.dumps([candidate]))
-    assert result[0]["output_classification"] is None
-    candidate["output_classification"] = "Public"
-    with pytest.raises(ValueError, match="null output_classification"):
-        module.suggest_sensitive_data(_context(), prompt="Policy", invoke=lambda _: json.dumps([candidate]))
-    with pytest.raises(module.AIConfigurationError, match="classification_levels"):
-        module.suggest_sensitive_data({**_context(), "classification_levels": {}}, prompt="Policy", invoke=lambda _: pytest.fail("Must not invoke AI"))
-
-
-def test_direct_indirect_and_not_pii_suggestions_are_reviewable():
-    """Retain all three supported PII assessments for human review."""
-    suggestions = module.suggest_sensitive_data(
-        _context(), prompt="configured prompt", invoke=_invoke([
-            {"column": "EMAIL", "pii_type": "direct", "reason": "Can contact a person.",
-             "treatment": "mask", "action": "Block",
-             "parameters": {"preserve_start": 0, "preserve_end": 0, "mask_character": "*"}},
-            {"column": "POSTAL_CODE", "pii_type": "indirect", "reason": "Narrows location.",
-             "treatment": "bucket", "action": "Warn",
-             "parameters": {"bins": [0, 10000, 20000], "labels": ["A", "B", "C"]}},
-            {"column": "ORDER_TOTAL", "pii_type": "none", "reason": "No identifying basis.",
-             "treatment": None, "action": None, "parameters": {}},
-        ]),
-    )
-    assert [item["pii_type"] for item in suggestions] == ["direct", "indirect", "none"]
-    assert suggestions[0]["treatment"] == "mask"
-    assert suggestions[1]["treatment"] == "bucket"
-    assert suggestions[2]["is_active"] is False
-
-
-@pytest.mark.parametrize("treatment", ["tokenize", "mask", "remove"])
-def test_supported_non_bucket_treatments(treatment):
-    """Accept each non-bucket treatment through canonical validation."""
-    parameters = (
-        {"preserve_start": 0, "preserve_end": 0, "mask_character": "*"}
-        if treatment == "mask" else {}
-    )
-    result = module.suggest_sensitive_data(
-        _context(), prompt="configured", invoke=_invoke([{
-            "column": "EMAIL", "pii_type": "direct", "reason": "Identifying.",
-            "treatment": treatment, "action": "Warn", "parameters": parameters,
-        }]),
-    )
-    assert result[0]["treatment"] == treatment
-
-
-@pytest.mark.parametrize(
-    ("field", "value", "message"),
-    [
-        ("pii_type", "possible", "invalid pii_type"),
-        ("treatment", "hash", "invalid"),
-        ("action", "Approve", "invalid"),
-    ],
-)
-def test_invalid_suggestion_fields_are_rejected(field, value, message):
-    """Reject unsupported assessment, treatment, and action values."""
-    candidate = {"column": "EMAIL", "pii_type": "direct", "reason": "Identifying.",
-                 "treatment": "mask", "action": "Block",
-                 "parameters": {"preserve_start": 0, "preserve_end": 0, "mask_character": "*"}}
-    candidate[field] = value
-    with pytest.raises(ValueError, match=message):
-        module.suggest_sensitive_data(_context(), prompt="configured", invoke=_invoke([candidate]))
-
-
-def test_unknown_column_suggestion_is_ignored():
-    """Ignore model output that does not reference a governed column."""
-    candidate = {
-        "column": "MISSING",
-        "pii_type": "direct",
-        "reason": "Invented column.",
-        "treatment": "mask",
-        "action": "Block",
-        "parameters": {"preserve_start": 0, "preserve_end": 0, "mask_character": "*"},
-    }
-
-    result = module.suggest_sensitive_data(
-        _context(), prompt="configured", invoke=_invoke([candidate])
-    )
-
-    assert result == []
-
-
-def test_nested_column_context_is_normalized_to_known_column():
-    """Accept a known column when the model echoes the supplied column object."""
-    candidate = {
-        "column": {
-            "column_id": "email-id",
-            "column_name": "EMAIL",
-            "data_type": "string",
-            "description": "Email address",
-            "profile_evidence": {"row_count": 120},
-        },
-        "pii_type": "direct",
-        "reason": "Can contact a person.",
-        "treatment": "mask",
-        "action": "Block",
-        "parameters": {"preserve_start": 0, "preserve_end": 0, "mask_character": "*"},
-    }
-
-    result = module.suggest_sensitive_data(
-        _context(), prompt="configured", invoke=_invoke([candidate])
-    )
-
-    assert result[0]["column_name"] == "EMAIL"
-
-
-def test_stringified_column_context_is_normalized_to_known_column():
-    """Accept Fabric AI output that stringifies the supplied column object."""
-    column = {
-        "classification": "",
-        "column_id": "email-id",
-        "column_name": "EMAIL",
-        "data_type": "string",
-        "description": "Email address",
-        "profile_evidence": {"row_count": 120},
-    }
-    candidate = {
-        "column": str(column),
-        "pii_type": "direct",
-        "reason": "Can contact a person.",
-        "treatment": "mask",
-        "action": "Block",
-        "parameters": {"preserve_start": 0, "preserve_end": 0, "mask_character": "*"},
-    }
-
-    result = module.suggest_sensitive_data(
-        _context(), prompt="configured", invoke=_invoke([candidate])
-    )
-
-    assert result[0]["column_name"] == "EMAIL"
-
-
-def test_invalid_treatment_parameters_are_rejected():
-    """Apply canonical Sensitive Data parameter validation to AI output."""
-    candidate = {"column": "POSTAL_CODE", "pii_type": "indirect", "reason": "Location.",
-                 "treatment": "bucket", "action": "Warn", "parameters": {"bins": [1]}}
-    with pytest.raises(ValueError, match="invalid"):
-        module.suggest_sensitive_data(_context(), prompt="configured", invoke=_invoke([candidate]))
-
-
-def test_assessment_metadata_uses_canonical_sensitive_data_validation():
-    """Retain only validated review rationale in Sensitive Data parameters."""
-    validated = module.validate_sensitive_data_parameters({
-        "scope": "column", "treatment": "remove", "pii_type": "indirect",
-        "pii_reason": "A quasi-identifier when combined with other attributes.",
-    })
-    assert validated["pii_type"] == "indirect"
-    assert validated["pii_reason"].startswith("A quasi-identifier")
-    with pytest.raises(ValueError, match="pii_type"):
-        module.validate_sensitive_data_parameters({
-            "scope": "column", "treatment": "remove", "pii_type": "none",
-            "pii_reason": "Not identifying.",
-        })
-
-
-def test_duplicate_columns_use_first_valid_suggestion():
-    """Resolve duplicate suggestions deterministically by keeping the first."""
-    candidate = {"column": "EMAIL", "pii_type": "direct", "reason": "First.",
-                 "treatment": "mask", "action": "Block",
-                 "parameters": {"preserve_start": 0, "preserve_end": 0, "mask_character": "*"}}
-    duplicate = {**candidate, "reason": "Second.", "treatment": "remove"}
-    result = module.suggest_sensitive_data(
-        _context(), prompt="configured", invoke=_invoke([candidate, duplicate])
-    )
-    assert len(result) == 1
-    assert result[0]["reason"] == "First."
-
-
-def test_malformed_json_and_non_list_are_rejected():
-    """Reject malformed and incorrectly shaped model responses."""
-    with pytest.raises(ValueError, match="not valid JSON"):
-        module.suggest_sensitive_data(_context(), prompt="configured", invoke=lambda _prompt: "{")
-    with pytest.raises(ValueError, match="JSON list"):
-        module.suggest_sensitive_data(_context(), prompt="configured", invoke=_invoke({}))
-
-
-def test_configured_prompt_and_metadata_only_context_are_sent():
-    """Include the editable configured prompt and constrained instructions."""
-    prompts = []
-    module.suggest_sensitive_data(
-        _context(), prompt="MY EDITABLE PROMPT", invoke=lambda prompt: prompts.append(prompt) or "[]"
-    )
-    assert "MY EDITABLE PROMPT" in prompts[0]
-    assert "Direct PII" in prompts[0]
-    assert "Do not include raw values" in prompts[0]
+from fabricops_kit.data_contract import shared as module
 
 
 def _aifunc():
@@ -319,7 +68,7 @@ def test_fabric_ai_invocation_uses_spark_accessor_and_returns_response(monkeypat
     monkeypatch.setattr(module.importlib, "import_module", fake_import)
     monkeypatch.setattr(module, "get_spark_session", lambda: _spark_ai_runtime(calls))
 
-    assert module._invoke_fabric_ai("prompt text") == "generated response"
+    assert module.invoke_fabric_ai("prompt text") == "generated response"
     assert calls[0] == ("import", "synapse.ml.spark.aifunc")
     assert calls[1] == ("createDataFrame", [{"fabricops_prompt": "prompt text"}])
     assert calls[2] == ("generate_response", {
@@ -346,7 +95,7 @@ def test_fabric_ai_suppresses_only_synapseml_protobuf_service_warning(monkeypatc
     monkeypatch.setattr(module, "get_spark_session", lambda: _spark_ai_runtime(calls))
     with warnings.catch_warnings(record=True) as captured:
         warnings.simplefilter("always")
-        assert module._invoke_fabric_ai("prompt") == "generated response"
+        assert module.invoke_fabric_ai("prompt") == "generated response"
 
     assert [str(item.message) for item in captured] == [
         "another SynapseML dependency warning"
@@ -362,7 +111,7 @@ def test_fabric_ai_keeps_synapseml_import_failures_visible(monkeypatch):
 
     monkeypatch.setattr(module.importlib, "import_module", fail_import)
     with pytest.raises(module.AIConfigurationError, match="PySpark AI Functions"):
-        module._invoke_fabric_ai("prompt")
+        module.invoke_fabric_ai("prompt")
 
 
 def test_fabric_ai_unavailable_has_clear_failure(monkeypatch):
@@ -379,7 +128,7 @@ def test_fabric_ai_unavailable_has_clear_failure(monkeypatch):
     spark = type("Spark", (), {"createDataFrame": lambda *_args: Frame()})()
     monkeypatch.setattr(module, "get_spark_session", lambda: spark)
     with pytest.raises(RuntimeError, match="AI Functions are unavailable"):
-        module._invoke_fabric_ai("prompt")
+        module.invoke_fabric_ai("prompt")
 
 
 def test_fabric_ai_invocation_works_while_notebook_event_loop_is_running(monkeypatch):
@@ -392,77 +141,22 @@ def test_fabric_ai_invocation_works_while_notebook_event_loop_is_running(monkeyp
 
     async def invoke_from_notebook_loop():
         assert asyncio.get_running_loop().is_running()
-        return module._invoke_fabric_ai("prompt")
+        return module.invoke_fabric_ai("prompt")
 
     assert asyncio.run(invoke_from_notebook_loop()) == "generated response"
 
 
-def test_fabric_ai_provider_error_retains_diagnostic(monkeypatch):
-    """Provider failures remain debuggable while the user receives safe guidance."""
+def test_fabric_ai_assessment_provider_error_drops_provider_input(monkeypatch):
+    """The assessment operation excludes the provider's raw error from diagnostics."""
     calls = []
     monkeypatch.setattr(module.importlib, "import_module", lambda _name: _aifunc())
     monkeypatch.setattr(
         module, "get_spark_session",
         lambda: _spark_ai_runtime(calls, response=None, error="capacity unavailable"),
     )
-    with pytest.raises(module.AIProviderError, match="capacity unavailable") as failure:
-        module._invoke_fabric_ai("prompt")
+    with pytest.raises(module.AIProviderError, match="provider error") as failure:
+        module.invoke_fabric_ai("prompt", operation="sensitivity_assessment")
     diagnostic = module.ai_failure_diagnostic(failure.value)
     assert diagnostic["category"] == "provider"
     assert diagnostic["recoverable"] is True
-    assert "capacity unavailable" in diagnostic["detail"]
-
-
-def test_sensitive_context_and_prompt_include_approved_profile_samples():
-    """Share summaries and only the three most frequent values, not full rows."""
-    evidence = {**_context()['columns'][0], 'min_value': 'min@example.test',
-                'max_value': 'max@example.test', 'sample': 'unapproved-source-row',
-                'frequency_evidence': [
-                    {'value': 'fourth', 'count': 1},
-                    {'value': 'second', 'count': 20, 'percent': 20.0, 'extra': 'unapproved-extra'},
-                    {'value': 'first', 'count': 30},
-                    {'value': 'third', 'count': 10},
-                ],
-                'profile_evidence': {'row_count': 100, 'null_count': 2}}
-    built = module.build_ai_sensitive_data_context({**_context(), 'catalogue_profile_rows': [evidence]})
-    column = built['columns'][0]
-    assert column['profile_evidence'] == {'row_count': 100, 'null_count': 2,
-                                        'min_value': 'min@example.test', 'max_value': 'max@example.test'}
-    assert [item['value'] for item in column['frequency_evidence']] == ['first', 'second', 'third']
-    assert column['frequency_evidence'][1]['percent'] == 20.0
-    prompts = []
-    module.suggest_sensitive_data(built, prompt='Policy', invoke=lambda prompt: prompts.append(prompt) or '[]')
-    assert 'min@example.test' in prompts[0] and 'max@example.test' in prompts[0]
-    assert all(value in prompts[0] for value in ('first', 'second', 'third'))
-    assert 'fourth' not in prompts[0] and 'unapproved-' not in prompts[0]
-
-
-def test_nested_profile_extrema_survive_context_rebuilding():
-    """The invocation boundary preserves approved metadata already normalized by the widget."""
-    built = module.build_ai_sensitive_data_context({'catalogue_profile_rows': [
-        {**_context()['columns'][0], 'profile_evidence': {'min_value': 'A', 'max_value': 'Z'}}
-    ]})
-    rebuilt = module.build_ai_sensitive_data_context({'catalogue_profile_rows': built['columns']})
-    assert rebuilt['columns'][0]['profile_evidence'] == {'min_value': 'A', 'max_value': 'Z'}
-
-
-def test_sensitive_suggestions_always_use_block():
-    """Older model output cannot reintroduce a Warn policy into the editor."""
-    result = module.suggest_sensitive_data(_context(), prompt='Policy', invoke=_invoke([{
-        'column': 'EMAIL', 'pii_type': 'direct', 'reason': 'Identifies a person',
-        'treatment': 'remove', 'action': 'Warn', 'parameters': {},
-    }]))
-    assert result[0]['action'] == 'Block'
-
-
-@pytest.mark.parametrize('column,treatment,parameters', [
-    ('EMAIL', 'bucket', {'bins': [0, 10], 'labels': ['low', 'high']}),
-    ('POSTAL_CODE', 'mask', {'preserve_start': 0, 'preserve_end': 0, 'mask_character': '*'}),
-])
-def test_ai_rejects_treatments_incompatible_with_datatype(column, treatment, parameters):
-    """Reject unusable suggestions before the editor can offer acceptance."""
-    with pytest.raises(ValueError, match='datatype'):
-        module.suggest_sensitive_data(_context(), prompt='Policy', invoke=_invoke([{
-            'column': column, 'pii_type': 'direct', 'reason': 'Identifies an entity',
-            'treatment': treatment, 'action': 'Block', 'parameters': parameters,
-        }]))
+    assert "capacity unavailable" not in diagnostic["detail"]

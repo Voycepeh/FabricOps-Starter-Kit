@@ -126,6 +126,8 @@ Open **Table** and review:
 * Grain & Row Key — describe one row and select the actual table key: `order_id` for Orders/Curated Orders, `product_id` for Products, `historical_order_id` for Order History, and `customer_id` for Customer Summary. Leave **Enforce Grain** off for the main DQ exercise; Step 4 adds a focused Grain check separately.
 * Freshness, when applicable
 
+In **Columns**, choose **Data Sensitivity Assessment** for one column or all columns. Assessment uses the draft definitions and available profile and lineage evidence. Review the result before recording a classification. Choose a lower target explicitly to request treatment recommendations.
+
 Use AI suggestions where useful, then review them before applying. Profile statistics are evidence only; they do not become contract requirements unless Governance authors a rule from them.
 
 ### Grain enforcement and the orchestration sidebar

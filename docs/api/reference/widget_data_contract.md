@@ -153,12 +153,9 @@ Missing AI configuration disables AI actions for the widget session while
 manual authoring remains available. Execution and provider failures show a
 retryable message. Technical failure details are retained in the returned
 state rather than shown in the editor.
-When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,
-Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or
-Not PII from governed metadata and profile evidence. Editable draft state remains
-separate until Governance accepts a suggestion. Manual Description or Classification
-edits mark dependent advice stale for explicit re-run. AI never saves, freezes,
-activates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.
+Data Sensitivity Assessment uses current draft descriptions and existing governed
+evidence. AI assistance is optional. Explicitly stage a reviewed treatment in the
+draft editor and use the existing save, freeze, and activation workflow.
 Sensitive Data offers Mask for categorical/text columns, Bucket for numeric
 columns, and Tokenize/Remove for either. Dates offer Tokenize/Remove; complex
 types offer Remove. Text defaults to full masking; partial preservation is optional.
@@ -196,9 +193,9 @@ No related guides documented.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/widgets/widget_data_contract.py:1012`
+`fabricops_kit/widgets/widget_data_contract.py:1011`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1012-L7526">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/widgets/widget_data_contract.py#L1011-L7503">View on GitHub</a>
 </div>
 
 
