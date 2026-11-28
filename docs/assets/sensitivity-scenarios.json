@@ -44,7 +44,8 @@
   {
     "id": "C07",
     "title": "Email-shaped value of unknown business use",
-    "profile": {"COLUMN_NAME": "email", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": "person@example.org", "profile_scope": "full_table"},
+    "csv": "email\nalex.tan@example.org\nmira.lee@example.org\nsam.ong@example.org\n",
+    "columnOnly": true,
     "definitions": {},
     "expected": {"classification": null, "handling": "Confidential"}
   },
@@ -254,7 +255,7 @@
   {
     "id": "T04",
     "title": "Staff number linked to employment salary band",
-    "profile": {"profile": [{"COLUMN_NAME": "staff_number", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "salary_band", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "csv": "staff_number,salary_band\nST-1042,\"3,500–4,499\"\nST-1087,\"4,500–5,499\"\nST-1163,\"5,500–6,499\"\n",
     "definitions": {"staff_number": {"category": "institutional_identifier"}, "salary_band": {"category": "deidentified_employment_statistics"}},
     "expected": {"classification": "Confidential", "handling": "Confidential"},
     "sensitiveLinkage": true
@@ -315,7 +316,8 @@
   {
     "id": "T12",
     "title": "Sample with a release tag but unknown remaining coverage",
-    "profile": {"profile": [{"COLUMN_NAME": "public_title", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "bounded_selection"},
+    "csv": "public_title\nCampus map\nLibrary hours\nVisitor guide\n",
+    "profileScope": "bounded_selection",
     "definitions": {"public_title": {"category": "authorised_public_release"}},
     "expected": {"classification": null, "handling": "Restricted"}
   },

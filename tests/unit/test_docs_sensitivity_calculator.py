@@ -1,7 +1,10 @@
 """Check the browser file and policy inputs against the FabricOps engine."""
 
+import csv
+import io
 import json
 from pathlib import Path
+from xml.etree import ElementTree
 
 import pytest
 
@@ -9,19 +12,25 @@ from docs._tools.sensitivity_calculator import handle_message
 from fabricops_kit import GovernanceConfig, assess_data_sensitivity
 
 
-SCENARIOS = json.loads(
-    (Path(__file__).resolve().parents[2] / "docs" / "assets" / "sensitivity-scenarios.json").read_text()
-)
+ASSETS = Path(__file__).resolve().parents[2] / "docs" / "assets"
+SCENARIOS = json.loads((ASSETS / "sensitivity-scenarios.json").read_text())
 
 
 def _message(**request):
     return json.loads(handle_message(json.dumps(request)))
 
 
+def _load_scenario(case):
+    if "csv" in case:
+        return _message(action="dataset", text=case["csv"], columnOnly=case.get("columnOnly", False),
+                        profileScope=case.get("profileScope", "full_table"))
+    return _message(action="load", text=json.dumps(case["profile"]))
+
+
 def test_applied_policy_replaces_the_default_assessment():
     """Apply one policy at a time to the same profile and definitions."""
     scenario = next(case for case in SCENARIOS if case["id"] == "T04")
-    loaded = _message(action="load", text=json.dumps(scenario["profile"]), csv=False)
+    loaded = _load_scenario(scenario)
     request = {"action": "assess", "profile": loaded["profile"], "definitions": scenario["definitions"],
                "sensitiveLinkage": scenario["sensitiveLinkage"]}
     default = _message(**request, policy=json.dumps(loaded["defaultPolicy"]))
@@ -149,7 +158,7 @@ def test_library_includes_each_validation_case_and_all_default_categories():
 @pytest.mark.parametrize("case", SCENARIOS, ids=[case["id"] for case in SCENARIOS])
 def test_selectable_scenario_matches_browser_result(case):
     """Check each shipped profile with the same calculator entry points as the page."""
-    loaded = _message(action="load", text=json.dumps(case["profile"]), csv=False)
+    loaded = _load_scenario(case)
     result = _message(action="assess", profile=loaded["profile"], definitions=case["definitions"],
                       policy=json.dumps(loaded["defaultPolicy"]), sensitiveLinkage=case.get("sensitiveLinkage"))
     assert result["classification"] == case["expected"]["classification"]
@@ -169,3 +178,21 @@ def test_scenario_spark_reference_matches_fabricops(case, spark_session):
     )
     assert result["classification"] == spark["expected"]["classification"]
     assert result["minimum_handling_classification"] == spark["expected"]["handling"]
+
+
+@pytest.mark.parametrize(("case_id", "image"), [
+    ("C07", "email-signal.svg"),
+    ("T04", "linked-salary.svg"),
+    ("T12", "public-sample.svg"),
+])
+def test_showcase_rows_match_the_assessed_csv(case_id, image):
+    """Render the same synthetic values the calculator profiles for each featured example."""
+    case = next(case for case in SCENARIOS if case["id"] == case_id)
+    rows = list(csv.reader(io.StringIO(case["csv"])))
+    drawing = ElementTree.parse(ASSETS / "sensitivity" / image).getroot()
+    labels = {label.text for label in drawing.iter("{http://www.w3.org/2000/svg}text")}
+    assert {value for row in rows[1:] for value in row} <= labels
+    loaded = _load_scenario(case)
+    assert loaded["columnOnly"] is case.get("columnOnly", False)
+    assert all(column["row_count"] == len(rows) - 1 for column in loaded["columns"])
+    assert json.loads(loaded["profile"])["profile_scope"] == case.get("profileScope", "full_table")

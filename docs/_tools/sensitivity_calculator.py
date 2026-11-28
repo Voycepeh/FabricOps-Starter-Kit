@@ -208,6 +208,14 @@ def handle_message(request_json):
         definitions = {}
         if action == "dataset":
             payload, definitions = _dataset_profile(request["text"])
+            scope = request.get("profileScope", "full_table")
+            if scope not in {"full_table", "bounded_selection"}:
+                raise ValueError("CSV assessment scope must be a full table or a bounded selection.")
+            if request.get("columnOnly"):
+                if len(payload["profile"]) != 1:
+                    raise ValueError("A column assessment requires exactly one column.")
+                payload = {**payload, "kind": "column", "profile": payload["profile"][0]}
+            payload["profile_scope"] = scope
         else:
             payload = json.loads(request["text"])
             if isinstance(payload, list):

@@ -134,6 +134,8 @@
     const inputs = root.querySelector("[data-calculator-inputs]");
     const fields = root.querySelector("[data-column-fields]");
     const profileName = root.querySelector("[data-profile-name]");
+    const sampleData = root.querySelector("[data-sample-data]");
+    const sampleCSV = sampleData.querySelector("code");
     const policy = root.querySelector("[data-policy]");
     const apply = root.querySelector("[data-apply]");
     const reset = root.querySelector("[data-reset]");
@@ -258,10 +260,10 @@
     async function loadProfile({ upload, scenario }) {
       await perform(upload ? "Profiling the CSV and starting the calculator…" : "Loading scenario…", async () => {
         if (upload?.size > 2 * 1024 * 1024) throw new Error("Choose a CSV file up to 2 MB.");
-        const data = await send({
-          action: upload ? "dataset" : "load",
-          text: upload ? await upload.text() : JSON.stringify(scenario.profile),
-        });
+        const csv = upload ? await upload.text() : scenario.csv;
+        const data = await send(csv !== undefined ? {
+          action: "dataset", text: csv, profileScope: scenario?.profileScope, columnOnly: scenario?.columnOnly,
+        } : { action: "load", text: JSON.stringify(scenario.profile) });
         profile = data.profile;
         defaultPolicy ??= data.defaultPolicy;
         if (!currentPolicy) restoreDefaultPolicy();
@@ -271,6 +273,8 @@
         inputs.hidden = false;
         results.hidden = true;
         profileName.textContent = upload ? upload.name : scenario.title;
+        sampleData.hidden = !scenario?.csv;
+        sampleCSV.textContent = scenario?.csv ?? "";
         sparkReference.hidden = !scenario?.spark;
         if (scenario?.spark) {
           const { classification, handling } = scenario.spark.expected;

@@ -8,57 +8,68 @@ Upload a CSV dataset for a suggested classification and personal data (PII) asse
 
 <div class="sensitivity-calculator" data-sensitivity-calculator>
   <form>
-    <div class="sensitivity-calculator__actions">
-      <label for="sensitivity-dataset-file">Upload a CSV dataset
-        <input id="sensitivity-dataset-file" type="file" accept=".csv,text/csv" aria-describedby="sensitivity-file-help" data-dataset-file>
-      </label>
-    </div>
-    <small id="sensitivity-file-help">Use a UTF-8 CSV with a header row, up to 2 MB and 500 columns.</small>
-    <div class="sensitivity-calculator__scenario-picker">
-      <label for="sensitivity-scenario">Try a scenario
-        <select id="sensitivity-scenario" data-scenario aria-describedby="sensitivity-scenario-help" disabled>
-          <option value="">Loading scenarios…</option>
-        </select>
-      </label>
-      <button type="button" class="md-button" data-load-scenario disabled>Load and assess</button>
-    </div>
-    <small id="sensitivity-scenario-help">Scenarios cover single columns, datasets, and Spark group-size checks.</small>
-    <section class="sensitivity-calculator__showcase" aria-labelledby="sensitivity-showcase-title" aria-roledescription="carousel" data-scenario-showcase>
-      <h3 id="sensitivity-showcase-title">Examples under the default policy</h3>
-      <figure data-slide>
-        <img src="../../assets/sensitivity/email-signal.svg" width="720" height="288" alt="Suggested handling is Confidential. Review the business use of the email-shaped value, which flags possible PII.">
-        <figcaption>
-          <strong>A value pattern can raise handling</strong>
-          <p>The email format supplies a PII signal while its business use is still unknown.</p>
-        </figcaption>
-        <button type="button" class="md-button" data-showcase-scenario="C07" hidden>Try email example</button>
-      </figure>
-      <figure data-slide hidden>
-        <img src="../../assets/sensitivity/linked-salary.svg" width="720" height="288" loading="lazy" alt="A staff number and a salary band are each Restricted. Confirmed linkage makes the dataset Confidential.">
-        <figcaption>
-          <strong>Linkage can raise the dataset classification</strong>
-          <p>The staff number makes the salary band attributable to an individual.</p>
-        </figcaption>
-        <button type="button" class="md-button" data-showcase-scenario="T04" hidden>Try linkage example</button>
-      </figure>
-      <figure data-slide hidden>
-        <img src="../../assets/sensitivity/public-sample.svg" width="720" height="288" loading="lazy" alt="Suggested dataset handling is Restricted. The sampled public title is Unclassified. Review coverage of the full dataset.">
-        <figcaption>
-          <strong>A public sample only covers the rows assessed</strong>
-          <p>Keep Restricted handling until you confirm coverage of the full dataset.</p>
-        </figcaption>
-        <button type="button" class="md-button" data-showcase-scenario="T12" hidden>Try sampled data example</button>
-      </figure>
-      <div class="sensitivity-calculator__showcase-nav" data-showcase-nav hidden>
-        <button type="button" class="md-button" aria-label="Previous example" data-showcase-previous>Previous</button>
-        <span aria-live="polite" aria-atomic="true" data-showcase-position>1 of 3</span>
-        <button type="button" class="md-button" aria-label="Next example" data-showcase-next>Next</button>
+    <div class="sensitivity-calculator__source-options">
+      <div>
+        <label for="sensitivity-dataset-file">Upload a CSV dataset
+          <input id="sensitivity-dataset-file" type="file" accept=".csv,text/csv" aria-describedby="sensitivity-file-help" data-dataset-file>
+        </label>
+        <small id="sensitivity-file-help">UTF-8 CSV with headers, up to 2 MB and 500 columns.</small>
       </div>
+      <div>
+        <div class="sensitivity-calculator__scenario-picker">
+          <label for="sensitivity-scenario">Try a scenario
+            <select id="sensitivity-scenario" data-scenario aria-describedby="sensitivity-scenario-help" disabled>
+              <option value="">Loading scenarios…</option>
+            </select>
+          </label>
+          <button type="button" class="md-button" data-load-scenario disabled>Load and assess</button>
+        </div>
+        <small id="sensitivity-scenario-help">53 column, dataset, and Spark scenarios.</small>
+      </div>
+    </div>
+    <section class="sensitivity-calculator__showcase" aria-labelledby="sensitivity-showcase-title" aria-roledescription="carousel" data-scenario-showcase>
+      <div class="sensitivity-calculator__showcase-header">
+        <h3 id="sensitivity-showcase-title">Examples under the default policy</h3>
+        <div class="sensitivity-calculator__showcase-nav" data-showcase-nav hidden>
+          <button type="button" class="md-button" aria-label="Previous example" data-showcase-previous>Previous</button>
+          <span aria-live="polite" aria-atomic="true" data-showcase-position>1 of 3</span>
+          <button type="button" class="md-button" aria-label="Next example" data-showcase-next>Next</button>
+        </div>
+      </div>
+      <figure data-slide>
+        <img src="../../assets/sensitivity/email-signal.svg" width="720" height="288" alt="Three example.org email addresses flag possible PII. Suggested handling is Confidential pending review of their business use.">
+        <figcaption>
+          <strong>Email with unknown business use</strong>
+          <p>All three addresses match the email pattern. Confirm how the addresses are used before lowering handling.</p>
+          <button type="button" class="md-button" data-showcase-scenario="C07" hidden>Try email example</button>
+        </figcaption>
+      </figure>
+      <figure data-slide hidden>
+        <img src="../../assets/sensitivity/linked-salary.svg" width="720" height="288" loading="lazy" alt="Three staff numbers are paired with salary bands. Each column is Restricted, and the confirmed linkage makes the dataset Confidential.">
+        <figcaption>
+          <strong>Staff numbers linked to salary bands</strong>
+          <p>Each column is Restricted. The paired values make individual salary bands identifiable.</p>
+          <button type="button" class="md-button" data-showcase-scenario="T04" hidden>Try linkage example</button>
+        </figcaption>
+      </figure>
+      <figure data-slide hidden>
+        <img src="../../assets/sensitivity/public-sample.svg" width="720" height="288" loading="lazy" alt="The sample contains a campus map, library hours, and a visitor guide. The sampled column is Unclassified. Review the full dataset and use Restricted handling in the meantime.">
+        <figcaption>
+          <strong>Three public titles from a larger table</strong>
+          <p>The sample contains public material. Keep Restricted handling until the full dataset is reviewed.</p>
+          <button type="button" class="md-button" data-showcase-scenario="T12" hidden>Try sampled data example</button>
+        </figcaption>
+      </figure>
+      <small>These examples use synthetic rows. Try one to assess the same CSV data.</small>
     </section>
     <div data-calculator-inputs hidden>
       <h3>Column details</h3>
       <p><strong data-profile-name></strong></p>
       <p data-spark-reference hidden></p>
+      <details data-sample-data hidden>
+        <summary>View the example CSV</summary>
+        <pre><code></code></pre>
+      </details>
       <p>Review the suggested descriptions and categories. Edit them here or upload your own descriptions.</p>
       <label for="sensitivity-dictionary-file">Upload a data dictionary (optional)
         <input id="sensitivity-dictionary-file" type="file" accept=".csv,.json" aria-describedby="sensitivity-dictionary-help" data-dictionary-file>
