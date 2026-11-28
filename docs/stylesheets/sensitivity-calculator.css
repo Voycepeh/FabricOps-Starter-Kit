@@ -29,6 +29,13 @@
   min-inline-size: 0;
 }
 
+.sensitivity-calculator__scenario-picker button:disabled {
+  background: transparent;
+  border-color: var(--md-default-fg-color--lightest);
+  color: var(--md-default-fg-color--light);
+  cursor: default;
+}
+
 .sensitivity-calculator label {
   display: block;
 }

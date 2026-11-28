@@ -4,7 +4,7 @@ Use Data Sensitivity Assessment to decide how to handle a column or dataset befo
 
 ## Try the classification calculator
 
-Try one of the 53 synthetic validation scenarios or load a FabricOps profile as JSON or CSV. Add column descriptions, select business categories, and run the assessment. Open **Policy settings** to try a different classification level, category mapping, or combination rule. The result compares the same profile and categories under the FabricOps defaults and your edited policy. Categories defined only in your edited policy have no category rule under the defaults.
+Choose one of 53 synthetic scenarios or upload a FabricOps profile to compare classifications.
 
 <div class="sensitivity-calculator" data-sensitivity-calculator>
   <form>
@@ -62,6 +62,8 @@ Try one of the 53 synthetic validation scenarios or load a FabricOps profile as 
   <div data-results hidden></div>
   <noscript>Enable JavaScript to run the calculator.</noscript>
 </div>
+
+Edit the column descriptions and business categories, or open **Policy settings** to change the rules. The results compare the FabricOps defaults with your edited policy. Categories defined only in your edited policy have no category rule under the defaults.
 
 The calculator runs FabricOps' deterministic Python assessment in your browser. The page loads the Python runtime on first use, and your profile, descriptions, and policy edits stay in the tab. For approved Data Contracts, verified lineage, full Spark DataFrame scans, or optional AI, run the assessment in Fabric.
 
