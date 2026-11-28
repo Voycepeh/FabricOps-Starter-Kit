@@ -1,0 +1,104 @@
+.sensitivity-calculator {
+  border-block-start: 2px solid var(--fabricops-purple);
+  border-block-end: 1px solid var(--md-default-fg-color--lightest);
+  padding-block: 0.9rem;
+}
+
+.sensitivity-calculator [hidden] {
+  display: none !important;
+}
+
+.sensitivity-calculator__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.9rem;
+  margin-block: 0.6rem;
+}
+
+.sensitivity-calculator label {
+  display: block;
+}
+
+.sensitivity-calculator label :is(input, select),
+.sensitivity-calculator textarea {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  margin-block-start: 0.2rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--md-default-fg-color--light);
+  border-radius: 0.2rem;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  font: inherit;
+}
+
+.sensitivity-calculator input[type="file"] {
+  max-inline-size: 100%;
+}
+
+.sensitivity-calculator textarea {
+  min-block-size: 12rem;
+  resize: vertical;
+  font-family: var(--fabricops-font-code);
+}
+
+.sensitivity-calculator :focus-visible {
+  outline: 2px solid var(--fabricops-purple);
+  outline-offset: 2px;
+}
+
+.sensitivity-calculator fieldset {
+  min-inline-size: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 0.4rem 0.8rem;
+  margin-block: 0.7rem;
+  padding: 0.45rem 0.65rem 0.65rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.sensitivity-calculator legend,
+.sensitivity-calculator th,
+.sensitivity-calculator td,
+.sensitivity-calculator [data-profile-name] {
+  overflow-wrap: anywhere;
+}
+
+.sensitivity-calculator__comparison {
+  overflow-x: auto;
+}
+
+.sensitivity-calculator__comparison table {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+
+.sensitivity-calculator__comparison :is(th, td) {
+  padding: 0.42rem;
+  border-block-end: 1px solid var(--md-default-fg-color--lightest);
+  text-align: start;
+  vertical-align: top;
+}
+
+.sensitivity-calculator__comparison tbody tr:first-child {
+  font-weight: 700;
+}
+
+.sensitivity-calculator__changed {
+  box-shadow: inset 3px 0 var(--fabricops-purple);
+}
+
+.sensitivity-calculator__comparison caption {
+  text-align: start;
+  color: var(--md-default-fg-color--light);
+}
+
+.sensitivity-calculator form[aria-busy="true"] {
+  opacity: 0.7;
+}
+
+.sensitivity-calculator__comparison small {
+  display: block;
+}

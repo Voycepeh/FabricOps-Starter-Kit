@@ -2,6 +2,55 @@
 
 Use Data Sensitivity Assessment to decide how to handle a column or dataset before approving its classification in a Data Contract.
 
+## Try the classification calculator
+
+Start with a sample or load a FabricOps profile as JSON or CSV. Add column descriptions, select business categories, and run the assessment. Open **Policy settings** to try a different classification level, category mapping, or combination rule. The result compares the same profile and categories under the FabricOps defaults and your edited policy. Categories defined only in your edited policy have no category rule under the defaults.
+
+<div class="sensitivity-calculator" data-sensitivity-calculator>
+  <form>
+    <div class="sensitivity-calculator__actions">
+      <label for="sensitivity-profile-file">Load a profile
+        <input id="sensitivity-profile-file" type="file" accept=".json,.csv" aria-describedby="sensitivity-file-help" data-profile-file>
+      </label>
+      <button type="button" class="md-button" data-example>Use example</button>
+    </div>
+    <small id="sensitivity-file-help">FabricOps profile JSON or CSV, up to 2 MB and 500 columns.</small>
+    <div data-calculator-inputs hidden>
+      <h3>Column details</h3>
+      <p><strong data-profile-name></strong></p>
+      <p>Choose the category that describes each column's business use. Descriptions capture review context.</p>
+      <div data-column-fields></div>
+      <details>
+        <summary>Policy settings</summary>
+        <label for="sensitivity-policy">GovernanceConfig settings (JSON)
+          <textarea id="sensitivity-policy" data-policy spellcheck="false"></textarea>
+        </label>
+        <div class="sensitivity-calculator__actions">
+          <button type="button" class="md-button" data-apply>Apply policy and assess</button>
+          <button type="button" class="md-button" data-reset>Reset to defaults</button>
+        </div>
+        <small>Apply changes to refresh the business categories and treatment targets and see the comparison.</small>
+      </details>
+      <details>
+        <summary>Explore treatment suggestions</summary>
+        <label for="sensitivity-target">Target classification
+          <select id="sensitivity-target" data-target></select>
+        </label>
+      </details>
+      <div class="sensitivity-calculator__actions">
+        <button type="submit" class="md-button md-button--primary">Run assessment</button>
+      </div>
+    </div>
+  </form>
+  <p role="status"></p>
+  <div data-results hidden></div>
+  <noscript>Enable JavaScript to run the calculator.</noscript>
+</div>
+
+The calculator runs FabricOps' deterministic Python assessment in your browser. The page loads the Python runtime on first use, and your profile, descriptions, and policy edits stay in the tab. For approved Data Contracts, verified lineage, full Spark DataFrame scans, or optional AI, run the assessment in Fabric.
+
+JSON accepts a canonical column profile, a list of profile rows, or a profile result with `profile` and optional `frequency_profile` rows. CSV uses the standard FabricOps profile headers, including `COLUMN_NAME`. Include `PROFILE_SCOPE` where known to distinguish a full-table profile from sampled or limited coverage.
+
 ## Default policy rules
 
 FabricOps bases its defaults on three governance principles. Data approved for general release may be handled as Unclassified. Data with uncertain classification needs at least Restricted handling. Combining data can increase the impact of disclosure or make sensitive information identifiable.
@@ -36,7 +85,7 @@ A rule in `combinations` matches when all its listed categories are present. It 
 
 ## Configure your organisation's policy
 
-In **00 Environment Config**, edit the `GovernanceConfig` settings. Keep the existing settings for other governance workflows.
+In **00 Environment Config**, edit the `GovernanceConfig` settings. You can save the calculator policy as JSON and load it with `GovernanceConfig(**json.loads(policy_json))`. Keep the existing settings for other governance workflows.
 
 | Setting | What to enter |
 | --- | --- |
