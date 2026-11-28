@@ -10,18 +10,6 @@ from fabricops_kit.data_contract.shared import assessment_profile_evidence
 
 
 DEFAULT = GovernanceConfig()
-SAMPLE = {
-    "profile_scope": "full_table",
-    "profile": [
-        {"column_name": "staff_number", "data_type": "int", "row_count": 120},
-        {"column_name": "salary_band", "data_type": "string", "row_count": 120},
-    ],
-}
-SAMPLE_DEFINITIONS = {
-    "staff_number": {"description": "Internal staff number", "category": "institutional_identifier"},
-    "salary_band": {"description": "Employment statistics grouped by salary band",
-                    "category": "deidentified_employment_statistics"},
-}
 PROFILE_FIELDS = {
     "column_name", "data_type", "row_count", "non_null_count", "null_count", "distinct_count",
     "min_value", "max_value", "profile_snapshot_id", "profile_scope",
@@ -89,17 +77,14 @@ def handle_message(request_json):
     request = json.loads(request_json)
     action = request["action"]
     if action == "load":
-        example = request.get("example")
-        profile = _local_profile(SAMPLE if example else _profile_payload(request["text"], request["csv"]))
+        profile = _local_profile(_profile_payload(request["text"], request["csv"]))
         rows = profile["profile"]
         return json.dumps({
             "profile": json.dumps(profile),
             "columns": [{key: row.get(key) for key in ("column_name", "data_type")}
                         for row in (rows if isinstance(rows, list) else [rows])],
             "columnOnly": "kind" in profile,
-            "sensitiveLinkage": True if example else None,
             "defaultPolicy": _policy(DEFAULT),
-            "definitions": SAMPLE_DEFINITIONS if example else {},
         })
 
     settings = json.loads(request["policy"])

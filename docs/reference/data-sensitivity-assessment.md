@@ -4,20 +4,29 @@ Use Data Sensitivity Assessment to decide how to handle a column or dataset befo
 
 ## Try the classification calculator
 
-Start with a sample or load a FabricOps profile as JSON or CSV. Add column descriptions, select business categories, and run the assessment. Open **Policy settings** to try a different classification level, category mapping, or combination rule. The result compares the same profile and categories under the FabricOps defaults and your edited policy. Categories defined only in your edited policy have no category rule under the defaults.
+Try one of the 53 synthetic validation scenarios or load a FabricOps profile as JSON or CSV. Add column descriptions, select business categories, and run the assessment. Open **Policy settings** to try a different classification level, category mapping, or combination rule. The result compares the same profile and categories under the FabricOps defaults and your edited policy. Categories defined only in your edited policy have no category rule under the defaults.
 
 <div class="sensitivity-calculator" data-sensitivity-calculator>
   <form>
+    <div class="sensitivity-calculator__scenario-picker">
+      <label for="sensitivity-scenario">Try a scenario
+        <select id="sensitivity-scenario" data-scenario aria-describedby="sensitivity-scenario-help" disabled>
+          <option value="">Loading scenarios…</option>
+        </select>
+      </label>
+      <button type="button" class="md-button" data-load-scenario disabled>Load and assess</button>
+    </div>
+    <small id="sensitivity-scenario-help">Scenarios cover single columns, datasets, and Spark group-size checks.</small>
     <div class="sensitivity-calculator__actions">
       <label for="sensitivity-profile-file">Load a profile
         <input id="sensitivity-profile-file" type="file" accept=".json,.csv" aria-describedby="sensitivity-file-help" data-profile-file>
       </label>
-      <button type="button" class="md-button" data-example>Use example</button>
     </div>
     <small id="sensitivity-file-help">FabricOps profile JSON or CSV, up to 2 MB and 500 columns.</small>
     <div data-calculator-inputs hidden>
       <h3>Column details</h3>
       <p><strong data-profile-name></strong></p>
+      <p data-spark-reference hidden></p>
       <p>Choose the category that describes each column's business use. Descriptions capture review context.</p>
       <div data-column-fields></div>
       <label for="sensitivity-linkage">Can sensitive information in this dataset identify people or a sensitive group?

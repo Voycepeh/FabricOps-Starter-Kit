@@ -1,5 +1,6 @@
 (() => {
   const workerURL = new URL("sensitivity-calculator-worker.js", document.currentScript.src);
+  const scenariosURL = new URL("../assets/sensitivity-scenarios.json", workerURL);
   const datasets = new WeakSet();
 
   function element(tag, text) {
@@ -95,7 +96,9 @@
 
     const form = root.querySelector("form");
     const file = root.querySelector("[data-profile-file]");
-    const sample = root.querySelector("[data-example]");
+    const picker = root.querySelector("[data-scenario]");
+    const loadScenario = root.querySelector("[data-load-scenario]");
+    const sparkReference = root.querySelector("[data-spark-reference]");
     const inputs = root.querySelector("[data-calculator-inputs]");
     const fields = root.querySelector("[data-column-fields]");
     const profileName = root.querySelector("[data-profile-name]");
@@ -111,6 +114,7 @@
     let defaultPolicy;
     let currentPolicy;
     let columns = [];
+    const scenarios = new Map();
 
     function send(message) {
       worker ??= new Worker(workerURL);
@@ -193,36 +197,70 @@
       status.textContent = `Assessment complete. Profile scope is ${scope}.`;
     }
 
-    async function loadProfile(upload) {
+    async function loadProfile({ upload, scenario }) {
       await perform("Loading profile and calculator…", async () => {
         if (upload?.size > 2 * 1024 * 1024) throw new Error("Choose a profile file up to 2 MB.");
-        const data = await send(upload ? {
-          action: "load", text: await upload.text(), csv: /\.csv$/i.test(upload.name),
-        } : { action: "load", example: true });
+        const data = await send({
+          action: "load",
+          text: upload ? await upload.text() : JSON.stringify(scenario.profile),
+          csv: upload ? /\.csv$/i.test(upload.name) : false,
+        });
         profile = data.profile;
         defaultPolicy ??= data.defaultPolicy;
         if (!currentPolicy) {
           currentPolicy = defaultPolicy;
           policy.value = JSON.stringify(defaultPolicy, null, 2);
         }
-        addColumns(data.columns, data.definitions);
+        addColumns(data.columns, scenario?.definitions ?? {});
         linkage.closest("label").hidden = data.columnOnly;
-        linkage.value = data.sensitiveLinkage ? "yes" : "";
+        linkage.value = scenario?.sensitiveLinkage == null ? "" : scenario.sensitiveLinkage ? "yes" : "no";
         inputs.hidden = false;
         results.hidden = true;
-        profileName.textContent = upload ? upload.name : "Example profile";
-        const count = `${columns.length} ${columns.length === 1 ? "column" : "columns"}`;
-        status.textContent = `Loaded ${profileName.textContent}. ${count}.`;
+        profileName.textContent = upload ? upload.name : scenario.title;
+        sparkReference.hidden = !scenario?.spark;
+        if (scenario?.spark) {
+          const { classification, handling } = scenario.spark.expected;
+          sparkReference.textContent = `With the default policy and a Spark scan, this scenario assessed as ${classification}, with ${handling} handling. The browser compares policies using the profile evidence available here.`;
+        }
+        if (scenario) {
+          await assess();
+        } else {
+          picker.value = "";
+          loadScenario.disabled = true;
+          const count = `${columns.length} ${columns.length === 1 ? "column" : "columns"}`;
+          status.textContent = `Loaded ${profileName.textContent}. ${count}.`;
+        }
       });
       file.value = "";
     }
 
-    sample.addEventListener("click", () => loadProfile());
-    file.addEventListener("change", () => {
-      if (file.files[0]) loadProfile(file.files[0]);
+    fetch(scenariosURL).then(async (response) => {
+      if (!response.ok) throw new Error("Scenario library is unavailable.");
+      const groups = { C: "Single columns", T: "Datasets", S: "Spark group-size checks" };
+      const options = Object.fromEntries(Object.entries(groups).map(([prefix, title]) => {
+        const group = element("optgroup");
+        group.label = title;
+        return [prefix, group];
+      }));
+      for (const scenario of await response.json()) {
+        scenarios.set(scenario.id, scenario);
+        options[scenario.id[0]].append(new Option(scenario.title, scenario.id));
+      }
+      picker.replaceChildren(new Option("Choose a scenario", ""), ...Object.values(options));
+      picker.disabled = false;
+    }).catch(() => {
+      picker.replaceChildren(new Option("Scenarios unavailable", ""));
     });
-    form.addEventListener("input", () => {
-      if (!results.hidden) status.textContent = "Run another assessment to update the results.";
+
+    picker.addEventListener("change", () => {
+      loadScenario.disabled = !scenarios.has(picker.value);
+    });
+    loadScenario.addEventListener("click", () => loadProfile({ scenario: scenarios.get(picker.value) }));
+    file.addEventListener("change", () => {
+      if (file.files[0]) loadProfile({ upload: file.files[0] });
+    });
+    form.addEventListener("input", (event) => {
+      if (event.target !== picker && !results.hidden) status.textContent = "Run another assessment to update the results.";
     });
     apply.addEventListener("click", () => perform("Checking policy…", async () => {
       currentPolicy = await send({ action: "policy", policy: policy.value });

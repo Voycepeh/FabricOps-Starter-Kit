@@ -1,0 +1,382 @@
+[
+  {
+    "id": "C01",
+    "title": "Unlabelled numeric amount",
+    "profile": {"COLUMN_NAME": "amount", "DATA_TYPE": "long", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {},
+    "expected": {"classification": null, "handling": "Restricted"}
+  },
+  {
+    "id": "C02",
+    "title": "Payroll described but no category (unverified business meaning)",
+    "profile": {"COLUMN_NAME": "amount", "DATA_TYPE": "long", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"amount": {"description": "Monthly employee base salary"}},
+    "expected": {"classification": null, "handling": "Restricted"}
+  },
+  {
+    "id": "C03",
+    "title": "Payroll with explicit category",
+    "profile": {"COLUMN_NAME": "amount", "DATA_TYPE": "long", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"amount": {"category": "payroll", "description": "Monthly employee base salary"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C04",
+    "title": "Same amount name used for internal budget",
+    "profile": {"COLUMN_NAME": "amount", "DATA_TYPE": "long", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"amount": {"category": "internal_budget"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "C05",
+    "title": "Personal email, category supplied",
+    "profile": {"COLUMN_NAME": "email", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": "person@example.org", "profile_scope": "full_table"},
+    "definitions": {"email": {"category": "personal_contact"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C06",
+    "title": "Institutional email solely for business use",
+    "profile": {"COLUMN_NAME": "email", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": "person@example.org", "profile_scope": "full_table"},
+    "definitions": {"email": {"category": "business_contact"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "C07",
+    "title": "Email-shaped value of unknown business use",
+    "profile": {"COLUMN_NAME": "email", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": "person@example.org", "profile_scope": "full_table"},
+    "definitions": {},
+    "expected": {"classification": null, "handling": "Confidential"}
+  },
+  {
+    "id": "C08",
+    "title": "Staff number in isolation",
+    "profile": {"COLUMN_NAME": "staff_number", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": "49382", "profile_scope": "full_table"},
+    "definitions": {"staff_number": {"category": "institutional_identifier"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "C09",
+    "title": "Student number in isolation",
+    "profile": {"COLUMN_NAME": "student_number", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": "15942", "profile_scope": "full_table"},
+    "definitions": {"student_number": {"category": "institutional_identifier"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "C10",
+    "title": "Government-issued identifier, category supplied",
+    "profile": {"COLUMN_NAME": "national_identifier", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"national_identifier": {"category": "personal_identifier"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C11",
+    "title": "Student mark",
+    "profile": {"COLUMN_NAME": "mark", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"mark": {"category": "academic_record"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C12",
+    "title": "Exam paper",
+    "profile": {"COLUMN_NAME": "paper", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"paper": {"category": "examination_material"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C13",
+    "title": "Medical diagnosis",
+    "profile": {"COLUMN_NAME": "diagnosis", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"diagnosis": {"category": "health_record"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C14",
+    "title": "Approved public campus map",
+    "profile": {"COLUMN_NAME": "campus_map", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"campus_map": {"category": "authorised_public_release"}},
+    "expected": {"classification": "Unclassified", "handling": "Unclassified"}
+  },
+  {
+    "id": "C15",
+    "title": "Campus map with unknown release status",
+    "profile": {"COLUMN_NAME": "campus_map", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"campus_map": {"description": "Campus map"}},
+    "expected": {"classification": null, "handling": "Restricted"}
+  },
+  {
+    "id": "C16",
+    "title": "De-identified salary band",
+    "profile": {"COLUMN_NAME": "salary_band", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"salary_band": {"category": "deidentified_employment_statistics"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "C17",
+    "title": "Vendor bank account with explicit category",
+    "profile": {"COLUMN_NAME": "account_number", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"account_number": {"category": "vendor_bank_account", "description": "Vendor bank account number"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "C18",
+    "title": "Employee bank account with explicit category",
+    "profile": {"COLUMN_NAME": "account_number", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"account_number": {"category": "employee_bank_account", "description": "Employee bank account number"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C19",
+    "title": "Admissions decision with explicit category",
+    "profile": {"COLUMN_NAME": "decision", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"decision": {"category": "admissions_record", "description": "Individual admissions application outcome"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C20",
+    "title": "Appraisal comments with explicit category",
+    "profile": {"COLUMN_NAME": "comments", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"comments": {"category": "employee_appraisal", "description": "Individual employee performance appraisal"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C21",
+    "title": "Internal staff circular with explicit category",
+    "profile": {"COLUMN_NAME": "message", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"message": {"category": "internal_staff_communication", "description": "Internal management circular addressed to staff"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "C22",
+    "title": "Significant legal or financial impact explicitly tagged",
+    "profile": {"COLUMN_NAME": "incident_report", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"incident_report": {"category": "significant_disclosure_impact"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C23",
+    "title": "Business phone explicitly tagged",
+    "profile": {"COLUMN_NAME": "phone", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": "(202) 555-0142", "profile_scope": "full_table"},
+    "definitions": {"phone": {"category": "business_contact"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "C24",
+    "title": "Payment-card pattern from synthetic test number",
+    "profile": {"COLUMN_NAME": "payment_reference", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": "4111111111111111", "profile_scope": "full_table"},
+    "definitions": {},
+    "expected": {"classification": null, "handling": "Confidential"}
+  },
+  {
+    "id": "C25",
+    "title": "Confidential individual alumni record",
+    "profile": {"COLUMN_NAME": "alumni_record", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"alumni_record": {"category": "alumni_personal_record"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C26",
+    "title": "Confidential donor record",
+    "profile": {"COLUMN_NAME": "gift", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"gift": {"category": "donation_record"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C27",
+    "title": "Investment covered by a confidentiality obligation",
+    "profile": {"COLUMN_NAME": "investment", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"investment": {"category": "investment_under_confidentiality"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C28",
+    "title": "Routine internal investment review",
+    "profile": {"COLUMN_NAME": "review", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"review": {"category": "internal_investment_record"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "C29",
+    "title": "Internal management accounting record",
+    "profile": {"COLUMN_NAME": "ledger", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"ledger": {"category": "internal_financial_record"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "C30",
+    "title": "Student bank account",
+    "profile": {"COLUMN_NAME": "account", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"account": {"category": "individual_bank_account"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C31",
+    "title": "Payment card with business category",
+    "profile": {"COLUMN_NAME": "payment_card", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"payment_card": {"category": "payment_card"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "C32",
+    "title": "General-release university newsletter",
+    "profile": {"COLUMN_NAME": "newsletter", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"newsletter": {"category": "authorised_public_release"}},
+    "expected": {"classification": "Unclassified", "handling": "Unclassified"}
+  },
+  {
+    "id": "C33",
+    "title": "Routine employment training record",
+    "profile": {"COLUMN_NAME": "course", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null, "profile_scope": "full_table"},
+    "definitions": {"course": {"category": "routine_employment_record"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "T01",
+    "title": "Approved public map and approved press release",
+    "profile": {"profile": [{"COLUMN_NAME": "map", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "release", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"map": {"category": "authorised_public_release"}, "release": {"category": "authorised_public_release"}},
+    "expected": {"classification": "Unclassified", "handling": "Unclassified"}
+  },
+  {
+    "id": "T02",
+    "title": "Public map and internal operating budget",
+    "profile": {"profile": [{"COLUMN_NAME": "map", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "budget", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"map": {"category": "authorised_public_release"}, "budget": {"category": "internal_budget"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "T03",
+    "title": "Public programme name and identifiable exam marks",
+    "profile": {"profile": [{"COLUMN_NAME": "programme", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "marks", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"programme": {"category": "authorised_public_release"}, "marks": {"category": "academic_record"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"}
+  },
+  {
+    "id": "T04",
+    "title": "Staff number linked to employment salary band",
+    "profile": {"profile": [{"COLUMN_NAME": "staff_number", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "salary_band", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"staff_number": {"category": "institutional_identifier"}, "salary_band": {"category": "deidentified_employment_statistics"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"},
+    "sensitiveLinkage": true
+  },
+  {
+    "id": "T05",
+    "title": "Business directory with institution ID and work email only",
+    "profile": {"profile": [{"COLUMN_NAME": "staff_number", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "email", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": "person@example.org"}], "profile_scope": "full_table"},
+    "definitions": {"staff_number": {"category": "institutional_identifier"}, "email": {"category": "business_contact"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"},
+    "sensitiveLinkage": false
+  },
+  {
+    "id": "T06",
+    "title": "Staff number linked to sensitive individual training outcomes",
+    "profile": {"profile": [{"COLUMN_NAME": "staff_number", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "outcome", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"staff_number": {"category": "institutional_identifier"}, "outcome": {"category": "routine_employment_record", "description": "Sensitive remedial training outcome now attributable to an individual staff member"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"},
+    "sensitiveLinkage": true
+  },
+  {
+    "id": "T07",
+    "title": "Approved map and unknown free-text notes",
+    "profile": {"profile": [{"COLUMN_NAME": "map", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "notes", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"map": {"category": "authorised_public_release"}},
+    "expected": {"classification": null, "handling": "Restricted"}
+  },
+  {
+    "id": "T08",
+    "title": "Restricted operating budget and unknown comments",
+    "profile": {"profile": [{"COLUMN_NAME": "budget", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "comments", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"budget": {"category": "internal_budget"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "T09",
+    "title": "Incompatible join granularity: contact for aggregate report plus unrelated large-cohort salary band",
+    "profile": {"profile": [{"COLUMN_NAME": "report_owner", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "salary_band", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"report_owner": {"category": "business_contact"}, "salary_band": {"category": "deidentified_employment_statistics"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"},
+    "sensitiveLinkage": false
+  },
+  {
+    "id": "T10",
+    "title": "Age band and department, group sizes unavailable; review",
+    "profile": {"profile": [{"COLUMN_NAME": "age_band", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "department", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"age_band": {"category": "quasi_identifier"}, "department": {"category": "quasi_identifier"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "T11",
+    "title": "Student number linked to sensitive support status",
+    "profile": {"profile": [{"COLUMN_NAME": "student_number", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "support_status", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"student_number": {"category": "institutional_identifier"}, "support_status": {"category": "health_record", "description": "Sensitive individual disability accommodations"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"},
+    "sensitiveLinkage": true
+  },
+  {
+    "id": "T12",
+    "title": "Sample with a release tag but unknown remaining coverage",
+    "profile": {"profile": [{"COLUMN_NAME": "public_title", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "bounded_selection"},
+    "definitions": {"public_title": {"category": "authorised_public_release"}},
+    "expected": {"classification": null, "handling": "Restricted"}
+  },
+  {
+    "id": "T13",
+    "title": "Internal programme fields without any individual linkage",
+    "profile": {"profile": [{"COLUMN_NAME": "exchange_programme", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "internship_type", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"exchange_programme": {"category": "internal_programme_information", "description": "Internal study abroad programme catalogue"}, "internship_type": {"category": "internal_programme_information", "description": "Internal internship programme category"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "T14",
+    "title": "Employee values removed from a complete output; remaining operating budget",
+    "profile": {"profile": [{"COLUMN_NAME": "budget", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "fiscal_year", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"budget": {"category": "internal_budget"}, "fiscal_year": {"category": "internal_budget"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "T15",
+    "title": "Email shape conflicts with a public release tag",
+    "profile": {"profile": [{"COLUMN_NAME": "published_contact", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": "person@example.org"}], "profile_scope": "full_table"},
+    "definitions": {"published_contact": {"category": "authorised_public_release"}},
+    "expected": {"classification": "Unclassified", "handling": "Confidential"}
+  },
+  {
+    "id": "T16",
+    "title": "Work contact actually links people to a sensitive salary band",
+    "profile": {"profile": [{"COLUMN_NAME": "email", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "salary_band", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"email": {"category": "business_contact"}, "salary_band": {"category": "deidentified_employment_statistics"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"},
+    "sensitiveLinkage": true
+  },
+  {
+    "id": "T17",
+    "title": "Two restricted fields with linkability still unknown",
+    "profile": {"profile": [{"COLUMN_NAME": "staff_number", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "salary_band", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"staff_number": {"category": "institutional_identifier"}, "salary_band": {"category": "deidentified_employment_statistics"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"}
+  },
+  {
+    "id": "T18",
+    "title": "Previously verified age band and department link people to sensitive details",
+    "profile": {"profile": [{"COLUMN_NAME": "age_band", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}, {"COLUMN_NAME": "department", "DATA_TYPE": "string", "ROW_COUNT": 120, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"age_band": {"category": "quasi_identifier"}, "department": {"category": "quasi_identifier"}},
+    "expected": {"classification": "Confidential", "handling": "Confidential"},
+    "sensitiveLinkage": true
+  },
+  {
+    "id": "S01",
+    "title": "Joint group sizes below the Spark threshold",
+    "profile": {"profile": [{"COLUMN_NAME": "department", "DATA_TYPE": "string", "ROW_COUNT": 2, "MIN_VALUE": null}, {"COLUMN_NAME": "age_band", "DATA_TYPE": "string", "ROW_COUNT": 2, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"department": {"category": "quasi_identifier"}, "age_band": {"category": "quasi_identifier"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"},
+    "spark": {"rows": [["A", "20–29"], ["B", "30–39"]], "expected": {"classification": "Confidential", "handling": "Confidential"}}
+  },
+  {
+    "id": "S02",
+    "title": "Joint group sizes meet the Spark threshold",
+    "profile": {"profile": [{"COLUMN_NAME": "department", "DATA_TYPE": "string", "ROW_COUNT": 10, "MIN_VALUE": null}, {"COLUMN_NAME": "age_band", "DATA_TYPE": "string", "ROW_COUNT": 10, "MIN_VALUE": null}], "profile_scope": "full_table"},
+    "definitions": {"department": {"category": "quasi_identifier"}, "age_band": {"category": "quasi_identifier"}},
+    "expected": {"classification": "Restricted", "handling": "Restricted"},
+    "spark": {"rows": [["A", "20–29"], ["A", "20–29"], ["A", "20–29"], ["A", "20–29"], ["A", "20–29"], ["B", "30–39"], ["B", "30–39"], ["B", "30–39"], ["B", "30–39"], ["B", "30–39"]], "expected": {"classification": "Restricted", "handling": "Restricted"}}
+  }
+]

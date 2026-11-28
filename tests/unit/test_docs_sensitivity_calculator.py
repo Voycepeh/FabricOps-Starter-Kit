@@ -1,11 +1,17 @@
 """Check the browser file and policy inputs against the FabricOps engine."""
 
 import json
+from pathlib import Path
 
 import pytest
 
 from docs._tools.sensitivity_calculator import handle_message
-from fabricops_kit import assess_data_sensitivity
+from fabricops_kit import GovernanceConfig, assess_data_sensitivity
+
+
+SCENARIOS = json.loads(
+    (Path(__file__).resolve().parents[2] / "docs" / "assets" / "sensitivity-scenarios.json").read_text()
+)
 
 
 def _message(**request):
@@ -14,12 +20,13 @@ def _message(**request):
 
 def test_example_compares_the_dataset_combination_without_changing_column_labels():
     """Compare the combination rule at dataset and column level."""
-    loaded = _message(action="load", example=True)
+    scenario = next(case for case in SCENARIOS if case["id"] == "T04")
+    loaded = _message(action="load", text=json.dumps(scenario["profile"]), csv=False)
     edited = loaded["defaultPolicy"]
     edited["sensitivity_assessment"]["combinations"] = []
     edited["sensitivity_assessment"]["suspected_handling"] = "Restricted"
-    result = _message(action="assess", profile=loaded["profile"], definitions=loaded["definitions"],
-                      policy=json.dumps(edited), sensitiveLinkage=loaded["sensitiveLinkage"])
+    result = _message(action="assess", profile=loaded["profile"], definitions=scenario["definitions"],
+                      policy=json.dumps(edited), sensitiveLinkage=scenario["sensitiveLinkage"])
     baseline = result["default"]
     current = result["current"]
     assert baseline["classification"] == "Confidential"
@@ -65,3 +72,41 @@ def test_mixed_profile_snapshots_are_rejected_before_assessment():
     profile = [{"COLUMN_NAME": name, "PROFILE_SNAPSHOT_ID": name} for name in ("first", "second")]
     with pytest.raises(ValueError, match="more than one snapshot"):
         _message(action="load", text=json.dumps(profile), csv=False)
+
+
+def test_library_includes_each_validation_case_and_all_default_categories():
+    """Keep the selectable library complete and categories covered."""
+    assert [case["id"] for case in SCENARIOS] == [
+        *(f"C{number:02}" for number in range(1, 34)),
+        *(f"T{number:02}" for number in range(1, 19)),
+        "S01", "S02",
+    ]
+    categories = {definition["category"] for case in SCENARIOS
+                  for definition in case["definitions"].values() if "category" in definition}
+    assert set(GovernanceConfig().sensitivity_assessment["categories"]) == categories
+
+
+@pytest.mark.parametrize("case", SCENARIOS, ids=[case["id"] for case in SCENARIOS])
+def test_selectable_scenario_matches_browser_result(case):
+    """Check each shipped profile with the same calculator entry points as the page."""
+    loaded = _message(action="load", text=json.dumps(case["profile"]), csv=False)
+    result = _message(action="assess", profile=loaded["profile"], definitions=case["definitions"],
+                      policy=json.dumps(loaded["defaultPolicy"]), sensitiveLinkage=case.get("sensitiveLinkage"))
+    assert result["current"] == result["default"]
+    assert result["default"]["classification"] == case["expected"]["classification"]
+    assert result["default"]["minimum_handling_classification"] == case["expected"]["handling"]
+    if "spark" in case:
+        assert result["default"]["human_review_required"]
+        assert result["default"]["dataset_findings"][0]["code"] == "joint_group_sizes_unverified"
+
+
+@pytest.mark.parametrize("case", [case for case in SCENARIOS if "spark" in case], ids=["S01", "S02"])
+def test_scenario_spark_reference_matches_fabricops(case, spark_session):
+    """Check that the displayed Spark reference comes from the same engine."""
+    spark = case["spark"]
+    dataframe = spark_session.createDataFrame(spark["rows"], list(case["definitions"]))
+    result = assess_data_sensitivity(
+        case["profile"], column_definitions=case["definitions"], dataframe=dataframe,
+    )
+    assert result["classification"] == spark["expected"]["classification"]
+    assert result["minimum_handling_classification"] == spark["expected"]["handling"]
