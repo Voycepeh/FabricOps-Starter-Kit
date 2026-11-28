@@ -51,6 +51,25 @@
     return { handling, assessed, personalData, review, reason };
   }
 
+  function renderExampleRows(rows, columns, container) {
+    container.replaceChildren();
+    if (!rows) return;
+    const table = element("table");
+    table.className = "sensitivity-calculator__table";
+    const header = table.createTHead().insertRow();
+    for (const column of columns) {
+      const heading = element("th", column.column_name);
+      heading.scope = "col";
+      header.append(heading);
+    }
+    const body = table.createTBody();
+    for (const values of rows) {
+      const row = body.insertRow();
+      for (const value of values) row.insertCell().textContent = value;
+    }
+    container.append(table);
+  }
+
   function renderResults(result, container, policyLabel) {
     const table = element("table");
     table.className = "sensitivity-calculator__table";
@@ -63,10 +82,13 @@
       headings.append(head);
     }
     const body = table.createTBody();
-    for (const [name, assessment] of [
-      [result.scope.column_only ? "Column" : "Dataset", result],
-      ...result.columns.map((column) => [column.column_name, column]),
-    ]) {
+    const rows = result.scope.column_only && result.columns.length === 1
+      ? [[result.columns[0].column_name, result]]
+      : [
+        [result.scope.column_only ? "Column" : "Dataset", result],
+        ...result.columns.map((column) => [column.column_name, column]),
+      ];
+    for (const [name, assessment] of rows) {
       const row = body.insertRow();
       const heading = element("th", name);
       heading.scope = "row";
@@ -97,7 +119,7 @@
     if (reasons.length) {
       const list = element("ul");
       for (const reason of reasons) list.append(element("li", reason));
-      findings.append(element("h4", "Findings"), list);
+      findings.append(element("h5", "Findings"), list);
     }
     if (result.recommended_treatments.length || result.residual_risks.length) {
       const list = element("ul");
@@ -105,7 +127,7 @@
         list.append(element("li", `${label(item.parameters.treatment)} ${item.column_name}. ${item.rationale}`));
       }
       for (const risk of result.residual_risks) list.append(element("li", risk));
-      findings.append(element("h4", "Treatment suggestions"), list);
+      findings.append(element("h5", "Treatment suggestions"), list);
     }
     const tableRegion = element("div");
     tableRegion.className = "sensitivity-calculator__results-table";
@@ -113,7 +135,7 @@
     tableRegion.setAttribute("role", "region");
     tableRegion.setAttribute("aria-label", "Suggested handling");
     tableRegion.append(table);
-    container.replaceChildren(element("h3", "Assessment results"), tableRegion, findings);
+    container.replaceChildren(element("h4", "Assessment results"), tableRegion, findings);
     container.hidden = false;
   }
 
@@ -136,6 +158,7 @@
     const profileName = root.querySelector("[data-profile-name]");
     const sampleData = root.querySelector("[data-sample-data]");
     const sampleCSV = sampleData.querySelector("code");
+    const sampleRows = sampleData.querySelector("[data-sample-rows]");
     const policy = root.querySelector("[data-policy]");
     const apply = root.querySelector("[data-apply]");
     const reset = root.querySelector("[data-reset]");
@@ -179,7 +202,7 @@
       form.setAttribute("aria-busy", "true");
       status.textContent = message;
       try {
-        await action();
+        return await action();
       } catch (error) {
         status.textContent = error.message;
       } finally {
@@ -258,12 +281,13 @@
     }
 
     async function loadProfile({ upload, scenario }) {
-      await perform(upload ? "Profiling the CSV and starting the calculator…" : "Loading scenario…", async () => {
+      const loaded = await perform(upload ? "Profiling the CSV and starting the calculator…" : "Loading scenario…", async () => {
         if (upload?.size > 2 * 1024 * 1024) throw new Error("Choose a CSV file up to 2 MB.");
-        const csv = upload ? await upload.text() : scenario.csv;
-        const data = await send(csv !== undefined ? {
-          action: "dataset", text: csv, profileScope: scenario?.profileScope, columnOnly: scenario?.columnOnly,
-        } : { action: "load", text: JSON.stringify(scenario.profile) });
+        const data = await send(upload ? {
+          action: "dataset", text: await upload.text(),
+        } : {
+          action: "sample", text: scenario.csv, profileScope: scenario.profileScope, columnOnly: scenario.columnOnly,
+        });
         profile = data.profile;
         defaultPolicy ??= data.defaultPolicy;
         if (!currentPolicy) restoreDefaultPolicy();
@@ -273,8 +297,9 @@
         inputs.hidden = false;
         results.hidden = true;
         profileName.textContent = upload ? upload.name : scenario.title;
-        sampleData.hidden = !scenario?.csv;
+        sampleData.hidden = !data.exampleRows;
         sampleCSV.textContent = scenario?.csv ?? "";
+        renderExampleRows(data.exampleRows, data.columns, sampleRows);
         sparkReference.hidden = !scenario?.spark;
         if (scenario?.spark) {
           const { classification, handling } = scenario.spark.expected;
@@ -285,8 +310,13 @@
           loadScenario.disabled = true;
         }
         await assess();
+        return true;
       });
       file.value = "";
+      if (loaded) {
+        inputs.focus({ preventScroll: true });
+        inputs.scrollIntoView({ block: "start" });
+      }
     }
 
     let currentSlide = 0;

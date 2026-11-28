@@ -60,7 +60,7 @@ def _csv_records(text):
             yield record
 
 
-def _dataset_profile(text):
+def _dataset_profile(text, *, example_rows=None):
     records = _csv_records(text)
     names = [name.strip() for name in next(records, [])]
     if not names or "" in names or len(names) != len(set(names)):
@@ -77,6 +77,8 @@ def _dataset_profile(text):
     for row_count, record in enumerate(records, 1):
         if len(record) != len(names):
             raise ValueError(f"Data row {row_count} has {len(record)} fields. Expected {len(names)}.")
+        if example_rows is not None and len(example_rows) < 10:
+            example_rows.append(record)
         for index, raw in enumerate(record):
             if not (value := raw.strip()):
                 continue
@@ -204,18 +206,20 @@ def handle_message(request_json):
         return json.dumps({"definitions": _dictionary(
             request["text"], request["csv"], request["columns"], request["categories"],
         )})
-    if action in {"load", "dataset"}:
+    if action in {"load", "dataset", "sample"}:
         definitions = {}
-        if action == "dataset":
-            payload, definitions = _dataset_profile(request["text"])
-            scope = request.get("profileScope", "full_table")
-            if scope not in {"full_table", "bounded_selection"}:
-                raise ValueError("CSV assessment scope must be a full table or a bounded selection.")
-            if request.get("columnOnly"):
-                if len(payload["profile"]) != 1:
-                    raise ValueError("A column assessment requires exactly one column.")
-                payload = {**payload, "kind": "column", "profile": payload["profile"][0]}
-            payload["profile_scope"] = scope
+        example_rows = [] if action == "sample" else None
+        if action in {"dataset", "sample"}:
+            payload, definitions = _dataset_profile(request["text"], example_rows=example_rows)
+            if example_rows is not None:
+                scope = request.get("profileScope", "full_table")
+                if scope not in {"full_table", "bounded_selection"}:
+                    raise ValueError("CSV assessment scope must be a full table or a bounded selection.")
+                if request.get("columnOnly"):
+                    if len(payload["profile"]) != 1:
+                        raise ValueError("A column assessment requires exactly one column.")
+                    payload = {**payload, "kind": "column", "profile": payload["profile"][0]}
+                payload["profile_scope"] = scope
         else:
             payload = json.loads(request["text"])
             if isinstance(payload, list):
@@ -229,6 +233,7 @@ def handle_message(request_json):
                  if key in row} for row in (rows if isinstance(rows, list) else [rows])
             ],
             "definitions": definitions,
+            "exampleRows": example_rows,
             "columnOnly": "kind" in profile,
             "defaultPolicy": _policy(DEFAULT),
         })

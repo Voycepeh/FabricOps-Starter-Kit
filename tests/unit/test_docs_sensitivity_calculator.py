@@ -21,10 +21,8 @@ def _message(**request):
 
 
 def _load_scenario(case):
-    if "csv" in case:
-        return _message(action="dataset", text=case["csv"], columnOnly=case.get("columnOnly", False),
-                        profileScope=case.get("profileScope", "full_table"))
-    return _message(action="load", text=json.dumps(case["profile"]))
+    return _message(action="sample", text=case["csv"], columnOnly=case.get("columnOnly", False),
+                    profileScope=case.get("profileScope", "full_table"))
 
 
 def test_applied_policy_replaces_the_default_assessment():
@@ -72,6 +70,7 @@ def test_csv_profiles_rows_and_scans_values_beyond_the_first_five():
     rows.append('10,"Synthetic note, contact person@example.org",2000-01-01')
     csv_text = "\ufeffmonthly_salary,remarks,start_date\n" + "\n".join(rows)
     loaded = _message(action="dataset", text=csv_text)
+    assert loaded["exampleRows"] is None
     assert loaded["columns"] == [
         {"column_name": "monthly_salary", "data_type": "long", "row_count": 10, "null_count": 0, "distinct_count": 10},
         {"column_name": "remarks", "data_type": "string", "row_count": 10, "null_count": 0, "distinct_count": 10},
@@ -161,6 +160,8 @@ def test_selectable_scenario_matches_browser_result(case):
     loaded = _load_scenario(case)
     result = _message(action="assess", profile=loaded["profile"], definitions=case["definitions"],
                       policy=json.dumps(loaded["defaultPolicy"]), sensitiveLinkage=case.get("sensitiveLinkage"))
+    records = list(csv.reader(io.StringIO(case["csv"])))
+    assert loaded["exampleRows"] == records[1:]
     assert result["classification"] == case["expected"]["classification"]
     assert result["minimum_handling_classification"] == case["expected"]["handling"]
     if "spark" in case:
@@ -172,9 +173,10 @@ def test_selectable_scenario_matches_browser_result(case):
 def test_scenario_spark_reference_matches_fabricops(case, spark_session):
     """Check that the displayed Spark reference comes from the same engine."""
     spark = case["spark"]
-    dataframe = spark_session.createDataFrame(spark["rows"], list(case["definitions"]))
+    columns, *rows = csv.reader(io.StringIO(case["csv"]))
+    dataframe = spark_session.createDataFrame(rows, columns)
     result = assess_data_sensitivity(
-        case["profile"], column_definitions=case["definitions"], dataframe=dataframe,
+        json.loads(_load_scenario(case)["profile"]), column_definitions=case["definitions"], dataframe=dataframe,
     )
     assert result["classification"] == spark["expected"]["classification"]
     assert result["minimum_handling_classification"] == spark["expected"]["handling"]
