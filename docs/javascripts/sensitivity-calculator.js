@@ -23,6 +23,20 @@
     return `${result.classification ?? "Unresolved"} · ${result.minimum_handling_classification ?? "Unresolved"}`;
   }
 
+  function personalData(assessment) {
+    const evidence = assessment.evidence ?? assessment.columns.flatMap((column) => column.evidence);
+    const patterns = [...new Set(evidence.filter((code) => code.startsWith("pattern_match:")))]
+      .map((code) => {
+        const detector = code.slice("pattern_match:".length);
+        return detector === "nric_fin" ? "NRIC/FIN" : detector.replaceAll("_", " ");
+      });
+    const classified = assessment.is_personal_data ?? assessment.contains_personal_data;
+    if (classified === true) return "PII indicated by category";
+    if (patterns.length) return `Possible PII (${patterns.join(", ")})`;
+    if (classified === false) return "Categories indicate non-personal data";
+    return "PII unconfirmed";
+  }
+
   function renderResults(result, container) {
     const { default: baseline, current } = result;
     const table = element("table");
@@ -47,9 +61,10 @@
       for (const assessment of [before, after]) {
         const cell = row.insertCell();
         cell.append(element("div", classification(assessment)));
+        cell.append(element("small", personalData(assessment)));
         if (assessment.human_review_required) cell.append(element("small", "Review required"));
       }
-      if (classification(before) !== classification(after) ||
+      if (classification(before) !== classification(after) || personalData(before) !== personalData(after) ||
           before.human_review_required !== after.human_review_required) {
         row.lastElementChild.classList.add("sensitivity-calculator__changed");
         row.lastElementChild.append(element("small", "Differs from defaults"));
@@ -95,7 +110,8 @@
     datasets.add(root);
 
     const form = root.querySelector("form");
-    const file = root.querySelector("[data-profile-file]");
+    const file = root.querySelector("[data-dataset-file]");
+    const dictionary = root.querySelector("[data-dictionary-file]");
     const picker = root.querySelector("[data-scenario]");
     const loadScenario = root.querySelector("[data-load-scenario]");
     const sparkReference = root.querySelector("[data-spark-reference]");
@@ -158,14 +174,15 @@
         .sort((left, right) => left[1].localeCompare(right[1]));
       for (const column of columns) {
         syncOptions(column.category, categories, "Choose a category", column.category.value || column.initial);
+        if (!column.category.value) column.suggestion.hidden = true;
         column.initial = "";
       }
       syncOptions(target, Object.keys(currentPolicy.classification_levels).map((level) => [level, level]),
         "No target");
     }
 
-    function addColumns(rows, definitions) {
-      columns = rows.map(({ column_name: name, data_type: type }) => {
+    function addColumns(rows, definitions, suggestCategories) {
+      columns = rows.map(({ column_name: name, data_type: type, row_count, null_count, distinct_count }) => {
         const row = element("fieldset");
         row.append(element("legend", type ? `${name} (${type})` : name));
         const description = element("input");
@@ -178,7 +195,22 @@
           wrapper.append(control);
           row.append(wrapper);
         }
-        return { name, row, description, category, initial: initial.category ?? "" };
+        const counts = [];
+        if (row_count != null) counts.push(`${row_count} rows`);
+        if (null_count != null) counts.push(`${null_count} blank`);
+        if (distinct_count != null) counts.push(`${distinct_count} distinct`);
+        const suggestion = element("small", "Category suggested from the header. Review its business use.");
+        suggestion.hidden = !suggestCategories || !initial.category ||
+          !Object.hasOwn(currentPolicy.sensitivity_assessment.categories, initial.category);
+        suggestion.className = "sensitivity-calculator__column-detail";
+        category.addEventListener("change", () => { suggestion.hidden = true; });
+        if (counts.length) {
+          const stats = element("small", counts.join(" · "));
+          stats.className = "sensitivity-calculator__column-detail";
+          row.append(stats);
+        }
+        row.append(suggestion);
+        return { name, row, description, category, suggestion, initial: initial.category ?? "" };
       });
       fields.replaceChildren(...columns.map(({ row }) => row));
       updateOptions();
@@ -194,16 +226,15 @@
       });
       renderResults(result, results);
       const scope = label(result.current.scope.kind).toLowerCase();
-      status.textContent = `Assessment complete. Profile scope is ${scope}.`;
+      status.textContent = `Assessment complete for ${profileName.textContent}. Profile scope is ${scope}.`;
     }
 
     async function loadProfile({ upload, scenario }) {
-      await perform("Loading profile and calculator…", async () => {
-        if (upload?.size > 2 * 1024 * 1024) throw new Error("Choose a profile file up to 2 MB.");
+      await perform(upload ? "Profiling the CSV and starting the calculator…" : "Loading scenario…", async () => {
+        if (upload?.size > 2 * 1024 * 1024) throw new Error("Choose a CSV file up to 2 MB.");
         const data = await send({
-          action: "load",
+          action: upload ? "dataset" : "load",
           text: upload ? await upload.text() : JSON.stringify(scenario.profile),
-          csv: upload ? /\.csv$/i.test(upload.name) : false,
         });
         profile = data.profile;
         defaultPolicy ??= data.defaultPolicy;
@@ -211,7 +242,7 @@
           currentPolicy = defaultPolicy;
           policy.value = JSON.stringify(defaultPolicy, null, 2);
         }
-        addColumns(data.columns, scenario?.definitions ?? {});
+        addColumns(data.columns, scenario?.definitions ?? data.definitions, Boolean(upload));
         linkage.closest("label").hidden = data.columnOnly;
         linkage.value = scenario?.sensitiveLinkage == null ? "" : scenario.sensitiveLinkage ? "yes" : "no";
         inputs.hidden = false;
@@ -222,14 +253,11 @@
           const { classification, handling } = scenario.spark.expected;
           sparkReference.textContent = `With the default policy and a Spark scan, this scenario assessed as ${classification}, with ${handling} handling. The browser compares policies using the profile evidence available here.`;
         }
-        if (scenario) {
-          await assess();
-        } else {
+        if (upload) {
           picker.value = "";
           loadScenario.disabled = true;
-          const count = `${columns.length} ${columns.length === 1 ? "column" : "columns"}`;
-          status.textContent = `Loaded ${profileName.textContent}. ${count}.`;
         }
+        await assess();
       });
       file.value = "";
     }
@@ -259,8 +287,35 @@
     file.addEventListener("change", () => {
       if (file.files[0]) loadProfile({ upload: file.files[0] });
     });
+    dictionary.addEventListener("change", async () => {
+      const upload = dictionary.files[0];
+      if (!upload || !profile) return;
+      await perform("Applying data dictionary…", async () => {
+        if (upload.size > 2 * 1024 * 1024) throw new Error("Choose a dictionary file up to 2 MB.");
+        const { definitions } = await send({
+          action: "dictionary",
+          text: await upload.text(),
+          csv: /\.csv$/i.test(upload.name),
+          columns: columns.map(({ name }) => name),
+          categories: Object.keys(currentPolicy.sensitivity_assessment.categories),
+        });
+        for (const column of columns) {
+          if (!Object.hasOwn(definitions, column.name)) continue;
+          const definition = definitions[column.name];
+          column.description.value = definition.description;
+          if (definition.category) {
+            column.category.value = definition.category;
+            column.suggestion.hidden = true;
+          }
+        }
+        await assess();
+      });
+      dictionary.value = "";
+    });
     form.addEventListener("input", (event) => {
-      if (event.target !== picker && !results.hidden) status.textContent = "Run another assessment to update the results.";
+      if (![picker, file, dictionary].includes(event.target) && !results.hidden) {
+        status.textContent = "Run another assessment to update the results.";
+      }
     });
     apply.addEventListener("click", () => perform("Checking policy…", async () => {
       currentPolicy = await send({ action: "policy", policy: policy.value });

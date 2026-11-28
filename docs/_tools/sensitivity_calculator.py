@@ -1,11 +1,14 @@
-"""Run the profile-only Data Sensitivity Assessment in the docs calculator."""
+"""Profile CSV data and run Data Sensitivity Assessment in the docs calculator."""
 
 import csv
 import io
 import json
+import re
+from datetime import date
 from types import SimpleNamespace
 
 from fabricops_kit import GovernanceConfig, assess_data_sensitivity
+from fabricops_kit.data_contract.assess_data_sensitivity import assessment_value_signals
 from fabricops_kit.data_contract.shared import assessment_profile_evidence
 
 
@@ -16,23 +19,144 @@ PROFILE_FIELDS = {
 }
 
 
-def _profile_payload(text, is_csv):
+# Exact header aliases provide draft business context, never approval.
+HEADER_CATEGORIES = {
+    "personal_email": "personal_contact", "personal_phone": "personal_contact",
+    "staff_number": "institutional_identifier", "student_number": "institutional_identifier",
+    "employee_id": "institutional_identifier", "student_id": "institutional_identifier",
+    "salary": "payroll", "base_salary": "payroll", "monthly_salary": "payroll",
+    "exam_marks": "academic_record", "exam_grade": "academic_record",
+    "medical_diagnosis": "health_record", "admission_decision": "admissions_record",
+    "employee_bank_account": "employee_bank_account", "vendor_bank_account": "vendor_bank_account",
+    "internal_budget": "internal_budget", "operating_budget": "internal_budget",
+    "credit_card_number": "payment_card", "nric": "personal_identifier", "passport_number": "personal_identifier",
+}
+VALUE_DETECTORS = ("email", "phone", "payment_card", "nric_fin")
+INTEGER = re.compile(r"[+-]?(?:0|[1-9][0-9]*)")
+DECIMAL = re.compile(r"[+-]?(?:0|[1-9][0-9]*)\.[0-9]+")
+ISO_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+
+
+def _value_type(value):
+    if value.lower() in {"true", "false"}:
+        return "boolean"
+    if INTEGER.fullmatch(value):
+        return "long"
+    if DECIMAL.fullmatch(value):
+        return "decimal"
+    if ISO_DATE.fullmatch(value):
+        try:
+            date.fromisoformat(value)
+            return "date"
+        except ValueError:
+            pass
+    return "string"
+
+
+def _csv_records(text):
+    reader = csv.reader(io.StringIO(text.removeprefix("\ufeff")), strict=True)
+    for record in reader:
+        if record:
+            yield record
+
+
+def _dataset_profile(text):
+    records = _csv_records(text)
+    names = [name.strip() for name in next(records, [])]
+    if not names or "" in names or len(names) != len(set(names)):
+        raise ValueError("The CSV needs a header with non-empty, unique column names.")
+    if len(names) > 500:
+        raise ValueError("Use a CSV with at most 500 columns.")
+
+    values = [set() for _ in names]
+    counts = [0] * len(names)
+    types = [set() for _ in names]
+    witnesses = [{} for _ in names]
+    pending = [dict.fromkeys(VALUE_DETECTORS) for _ in names]
+    row_count = 0
+    for row_count, record in enumerate(records, 1):
+        if len(record) != len(names):
+            raise ValueError(f"Data row {row_count} has {len(record)} fields. Expected {len(names)}.")
+        for index, raw in enumerate(record):
+            if not (value := raw.strip()):
+                continue
+            counts[index] += 1
+            if value in values[index]:
+                continue
+            values[index].add(value)
+            if "string" not in types[index]:
+                types[index].add(_value_type(value))
+            if pending[index]:
+                for signal in assessment_value_signals(value, pending[index]):
+                    witnesses[index][signal] = value
+                    del pending[index][signal]
+    if not row_count:
+        raise ValueError("Add at least one data row to the CSV.")
+
+    profile, frequency, definitions = [], [], {}
+    for index, name in enumerate(names):
+        observed = types[index]
+        kind = next(iter(observed), "unknown") if len(observed) <= 1 else (
+            "decimal" if observed == {"long", "decimal"} else "string"
+        )
+        profile.append({
+            "column_name": name, "data_type": kind, "row_count": row_count,
+            "non_null_count": counts[index], "null_count": row_count - counts[index],
+            "distinct_count": len(values[index]),
+        })
+        # One witness per detected pattern fits within the engine's frequency evidence limit.
+        for value in dict.fromkeys(witnesses[index].values()):
+            frequency.append({"column_name": name, "value": value})
+        normalised = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+        readable = re.sub(r"[_-]+", " ", name)
+        category = HEADER_CATEGORIES.get(normalised)
+        description = f"Values for {readable}."
+        if category:
+            description += f" The header suggests {category.replace('_', ' ')}."
+        definitions[name] = {"description": description, "category": category}
+
+    return {"profile": profile, "frequency_profile": frequency,
+            "profile_scope": "full_table"}, definitions
+
+
+def _dictionary(text, is_csv, names, categories):
     if is_csv:
-        rows = csv.DictReader(io.StringIO(text))
-        if not rows.fieldnames or "column_name" not in {name.lower() for name in rows.fieldnames}:
-            raise ValueError("CSV profiles need a COLUMN_NAME header.")
-        payload = {"profile": [
-            {key.lower(): value for key, value in row.items() if key is not None and value != ""}
-            for row in rows
-        ]}
-        for row in payload["profile"]:
-            if "row_count" in row:
-                row["row_count"] = int(row["row_count"])
+        records = _csv_records(text)
+        headings = [heading.strip().lower() for heading in next(records, [])]
+        required = {"column_name", "description"}
+        if len(headings) != len(set(headings)) or not required <= set(headings) or set(headings) - (required | {"category"}):
+            raise ValueError("Dictionary CSV needs column_name and description headers. Category is optional.")
+        entries = {}
+        for row in records:
+            if len(row) != len(headings):
+                raise ValueError("Every dictionary row must match its headers.")
+            entry = dict(zip(headings, row))
+            name = entry.pop("column_name").strip()
+            if name in entries:
+                raise ValueError("The dictionary contains duplicate column names.")
+            if not entry.get("category"):
+                entry.pop("category", None)
+            entries[name] = entry
     else:
-        payload = json.loads(text)
-        if isinstance(payload, list):
-            payload = {"profile": payload}
-    return payload
+        entries = json.loads(text.removeprefix("\ufeff"))
+        if not isinstance(entries, dict):
+            raise ValueError("Dictionary JSON must map column names to descriptions or objects.")
+
+    result = {}
+    allowed = set(names)
+    for name, entry in entries.items():
+        if name not in allowed:
+            raise ValueError(f"Dictionary column {name!r} does not match a dataset column.")
+        if isinstance(entry, str):
+            entry = {"description": entry}
+        if (not isinstance(entry, dict) or set(entry) - {"description", "category"}
+                or not isinstance(entry.get("description"), str)
+                or ("category" in entry and (not isinstance(entry["category"], str) or entry["category"] not in categories))):
+            raise ValueError("Dictionary entries need a description and may use a configured business category.")
+        result[name] = entry
+    if not result:
+        raise ValueError("The dictionary has no column descriptions.")
+    return result
 
 
 def _local_profile(payload):
@@ -76,13 +200,27 @@ def handle_message(request_json):
     """Return only the browser's JSON-serializable result."""
     request = json.loads(request_json)
     action = request["action"]
-    if action == "load":
-        profile = _local_profile(_profile_payload(request["text"], request["csv"]))
+    if action == "dictionary":
+        return json.dumps({"definitions": _dictionary(
+            request["text"], request["csv"], request["columns"], request["categories"],
+        )})
+    if action in {"load", "dataset"}:
+        definitions = {}
+        if action == "dataset":
+            payload, definitions = _dataset_profile(request["text"])
+        else:
+            payload = json.loads(request["text"])
+            if isinstance(payload, list):
+                payload = {"profile": payload}
+        profile = _local_profile(payload)
         rows = profile["profile"]
         return json.dumps({
             "profile": json.dumps(profile),
-            "columns": [{key: row.get(key) for key in ("column_name", "data_type")}
-                        for row in (rows if isinstance(rows, list) else [rows])],
+            "columns": [
+                {key: row[key] for key in ("column_name", "data_type", "row_count", "null_count", "distinct_count")
+                 if key in row} for row in (rows if isinstance(rows, list) else [rows])
+            ],
+            "definitions": definitions,
             "columnOnly": "kind" in profile,
             "defaultPolicy": _policy(DEFAULT),
         })

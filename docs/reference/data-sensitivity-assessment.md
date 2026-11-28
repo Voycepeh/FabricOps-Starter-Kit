@@ -4,10 +4,16 @@ Use Data Sensitivity Assessment to decide how to handle a column or dataset befo
 
 ## Try the classification calculator
 
-Choose one of 53 synthetic scenarios or upload a FabricOps profile to compare classifications.
+Upload a CSV dataset for a suggested classification and personal data (PII) assessment. You can also try one of 53 synthetic scenarios.
 
 <div class="sensitivity-calculator" data-sensitivity-calculator>
   <form>
+    <div class="sensitivity-calculator__actions">
+      <label for="sensitivity-dataset-file">Upload a CSV dataset
+        <input id="sensitivity-dataset-file" type="file" accept=".csv,text/csv" aria-describedby="sensitivity-file-help" data-dataset-file>
+      </label>
+    </div>
+    <small id="sensitivity-file-help">Use a UTF-8 CSV with a header row, up to 2 MB and 500 columns.</small>
     <div class="sensitivity-calculator__scenario-picker">
       <label for="sensitivity-scenario">Try a scenario
         <select id="sensitivity-scenario" data-scenario aria-describedby="sensitivity-scenario-help" disabled>
@@ -17,17 +23,15 @@ Choose one of 53 synthetic scenarios or upload a FabricOps profile to compare cl
       <button type="button" class="md-button" data-load-scenario disabled>Load and assess</button>
     </div>
     <small id="sensitivity-scenario-help">Scenarios cover single columns, datasets, and Spark group-size checks.</small>
-    <div class="sensitivity-calculator__actions">
-      <label for="sensitivity-profile-file">Load a profile
-        <input id="sensitivity-profile-file" type="file" accept=".json,.csv" aria-describedby="sensitivity-file-help" data-profile-file>
-      </label>
-    </div>
-    <small id="sensitivity-file-help">FabricOps profile JSON or CSV, up to 2 MB and 500 columns.</small>
     <div data-calculator-inputs hidden>
       <h3>Column details</h3>
       <p><strong data-profile-name></strong></p>
       <p data-spark-reference hidden></p>
-      <p>Choose the category that describes each column's business use. Descriptions capture review context.</p>
+      <p>Review the suggested descriptions and categories. Edit them here or upload your own descriptions.</p>
+      <label for="sensitivity-dictionary-file">Upload a data dictionary (optional)
+        <input id="sensitivity-dictionary-file" type="file" accept=".csv,.json" aria-describedby="sensitivity-dictionary-help" data-dictionary-file>
+      </label>
+      <small id="sensitivity-dictionary-help">Use CSV with <code>column_name</code> and <code>description</code> headers, or JSON mapping column names to descriptions.</small>
       <div data-column-fields></div>
       <label for="sensitivity-linkage">Can sensitive information in this dataset identify people or a sensitive group?
         <select id="sensitivity-linkage" data-linkage>
@@ -63,11 +67,11 @@ Choose one of 53 synthetic scenarios or upload a FabricOps profile to compare cl
   <noscript>Enable JavaScript to run the calculator.</noscript>
 </div>
 
-Edit the column descriptions and business categories, or open **Policy settings** to change the rules. The results compare the FabricOps defaults with your edited policy. Categories defined only in your edited policy have no category rule under the defaults.
+The calculator profiles the entire uploaded CSV and scans each column using the FabricOps value detectors. It shows inferred types and counts of blank and distinct values. Exact header matches can suggest business categories, such as Payroll for `monthly_salary`. Review those suggestions against the actual business use. Pattern matches flag possible PII and can raise minimum handling while the classification remains unresolved. The table result applies to the rows in the uploaded file.
 
-The calculator runs FabricOps' deterministic Python assessment in your browser. The page loads the Python runtime on first use, and your profile, descriptions, and policy edits stay in the tab. For approved Data Contracts, verified lineage, full Spark DataFrame scans, or optional AI, run the assessment in Fabric.
+A data dictionary can cover any subset of the columns. Use exact column names. CSV also accepts an optional `category` header. For JSON, a description can be a string or an object such as `{"description": "Monthly base salary", "category": "payroll"}`. A category must exist in the active policy. Edit the descriptions and categories or open **Policy settings** to compare a different rule, then run the assessment again.
 
-JSON accepts a canonical column profile, a list of profile rows, or a profile result with `profile` and optional `frequency_profile` rows. CSV uses the standard FabricOps profile headers, including `COLUMN_NAME`. Include `PROFILE_SCOPE` where known to distinguish a full-table profile from sampled or limited coverage.
+The calculator runs deterministic Python in your browser. It loads the Python runtime on first use and keeps your CSV, dictionary, and policy edits in the tab. Use Fabric for approved Data Contracts, verified lineage, Spark group-size checks, and optional AI.
 
 ## Default policy rules
 

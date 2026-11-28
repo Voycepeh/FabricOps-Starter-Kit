@@ -4442,7 +4442,7 @@
       "function_name": "_identifier_checksum",
       "function_type": "private_function",
       "inbound_source_references": [
-        "fabricops_kit.data_contract.assess_data_sensitivity._value_signals"
+        "fabricops_kit.data_contract.assess_data_sensitivity.assessment_value_signals"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "none",
@@ -4458,7 +4458,7 @@
       "function_name": "_luhn",
       "function_type": "private_function",
       "inbound_source_references": [
-        "fabricops_kit.data_contract.assess_data_sensitivity._value_signals"
+        "fabricops_kit.data_contract.assess_data_sensitivity.assessment_value_signals"
       ],
       "lifecycle_status": "internal",
       "live_impact_level": "none",
@@ -4479,9 +4479,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.assess_data_sensitivity._scan",
-      "source_end_line": 110,
+      "source_end_line": 113,
       "source_path": "src/fabricops_kit/data_contract/assess_data_sensitivity.py",
-      "source_start_line": 91,
+      "source_start_line": 94,
       "usage": "public_flow_reachable"
     },
     {
@@ -4495,25 +4495,9 @@
       "lifecycle_status": "internal",
       "live_impact_level": "preview_only",
       "qualified_name": "fabricops_kit.data_contract.assess_data_sensitivity._spark_detector",
-      "source_end_line": 88,
+      "source_end_line": 91,
       "source_path": "src/fabricops_kit/data_contract/assess_data_sensitivity.py",
-      "source_start_line": 59,
-      "usage": "public_flow_reachable"
-    },
-    {
-      "architecture_classification": "internal",
-      "contract_classification": "preview_only_internal",
-      "function_name": "_value_signals",
-      "function_type": "private_function",
-      "inbound_source_references": [
-        "fabricops_kit.data_contract.assess_data_sensitivity.assess_data_sensitivity"
-      ],
-      "lifecycle_status": "internal",
-      "live_impact_level": "preview_only",
-      "qualified_name": "fabricops_kit.data_contract.assess_data_sensitivity._value_signals",
-      "source_end_line": 56,
-      "source_path": "src/fabricops_kit/data_contract/assess_data_sensitivity.py",
-      "source_start_line": 47,
+      "source_start_line": 62,
       "usage": "public_flow_reachable"
     },
     {
@@ -4583,10 +4567,26 @@
       "raises_documentation": "ValueError\n    If definitions, target classification, profile coverage, or scan scope are invalid.",
       "returns_documentation": "dict\n    Findings include observed scope, nullable classification, approved\n    dataset classification, minimum handling, review flags, provenance,\n    and conditional treatments. The assessed classification describes the\n    observed data. The approved classification remains a handling floor.",
       "signature": "def assess_data_sensitivity(profile_result, description=None, column_definitions=None, target_classification=None, use_ai=False, *, dataframe=None, sensitive_linkage=None, context=None) -> dict",
-      "source_end_line": 458,
+      "source_end_line": 461,
       "source_path": "src/fabricops_kit/data_contract/assess_data_sensitivity.py",
-      "source_start_line": 113,
+      "source_start_line": 116,
       "summary": "Assess profile evidence and applicable Data Contract protections.",
+      "usage": "public_flow_reachable"
+    },
+    {
+      "architecture_classification": "internal",
+      "contract_classification": "preview_only_internal",
+      "function_name": "assessment_value_signals",
+      "function_type": "shared_function",
+      "inbound_source_references": [
+        "fabricops_kit.data_contract.assess_data_sensitivity.assess_data_sensitivity"
+      ],
+      "lifecycle_status": "internal",
+      "live_impact_level": "preview_only",
+      "qualified_name": "fabricops_kit.data_contract.assess_data_sensitivity.assessment_value_signals",
+      "source_end_line": 59,
+      "source_path": "src/fabricops_kit/data_contract/assess_data_sensitivity.py",
+      "source_start_line": 47,
       "usage": "public_flow_reachable"
     },
     {
@@ -21976,7 +21976,7 @@
       "caller_qualified_name": "fabricops_kit.data_contract.assess_data_sensitivity.assess_data_sensitivity"
     },
     {
-      "callee_qualified_name": "fabricops_kit.data_contract.assess_data_sensitivity._value_signals",
+      "callee_qualified_name": "fabricops_kit.data_contract.assess_data_sensitivity.assessment_value_signals",
       "caller_qualified_name": "fabricops_kit.data_contract.assess_data_sensitivity.assess_data_sensitivity"
     },
     {

@@ -44,11 +44,14 @@ def _identifier_checksum(value):
     return alphabet[(total + offset) % 11] == suffix
 
 
-def _value_signals(value, detectors):
+def assessment_value_signals(value, detectors):
+    """Find configured value patterns without returning the matched text."""
     if value is None:
         return []
     matches = []
     for detector in detectors:
+        if detector == "email" and "@" not in str(value):
+            continue
         check = {"payment_card": _luhn, "nric_fin": _identifier_checksum}.get(detector)
         candidates = re.finditer(_PATTERNS[detector], str(value), flags=re.ASCII)
         if any(check is None or check(candidate.group()) for candidate in candidates):
@@ -310,7 +313,7 @@ def assess_data_sensitivity(
         observed = profile.get(name, {})
         positives = set()
         for value in observed.get("observed_values", []):
-            positives.update(_value_signals(value, detectors))
+            positives.update(assessment_value_signals(value, detectors))
         for detector in detectors:
             if scan_counts.get((name, detector), 0):
                 positives.add(detector)

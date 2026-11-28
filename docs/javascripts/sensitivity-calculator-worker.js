@@ -13,6 +13,7 @@ async function start() {
   python.runPython(`
 import sys
 sys.path[:0] = ["/fabricops", "/fabricops/src"]
+import csv
 from sensitivity_calculator import handle_message
 `);
   return python;
@@ -34,7 +35,7 @@ self.onmessage = async ({ data }) => {
     const response = python.runPython(`
 try:
     calculator_response = handle_message(calculator_request)
-except (ValueError, TypeError, KeyError, OverflowError) as exc:
+except (ValueError, TypeError, KeyError, OverflowError, csv.Error) as exc:
     import json
     calculator_response = json.dumps({"error": str(exc)})
 finally:
@@ -44,6 +45,6 @@ calculator_response
     self.postMessage(JSON.parse(response));
     python.globals.delete("calculator_response");
   } catch {
-    self.postMessage({ error: "The assessment could not finish. Check the profile and try again." });
+    self.postMessage({ error: "The assessment could not finish. Check the input file and try again." });
   }
 };
