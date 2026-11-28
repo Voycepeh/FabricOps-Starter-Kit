@@ -136,7 +136,9 @@ dict
     Spark DataFrame, or ``None`` when no columns were selected. Governed
     ``profile`` rows additionally contain persisted snapshot identities
     and audit fields. ``profile_scope`` and ``assessment_reference`` identify
-    the coverage and subject for Data Sensitivity Assessment.
+    the coverage and subject for Data Sensitivity Assessment. When a
+    physical Lakehouse read can be pinned, ``delta_version`` identifies
+    the version used to calculate the profile.
 
 ### Return interpretation
 
@@ -205,7 +207,7 @@ profiled without creating an identity or writing metadata.
 
 `fabricops_kit/pipeline/profile_table.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L8-L201">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L8-L203">View on GitHub</a>
 </div>
 
 

@@ -87,8 +87,10 @@ True
 ## Returns
 
 dict
-    Findings include observed scope, nullable classification, minimum handling,
-    review flags, source and approval provenance, and conditional treatments.
+    Findings include observed scope, nullable classification, approved
+    dataset classification, minimum handling, review flags, provenance,
+    and conditional treatments. The assessed classification describes the
+    observed data. The approved classification remains a handling floor.
 
 ## Raises / Errors
 
@@ -116,9 +118,9 @@ modify data, Contracts or classifications.
 <div class="reference-source-card" markdown="1">
 **Source**
 
-`fabricops_kit/data_contract/assess_data_sensitivity.py:91`
+`fabricops_kit/data_contract/assess_data_sensitivity.py:113`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/assess_data_sensitivity.py#L91-L392">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/assess_data_sensitivity.py#L113-L437">View on GitHub</a>
 </div>
 
 

@@ -114,10 +114,12 @@ def test_malformed_ai_does_not_erase_deterministic_evidence(monkeypatch, respons
 def test_explicit_local_scan_finds_rare_matches_and_reports_counts_only(spark_session):
     """Use Spark to find matches omitted from aggregate stats or frequency tops."""
     frame = spark_session.createDataFrame([("ordinary",), ("rare@example.test",),
-                                          ("4111111111111111",)], "contact string")
-    result = assess_data_sensitivity(_profile("contact", ROW_COUNT=3), dataframe=frame)
+        ("4111111111111112 and 4111-1111-1111-1111",), ("s0000000j",), (None,)], "contact string")
+    context = _context(sensitivity_assessment={"detectors": ["email", "payment_card", "nric_fin"]})
+    result = assess_data_sensitivity(_profile("contact", ROW_COUNT=5), dataframe=frame, context=context)
     assert result["columns"][0]["local_detector_counts"]["email"] == 1
     assert result["columns"][0]["local_detector_counts"]["payment_card"] == 1
+    assert result["columns"][0]["local_detector_counts"]["nric_fin"] == 1
     assert "rare@example.test" not in repr(result)
     with pytest.raises(ValueError, match="different row counts"):
         assess_data_sensitivity(_profile("contact", ROW_COUNT=10), dataframe=frame)
@@ -190,14 +192,16 @@ def test_bounded_verified_chain_reaches_last_approved_source(monkeypatch):
 
     monkeypatch.setattr(lineage, "approved_source", approved)
     monkeypatch.setattr(lineage, "publication", lambda *_: ab)
-    monkeypatch.setattr(lineage, "history", lambda *_: [{"instant": now - 50}])
+    monkeypatch.setattr(lineage, "history", lambda *_, **_kwargs: [{"instant": now - 50}])
     inherited = lineage.walk(bc, "employee_id", "bigint")
     assert inherited["classification"] == "Confidential"
     assert seen == ["b", "a"]
-    assert lineage.walk(bc, "employee_id", "bigint") == inherited
-    assert seen == ["b", "a"]
-    lineage.resolved.clear()
-    monkeypatch.setattr(lineage, "history", lambda *_: [{"instant": now + 2}, {"instant": now - 50}])
+    computed = publication("run-computed", "b", "c", "renamed", "employee_id", start)
+    computed[2].nodes["alias"]["operation"] = "Substring"
+    derived = lineage.walk(computed, "employee_id", "bigint")
+    assert derived["classification"] is None and derived["floor"] == "Confidential"
+    assert derived["review"] == "transformed_upstream_information"
+    monkeypatch.setattr(lineage, "history", lambda *_, **_kwargs: [{"instant": now + 2}, {"instant": now - 50}])
     unverified = lineage.walk(bc, "employee_id", "bigint")
     assert unverified["classification"] is None
     assert unverified["review"] == "upstream_approval_unverified"
@@ -276,3 +280,129 @@ def test_changed_upstream_approval_keeps_stricter_handling(monkeypatch):
     lineage = shared._SensitivityLineage({}, {"Restricted": 0, "Confidential": 1})
     result = lineage.approved_source(source, read, shared._assessment_instant(before.replace(day=2)))
     assert result == ("Confidential", "Confidential", {"activation_id": "old"}, True)
+
+
+def test_output_assessment_does_not_reintroduce_removed_contract_columns(monkeypatch):
+    """A removed field stays out of output findings and the approved label still sets handling."""
+    module = __import__(assess_data_sensitivity.__module__, fromlist=["assessment_contract_evidence"])
+    monkeypatch.setattr(module, "assessment_contract_evidence", lambda *_: {
+        "classification": "Confidential", "columns": {
+            "email": {"classification": "Confidential", "treatment": "remove"},
+            "budget": {"classification": "Restricted"},
+        },
+    })
+    result = assess_data_sensitivity(_profile("budget"), target_classification="Restricted",
+        column_definitions={"email": {"category": "personal_contact"}})
+    assert [column["column_name"] for column in result["columns"]] == ["budget"]
+    assert result["classification"] == "Restricted"
+    assert result["approved_classification"] == result["minimum_handling_classification"] == "Confidential"
+    assert not result["recommended_treatments"] and result["human_review_required"]
+
+
+def test_treatment_label_requires_evidence_from_exact_applied_contract(monkeypatch):
+    """An approved output label becomes applicable after its exact treatment executes."""
+    module = __import__(assess_data_sensitivity.__module__, fromlist=["assessment_contract_evidence"])
+    proof = {"contract_id": "contract", "contract_version": 2, "payload_sha256": "digest"}
+    monkeypatch.setattr(module, "assessment_contract_evidence", lambda *_: {
+        "classification": "Restricted", "provenance": proof,
+        "columns": {"email": {"classification": "Restricted", "treatment": "mask", "pii_type": "direct"}},
+    })
+    profile = _profile("email", MIN_VALUE="****************")
+    unverified = assess_data_sensitivity(profile)
+    assert unverified["classification"] is None
+    assert unverified["minimum_handling_classification"] == "Confidential"
+    assert "treatment_execution_unverified" in unverified["columns"][0]["evidence"]
+
+    def verify(_asset, scope, *_):
+        scope["verified_treatment_contract"] = proof
+        return {}
+
+    monkeypatch.setattr(module, "assess_lineage_protection", verify)
+    verified = assess_data_sensitivity(profile)
+    assert verified["classification"] == verified["minimum_handling_classification"] == "Restricted"
+    assert not verified["human_review_required"]
+
+
+@pytest.mark.parametrize("target, expected", [
+    ("Restricted", ["email"]), ("Confidential", []), ("Highly Sensitive", []),
+])
+def test_known_treatment_is_available_while_other_columns_need_review(target, expected):
+    """Known findings can be treated while target feasibility remains provisional."""
+    result = assess_data_sensitivity(_profile("email", "notes"),
+        column_definitions={"email": {"category": "personal_contact"}}, target_classification=target)
+    assert [item["column_name"] for item in result["recommended_treatments"]] == expected
+    assert any("undetermined" in item for item in result["residual_risks"]) == bool(expected)
+
+
+def test_publication_requires_exact_version_and_successful_treatment(monkeypatch):
+    """A full profile and a successful Run are insufficient without the same pinned Delta version."""
+    asset = {"table_id": "target", "asset_workspace_id": "dev", "asset_type": "TABLE"}
+    event = {**asset, "profile_snapshot_id": "snapshot", "activity": "standard",
+             "status": "passed", "results_persisted": True, "trigger": "write",
+             "profile_scope": "full_table", "delta_version": 9}
+    contract = {"contract_id": "contract", "contract_version": 2, "payload_sha256": "digest"}
+    operation = {**contract, "write_mode": "overwrite", "stages": [
+        {"stage": "Sensitive Data", "status": "passed"}]}
+    monkeypatch.setattr(shared._SensitivityLineage, "history", lambda *_: [{"version": 9}])
+    monkeypatch.setattr(shared._SensitivityLineage, "publication",
+                        lambda *_, **_kwargs: ({"profiling": [event]}, operation))
+    monkeypatch.setattr(shared._SensitivityLineage, "walk", lambda *args: {"floor": "Restricted"})
+    scope = {"kind": "full_table", "operation": "write", "run_id": "run",
+             "profile_snapshot_id": "snapshot"}
+    stale = {**scope, "delta_version": 8}
+    assert shared.assess_lineage_protection(asset, stale, {"email": {}}, {}, {}) == {}
+    assert shared.assess_lineage_protection(asset, stale, {"email": {}}, {"configured": True}, {}) == {
+        "email": {"review": "whole_output_lineage_unverified"}}
+    assert shared.assess_lineage_protection(asset, scope, {"email": {}}, {"configured": True}, {}) == {
+        "email": {"floor": "Restricted"}}
+    assert scope["verified_treatment_contract"] == contract
+    event.pop("delta_version")
+    legacy = {"kind": "full_table", "operation": "write", "run_id": "run", "profile_snapshot_id": "snapshot"}
+    shared.assess_lineage_protection(asset, legacy, {"email": {}}, {"configured": True}, {})
+    assert "verified_treatment_contract" not in legacy
+
+
+def test_delta_receipt_matches_accepted_processing_state(spark_session, monkeypatch):
+    """Reuse the exact committed batch and reject a later commit carrying old receipt fields."""
+    published = datetime(2026, 1, 1, 0, 0, 1, 123456, tzinfo=UTC)
+    accepted = published.replace(second=2)
+    frame = spark_session.createDataFrame([
+        ("publication_receipt", "committed", "dev", "target", "run", "batch",
+         "activity", published, accepted, 12, "overwrite"),
+    ], ["record_type", "status", "workspace_id", "target_table_id", "run_id", "publication_batch_id",
+        "publication_activity_id", "publication_at", "accepted_at", "publication_input_rows",
+        "publication_strategy"])
+    monkeypatch.setattr(pipeline, "read_processing_state", lambda **_: frame)
+    receipt = {"batch_id": "batch", "activity_id": "activity", "committed_at": published.isoformat(),
+               "input_rows": 12, "run_id": "run", "strategy": "overwrite"}
+    exact = shared._assessment_instant(published)
+    assert pipeline.matches_committed_publication("target", "dev", receipt, exact, context={})
+    assert not pipeline.matches_committed_publication("target", "dev", {**receipt, "activity_id": "other"}, exact, context={})
+    assert not pipeline.matches_committed_publication("target", "dev", receipt, shared._assessment_instant(accepted) + 1, context={})
+
+
+def test_physical_profile_pins_the_delta_version(monkeypatch, spark_session):
+    """Profile the same storage version that will be reported to assessment."""
+    import sys
+    from fabricops_kit import profile_table
+
+    identity = {"table_id": "target", "store": "Silver", "schema": "dbo",
+                "table_name": "target", "asset_workspace_id": "dev", "store_type": "lakehouse"}
+    requests = []
+    source = spark_session.createDataFrame([("sample",)], "value string")
+
+    def read(**kwargs):
+        requests.append(kwargs)
+        return source
+
+    history = SimpleNamespace(select=lambda *_: SimpleNamespace(first=lambda: {"version": 0}))
+    delta = SimpleNamespace(forPath=lambda *_: SimpleNamespace(history=lambda _limit: history))
+    monkeypatch.setitem(sys.modules, "delta", SimpleNamespace(tables=SimpleNamespace(DeltaTable=delta)))
+    monkeypatch.setitem(sys.modules, "delta.tables", SimpleNamespace(DeltaTable=delta))
+    monkeypatch.setattr(pipeline, "resolve_catalogue_table_identity", lambda *_a, **_k: identity)
+    monkeypatch.setattr(pipeline, "resolve_configured_lakehouse_table", lambda *_a, **_k: (None, None, None, "path"))
+    monkeypatch.setattr(pipeline, "read_lakehouse_table", read)
+    monkeypatch.setattr(pipeline, "persistence_permitted", lambda *_: False)
+    result = profile_table(table_id="target", context={**_context(), "_spark_session": spark_session}, verbose=False)
+    assert result["delta_version"] == requests[0]["versionAsOf"] == 0
+    assert result["assessment_reference"]["profile_subject"] == "physical_table"

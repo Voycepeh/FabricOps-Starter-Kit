@@ -1879,6 +1879,7 @@ def assessment_profile_evidence(value, runtime):
              "run_id": reference.get("run_id") or (next(iter(row_runs)) if len(row_runs) == 1 else None),
              "operation": reference.get("operation") or (inferred_operation if len(row_roles) == 1 else None),
              "started_at": reference.get("started_at") or standard.get("executed_at"),
+             "delta_version": value.get("delta_version", standard.get("delta_version")),
              "max_rows": value.get("profiling_max_rows") or standard.get("profiling_max_rows")}
     if kind != "full_table":
         limitations.append("whole_table_coverage_unverified")
@@ -2401,31 +2402,43 @@ class _SensitivityLineage:
         self.rank = rank
         self.runs = {}
         self.reads = {}
+        self.tables = {}
         self.histories = {}
+        self.attestations = {}
         self.graphs = {}
         self.activations = {}
         self.payloads = {}
-        self.resolved = {}
 
     def highest(self, values):
         return max((label for label in values if label in self.rank), key=self.rank.get, default=None)
 
-    def history(self, asset, destination=None):
-        key = _assessment_key(asset)
-        if key not in self.histories:
-            try:
-                self.histories[key] = self._read_history(asset)
-            except Exception:
-                self.histories[key] = ({}, [])
-        binding, history = self.histories[key]
-        if destination and any(binding.get(field) != destination.get(field)
-                               for field in ("item_id", "kind", "schema", "table_name")):
-            return []
-        return history
-
-    def _read_history(self, asset):
-        from delta.tables import DeltaTable
+    def history(self, asset, destination=None, *, past=False):
         from pyspark.sql import functions as F
+
+        key = _assessment_key(asset)
+        try:
+            if key not in self.tables:
+                self.tables[key] = self._open_table(asset)
+            binding, table = self.tables[key]
+            if table is None or (destination and any(binding.get(field) != destination.get(field)
+                                     for field in ("item_id", "kind", "schema", "table_name"))):
+                return []
+            limit = 64 if past else 1
+            if not past and (key, 64) in self.histories:
+                return self.histories[key, 64][:1]
+            if (key, limit) not in self.histories:
+                rows = table.history(limit).select(
+                    "version", F.unix_micros("timestamp").alias("instant"), "operation",
+                    "operationParameters", "userMetadata",
+                )
+                self.histories[key, limit] = sorted(row_dicts(rows), key=lambda row: row["version"], reverse=True)
+            return self.histories[key, limit]
+        except Exception:
+            self.tables[key] = ({}, None)
+            return []
+
+    def _open_table(self, asset):
+        from delta.tables import DeltaTable
 
         from fabricops_kit.config.shared import get_store
         from fabricops_kit.pipeline.shared import pipeline_physical_bindings, resolve_catalogue_table_identity
@@ -2435,7 +2448,7 @@ class _SensitivityLineage:
         route = runtime["scope_workspace_id"]
         workspace, table_id, asset_type = _assessment_key(asset)
         if asset_type != "TABLE":
-            return {}, []
+            return {}, None
         spark = get_spark_session(context=runtime)
         metadata_route = runtime.get("metadata_workspace_id") or route
         catalogue = resolve_catalogue_table_identity(config, route, table_id, spark_session=spark,
@@ -2444,13 +2457,11 @@ class _SensitivityLineage:
         if (catalogue["store_type"] != "lakehouse" or configured_store.kind != "lakehouse"
                 or str(configured_store.workspace_id).lower() != workspace
                 or not catalogue.get("item_id") or catalogue["item_id"] != configured_store.item_id):
-            return {}, []
+            return {}, None
         binding = pipeline_physical_bindings({table_id: catalogue}, config=config, workspace_id=route)[table_id]
         _, _, _, path = resolve_configured_lakehouse_table(
             catalogue["store"], catalogue["table_name"], catalogue["schema"], context=runtime)
-        history = DeltaTable.forPath(spark, path).history(64).select(
-            "version", F.unix_micros("timestamp").alias("instant"), "operation", "userMetadata")
-        return binding, sorted(row_dicts(history), key=lambda row: row["version"], reverse=True)
+        return binding, DeltaTable.forPath(spark, path)
 
     def run(self, run_id):
         if run_id not in self.runs:
@@ -2502,9 +2513,23 @@ class _SensitivityLineage:
         if len(candidates) != 1 or not candidates[0].get("lineage"):
             return None
         operation = candidates[0]
-        if operation["write_mode"] == "overwrite" and commit["operation"] != "WRITE":
+        if operation["write_mode"] == "overwrite" and (
+            commit["operation"] != "WRITE"
+            or str((commit.get("operationParameters") or {}).get("mode")).lower() != "overwrite"
+            or (commit.get("operationParameters") or {}).get("predicate")
+        ):
             return None
         if not self.history(asset, operation["destination"]):
+            return None
+        attestation = _assessment_key(asset), commit["version"], commit["userMetadata"]
+        if attestation not in self.attestations:
+            from fabricops_kit.pipeline.shared import matches_committed_publication
+
+            runtime = self.runtime
+            routed = {**runtime, "scope_workspace_id": runtime.get("metadata_workspace_id") or runtime["scope_workspace_id"]}
+            self.attestations[attestation] = matches_committed_publication(
+                operation["table_id"], run["workspace_id"], receipt, commit["instant"], context=routed)
+        if not self.attestations[attestation]:
             return None
         key = run["run_id"], operation["operation_key"]
         if key not in self.graphs:
@@ -2553,8 +2578,6 @@ class _SensitivityLineage:
         key = run["run_id"], operation["operation_key"], name, data_type
         if key in visited or len(visited) >= 6:
             return {"review": "lineage_cycle_or_depth_limit"}
-        if len(visited) == 0 and key in self.resolved:
-            return self.resolved[key]
         supported, direct, roots, population = graph.column(name, data_type)
         results = []
         for source in roots:
@@ -2576,8 +2599,8 @@ class _SensitivityLineage:
                                             "column_name": source["name"], "contract": provenance}}
             if changed:
                 source_result["review"] = "upstream_approval_changed"
-            if not label and direct and not changed:
-                history = self.history(source, read["destination"])
+            if not label and not changed:
+                history = self.history(source, read["destination"], past=True)
                 before = next((item for item in history if item["instant"] < read_at), None)
                 intervening = any(read_at <= item["instant"] <= committed_at for item in history)
                 try:
@@ -2609,8 +2632,6 @@ class _SensitivityLineage:
             "provenance": {"run_id": run["run_id"], "operation_key": operation["operation_key"],
                            "sources": [item["provenance"] for item in results if item.get("provenance")]},
         }
-        if len(visited) == 0:
-            self.resolved[key] = result
         return result
 
 
@@ -2622,23 +2643,38 @@ def assess_lineage_protection(asset, scope, profile, runtime, rank):
         return {}
     lineage = _SensitivityLineage(runtime, rank)
     try:
+        run_id = scope.get("run_id") if scope.get("operation") == "write" else None
+        version = scope.get("delta_version")
+        requires_journal = bool(run_id and scope.get("profile_snapshot_id"))
+        if version is None and not requires_journal:
+            raise ValueError("The assessed Delta version is unavailable.")
         history = lineage.history(asset)
         latest = history[0] if history else None
-        started_at = _assessment_instant(scope.get("started_at"))
-        # A post-Write schedule retains the exact Run. Standalone profiles provide
-        # the observation start, so a commit after that instant invalidates reuse.
-        run_id = scope.get("run_id") if scope.get("operation") == "write" else None
+        if not latest:
+            raise ValueError("The current Delta version is unavailable.")
+        if version is not None and (type(version) is not int or latest["version"] != version):
+            raise ValueError("The assessed Delta version is no longer current.")
         publication = lineage.publication(asset, latest, run_id=run_id, replace_only=False)
-        if publication and not started_at and run_id:
-            snapshot = scope.get("profile_snapshot_id")
-            candidates = [event for event in publication[0].get("profiling", [])
-                          if event.get("profile_snapshot_id") == snapshot and snapshot
-                          and event.get("activity") == "standard" and event.get("status") == "passed"
-                          and event.get("results_persisted") and event.get("trigger") == "write"
-                          and _assessment_key(event) == _assessment_key(asset)]
-            if len(candidates) == 1:
-                started_at = _assessment_instant(candidates[0].get("executed_at"))
-        if publication and started_at and latest["instant"] < started_at:
+        if publication and requires_journal:
+            snapshot = scope["profile_snapshot_id"]
+            events = [event for event in publication[0].get("profiling", [])
+                      if event.get("profile_snapshot_id") == snapshot
+                      and event.get("activity") == "standard" and event.get("status") == "passed"
+                      and event.get("results_persisted") and event.get("trigger") == "write"
+                      and event.get("profile_scope") == "full_table"
+                      and _assessment_key(event) == _assessment_key(asset)]
+            if len(events) != 1 or events[0].get("delta_version") != latest["version"]:
+                publication = None
+        if publication:
+            operation = publication[1]
+            if operation["write_mode"] == "overwrite" and all(
+                operation.get(key) for key in ("contract_id", "contract_version", "payload_sha256")
+            ) and any(stage["stage"] == "Sensitive Data" and stage["status"] == "passed"
+                      for stage in operation.get("stages", [])):
+                scope["verified_treatment_contract"] = {
+                    key: operation[key] for key in ("contract_id", "contract_version", "payload_sha256")
+                }
+            scope["delta_version"] = latest["version"]
             protection = {}
             for name, column in profile.items():
                 try:
@@ -2651,6 +2687,6 @@ def assess_lineage_protection(asset, scope, profile, runtime, rank):
             return protection
     except Exception:
         pass
-    if scope.get("operation") == "write":
+    if scope.get("operation") == "write" or scope.get("delta_version") is not None:
         return {name: {"review": "whole_output_lineage_unverified"} for name in profile}
     return {}

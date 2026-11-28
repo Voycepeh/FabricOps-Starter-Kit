@@ -322,7 +322,8 @@ PROFILE_EVENT_FIELDS = [("context_key", "string", False), ("activity", "string",
                         ("empty_result", "boolean"), ("profile_snapshot_id", "string"),
                         ("completed_at", "string"), ("reason", "string"), ("table_id", "string"),
                         ("row_count", "long"), ("asset_workspace_id", "string"), ("profile_scope", "string"), ("profiling_max_rows", "long"), ("trigger", "string"), ("workspace_id", "string"), ("pipeline_run_id", "string"), ("executed_at", "string"),
-                        ("physical", {"struct": [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"]})]
+                        ("physical", {"struct": [(n,t,z) for n,t,z in BINDING_FIELDS if n != "table_id"]}),
+                        ("delta_version", "long")]
 # Dicts denote structs; tuples denote native arrays. Lists retain the existing
 # array-of-struct contract used by other metadata tables.
 CATALOGUE_NESTED_FIELDS = {
@@ -951,6 +952,10 @@ def decode_metadata_row(table_name: str, row: dict[str, Any]) -> dict[str, Any]:
                         if field not in original["metrics"]:
                             decoded["metrics"].pop(field, None)
                 decoded["destination"] = {key: decoded["destination"][key] for key in original["destination"]}
+        if required and name == "profiling":
+            for original, decoded in zip(value, result[name]):
+                if "delta_version" not in original:
+                    decoded.pop("delta_version", None)
         if required and not legacy_run and name == "profiling":
             # Scope fields are additive JSON members. Do not inject them into
             # retained Run content and change a previously approved content hash.

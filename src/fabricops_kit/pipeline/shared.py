@@ -1970,6 +1970,33 @@ def _publication_receipt(row: Mapping[str, Any], history=()) -> dict[str, Any]:
     return receipt
 
 
+def matches_committed_publication(table_id, workspace_id, receipt, commit_instant, *, context):
+    """Match a Delta commit to the exact accepted Processing State publication."""
+    from pyspark.sql import functions as F
+
+    frame = read_processing_state(context=context).where(
+        (F.col("record_type") == "publication_receipt")
+        & (F.col("status") == "committed")
+        & (F.col("workspace_id") == workspace_id)
+        & (F.col("target_table_id") == table_id)
+        & (F.col("run_id") == receipt["run_id"])
+        & (F.col("publication_batch_id") == receipt["batch_id"])
+    )
+    # Spark transports timestamps to Python in the driver's timezone. Keep the
+    # persisted publication instant unambiguous when comparing the receipt.
+    rows = frame.withColumn("_publication_us", F.unix_micros("publication_at")).withColumn(
+        "_accepted_us", F.unix_micros("accepted_at")
+    ).limit(2).collect()
+    if len(rows) != 1:
+        return False
+    row = rows[0].asDict()
+    accepted_at = row["_accepted_us"]
+    if accepted_at is None or commit_instant > accepted_at or row["_publication_us"] is None:
+        return False
+    row["publication_at"] = datetime.fromtimestamp(row["_publication_us"] / 1_000_000, UTC)
+    return _publication_receipt(row) == receipt
+
+
 def _physical_target_has_publication(
     identity: Mapping[str, Any], receipt: Mapping[str, Any], *, context: Mapping[str, Any]
 ) -> bool:
@@ -7913,6 +7940,8 @@ def schedule_table_profiling(table_id, operation, *, context, spark_session=None
                                   "row_count": outcome.get("row_count"), **profile_scope, "results_persisted": True,
                                   "empty_result": outcome.get("empty_result", False),
                                   "completed_at": completed_at}
+            if activity == "standard" and outcome.get("delta_version") is not None:
+                outcomes[activity]["delta_version"] = outcome["delta_version"]
             record_profiling_outcome({**base, **outcomes[activity]}, context=context, spark_session=spark_session)
             completion_recorded = True
         except BaseException as exc:
@@ -8854,7 +8883,7 @@ def execute_table_profile(
         raise ValueError("frequency_top_n must be greater than zero when supplied.")
     spark_session = get_spark_session(spark_session, dataframe=dataframe, context=context)
     identity = None
-    assessment_started_at = datetime.now(UTC).isoformat()
+    delta_version = None
     config = active_workspace_id = None
     warehouse_fields = None
     warehouse_physical = False
@@ -8880,7 +8909,23 @@ def execute_table_profile(
         )
         if dataframe is None:
             if store_kind == "lakehouse":
-                dataframe = read_lakehouse_table(table_id=str(identity["table_id"]), context={**(context or {}), "_spark_session": spark_session})
+                options = {}
+                if (activities is None or ((context or {}).get("_profile_trigger") == "write"
+                        and "standard" in selected_activities
+                        and (context.get("_profile_scope") or {}).get("profile_scope") == "full_table")):
+                    try:
+                        from delta.tables import DeltaTable
+
+                        _, _, _, path = resolve_configured_lakehouse_table(
+                            identity["store"], identity["table_name"], identity.get("schema"), context=context)
+                        commit = DeltaTable.forPath(spark_session, path).history(1).select("version").first()
+                        delta_version = int(commit["version"])
+                        options = {"versionAsOf": delta_version}
+                    except Exception:
+                        # Profiling remains available when exact Delta provenance cannot be read.
+                        pass
+                dataframe = read_lakehouse_table(table_id=str(identity["table_id"]),
+                    context={**(context or {}), "_spark_session": spark_session}, **options)
                 profile_input_label = "complete persisted Lakehouse table"
             else:
                 warehouse_physical = True
@@ -8983,10 +9028,12 @@ def execute_table_profile(
                 display_profile_presentations([presentation])
             elif presentation is not None:
                 presentations.append(presentation)
+        if delta_version is not None:
+            result["delta_version"] = delta_version
         if activities is None:
             result["profile_scope"] = scope["profile_scope"]
             result["profiling_max_rows"] = scope["profiling_max_rows"]
-            reference = {"started_at": assessment_started_at, "profile_subject": "supplied_dataframe"}
+            reference = {"profile_subject": "supplied_dataframe"}
             if identity is not None:
                 reference.update(table_id=identity["table_id"], asset_type="TABLE",
                     asset_workspace_id=identity.get("asset_workspace_id") or get_store(

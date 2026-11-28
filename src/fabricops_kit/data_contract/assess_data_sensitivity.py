@@ -56,6 +56,38 @@ def _value_signals(value, detectors):
     return matches
 
 
+def _spark_detector(sample, detector):
+    from pyspark.sql import functions as F
+
+    if detector not in {"payment_card", "nric_fin"}:
+        return sample.rlike(_PATTERNS[detector])
+    candidates = F.regexp_extract_all(sample, F.lit(_PATTERNS[detector]), 0)
+
+    def valid_card(candidate):
+        digits = F.regexp_replace(candidate, "[ -]", "")
+        length = F.length(digits)
+
+        def score(total, index):
+            digit = F.substr(digits, index, F.lit(1)).cast("int")
+            doubled = F.when(digit > 4, digit * 2 - 9).otherwise(digit * 2)
+            return total + F.when((length - index) % 2 == 1, doubled).otherwise(digit)
+
+        total = F.aggregate(F.sequence(F.lit(1), length), F.lit(0), score)
+        return (~digits.rlike(r"^(\d)\1+$")) & (total % 10 == 0)
+
+    def valid_identifier(candidate):
+        value = F.upper(candidate)
+        prefix = F.substring(value, 1, 1)
+        total = sum(F.substring(value, index, 1).cast("int") * weight
+                    for index, weight in enumerate((2, 7, 6, 5, 4, 3, 2), 2))
+        offset = F.when(prefix.isin("T", "G"), 4).when(prefix == "M", 3).otherwise(0)
+        alphabet = F.when(prefix.isin("S", "T"), "JZIHGFEDCBA").when(
+            prefix == "M", "KLJNPQRTUWX").otherwise("XWUTRQPNMLK")
+        return F.substr(alphabet, (total + offset) % 11 + 1, F.lit(1)) == F.substring(value, 9, 1)
+
+    return F.exists(candidates, valid_card if detector == "payment_card" else valid_identifier)
+
+
 def _scan(dataframe, columns, detectors, expected_rows):
     """Return aggregate detector counts in one Spark action."""
     if not columns or not detectors:
@@ -65,22 +97,12 @@ def _scan(dataframe, columns, detectors, expected_rows):
     names = set(dataframe.columns)
     if set(columns) - names or len(names) != len(dataframe.columns):
         raise ValueError("Scan DataFrame must contain the assessed columns with unique names.")
-    checksum_detectors = tuple(detector for detector in detectors if detector in {"payment_card", "nric_fin"})
-    checksum_flags = F.udf(lambda value: _value_signals(value, checksum_detectors), "array<string>")
     checks = {}
-    derived = []
-    for index, name in enumerate(columns):
+    for name in columns:
         sample = F.col("`" + name.replace("`", "``") + "`").cast("string")
-        alias = f"_fabricops_assessment_{index}"
-        if checksum_detectors:
-            while alias in names:
-                alias += "_"
-            derived.append(checksum_flags(F.when(sample.rlike(
-                "|".join(f"(?:{_PATTERNS[detector]})" for detector in checksum_detectors)), sample)).alias(alias))
         for detector in detectors:
-            checks[name, detector] = (F.array_contains(F.col(alias), detector)
-                                      if detector in checksum_detectors else sample.rlike(_PATTERNS[detector]))
-    row = dataframe.select("*", *derived).agg(F.count("*").alias("assessment_rows"), *[
+            checks[name, detector] = _spark_detector(sample, detector)
+    row = dataframe.agg(F.count("*").alias("assessment_rows"), *[
         F.count(F.when(condition, 1)).alias(f"count_{index}") for index, condition in enumerate(checks.values())
     ]).first()
     if expected_rows is not None and row[0] != expected_rows:
@@ -130,8 +152,10 @@ def assess_data_sensitivity(
     Returns
     -------
     dict
-        Findings include observed scope, nullable classification, minimum handling,
-        review flags, source and approval provenance, and conditional treatments.
+        Findings include observed scope, nullable classification, approved
+        dataset classification, minimum handling, review flags, provenance,
+        and conditional treatments. The assessed classification describes the
+        observed data. The approved classification remains a handling floor.
 
     Raises
     ------
@@ -177,7 +201,17 @@ def assess_data_sensitivity(
     detectors = policy["detectors"]
     columns = {}
     source_columns = approved.get("columns", {})
-    for name in dict.fromkeys([*profile, *definitions, *(source_columns if not single else ())]):
+    output_schema = bool(profile) and not single and scope["kind"] == "full_table"
+    names = (profile if output_schema else
+             dict.fromkeys([*profile, *definitions, *(source_columns if not single else ())]))
+    treatment_provenance = scope.get("verified_treatment_contract")
+    treatment_verified = bool(treatment_provenance) and all(
+        treatment_provenance.get(key)
+        and treatment_provenance[key] == approved.get("provenance", {}).get(key)
+        for key in ("contract_id", "contract_version", "payload_sha256")
+    )
+    contract_has_treatment = any(item.get("treatment") for item in source_columns.values())
+    for name in names:
         observed = profile.get(name, {})
         draft = definitions.get(name, {})
         if isinstance(draft, str):
@@ -210,8 +244,9 @@ def assess_data_sensitivity(
                 flags.append("conflicting_classification")
             if inherited in rank and label != inherited:
                 flags.append("conflicting_upstream_classification")
-        if contract.get("treatment") and scope["kind"] != "full_table":
-            flags.append("verify_treatment_scope")
+        treatment_unverified = bool(contract.get("treatment")) and not treatment_verified
+        if treatment_unverified:
+            flags.append("treatment_execution_unverified")
             classification = None
         if classification is None:
             classification = highest((inherited, proposal))
@@ -229,6 +264,7 @@ def assess_data_sensitivity(
             "minimum_handling_classification": highest((
                 classification, label, inherited, proposal, upstream.get("floor"),
                 most_protective if label is not None and label not in rank else None,
+                policy["suspected_handling"] if treatment_unverified else None,
             )),
             "category": category, "is_personal_data": rule.get("personal"),
             "is_sensitive_data": rule.get("sensitive"),
@@ -333,23 +369,31 @@ def assess_data_sensitivity(
     approved_table = approved.get("classification") if not single else None
     if approved_table is not None and approved_table not in rank:
         findings.append({"code": "approved_label_outside_policy", "human_review_required": True})
-    assessed = highest([approved_table, dataset_rule, ai_dataset, *(c["classification"] for c in values)])
+    if contract_has_treatment and not treatment_verified and not single:
+        findings.append({"code": "treatment_execution_unverified", "human_review_required": True})
+    # The approved dataset label sets handling. An output with treatment rules
+    # is assessed from its observed columns and contextual evidence.
+    assessed = highest([approved_table if not contract_has_treatment else None,
+                        dataset_rule, ai_dataset, *(c["classification"] for c in values)])
     unresolved_current = not values or any(c["classification"] is None for c in values)
     if not single and approved_table in rank and dataset_rule in rank and rank[dataset_rule] > rank[approved_table]:
         findings.append({"code": "contradictory_dataset_evidence", "human_review_required": True})
     floor = highest([
-        assessed, *(c["minimum_handling_classification"] for c in values),
+        assessed, approved_table, *(c["minimum_handling_classification"] for c in values),
+        policy["suspected_handling"] if contract_has_treatment and not treatment_verified and not single else None,
         policy["unresolved_handling"] if unresolved_current or approved.get("unavailable") else None,
         most_protective if approved_table is not None and approved_table not in rank else None,
     ])
     treatments, residual = [], []
     if target_classification is not None:
-        if assessed is None or unresolved_current:
+        if assessed is None:
             residual.append("Treatment feasibility is undetermined while classification is unresolved.")
         elif rank[target_classification] < rank[assessed]:
+            if unresolved_current or any(c["human_review_required"] for c in values):
+                residual.append("Treatment feasibility is undetermined until unresolved findings are reviewed.")
             for column in values:
                 level = column["minimum_handling_classification"]
-                if level not in rank or rank[level] <= rank[target_classification]:
+                if column["classification"] is None or level not in rank or rank[level] <= rank[target_classification]:
                     continue
                 name = column["column_name"]
                 allowed = sensitive_data_treatments_for_type(column.get("data_type") or "")
@@ -364,8 +408,8 @@ def assess_data_sensitivity(
                 })
             if dataset_rule or ai_dataset or approved_table:
                 residual.append("Review dataset context and applicable approved protections after treatment.")
-            if not treatments:
-                residual.append("The requested target cannot be reached by the available column treatments alone.")
+            if not treatments and not unresolved_current:
+                residual.append("No column treatment addresses the remaining dataset findings.")
             residual.append("Reassess the actual transformed output before authorised classification review.")
 
     def indicator(field):
@@ -380,7 +424,8 @@ def assess_data_sensitivity(
     return {
         "table_id": asset.get("table_id"), "asset": asset, "scope": scope,
         "policy_fingerprint": hashlib.sha256(json.dumps([list(levels.items()), policy], sort_keys=True).encode()).hexdigest(),
-        "classification": assessed, "minimum_handling_classification": floor,
+        "classification": assessed, "approved_classification": approved_table,
+        "minimum_handling_classification": floor,
         "target_classification": target_classification,
         "contains_personal_data": indicator("is_personal_data"),
         "contains_sensitive_data": indicator("is_sensitive_data"),

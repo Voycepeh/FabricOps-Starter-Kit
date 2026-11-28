@@ -4244,6 +4244,11 @@ def widget_data_contract(
                 label = html.escape(str(assessment["classification"] or "Unresolved"))
                 floor = html.escape(str(assessment["minimum_handling_classification"] or "Unresolved"))
                 scope = html.escape(str(assessment["scope"]["kind"]).replace("_", " "))
+                approved = assessment.get("approved_classification")
+                approved_text = (
+                    f" · Approved {html.escape(approved)}"
+                    if approved and approved != assessment["classification"] else ""
+                )
                 rows = [
                     f"<li><b>{html.escape(finding['column_name'])}</b> · "
                     f"{html.escape(str(finding['classification'] or 'Unresolved'))} · "
@@ -4266,7 +4271,7 @@ def widget_data_contract(
                 rows.extend(f"<li>{html.escape(str(item).replace('_', ' '))}</li>" for item in details)
                 review = " · Review required" if assessment["human_review_required"] else ""
                 sensitivity_output.value = (
-                    f"<p><b>{label}</b> · Minimum handling {floor} · {scope}{review}</p><ul>"
+                    f"<p><b>{label}</b>{approved_text} · Minimum handling {floor} · {scope}{review}</p><ul>"
                     + "".join(rows) + "</ul>"
                 )
                 apply_treatment.disabled = selected_treatment() is None
