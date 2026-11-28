@@ -2020,7 +2020,7 @@ PUBLIC_SYMBOL_DOCS.append({
     "returns": "Advisory dictionary with column and dataset findings, profile scope, minimum handling and conditional treatments.",
     "side_effects": "Reads relevant metadata. Explicit local scans run on Spark. Opted-in AI uses existing operational telemetry.",
     "fabric_context": "A standalone profile row needs no Fabric configuration. Governed resolution and local Spark scans need their existing Fabric context.",
-    "preferred_example": "assessment = assess_data_sensitivity(profile_result, description='Staff payroll review')",
+    "preferred_example": "assessment = assess_data_sensitivity(profile_result, column_definitions={'salary': {'category': 'payroll'}})",
     "related_functions": ["profile_table", "widget_data_contract", "orchestrate_read", "orchestrate_write"],
     "related_guides": [{"title": "Sensitive data decisions", "path": "../../governance.md#sensitive-data-discovery-classification-and-treatment"}],
 })

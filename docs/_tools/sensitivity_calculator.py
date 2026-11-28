@@ -76,9 +76,10 @@ def _policy(config):
             "sensitivity_assessment": config.sensitivity_assessment}
 
 
-def _assess(profile, definitions, config, target=None):
+def _assess(profile, definitions, config, target=None, *, sensitive_linkage=None):
     return assess_data_sensitivity(
         profile, column_definitions=definitions, target_classification=target, use_ai=False,
+        sensitive_linkage=sensitive_linkage,
         context={"config": SimpleNamespace(governance_config=config), "scope_workspace_id": "docs"},
     )
 
@@ -95,6 +96,8 @@ def handle_message(request_json):
             "profile": json.dumps(profile),
             "columns": [{key: row.get(key) for key in ("column_name", "data_type")}
                         for row in (rows if isinstance(rows, list) else [rows])],
+            "columnOnly": "kind" in profile,
+            "sensitiveLinkage": True if example else None,
             "defaultPolicy": _policy(DEFAULT),
             "definitions": SAMPLE_DEFINITIONS if example else {},
         })
@@ -114,7 +117,8 @@ def handle_message(request_json):
                if definition.get("category") in default_categories else None}
         for name, definition in definitions.items()
     }
+    linkage = request.get("sensitiveLinkage")
     return json.dumps({
-        "default": _assess(profile, baseline, DEFAULT),
-        "current": _assess(profile, definitions, config, request.get("target")),
+        "default": _assess(profile, baseline, DEFAULT, sensitive_linkage=linkage),
+        "current": _assess(profile, definitions, config, request.get("target"), sensitive_linkage=linkage),
     })

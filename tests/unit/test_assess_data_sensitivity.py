@@ -1,6 +1,8 @@
 """Data Sensitivity Assessment policy, evidence, and bounded inheritance tests."""
 
 from datetime import UTC, datetime
+from importlib import import_module
+from itertools import product
 from types import SimpleNamespace
 
 import pytest
@@ -424,7 +426,7 @@ def test_default_combination_escalates_two_restricted_columns():
     """Linkable employment information escalates the dataset for Governance review."""
     definitions = {"staff_number": {"category": "institutional_identifier"},
                    "salary_band": {"category": "deidentified_employment_statistics"}}
-    result = assess_data_sensitivity(_profile(*definitions), column_definitions=definitions)
+    result = assess_data_sensitivity(_profile(*definitions), column_definitions=definitions, sensitive_linkage=True)
     assert {column["classification"] for column in result["columns"]} == {"Restricted"}
     assert result["classification"] == result["minimum_handling_classification"] == "Confidential"
     assert result["human_review_required"]
@@ -454,3 +456,90 @@ def test_existing_custom_label_can_still_be_configured():
         "record": {"category": "critical_material"},
     })
     assert result["classification"] == "Highly Sensitive"
+
+
+@pytest.mark.parametrize(("linkage", "label", "finding"), [
+    (None, "Restricted", "sensitive_linkage_unverified"),
+    (False, "Restricted", None),
+    (True, "Confidential", "sensitive_combination"),
+])
+def test_report_contact_and_salary_band_require_confirmed_linkage(linkage, label, finding):
+    """Distinguish a report contact from an identifier of people in the salary data."""
+    definitions = {"work_email": {"category": "business_contact"},
+                   "salary_band": {"category": "deidentified_employment_statistics"}}
+    result = assess_data_sensitivity(_profile(*definitions), column_definitions=definitions,
+                                     sensitive_linkage=linkage)
+    assert result["classification"] == result["minimum_handling_classification"] == label
+    assert {column["classification"] for column in result["columns"]} == {"Restricted"}
+    assert result["human_review_required"] is (linkage is not False)
+    assert (result["dataset_findings"][0]["code"] if result["dataset_findings"] else None) == finding
+
+
+def test_linkage_can_escalate_a_sensitive_record_without_a_configured_pair():
+    """Apply confirmed linkage without depending on a fixed list of category pairs."""
+    definitions = {"staff_number": {"category": "institutional_identifier"},
+                   "training_outcome": {"category": "routine_employment_record"}}
+    result = assess_data_sensitivity(_profile(*definitions), column_definitions=definitions,
+                                     sensitive_linkage=True)
+    assert result["classification"] == result["minimum_handling_classification"] == "Confidential"
+    assert {column["classification"] for column in result["columns"]} == {"Restricted"}
+    assert result["dataset_findings"][0]["code"] == "identifiable_sensitive_information"
+
+
+@pytest.mark.parametrize(("scope", "approval"), list(product(
+    ("bounded_selection", "unknown", "full_table"), (None, "Unclassified"),
+)))
+def test_partial_scope_cannot_establish_a_new_public_dataset_label(scope, approval, monkeypatch):
+    """Keep applicable Governance approval and protect a new assessment with limited coverage."""
+    if approval:
+        monkeypatch.setattr(
+            import_module("fabricops_kit.data_contract.assess_data_sensitivity"),
+            "assessment_contract_evidence", lambda *_: {"classification": approval},
+        )
+    profile = {**_profile("public_title"), "profile_scope": scope}
+    result = assess_data_sensitivity(profile, column_definitions={
+        "public_title": {"category": "authorised_public_release"},
+    })
+    limited = scope != "full_table" and approval is None
+    assert result["classification"] == (None if limited else "Unclassified")
+    assert result["minimum_handling_classification"] == ("Restricted" if limited else "Unclassified")
+    assert result["columns"][0]["classification"] == "Unclassified"
+
+
+def test_category_only_custom_combination_still_applies():
+    """Respect organisation rules that use the presence of categories as evidence."""
+    definitions = {"email": {"category": "business_contact"}, "budget": {"category": "internal_budget"}}
+    context = _context(sensitivity_assessment={"combinations": [
+        {"categories": ["business_contact", "internal_budget"], "classification": "Confidential"},
+    ]})
+    result = assess_data_sensitivity(_profile(*definitions), column_definitions=definitions,
+                                     sensitive_linkage=False, context=context)
+    assert result["classification"] == "Confidential"
+    assert result["dataset_findings"][0]["code"] == "sensitive_combination"
+
+
+@pytest.mark.parametrize(("category", "label"), [
+    ("vendor_bank_account", "Restricted"),
+    ("employee_bank_account", "Confidential"),
+    ("individual_bank_account", "Confidential"),
+    ("internal_programme_information", "Restricted"),
+    ("academic_record", "Confidential"),
+    ("admissions_record", "Confidential"),
+    ("internal_staff_communication", "Restricted"),
+    ("routine_employment_record", "Restricted"),
+    ("employee_appraisal", "Confidential"),
+    ("alumni_personal_record", "Confidential"),
+    ("donation_record", "Confidential"),
+    ("payment_card", "Confidential"),
+    ("internal_financial_record", "Restricted"),
+    ("internal_investment_record", "Restricted"),
+    ("investment_under_confidentiality", "Confidential"),
+])
+def test_default_policy_distinguishes_documented_business_uses(category, label):
+    """Resolve the documented business category even when no values are scanned."""
+    result = assess_data_sensitivity(
+        {"COLUMN_NAME": "value", "DATA_TYPE": "string", "PROFILE_SCOPE": "full_table"},
+        column_definitions={"value": {"category": category}},
+    )
+    assert result["classification"] == result["minimum_handling_classification"] == label
+    assert not result["human_review_required"]

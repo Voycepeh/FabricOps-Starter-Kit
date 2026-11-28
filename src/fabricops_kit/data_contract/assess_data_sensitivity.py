@@ -118,6 +118,7 @@ def assess_data_sensitivity(
     use_ai=False,
     *,
     dataframe=None,
+    sensitive_linkage=None,
     context=None,
 ) -> dict:
     """Assess profile evidence and applicable Data Contract protections.
@@ -146,6 +147,10 @@ def assess_data_sensitivity(
         Request optional assistance when the configured Fabric AI endpoint is approved.
     dataframe : pyspark.sql.DataFrame, optional
         Data within the assessed scope for explicit local detector and group checks.
+    sensitive_linkage : bool, optional
+        Dataset evidence that sensitive information can (True) or cannot
+        (False) be attributed to individuals or a sensitive group. Omit when
+        unknown. A negative declaration does not override scan findings.
     context : dict, optional
         Existing FabricOps notebook configuration and Metadata routing.
 
@@ -193,6 +198,8 @@ def assess_data_sensitivity(
     if target_classification is not None and (not isinstance(target_classification, str) or target_classification not in rank):
         raise ValueError("target_classification must be a configured classification label.")
     profile, scope, asset, single, limitations = assessment_profile_evidence(profile_result, runtime)
+    if sensitive_linkage is not None and (type(sensitive_linkage) is not bool or single):
+        raise ValueError("sensitive_linkage must be a Boolean for a dataset assessment.")
     approved = assessment_contract_evidence(asset, runtime)
     if approved.get("unavailable"):
         limitations.append("approved_contract_unavailable")
@@ -325,10 +332,19 @@ def assess_data_sensitivity(
     dataset_rule = None
     present = {column["category"] for column in columns.values()}
     for rule in policy["combinations"] if not single else ():
-        if set(rule["categories"]) <= present:
-            findings.append({"code": "sensitive_combination", "categories": rule["categories"],
-                             "classification": rule["classification"], "human_review_required": True})
-            dataset_rule = highest((dataset_rule, rule["classification"]))
+        if not set(rule["categories"]) <= present:
+            continue
+        if rule.get("requires_linkage") and sensitive_linkage is not True:
+            if sensitive_linkage is None:
+                findings.append({"code": "sensitive_linkage_unverified", "categories": rule["categories"],
+                                 "human_review_required": True})
+            continue
+        findings.append({"code": "sensitive_combination", "categories": rule["categories"],
+                         "classification": rule["classification"], "human_review_required": True})
+        dataset_rule = highest((dataset_rule, rule["classification"]))
+    if sensitive_linkage is True:
+        dataset_rule = highest((dataset_rule, policy["suspected_handling"]))
+        findings.append({"code": "identifiable_sensitive_information", "human_review_required": True})
     group_columns = [name for name, column in columns.items() if column["category"] == "quasi_identifier"]
     if not single and len(group_columns) >= 2:
         if dataframe is None or not set(group_columns) <= set(dataframe.columns):
@@ -348,7 +364,8 @@ def assess_data_sensitivity(
                 findings.append({"code": "small_joint_groups", "threshold": threshold, "human_review_required": True})
     if not single and any(value.get("population_changed") for value in lineage.values()):
         findings.append({"code": "changed_population", "human_review_required": True})
-    if not single and scope["kind"] != "full_table":
+    limited_dataset = not single and scope["kind"] != "full_table"
+    if limited_dataset:
         findings.append({"code": "limited_dataset_coverage", "human_review_required": True})
 
     ai_status = "disabled"
@@ -376,14 +393,16 @@ def assess_data_sensitivity(
     assessed = highest([approved_table if not contract_has_treatment else None,
                         dataset_rule, ai_dataset, *(c["classification"] for c in values)])
     unresolved_current = not values or any(c["classification"] is None for c in values)
-    if unresolved_current and assessed in rank and rank[assessed] < rank[policy["unresolved_handling"]]:
+    incomplete_classification = limited_dataset and (approved_table not in rank or contract_has_treatment)
+    if ((unresolved_current or incomplete_classification)
+            and assessed in rank and rank[assessed] < rank[policy["unresolved_handling"]]):
         assessed = None
     if not single and approved_table in rank and dataset_rule in rank and rank[dataset_rule] > rank[approved_table]:
         findings.append({"code": "contradictory_dataset_evidence", "human_review_required": True})
     floor = highest([
         assessed, approved_table, *(c["minimum_handling_classification"] for c in values),
         policy["suspected_handling"] if contract_has_treatment and not treatment_verified and not single else None,
-        policy["unresolved_handling"] if unresolved_current or approved.get("unavailable") else None,
+        policy["unresolved_handling"] if unresolved_current or incomplete_classification or approved.get("unavailable") else None,
         most_protective if approved_table is not None and approved_table not in rank else None,
     ])
     treatments, residual = [], []

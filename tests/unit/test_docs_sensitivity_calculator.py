@@ -17,8 +17,9 @@ def test_example_compares_the_dataset_combination_without_changing_column_labels
     loaded = _message(action="load", example=True)
     edited = loaded["defaultPolicy"]
     edited["sensitivity_assessment"]["combinations"] = []
+    edited["sensitivity_assessment"]["suspected_handling"] = "Restricted"
     result = _message(action="assess", profile=loaded["profile"], definitions=loaded["definitions"],
-                      policy=json.dumps(edited))
+                      policy=json.dumps(edited), sensitiveLinkage=loaded["sensitiveLinkage"])
     baseline = result["default"]
     current = result["current"]
     assert baseline["classification"] == "Confidential"

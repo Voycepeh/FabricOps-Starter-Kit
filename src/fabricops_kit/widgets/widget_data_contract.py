@@ -3501,6 +3501,12 @@ def widget_data_contract(
                      for name in assessment_policy.get("categories", {}))],
             description="Category", disabled=not editable,
         )
+        sensitivity_linkage = widgets.Dropdown(
+            options=[("Unknown", None), ("Sensitive information identifies people", True),
+                     ("Sensitive information cannot identify people", False)],
+            description="Linkage", disabled=True,
+        )
+        sensitivity_linkage.layout.display = "none"
         sensitivity_assist = widgets.Checkbox(
             value=False, description="Use AI assistance",
             disabled=not editable or not ai_enrichment.get("enabled") or not assessment_policy.get("ai_endpoint_approved"),
@@ -3509,7 +3515,7 @@ def widget_data_contract(
         apply_treatment = widgets.Button(description="Stage selected column treatment", disabled=True)
         apply_treatment.layout.width = "auto"
         assessment_state = {"result": None, "categories": {}}
-        for control in (sensitivity_scope, sensitivity_target, sensitivity_category):
+        for control in (sensitivity_scope, sensitivity_target, sensitivity_category, sensitivity_linkage):
             control.layout.width = "100%"
         for control in (
             table_description, table_classification,
@@ -4235,6 +4241,7 @@ def widget_data_contract(
                     description=next(iter(definitions.values()))["description"] if single else table_description.value,
                     column_definitions=definitions, target_classification=sensitivity_target.value or None,
                     use_ai=sensitivity_assist.value,
+                    sensitive_linkage=None if single else sensitivity_linkage.value,
                     context={**ai_runtime_context(selected_id if single else None),
                              "scope_workspace_id": resolved.get("scope_workspace_id") or routing_workspace_id,
                              "metadata_workspace_id": routing_workspace_id, "_spark_session": spark,
@@ -4324,7 +4331,14 @@ def widget_data_contract(
         apply_treatment.on_click(stage_assessed_treatment)
         column_select.observe(change_assessment_column, names="value")
         sensitivity_category.observe(change_assessment_category, names="value")
-        for field in (sensitivity_target, sensitivity_scope, sensitivity_assist):
+        def change_assessment_scope(change):
+            table_scope = change["new"] == "table"
+            sensitivity_linkage.layout.display = "" if table_scope else "none"
+            sensitivity_linkage.disabled = not editable or not table_scope
+            invalidate_assessment()
+
+        sensitivity_scope.observe(change_assessment_scope, names="value")
+        for field in (sensitivity_target, sensitivity_assist, sensitivity_linkage):
             field.observe(invalidate_assessment, names="value")
 
         def description_changed(change: dict[str, Any]) -> None:
@@ -4941,7 +4955,7 @@ def widget_data_contract(
         )
         sensitivity_panel = shared.form_section(
             widgets, title="Data Sensitivity Assessment",
-            children=[sensitivity_scope, sensitivity_category, sensitivity_target, sensitivity_assist,
+            children=[sensitivity_scope, sensitivity_category, sensitivity_linkage, sensitivity_target, sensitivity_assist,
                       run_assessment, sensitivity_output, apply_treatment],
         )
         column_right = (
@@ -7063,6 +7077,7 @@ def widget_data_contract(
             "sensitivity_output": sensitivity_output, "apply_treatment": apply_treatment,
             "run_assessment": run_assessment, "sensitivity_scope": sensitivity_scope,
             "sensitivity_category": sensitivity_category, "sensitivity_target": sensitivity_target,
+            "sensitivity_linkage": sensitivity_linkage,
             "sensitivity_assist": sensitivity_assist,
             "mask_mode": mask_mode, "treatment_help": treatment_help,
             "bucket_mode": bucket_mode, "bucket_width": bucket_width, "bucket_origin": bucket_origin,

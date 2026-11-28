@@ -522,10 +522,24 @@ def _validate_sensitivity_assessment(settings, levels, sensitivity_rules):
         "business_contact": ("Restricted", True, True),
         "payroll": ("Confidential", True, True),
         "academic_record": ("Confidential", True, True),
+        "admissions_record": ("Confidential", True, True),
+        "alumni_personal_record": ("Confidential", True, True),
+        "employee_appraisal": ("Confidential", True, True),
+        "employee_bank_account": ("Confidential", True, True),
+        "individual_bank_account": ("Confidential", True, True),
+        "payment_card": ("Confidential", None, True),
+        "donation_record": ("Confidential", None, True),
+        "investment_under_confidentiality": ("Confidential", None, True),
         "health_record": ("Confidential", True, True),
         "examination_material": ("Confidential", False, True),
         "significant_disclosure_impact": ("Confidential", None, True),
         "internal_budget": ("Restricted", False, True),
+        "vendor_bank_account": ("Restricted", None, True),
+        "internal_financial_record": ("Restricted", None, True),
+        "internal_investment_record": ("Restricted", None, True),
+        "internal_programme_information": ("Restricted", False, True),
+        "internal_staff_communication": ("Restricted", False, True),
+        "routine_employment_record": ("Restricted", None, True),
         "deidentified_employment_statistics": ("Restricted", False, True),
         "institutional_identifier": ("Restricted", None, True),
         "quasi_identifier": ("Restricted", None, True),
@@ -560,7 +574,8 @@ def _validate_sensitivity_assessment(settings, levels, sensitivity_rules):
         for context in ("payroll", "academic_record", "health_record")
         if "Confidential" in levels and {identifier, context} <= categories.keys()
     ] + [
-        {"categories": [identifier, "deidentified_employment_statistics"], "classification": "Confidential"}
+        {"categories": [identifier, "deidentified_employment_statistics"], "classification": "Confidential",
+         "requires_linkage": True}
         for identifier in ("personal_identifier", "institutional_identifier", "business_contact")
         if "Confidential" in levels and {identifier, "deidentified_employment_statistics"} <= categories.keys()
     ]
@@ -568,7 +583,9 @@ def _validate_sensitivity_assessment(settings, levels, sensitivity_rules):
     if not isinstance(combinations, (list, tuple)):
         raise ValueError("Sensitivity combinations must be a list.")
     for rule in combinations:
-        if (not isinstance(rule, Mapping) or set(rule) != {"categories", "classification"}
+        if (not isinstance(rule, Mapping) or not {"categories", "classification"} <= rule.keys()
+                or rule.keys() - {"categories", "classification", "requires_linkage"}
+                or type(rule.get("requires_linkage", False)) is not bool
                 or rule["classification"] not in levels or not isinstance(rule["categories"], (list, tuple))
                 or len(set(rule["categories"])) < 2 or not set(rule["categories"]) <= categories.keys()):
             raise ValueError("A sensitivity combination requires at least two configured categories and a classification.")

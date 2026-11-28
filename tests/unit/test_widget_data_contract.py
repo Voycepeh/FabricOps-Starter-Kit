@@ -2016,8 +2016,10 @@ def test_assessment_preserves_existing_unsaved_column_draft(widget_runtime, monk
     controls["column_description"].value = "Revised unsaved description"
     assert controls["apply_treatment"].disabled
     controls["sensitivity_scope"].value = "table"
+    controls["sensitivity_linkage"].value = True
     controls["run_assessment"].click()
     assert "column_id" not in calls[-1][0]["assessment_reference"]
+    assert calls[-1][1]["sensitive_linkage"] is True
     assert {"column_0", "column_1"} <= calls[-1][1]["column_definitions"].keys()
     controls["required"].value = False
     controls["apply_treatment"].click()

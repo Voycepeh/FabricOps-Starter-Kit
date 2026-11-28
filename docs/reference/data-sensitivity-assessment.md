@@ -20,6 +20,13 @@ Start with a sample or load a FabricOps profile as JSON or CSV. Add column descr
       <p><strong data-profile-name></strong></p>
       <p>Choose the category that describes each column's business use. Descriptions capture review context.</p>
       <div data-column-fields></div>
+      <label for="sensitivity-linkage">Can sensitive information in this dataset identify people or a sensitive group?
+        <select id="sensitivity-linkage" data-linkage>
+          <option value="">Unknown</option>
+          <option value="yes">Yes, linkage is confirmed</option>
+          <option value="no">No, the information cannot be linked</option>
+        </select>
+      </label>
       <details>
         <summary>Policy settings</summary>
         <label for="sensitivity-policy">GovernanceConfig settings (JSON)
@@ -71,6 +78,8 @@ For deterministic assessment, choose a business category in the widget or pass o
 
 Configured detectors recognise patterns such as email addresses and validate some identifiers with checksums. Positive evidence can raise minimum handling and trigger review. Profile statistics can miss rare values. Engineering can explicitly supply the same Spark DataFrame for local value checks. Optional AI assists with unresolved evidence when the endpoint is approved and the caller opts in. The request uses evidence codes and temporary column references. Frequency values and profile extrema stay local. Governance can explicitly opt in to sending business descriptions.
 
+The defaults distinguish vendor bank accounts (Restricted) from employee or other personal bank accounts (Confidential), and internal programme information (Restricted) from individual grades or admissions records (Confidential). Select the category that describes the business use. A limited or sampled profile cannot establish a new Unclassified classification for the whole dataset. Apply at least the uncertain-data handling level unless an applicable approved dataset classification establishes its handling.
+
 ## When the dataset needs more protection
 
 A compilation takes at least the highest applicable class of anything it contains. The combination can warrant a higher class even when the individual columns keep their original labels.
@@ -78,10 +87,10 @@ A compilation takes at least the highest applicable class of anything it contain
 | Evidence | Individual columns | Dataset finding |
 | --- | --- | --- |
 | An approved catalogue price and an internal budget | Unclassified and Restricted | Restricted |
-| An institutional identifier and de-identified employment statistics | Restricted and Restricted | The default combination rule proposes Confidential and calls for review because the records could link employment information to a person. |
+| An institutional identifier and de-identified employment statistics | Restricted and Restricted | Confirmed linkage makes the dataset Confidential. An unverified link calls for review. |
 | Department and age band, both tagged as indirect identifiers, alongside a salary band | Each can be Restricted in isolation | A small group can make a salary band attributable to an individual. Review the combined dataset and apply the higher handling where identification is possible. |
 
-A rule in `combinations` matches when all its listed categories are present. It can raise the dataset classification without changing individual column labels. For a table with at least two columns tagged `quasi_identifier`, you can supply its Spark DataFrame to count rows that share the same combination. A group smaller than `small_group_minimum` raises the dataset assessment to the configured suspected-sensitive level. The default of five is a review threshold. Even a larger group may be identifiable using other available information. Without a matching DataFrame, the assessment flags joint group sizes for review.
+A rule in `combinations` first checks whether all its categories are present. Rules with `requires_linkage: true` also need confirmation that the sensitive information identifies a person or a sensitive group. For example, a report owner's email does not identify the people in a separate salary summary. Use the calculator's linkage field or pass `sensitive_linkage=True` to record confirmed linkage. The default raises the dataset to Confidential while retaining the individual column labels. If linkage is unknown, a matching rule requests review. Spark group-size findings still apply when linkage is declared absent. For a table with at least two columns tagged `quasi_identifier`, you can supply its Spark DataFrame to count rows that share the same combination. A group smaller than `small_group_minimum` raises the dataset assessment to the configured suspected-sensitive level. The default of five is a review threshold. Even a larger group may be identifiable using other available information. Without a matching DataFrame, the assessment flags joint group sizes for review.
 
 ## Configure your organisation's policy
 
@@ -91,7 +100,7 @@ In **00 Environment Config**, edit the `GovernanceConfig` settings. You can save
 | --- | --- |
 | `classification_levels` | An ordered mapping of labels and their meanings, from lowest to highest protection. Keep existing labels in the configured order until Governance reviews any changes to saved classifications. |
 | `sensitivity_assessment["categories"]` | Business categories mapped to a classification. Each category may also record whether it generally describes personal or sensitive data. A category supplied here can replace a built-in rule with the same key. |
-| `sensitivity_assessment["combinations"]` | A list of categories that together warrant a dataset classification. Providing the list replaces the default combinations, so include each rule you intend to retain. |
+| `sensitivity_assessment["combinations"]` | A list of categories that together warrant a dataset classification. Set `requires_linkage` to true for a rule that needs confirmed linkage. Providing the list replaces the default combinations. |
 | `sensitivity_assessment["unresolved_handling"]` and `["suspected_handling"]` | The minimum handling for uncertain data and the level to apply when evidence suggests higher sensitivity. |
 | `sensitivity_assessment["detectors"]` and `["small_group_minimum"]` | The value patterns to check and the threshold for local group-size review. |
 
@@ -121,6 +130,7 @@ GOVERNANCE_CONFIG = GovernanceConfig(
         "combinations": [{
             "categories": ["institutional_identifier", "deidentified_employment_statistics"],
             "classification": "Protected",
+            "requires_linkage": True,
         }],
         "unresolved_handling": "Internal",
         "suspected_handling": "Protected",

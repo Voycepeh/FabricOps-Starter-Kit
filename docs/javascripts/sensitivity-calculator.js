@@ -103,6 +103,7 @@
     const apply = root.querySelector("[data-apply]");
     const reset = root.querySelector("[data-reset]");
     const target = root.querySelector("[data-target]");
+    const linkage = root.querySelector("[data-linkage]");
     const results = root.querySelector("[data-results]");
     const status = root.querySelector("[role=status]");
     let worker;
@@ -185,6 +186,7 @@
       ]));
       const result = await send({
         action: "assess", profile, definitions, policy: policy.value, target: target.value || null,
+        sensitiveLinkage: linkage.value ? linkage.value === "yes" : null,
       });
       renderResults(result, results);
       const scope = label(result.current.scope.kind).toLowerCase();
@@ -204,6 +206,8 @@
           policy.value = JSON.stringify(defaultPolicy, null, 2);
         }
         addColumns(data.columns, data.definitions);
+        linkage.closest("label").hidden = data.columnOnly;
+        linkage.value = data.sensitiveLinkage ? "yes" : "";
         inputs.hidden = false;
         results.hidden = true;
         profileName.textContent = upload ? upload.name : "Example profile";

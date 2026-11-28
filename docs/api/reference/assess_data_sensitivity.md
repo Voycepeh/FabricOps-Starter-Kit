@@ -19,7 +19,7 @@ Use after profiling, during Data Contract authoring, or when reviewing the actua
 <div class="reference-example-usage" markdown="1">
 
 ```python
-assessment = assess_data_sensitivity(profile_result, description='Staff payroll review')
+assessment = assess_data_sensitivity(profile_result, column_definitions={'salary': {'category': 'payroll'}})
 ```
 
 </div>
@@ -41,6 +41,7 @@ def assess_data_sensitivity(
     use_ai=False,
     *,
     dataframe=None,
+    sensitive_linkage=None,
     context=None,
 ) -> dict:
 ```
@@ -63,6 +64,7 @@ Required describes the Python signature. An optional parameter may still be need
 | `target_classification` | `str` | No | `None` | A configured label. A lower target can produce treatment recommendations. |
 | `use_ai` | `bool` | No | `False` | Request optional assistance when the configured Fabric AI endpoint is approved. |
 | `dataframe` | `pyspark.sql.DataFrame` | No | `None` | Data within the assessed scope for explicit local detector and group checks. |
+| `sensitive_linkage` | `bool` | No | `None` | Dataset evidence that sensitive information can (True) or cannot (False) be attributed to individuals or a sensitive group. Omit when unknown. A negative declaration does not override scan findings. |
 | `context` | `dict` | No | `None` | Existing FabricOps notebook configuration and Metadata routing. |
 
 </div>
@@ -120,7 +122,7 @@ modify data, Contracts or classifications.
 
 `fabricops_kit/data_contract/assess_data_sensitivity.py:113`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/assess_data_sensitivity.py#L113-L439">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/assess_data_sensitivity.py#L113-L458">View on GitHub</a>
 </div>
 
 
