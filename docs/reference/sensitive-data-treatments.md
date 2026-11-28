@@ -219,7 +219,7 @@ Mappings may reserve tokens before a later Guardrail or publication fails. Retai
 
 The authoring widget does not need every source row to declare fixed rules. Evaluating disclosure risk needs representative population evidence and consideration of combinations of identifying columns. Bucketing or tokenization alone does not establish anonymisation. Treatment covers the incoming write input; changing a rule does not rewrite historical target rows or SCD2 versions.
 
-Data Sensitivity Assessment reuses existing profile evidence and can run an explicit local scan for unresolved columns. Frequency values and profile extrema stay within the local assessment. Optional approved AI receives a bounded payload with evidence codes and opaque column references. Organisations can explicitly allow business descriptions. Review the assessed scope, classification, and minimum handling before staging any recommendation.
+Review the assessed scope, classification, and minimum handling before staging a recommendation. The assessment guide explains the policy rules and the evidence used to reassess a treated output. [Data Sensitivity and Classification](data-sensitivity-assessment.md)
 
 ## Validate versus Enforce
 
@@ -257,7 +257,7 @@ The final target profile is also based on the successfully published treated tar
 
 ## Related documentation
 
-- [Sensitive data discovery, classification and treatment](../governance.md#sensitive-data-discovery-classification-and-treatment)
+- [Governance workflow](../governance.md#sensitive-data-discovery-classification-and-treatment)
 - [Plug-and-Play pipelines and orchestration](../engineering.md#plug-and-play-pipelines-and-orchestration)
 - [Read & Write Modes](read-and-load-strategies.md)
 - [Sensitive Data stage](../api/reference/orchestrate_write.md)

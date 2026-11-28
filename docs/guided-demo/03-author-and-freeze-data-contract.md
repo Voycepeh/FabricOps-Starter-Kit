@@ -9,7 +9,7 @@ Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the c
 
     Meet the [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and set `GOVERNANCE_CONFIG.ai_enrichment.enabled = True` in `00_env_config`.
 
-    Learn more: [Sensitive data discovery, classification and treatment](../governance.md#sensitive-data-discovery-classification-and-treatment).
+    Learn more: [Data Sensitivity and Classification](../reference/data-sensitivity-assessment.md).
 
 ### Choose the AI settings or author manually
 

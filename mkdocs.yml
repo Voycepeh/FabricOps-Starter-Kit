@@ -48,6 +48,7 @@ nav:
       - Metadata Tables: reference/metadata.md
       - Data Quality Rules: reference/dq-rules/index.md
       - Read & Write Modes: reference/read-and-load-strategies.md
+      - Data Sensitivity and Classification: reference/data-sensitivity-assessment.md
       - Sensitive Data Treatments: reference/sensitive-data-treatments.md
       - PySpark Transformation: reference/pyspark-transformation.md
       - Glossary: glossary.md      
