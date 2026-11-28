@@ -26,7 +26,7 @@ Upload a CSV dataset for a suggested classification and personal data (PII) asse
     <section class="sensitivity-calculator__showcase" aria-labelledby="sensitivity-showcase-title" aria-roledescription="carousel" data-scenario-showcase>
       <h3 id="sensitivity-showcase-title">Examples under the default policy</h3>
       <figure data-slide>
-        <img src="../../assets/sensitivity/email-signal.svg" width="720" height="288" alt="An email-shaped value flags possible PII. The assessed class is Unresolved and minimum handling is Confidential.">
+        <img src="../../assets/sensitivity/email-signal.svg" width="720" height="288" alt="Suggested handling is Confidential. Review the business use of the email-shaped value, which flags possible PII.">
         <figcaption>
           <strong>A value pattern can raise handling</strong>
           <p>The email format supplies a PII signal while its business use is still unknown.</p>
@@ -42,10 +42,10 @@ Upload a CSV dataset for a suggested classification and personal data (PII) asse
         <button type="button" class="md-button" data-showcase-scenario="T04" hidden>Try linkage example</button>
       </figure>
       <figure data-slide hidden>
-        <img src="../../assets/sensitivity/public-sample.svg" width="720" height="288" loading="lazy" alt="A sampled public title is Unclassified. The dataset assessment is Unresolved and minimum handling is Restricted.">
+        <img src="../../assets/sensitivity/public-sample.svg" width="720" height="288" loading="lazy" alt="Suggested dataset handling is Restricted. The sampled public title is Unclassified. Review coverage of the full dataset.">
         <figcaption>
           <strong>A public sample only covers the rows assessed</strong>
-          <p>The full dataset needs Restricted handling while its release status remains unresolved.</p>
+          <p>Keep Restricted handling until you confirm coverage of the full dataset.</p>
         </figcaption>
         <button type="button" class="md-button" data-showcase-scenario="T12" hidden>Try sampled data example</button>
       </figure>
@@ -99,7 +99,7 @@ Upload a CSV dataset for a suggested classification and personal data (PII) asse
   <noscript>Enable JavaScript to run the calculator.</noscript>
 </div>
 
-The calculator profiles the entire uploaded CSV and scans each column using the FabricOps value detectors. It shows inferred types and counts of blank and distinct values. Exact header matches can suggest business categories, such as Payroll for `monthly_salary`. Review those suggestions against the actual business use. Pattern matches flag possible PII and can raise minimum handling while the classification remains unresolved. The table result applies to the rows in the uploaded file.
+The calculator profiles the entire uploaded CSV and scans each column using the FabricOps value detectors. It shows inferred types and counts of blank and distinct values. Exact header matches can suggest business categories, such as Payroll for `monthly_salary`. Review those suggestions against the actual business use. Pattern matches flag possible PII and can raise the suggested handling. A **Review** label asks you to confirm the evidence or business use before changing it. The table result applies to the rows in the uploaded file.
 
 A data dictionary can cover any subset of the columns. Use exact column names. CSV also accepts an optional `category` header. For JSON, a description can be a string or an object such as `{"description": "Monthly base salary", "category": "payroll"}`. A category must exist in the active policy. Edit the descriptions and categories or open **Policy settings** to compare a different rule, then run the assessment again.
 
@@ -115,7 +115,7 @@ FabricOps bases its defaults on three governance principles. Data approved for g
 | **Restricted** | Access is limited to authorised internal users, or classification is still uncertain. | Internal budget or business contact details |
 | **Confidential** | Information is sensitive or critical, or disclosure could have significant consequences. | Identifiable payroll, examination material, or business information with significant disclosure impact |
 
-An assessment keeps three values visible. The **assessed classification** reflects the evidence, and can be unknown. The **approved classification** comes from Governance. The **minimum handling classification** is the protection to apply while the assessment or classification decision is open. An email-shaped value with unknown business use, for example, can leave the classification unknown while requiring Confidential handling and review.
+The calculator leads with **suggested handling**, the minimum protection to apply now. **Review** marks results that need more evidence or human confirmation. If the assessed classification differs from the handling level, the calculator shows it separately. Governance approves the official classification. For example, when an email-shaped value could be personal, the calculator suggests **Confidential** handling and asks you to review its business use.
 
 ## How FabricOps assesses a column
 

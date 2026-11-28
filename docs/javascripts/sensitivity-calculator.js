@@ -19,11 +19,9 @@
     select.value = choices.some(([value]) => value === selected) ? selected : "";
   }
 
-  function classification(result) {
-    return `${result.classification ?? "Unresolved"} · ${result.minimum_handling_classification ?? "Unresolved"}`;
-  }
-
-  function personalData(assessment) {
+  function assessmentSummary(assessment) {
+    const assessed = assessment.classification;
+    const handling = assessment.minimum_handling_classification ?? assessed;
     const evidence = assessment.evidence ?? assessment.columns.flatMap((column) => column.evidence);
     const patterns = [...new Set(evidence.filter((code) => code.startsWith("pattern_match:")))]
       .map((code) => {
@@ -31,10 +29,26 @@
         return detector === "nric_fin" ? "NRIC/FIN" : detector.replaceAll("_", " ");
       });
     const classified = assessment.is_personal_data ?? assessment.contains_personal_data;
-    if (classified === true) return "PII indicated by category";
-    if (patterns.length) return `Possible PII (${patterns.join(", ")})`;
-    if (classified === false) return "Categories indicate non-personal data";
-    return "PII unconfirmed";
+    const personalData = classified === true ? "PII indicated by category"
+      : patterns.length ? `Possible PII (${patterns.join(", ")})`
+        : classified === false ? "Category indicates non-personal data" : "PII status unknown";
+    const findings = assessment.dataset_findings?.map(({ code }) => code) ?? [];
+    const review = assessment.human_review_required || !assessed;
+    let reason;
+    if (review) {
+      if (findings.includes("limited_dataset_coverage")) {
+        reason = "Check coverage of the full dataset before lowering handling.";
+      } else if (patterns.length && assessed !== handling) {
+        reason = "Keep this level until the business use of the matched values is confirmed.";
+      } else if (findings.includes("sensitive_linkage_unverified")) {
+        reason = "Confirm whether the fields link people to sensitive information.";
+      } else if (findings.includes("identifiable_sensitive_information")) {
+        reason = "The linked fields can identify people in sensitive information.";
+      } else if (!assessed) {
+        reason = "Confirm the business use and choose the appropriate category.";
+      }
+    }
+    return { handling, assessed, personalData, review, reason };
   }
 
   function renderResults(result, container) {
@@ -42,30 +56,36 @@
     const table = element("table");
     table.className = "sensitivity-calculator__table";
     const caption = table.createCaption();
-    caption.textContent = "Assessed classification · Minimum handling";
+    caption.textContent = "Suggested handling for each column and dataset";
     const headings = table.createTHead().insertRow();
-    for (const title of ["Assessment", "FabricOps defaults", "Edited policy"]) {
+    for (const title of ["Scope", "FabricOps defaults", "Edited policy"]) {
       const head = element("th", title);
       head.scope = "col";
       headings.append(head);
     }
     const body = table.createTBody();
     for (const [name, before, after] of [
-      [current.scope.column_only ? "Column summary" : "Dataset", baseline, current],
+      [current.scope.column_only ? "Column" : "Dataset", baseline, current],
       ...current.columns.map((column, index) => [column.column_name, baseline.columns[index], column]),
     ]) {
       const row = body.insertRow();
       const heading = element("th", name);
       heading.scope = "row";
       row.append(heading);
-      for (const assessment of [before, after]) {
+      const summaries = [before, after].map(assessmentSummary);
+      for (const { handling, assessed, personalData, review, reason } of summaries) {
         const cell = row.insertCell();
-        cell.append(element("div", classification(assessment)));
-        cell.append(element("small", personalData(assessment)));
-        if (assessment.human_review_required) cell.append(element("small", "Review required"));
+        cell.append(element("strong", handling ?? "Review"));
+        if (review && handling) {
+          const status = element("small", "Review");
+          status.className = "sensitivity-calculator__review";
+          cell.append(status);
+        }
+        if (assessed && assessed !== handling) cell.append(element("small", `Assessed as ${assessed}.`));
+        cell.append(element("small", personalData));
+        if (reason) cell.append(element("small", reason));
       }
-      if (classification(before) !== classification(after) || personalData(before) !== personalData(after) ||
-          before.human_review_required !== after.human_review_required) {
+      if (JSON.stringify(summaries[0]) !== JSON.stringify(summaries[1])) {
         row.lastElementChild.classList.add("sensitivity-calculator__changed");
         row.lastElementChild.append(element("small", "Differs from defaults"));
       }
@@ -98,7 +118,7 @@
     comparison.className = "sensitivity-calculator__comparison";
     comparison.tabIndex = 0;
     comparison.setAttribute("role", "region");
-    comparison.setAttribute("aria-label", "Classification comparison");
+    comparison.setAttribute("aria-label", "Suggested handling comparison");
     comparison.append(table);
     container.replaceChildren(element("h3", "Assessment results"), comparison, findings);
     container.hidden = false;

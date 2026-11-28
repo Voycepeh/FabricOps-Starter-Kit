@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 288" width="720" height="288" role="img" aria-labelledby="title desc">
-  <title id="title">A public sample leaves the full dataset unresolved</title>
-  <desc id="desc">The sampled public title is Unclassified. The full dataset assessment is Unresolved and minimum handling remains Restricted.</desc>
+  <title id="title">A public sample still needs Restricted dataset handling</title>
+  <desc id="desc">Suggested dataset handling is Restricted. The sampled public title is Unclassified. Review coverage of the full dataset.</desc>
   <rect x="1" y="1" width="718" height="286" rx="20" fill="#F6F8FF" stroke="#DDE3F3"/>
   <path d="M300 144h84m-12-10 12 10-12 10" fill="none" stroke="#52627A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
   <rect x="24" y="36" width="280" height="216" rx="12" fill="#FFFFFF" stroke="#DDE3F3" stroke-width="2"/>
@@ -10,9 +10,9 @@
     <text x="48" y="76" font-size="24" font-weight="600">Sampled column</text>
     <text x="48" y="145" font-size="26" font-weight="600">Public title</text>
     <text x="48" y="206" font-size="22" fill="#52627A">Unclassified</text>
-    <text x="420" y="76" font-size="22" fill="#52627A">Dataset class</text>
-    <text x="420" y="126" font-size="34" font-weight="700">Unresolved</text>
-    <text x="420" y="190" font-size="22" fill="#52627A">Minimum handling</text>
-    <text x="420" y="228" font-size="30" font-weight="700" fill="#B45309">Restricted</text>
+    <text x="420" y="76" font-size="22" fill="#52627A">Suggested handling</text>
+    <text x="420" y="126" font-size="34" font-weight="700" fill="#B45309">Restricted</text>
+    <text x="420" y="190" font-size="22" fill="#52627A">Review</text>
+    <text x="420" y="228" font-size="24" font-weight="600">Check full coverage</text>
   </g>
 </svg>

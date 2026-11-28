@@ -110,6 +110,11 @@
   box-shadow: inset 3px 0 var(--fabricops-purple);
 }
 
+.sensitivity-calculator__comparison thead th:first-child,
+.sensitivity-calculator__comparison tbody tr:first-child th {
+  overflow-wrap: normal;
+}
+
 .sensitivity-calculator__comparison caption {
   text-align: start;
   color: var(--md-default-fg-color--light);
@@ -173,4 +178,14 @@
   min-inline-size: 2.65rem;
   color: var(--md-default-fg-color--light);
   text-align: center;
+}
+
+
+.sensitivity-calculator__comparison .sensitivity-calculator__review {
+  display: inline-block;
+  margin-inline-start: 0.35rem;
+  padding: 0 0.3rem;
+  border: 1px solid var(--md-default-fg-color--light);
+  border-radius: 0.22rem;
+  font-weight: 600;
 }
