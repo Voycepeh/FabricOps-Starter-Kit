@@ -115,6 +115,9 @@
     const picker = root.querySelector("[data-scenario]");
     const loadScenario = root.querySelector("[data-load-scenario]");
     const sparkReference = root.querySelector("[data-spark-reference]");
+    const showcase = root.querySelector("[data-scenario-showcase]");
+    const slides = [...showcase.querySelectorAll("[data-slide]")];
+    const showcaseButtons = showcase.querySelectorAll("[data-showcase-scenario]");
     const inputs = root.querySelector("[data-calculator-inputs]");
     const fields = root.querySelector("[data-column-fields]");
     const profileName = root.querySelector("[data-profile-name]");
@@ -262,6 +265,30 @@
       file.value = "";
     }
 
+    let currentSlide = 0;
+    const showcasePosition = showcase.querySelector("[data-showcase-position]");
+
+    function moveShowcase(offset) {
+      slides[currentSlide].hidden = true;
+      currentSlide = (currentSlide + offset + slides.length) % slides.length;
+      const slide = slides[currentSlide];
+      slide.hidden = false;
+      const title = slide.querySelector("figcaption strong").textContent;
+      showcasePosition.textContent = `${currentSlide + 1} of ${slides.length}`;
+      showcasePosition.setAttribute("aria-label", `${currentSlide + 1} of ${slides.length}. ${title}`);
+    }
+
+    showcase.querySelector("[data-showcase-previous]").addEventListener("click", () => moveShowcase(-1));
+    showcase.querySelector("[data-showcase-next]").addEventListener("click", () => moveShowcase(1));
+    showcase.querySelector("[data-showcase-nav]").hidden = false;
+    for (const button of showcaseButtons) {
+      button.addEventListener("click", () => {
+        picker.value = button.dataset.showcaseScenario;
+        loadScenario.disabled = false;
+        loadProfile({ scenario: scenarios.get(picker.value) });
+      });
+    }
+
     fetch(scenariosURL).then(async (response) => {
       if (!response.ok) throw new Error("Scenario library is unavailable.");
       const groups = { C: "Single columns", T: "Datasets", S: "Spark group-size checks" };
@@ -276,6 +303,9 @@
       }
       picker.replaceChildren(new Option("Choose a scenario", ""), ...Object.values(options));
       picker.disabled = false;
+      for (const button of showcaseButtons) {
+        button.hidden = !scenarios.has(button.dataset.showcaseScenario);
+      }
     }).catch(() => {
       picker.replaceChildren(new Option("Scenarios unavailable", ""));
     });

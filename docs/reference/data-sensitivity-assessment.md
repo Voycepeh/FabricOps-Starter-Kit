@@ -23,6 +23,38 @@ Upload a CSV dataset for a suggested classification and personal data (PII) asse
       <button type="button" class="md-button" data-load-scenario disabled>Load and assess</button>
     </div>
     <small id="sensitivity-scenario-help">Scenarios cover single columns, datasets, and Spark group-size checks.</small>
+    <section class="sensitivity-calculator__showcase" aria-labelledby="sensitivity-showcase-title" aria-roledescription="carousel" data-scenario-showcase>
+      <h3 id="sensitivity-showcase-title">Examples under the default policy</h3>
+      <figure data-slide>
+        <img src="../../assets/sensitivity/email-signal.svg" width="720" height="288" alt="An email-shaped value flags possible PII. The assessed class is Unresolved and minimum handling is Confidential.">
+        <figcaption>
+          <strong>A value pattern can raise handling</strong>
+          <p>The email format supplies a PII signal while its business use is still unknown.</p>
+        </figcaption>
+        <button type="button" class="md-button" data-showcase-scenario="C07" hidden>Try email example</button>
+      </figure>
+      <figure data-slide hidden>
+        <img src="../../assets/sensitivity/linked-salary.svg" width="720" height="288" loading="lazy" alt="A staff number and a salary band are each Restricted. Confirmed linkage makes the dataset Confidential.">
+        <figcaption>
+          <strong>Linkage can raise the dataset classification</strong>
+          <p>The staff number makes the salary band attributable to an individual.</p>
+        </figcaption>
+        <button type="button" class="md-button" data-showcase-scenario="T04" hidden>Try linkage example</button>
+      </figure>
+      <figure data-slide hidden>
+        <img src="../../assets/sensitivity/public-sample.svg" width="720" height="288" loading="lazy" alt="A sampled public title is Unclassified. The dataset assessment is Unresolved and minimum handling is Restricted.">
+        <figcaption>
+          <strong>A public sample only covers the rows assessed</strong>
+          <p>The full dataset needs Restricted handling while its release status remains unresolved.</p>
+        </figcaption>
+        <button type="button" class="md-button" data-showcase-scenario="T12" hidden>Try sampled data example</button>
+      </figure>
+      <div class="sensitivity-calculator__showcase-nav" data-showcase-nav hidden>
+        <button type="button" class="md-button" aria-label="Previous example" data-showcase-previous>Previous</button>
+        <span aria-live="polite" aria-atomic="true" data-showcase-position>1 of 3</span>
+        <button type="button" class="md-button" aria-label="Next example" data-showcase-next>Next</button>
+      </div>
+    </section>
     <div data-calculator-inputs hidden>
       <h3>Column details</h3>
       <p><strong data-profile-name></strong></p>

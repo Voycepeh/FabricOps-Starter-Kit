@@ -126,3 +126,51 @@
 .sensitivity-calculator__column-detail {
   grid-column: 1 / -1;
 }
+
+
+.sensitivity-calculator__showcase {
+  max-inline-size: 40rem;
+  margin-block: 1.25rem;
+}
+
+.sensitivity-calculator__showcase figure {
+  display: block;
+  max-inline-size: none;
+  margin: 0;
+  text-align: start;
+}
+
+.sensitivity-calculator__showcase img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.sensitivity-calculator__showcase figcaption {
+  max-inline-size: none;
+  margin: 0.55rem 0;
+  color: var(--md-default-fg-color);
+  font-style: normal;
+}
+
+.sensitivity-calculator__showcase figcaption p {
+  margin-block: 0.25rem 0;
+}
+
+.sensitivity-calculator__showcase-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-block-start: 0.7rem;
+}
+
+.sensitivity-calculator__showcase .md-button {
+  min-block-size: 2.2rem;
+  padding: 0.36rem 0.7rem;
+}
+
+.sensitivity-calculator__showcase-nav span {
+  min-inline-size: 2.65rem;
+  color: var(--md-default-fg-color--light);
+  text-align: center;
+}

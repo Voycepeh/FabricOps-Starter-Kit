@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 288" width="720" height="288" role="img" aria-labelledby="title desc">
+  <title id="title">Linked Restricted columns make a Confidential dataset</title>
+  <desc id="desc">Staff number and salary band are each Restricted. Confirmed linkage makes the dataset Confidential.</desc>
+  <rect x="1" y="1" width="718" height="286" rx="20" fill="#F6F8FF" stroke="#DDE3F3"/>
+  <path d="M304 88h28v56h52m-80 56h28v-56m40-10 12 10-12 10" fill="none" stroke="#52627A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="24" y="36" width="280" height="104" rx="12" fill="#FFFFFF" stroke="#DDE3F3" stroke-width="2"/>
+  <rect x="24" y="148" width="280" height="104" rx="12" fill="#FFFFFF" stroke="#DDE3F3" stroke-width="2"/>
+  <rect x="396" y="36" width="300" height="216" rx="12" fill="#FFFFFF" stroke="#7C3AED" stroke-width="2"/>
+  <path d="M396 152h300" stroke="#DDE3F3" stroke-width="2"/>
+  <g font-family="Segoe UI, Arial, sans-serif" fill="#19243A">
+    <text x="48" y="78" font-size="26" font-weight="600">Staff number</text>
+    <text x="48" y="112" font-size="22" fill="#52627A">Restricted</text>
+    <text x="48" y="190" font-size="26" font-weight="600">Salary band</text>
+    <text x="48" y="224" font-size="22" fill="#52627A">Restricted</text>
+    <text x="420" y="76" font-size="22" fill="#52627A">Dataset class</text>
+    <text x="420" y="126" font-size="34" font-weight="700" fill="#6D28D9">Confidential</text>
+    <text x="420" y="209" font-size="24" font-weight="600">Confirmed linkage</text>
+  </g>
+</svg>
