@@ -1,0 +1,336 @@
+.sensitivity-calculator {
+  padding-block-end: 0.75rem;
+}
+
+.sensitivity-calculator [hidden] {
+  display: none !important;
+}
+
+.sensitivity-calculator__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.9rem;
+  margin-block: 0.6rem;
+}
+
+.sensitivity-calculator__source-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  align-items: start;
+  gap: 0.85rem 1.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+}
+
+.sensitivity-calculator__source-options > div {
+  min-inline-size: 0;
+}
+
+.sensitivity-calculator__source-options label {
+  font-weight: 600;
+}
+
+.sensitivity-calculator__source-options :is(input, select, .md-button) {
+  min-block-size: 2.15rem;
+}
+
+.sensitivity-calculator__source-options .md-button {
+  padding-inline: 0.7rem;
+}
+
+.sensitivity-calculator__source-options input[type="file"]::file-selector-button {
+  margin-inline-end: 0.45rem;
+}
+
+.sensitivity-calculator__source-options small {
+  display: block;
+  margin-block-start: 0.26rem;
+}
+
+.sensitivity-calculator__scenario-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.6rem 0.9rem;
+}
+
+.sensitivity-calculator__scenario-picker label {
+  flex: 1 1 10rem;
+  min-inline-size: 0;
+}
+
+.sensitivity-calculator__scenario-picker button:disabled {
+  background: transparent;
+  border-color: var(--md-default-fg-color--lightest);
+  color: var(--md-default-fg-color--light);
+  cursor: default;
+}
+
+.sensitivity-calculator label {
+  display: block;
+}
+
+.sensitivity-calculator label :is(input, select),
+.sensitivity-calculator textarea {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  margin-block-start: 0.2rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--md-default-fg-color--light);
+  border-radius: 0.2rem;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  font: inherit;
+}
+
+.sensitivity-calculator input[type="file"] {
+  max-inline-size: 100%;
+}
+
+.sensitivity-calculator textarea {
+  min-block-size: 12rem;
+  resize: vertical;
+  font-family: var(--fabricops-font-code);
+}
+
+.sensitivity-calculator :focus-visible {
+  outline: 2px solid var(--fabricops-purple);
+  outline-offset: 2px;
+}
+
+.sensitivity-calculator fieldset {
+  min-inline-size: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 0.4rem 0.8rem;
+  margin-block: 0.7rem;
+  padding: 0.45rem 0.65rem 0.65rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.sensitivity-calculator legend,
+.sensitivity-calculator th,
+.sensitivity-calculator td,
+.sensitivity-calculator [data-profile-name] {
+  overflow-wrap: anywhere;
+}
+
+.sensitivity-calculator :is(.sensitivity-calculator__results-table, .sensitivity-calculator__sample-table) {
+  overflow-x: auto;
+}
+
+.sensitivity-calculator__table {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+
+.sensitivity-calculator__table :is(th, td) {
+  padding: 0.42rem;
+  border-block-end: 1px solid var(--md-default-fg-color--lightest);
+  text-align: start;
+  vertical-align: top;
+}
+
+.sensitivity-calculator__table thead th {
+  color: var(--md-default-fg-color--light);
+  font-weight: 600;
+}
+
+.sensitivity-calculator__results-table tbody th {
+  min-inline-size: 7em;
+}
+
+.sensitivity-calculator form[aria-busy="true"] {
+  opacity: 0.7;
+}
+
+.sensitivity-calculator__results-table td > small,
+.sensitivity-calculator [data-handling-summary] > small {
+  display: block;
+}
+
+.sensitivity-calculator__column-detail {
+  grid-column: 1 / -1;
+}
+
+
+.sensitivity-calculator__showcase {
+  margin-block: 1.15rem;
+  padding-block: 0.9rem;
+  border-block: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.sensitivity-calculator__showcase-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.55rem;
+  margin-block-end: 0.75rem;
+}
+
+.sensitivity-calculator__showcase .sensitivity-calculator__showcase-header h3 {
+  margin: 0;
+}
+
+.sensitivity-calculator__showcase figure {
+  display: grid;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  max-inline-size: none;
+  margin: 0;
+  text-align: start;
+}
+
+.sensitivity-calculator__showcase img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.sensitivity-calculator__showcase figcaption {
+  max-inline-size: none;
+  margin: 0;
+  color: var(--md-default-fg-color);
+  font-style: normal;
+}
+
+.sensitivity-calculator__showcase figcaption p {
+  margin-block: 0.25rem 0.6rem;
+}
+
+.sensitivity-calculator__showcase > small {
+  display: block;
+  margin-block-start: 0.45rem;
+}
+
+@media screen and (min-width: 56rem) {
+  .sensitivity-calculator__showcase figure {
+    grid-template-columns: minmax(0, 1fr) minmax(11rem, 0.35fr);
+  }
+}
+
+.sensitivity-calculator__showcase-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.sensitivity-calculator__showcase .md-button {
+  min-block-size: 2.2rem;
+  padding: 0.36rem 0.7rem;
+}
+
+.sensitivity-calculator__showcase-nav span {
+  min-inline-size: 2.65rem;
+  color: var(--md-default-fg-color--light);
+  text-align: center;
+}
+
+
+.sensitivity-calculator__verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.4rem;
+}
+
+.sensitivity-calculator .sensitivity-calculator__review {
+  display: inline-block;
+  padding: 0 0.3rem;
+  border: 1px solid var(--md-default-fg-color--light);
+  border-radius: 0.22rem;
+  font-weight: 600;
+}
+
+
+.sensitivity-calculator > [role="status"]:empty {
+  margin: 0;
+}
+
+.sensitivity-calculator :is(.sensitivity-calculator__assessment, .sensitivity-calculator__editor) {
+  scroll-margin-block-start: 5rem;
+}
+
+.sensitivity-calculator__assessment {
+  margin-block: 1.35rem;
+}
+
+.sensitivity-calculator__assessment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  margin-block-end: 0.65rem;
+}
+
+.sensitivity-calculator .sensitivity-calculator__assessment-header h3 {
+  flex: 1 1 15rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.sensitivity-calculator .sensitivity-calculator__assessment-header .md-button {
+  min-block-size: 2.2rem;
+  padding: 0.4rem 0.65rem;
+}
+
+.sensitivity-calculator [data-handling-summary] {
+  padding: 0.65rem 0.85rem;
+  border-inline-start: 3px solid var(--fabricops-purple);
+  background: color-mix(in srgb, var(--fabricops-purple) 5%, var(--md-default-bg-color));
+}
+
+.sensitivity-calculator [data-handling-summary] h4 {
+  margin: 0 0 0.1rem;
+  font-weight: 600;
+}
+
+.sensitivity-calculator [data-handling-summary] .sensitivity-calculator__verdict strong {
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.sensitivity-calculator .sensitivity-calculator__policy-note {
+  margin-block: 0.3rem 0;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.68rem;
+}
+
+.sensitivity-calculator__workspace {
+  display: grid;
+  gap: 0.85rem 1.1rem;
+  align-items: start;
+  margin-block-start: 0.75rem;
+}
+
+.sensitivity-calculator__workspace > * {
+  min-inline-size: 0;
+}
+
+.sensitivity-calculator__workspace h4 {
+  margin-block: 0 0.25rem;
+}
+
+.sensitivity-calculator__sample details,
+.sensitivity-calculator__findings {
+  margin-block: 0.55rem 0;
+}
+
+.sensitivity-calculator__sample-table td {
+  font-family: var(--fabricops-font-code);
+}
+
+.sensitivity-calculator__editor {
+  margin-block-start: 1rem;
+}
+
+@media screen and (min-width: 56rem) {
+  .sensitivity-calculator__workspace:has([data-sample-data]:not([hidden])):has([data-results]:not([hidden])) {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  }
+}

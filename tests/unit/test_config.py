@@ -1756,9 +1756,8 @@ def test_governance_config_normalizes_ai_enrichment_without_coupling_labels():
     }
     assert GovernanceConfig().ai_enrichment["enabled"] is False
     default_prompt = GovernanceConfig().ai_enrichment["sensitive_data_prompt"]
-    assert all(term in default_prompt for term in ("tokenize", "mask", "bucket", "remove"))
-    assert "information classification" in default_prompt
-    assert "raw values" in default_prompt
+    assert "non-personal sensitivity" in default_prompt
+    assert "inconclusive" in default_prompt
 
     business_prompt = GovernanceConfig().ai_enrichment["business_rule_prompt"]
     assert all(

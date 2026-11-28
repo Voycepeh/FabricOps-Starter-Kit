@@ -9,7 +9,7 @@ Complete [Step 2A](02A-full-refresh-demo.md) before authoring and freezing the c
 
     Meet the [AI Functions prerequisites](https://learn.microsoft.com/en-us/fabric/data-science/ai-functions/overview) and set `GOVERNANCE_CONFIG.ai_enrichment.enabled = True` in `00_env_config`.
 
-    Learn more: [Sensitive data discovery, classification and treatment](../governance.md#sensitive-data-discovery-classification-and-treatment).
+    Learn more: [Data Sensitivity and Classification](../reference/data-sensitivity-assessment.md).
 
 ### Choose the AI settings or author manually
 
@@ -125,6 +125,8 @@ Open **Table** and review:
 * Description and Classification
 * Grain & Row Key — describe one row and select the actual table key: `order_id` for Orders/Curated Orders, `product_id` for Products, `historical_order_id` for Order History, and `customer_id` for Customer Summary. Leave **Enforce Grain** off for the main DQ exercise; Step 4 adds a focused Grain check separately.
 * Freshness, when applicable
+
+In **Columns**, choose **Data Sensitivity Assessment** for one column or all columns. Assessment uses the draft definitions and available profile and lineage evidence. Review the result before recording a classification. Choose a lower target explicitly to request treatment recommendations.
 
 Use AI suggestions where useful, then review them before applying. Profile statistics are evidence only; they do not become contract requirements unless Governance authors a rule from them.
 

@@ -114,6 +114,8 @@ def orchestrate_read(*, store: str, schema: str | None = None, table_name: str |
     -------
     dict
         Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.
+        For Data Sensitivity Assessment, profile_result identifies the profiled
+        physical source or file selection, which may differ from the Read output.
         ``read_metrics.rows_read`` and the notebook summary describe the exact
         returned scope. For incremental reads this is the target-specific batch,
         never the complete physical Source Observation count.

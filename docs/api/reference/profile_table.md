@@ -135,7 +135,10 @@ dict
     ``frequency_profile`` contains the applicable canonical frequency
     Spark DataFrame, or ``None`` when no columns were selected. Governed
     ``profile`` rows additionally contain persisted snapshot identities
-    and audit fields.
+    and audit fields. ``profile_scope`` and ``assessment_reference`` identify
+    the coverage and subject for Data Sensitivity Assessment. When a
+    physical Lakehouse read can be pinned, ``delta_version`` identifies
+    the version used to calculate the profile.
 
 ### Return interpretation
 
@@ -204,7 +207,7 @@ profiled without creating an identity or writing metadata.
 
 `fabricops_kit/pipeline/profile_table.py:8`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L8-L200">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/profile_table.py#L8-L203">View on GitHub</a>
 </div>
 
 
@@ -246,7 +249,7 @@ distinct snapshot identity.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 147 |
+| Live-critical dependencies | 148 |
 
 ### Release history
 
@@ -282,6 +285,7 @@ distinct snapshot identity.
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_activation_contract</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_promoted_operations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_activation_contract_payload</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_approvals</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_file_execution_authorizations</code></li>

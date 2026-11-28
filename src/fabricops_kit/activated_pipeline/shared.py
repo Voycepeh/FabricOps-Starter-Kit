@@ -180,10 +180,16 @@ def resolve_activation_contract(activation, *, context, spark_session=None):
     """Resolve a separately frozen exact Contract; never copy its payload into Registry."""
     row = exact_record(metadata_records("METADATA_DATA_CONTRACT", context=context, spark_session=spark_session),
         contract_id=activation["contract_id"], contract_version=activation["contract_version"])
-    if (row.get("table_id") != activation.get("table_id") or row.get("asset_type") != activation.get("asset_type") or row["status"] != "frozen" or
-            hashlib.sha256(row["contract_payload_json"].encode("utf-8")).hexdigest() != activation["payload_sha256"]):
+    return {**row, "contract_payload": validate_activation_contract_payload(row, activation)}
+
+
+def validate_activation_contract_payload(row, activation):
+    """Check the immutable Contract against the exact Governance selection."""
+    if (row.get("table_id") != activation.get("table_id") or row.get("asset_type") != activation.get("asset_type")
+            or row["status"] != "frozen"
+            or hashlib.sha256(row["contract_payload_json"].encode("utf-8")).hexdigest() != activation["payload_sha256"]):
         raise ValueError("Activated frozen Data Contract changed or does not match its Table ID.")
-    return {**row, "contract_payload": migrate_asset_references(parse_metadata_json(row["contract_payload_json"], field="contract_payload_json"))}
+    return migrate_asset_references(parse_metadata_json(row["contract_payload_json"], field="contract_payload_json"))
 
 
 def metadata_path(table, *, context):

@@ -43,7 +43,9 @@ def test_dataframe_only_profiles_without_metadata_writes_and_prints(spark_sessio
 
     result = profile_table(dataframe=source, frequency_enabled=True, frequency_columns=["status"])
 
-    assert set(result) == {"profile", "frequency_profile", "row_count"}
+    assert {"profile", "frequency_profile", "row_count"} <= set(result)
+    assert result["profile_scope"] == "supplied_dataframe"
+    assert "table_id" not in result["assessment_reference"]
     assert _rows(result["profile"])["amount"]["ROW_COUNT"] == 3
     frequency = result["frequency_profile"].collect()
     assert {(row.VALUE, row.FREQUENCY_COUNT) for row in frequency} == {(None, 1), ("A", 2)}

@@ -106,6 +106,8 @@ changes = orchestrate_read(
 
 dict
     Governed source dataframe, execution identity, Guardrail outcomes, read_metrics, profile_result and orchestration_stages.
+    For Data Sensitivity Assessment, profile_result identifies the profiled
+    physical source or file selection, which may differ from the Read output.
     ``read_metrics.rows_read`` and the notebook summary describe the exact
     returned scope. For incremental reads this is the target-specific batch,
     never the complete physical Source Observation count.
@@ -175,7 +177,7 @@ No related guides documented.
 
 `fabricops_kit/pipeline/orchestrate_read.py:28`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L249">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/pipeline/orchestrate_read.py#L28-L251">View on GitHub</a>
 </div>
 
 
@@ -191,7 +193,7 @@ No related guides documented.
 | Discontinued in | — |
 | Contract classification | Live public function |
 | Contract risk | Live |
-| Live-critical dependencies | 286 |
+| Live-critical dependencies | 289 |
 
 ### Release history
 
@@ -226,6 +228,7 @@ No related guides documented.
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_activation_contract</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.resolve_promoted_operations</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.snapshot_file</code></li>
+<li><code>fabricops_kit.activated_pipeline.shared.validate_activation_contract_payload</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_agreement</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_approvals</code></li>
 <li><code>fabricops_kit.activated_pipeline.shared.validate_file_execution_authorizations</code></li>
@@ -348,6 +351,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._dq_tagged_dataframe</code></li>
 <li><code>fabricops_kit.pipeline.shared._ensure_unambiguous_source_observation</code></li>
 <li><code>fabricops_kit.pipeline.shared._evaluate_dq_rules</code></li>
+<li><code>fabricops_kit.pipeline.shared._file_assessment_reference</code></li>
 <li><code>fabricops_kit.pipeline.shared._file_profiling_event</code></li>
 <li><code>fabricops_kit.pipeline.shared._format_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._frequency_metadata_dataframe</code></li>
@@ -409,6 +413,7 @@ No related guides documented.
 <li><code>fabricops_kit.pipeline.shared._stage_catalogue_profile_retry</code></li>
 <li><code>fabricops_kit.pipeline.shared._string_value</code></li>
 <li><code>fabricops_kit.pipeline.shared._summarize_dq_guardrail</code></li>
+<li><code>fabricops_kit.pipeline.shared._table_assessment_reference</code></li>
 <li><code>fabricops_kit.pipeline.shared._validate_dq_rules</code></li>
 <li><code>fabricops_kit.pipeline.shared._validated_observation_identity</code></li>
 <li><code>fabricops_kit.pipeline.shared._validated_source_snapshot</code></li>

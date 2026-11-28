@@ -10,7 +10,7 @@ import pytest
 
 from fabricops_kit.config import GovernanceConfig
 
-module = importlib.import_module("fabricops_kit.widgets.enrichment_shared")
+module = importlib.import_module("fabricops_kit.data_contract.shared")
 
 
 @pytest.mark.parametrize("model", ["gpt-5-mini", "gpt-5.1"])
@@ -75,7 +75,7 @@ def test_every_request_reapplies_runtime_settings_and_reads_actual_stats(monkeyp
     settings = {"model_deployment_name": "gpt-5.1", "reasoning_effort": "medium", "verbosity": "medium"}
     usage = []
     for _ in range(2):
-        assert module._invoke_fabric_ai(
+        assert module.invoke_fabric_ai(
             "private context", ai_config=settings, spark_session=spark, usage=usage, operation="grain",
         ) == "description"
     assert conf.set_deployment_name.call_args_list == [(("gpt-5.1",),), (("gpt-5.1",),)]
@@ -98,7 +98,7 @@ def test_missing_stats_do_not_invent_usage_or_break_authoring(monkeypatch):
     """Optional telemetry has no fabricated token or CU values."""
     conf, spark, result = _runtime(monkeypatch)
     usage = []
-    assert module._invoke_fabric_ai("prompt", spark_session=spark, usage=usage) == "description"
+    assert module.invoke_fabric_ai("prompt", spark_session=spark, usage=usage) == "description"
     conf.set_deployment_name.assert_called_once_with("gpt-5-mini")
     conf.set_reasoning_effort.assert_called_once_with("low")
     conf.reset_verbosity.assert_called_once_with()
@@ -114,7 +114,7 @@ def test_provider_response_failures_keep_details(monkeypatch, response, error, m
     """Empty and rejected responses are provider failures, preserving original details."""
     _, spark, result = _runtime(monkeypatch, response=response, error=error)
     with pytest.raises(module.AIProviderError, match=message):
-        module._invoke_fabric_ai("prompt", spark_session=spark)
+        module.invoke_fabric_ai("prompt", spark_session=spark)
     result.unpersist.assert_called_once_with()
 
 
@@ -124,7 +124,7 @@ def test_execution_failure_preserves_cause_and_releases_cache(monkeypatch):
     _, spark, result = _runtime(monkeypatch, failure=original)
     usage = []
     with pytest.raises(module.AIExecutionError) as error:
-        module._invoke_fabric_ai("prompt", spark_session=spark, usage=usage)
+        module.invoke_fabric_ai("prompt", spark_session=spark, usage=usage)
     assert error.value.__cause__ is original
     assert module.ai_failure_diagnostic(error.value)["category"] == "execution"
     assert usage[0]["statistics_status"] == "unavailable"
@@ -136,7 +136,7 @@ def test_no_result_row_is_a_provider_failure(monkeypatch):
     _, spark, result = _runtime(monkeypatch)
     result.collect.return_value = []
     with pytest.raises(module.AIProviderError, match="no result row"):
-        module._invoke_fabric_ai("prompt", spark_session=spark)
+        module.invoke_fabric_ai("prompt", spark_session=spark)
 
 
 def test_initialization_failure_retains_cause(monkeypatch):
@@ -145,7 +145,7 @@ def test_initialization_failure_retains_cause(monkeypatch):
     original = RuntimeError("missing Runtime 2.0 setter")
     conf.reset_temperature.side_effect = original
     with pytest.raises(module.AIConfigurationError) as error:
-        module._invoke_fabric_ai("prompt", spark_session=spark)
+        module.invoke_fabric_ai("prompt", spark_session=spark)
     assert error.value.__cause__ is original
     spark.createDataFrame.assert_not_called()
 
@@ -176,10 +176,10 @@ def test_automatic_audit_even_without_usage_collector(monkeypatch, outcome):
     audit = Mock()
     monkeypatch.setattr(module, "_persist_ai_usage", audit)
     if outcome == "succeeded":
-        assert module._invoke_fabric_ai("private prompt", spark_session=spark) == "description"
+        assert module.invoke_fabric_ai("private prompt", spark_session=spark) == "description"
     else:
         with pytest.raises(module.AIProviderError if outcome == "provider_error" else module.AIExecutionError):
-            module._invoke_fabric_ai("private prompt", spark_session=spark)
+            module.invoke_fabric_ai("private prompt", spark_session=spark)
     audit.assert_called_once()
     record = audit.call_args.args[0]
     assert record["status"] == outcome
@@ -198,7 +198,7 @@ def test_audit_failure_preserves_response_and_reports_unconfirmed_write(monkeypa
     audit = Mock(side_effect=PermissionError("private storage path"))
     monkeypatch.setattr(module, "_persist_ai_usage", audit)
     usage = []
-    assert module._invoke_fabric_ai("private prompt", spark_session=spark, usage=usage) == "description"
+    assert module.invoke_fabric_ai("private prompt", spark_session=spark, usage=usage) == "description"
     assert usage[0]["persistence_status"] == "unconfirmed"
     assert usage[0]["persistence_error_type"] == "PermissionError"
     assert "private" not in caplog.text
@@ -211,7 +211,7 @@ def test_audit_failure_preserves_original_model_failure(monkeypatch):
     _, spark, result = _runtime(monkeypatch, failure=RuntimeError("execution failed"))
     monkeypatch.setattr(module, "_persist_ai_usage", Mock(side_effect=PermissionError()))
     with pytest.raises(module.AIExecutionError) as failure:
-        module._invoke_fabric_ai("prompt", spark_session=spark)
+        module.invoke_fabric_ai("prompt", spark_session=spark)
     assert isinstance(failure.value.__cause__, RuntimeError)
     result.collect.assert_called_once()
 

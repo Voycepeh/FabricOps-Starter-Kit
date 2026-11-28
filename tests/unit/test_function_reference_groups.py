@@ -14,7 +14,7 @@ EXPECTED_GROUPS = [
     ]),
     ("governance", "Governance Functions", [
         "setup_metadata_tables", "widget_data_steward", "widget_data_agreement",
-        "widget_data_contract", "widget_activate_data_contract", "widget_activate_pipeline",
+        "widget_data_contract", "assess_data_sensitivity", "widget_activate_data_contract", "widget_activate_pipeline",
     ]),
     ("foundational-io", "Foundational I/O", [
         "read_lakehouse_csv", "read_lakehouse_excel", "read_lakehouse_json",

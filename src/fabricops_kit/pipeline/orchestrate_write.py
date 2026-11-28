@@ -90,6 +90,7 @@ def orchestrate_write(dataframe: Any, *, store: str, schema: str | None = None, 
     A successful Write does not imply successful completion of the notebook.
 
     Dry Run profiles the prepared DataFrame in memory without publishing the target.
+    For Data Sensitivity Assessment, profile_result identifies the coverage and subject.
     Persistent table writes profile the physical target after successful publication,
     bounded only by setup_pipeline(profiling_max_rows=...).
     Pipeline-owned settings apply independently of selected Contracts; Dry Run observations

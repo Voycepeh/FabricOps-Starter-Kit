@@ -18,7 +18,7 @@ Input DataFrame
 
 The editor filters choices using the declared column datatype. Numeric columns offer Bucket, Tokenize and Remove; text and boolean categories offer Mask, Tokenize and Remove. Numeric IDs can use Tokenize; numeric measures can use Bucket. A numeric category code must be explicitly modeled as text if character masking is the intended treatment. Dates offer Tokenize/Remove and complex types offer Remove.
 
-AI suggestions are checked against the same datatype rules before acceptance. An incompatible suggestion shows a message and changes no authored fields. A saved treatment that is incompatible with these authoring choices remains in the contract for review; editing requires an explicit replacement rather than silently changing the rule.
+Assessment recommendations are checked against the same datatype rules before staging. An incompatible suggestion shows a message and changes no authored fields. A saved treatment that is incompatible with these authoring choices remains in the contract for review; editing requires an explicit replacement rather than silently changing the rule.
 
 | Treatment | Result |
 | --- | --- |
@@ -219,7 +219,7 @@ Mappings may reserve tokens before a later Guardrail or publication fails. Retai
 
 The authoring widget does not need every source row to declare fixed rules. Evaluating disclosure risk needs representative population evidence and consideration of combinations of identifying columns. Bucketing or tokenization alone does not establish anonymisation. Treatment covers the incoming write input; changing a rule does not rewrite historical target rows or SCD2 versions.
 
-Sensitive Data AI receives governed column metadata and profile summaries, including minimum and maximum values. Up to three values with the highest frequency are included with their counts and percentages. These approved profile samples help AI assess sensitivity; full source rows and arbitrary sample payloads are not included. AI suggestions always resolve to Block and remain subject to human review.
+Review the assessed scope, classification, and minimum handling before staging a recommendation. The assessment guide explains the policy rules and the evidence used to reassess a treated output. [Data Sensitivity and Classification](data-sensitivity-assessment.md)
 
 ## Validate versus Enforce
 
@@ -257,7 +257,7 @@ The final target profile is also based on the successfully published treated tar
 
 ## Related documentation
 
-- [Sensitive data discovery, classification and treatment](../governance.md#sensitive-data-discovery-classification-and-treatment)
+- [Governance workflow](../governance.md#sensitive-data-discovery-classification-and-treatment)
 - [Plug-and-Play pipelines and orchestration](../engineering.md#plug-and-play-pipelines-and-orchestration)
 - [Read & Write Modes](read-and-load-strategies.md)
 - [Sensitive Data stage](../api/reference/orchestrate_write.md)

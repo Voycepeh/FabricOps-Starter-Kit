@@ -17,6 +17,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Mapping
 
 from fabricops_kit.config.shared import DEFAULT_CLASSIFICATION_LEVELS, metadata_timestamp_sort_key, normalize_audit_datetime, resolve_fabric_context, validate_ai_enrichment
+from fabricops_kit.data_contract import assess_data_sensitivity
 from fabricops_kit.data_contract import shared as contracts
 from fabricops_kit.io.shared import get_spark_session
 from fabricops_kit.pipeline.shared import dq_tolerance_parameter
@@ -26,11 +27,9 @@ from fabricops_kit.widgets.enrichment_shared import (
     ai_failure_diagnostic,
     build_ai_business_rule_context,
     build_ai_enrichment_context,
-    build_ai_sensitive_data_context,
     suggest_enrichment,
     suggest_grain_key,
     suggest_business_rule,
-    suggest_sensitive_data,
 )
 
 _SENSITIVE_TREATMENT_OPTIONS = (("Mask", "mask"), ("Tokenize", "tokenize"), ("Bucket numeric values", "bucket"), ("Remove column", "remove"))
@@ -1110,12 +1109,9 @@ def widget_data_contract(
     manual authoring remains available. Execution and provider failures show a
     retryable message. Technical failure details are retained in the returned
     state rather than shown in the editor.
-    When enabled through ``GOVERNANCE_CONFIG.ai_enrichment`` in ``00_env_config``,
-    Sensitive Data AI assesses canonical columns as Direct PII, Indirect PII, or
-    Not PII from governed metadata and profile evidence. Editable draft state remains
-    separate until Governance accepts a suggestion. Manual Description or Classification
-    edits mark dependent advice stale for explicit re-run. AI never saves, freezes,
-    activates, or enforces a contract; runtime Sensitive Data enforcement remains deterministic.
+    Data Sensitivity Assessment uses current draft descriptions and existing governed
+    evidence. AI assistance is optional. Explicitly stage a reviewed treatment in the
+    draft editor and use the existing save, freeze, and activation workflow.
     Sensitive Data offers Mask for categorical/text columns, Bucket for numeric
     columns, and Tokenize/Remove for either. Dates offer Tokenize/Remove; complex
     types offer Remove. Text defaults to full masking; partial preservation is optional.
@@ -2059,7 +2055,7 @@ def widget_data_contract(
                 enrichment_value(enrichments, "table", "Classification"),
                 fallback="",
             ),
-            disabled=True, **shared.widget_common(widgets, "Classification"),
+            disabled=not editable, **shared.widget_common(widgets, "Classification"),
         )
         table_description.description = ""
         table_description.layout.close()
@@ -2400,7 +2396,9 @@ def widget_data_contract(
 
         def refresh_table_classification() -> None:
             derived = derive_table_classification()
-            if str(table_classification.value or "") != derived:
+            author_rank = {label: index for index, label in enumerate(classification_levels)}
+            authored = str(table_classification.value or "")
+            if editable and author_rank.get(derived, -1) > author_rank.get(authored, -1):
                 table_classification.value = derived
             if not derived:
                 table_classification_sources.value = (
@@ -2436,7 +2434,7 @@ def widget_data_contract(
             noun = "column" if count == 1 else "columns"
             table_classification_sources.value = (
                 "<span style='color:#667085;font-size:12px;line-height:1.5;'>"
-                f"Determined by {count} {noun} at this level"
+                f"Column classification floor {html.escape(derived)} from {count} {noun}"
                 + (f": {examples}{extra}" if examples else ".")
                 + "</span>"
             )
@@ -3488,13 +3486,37 @@ def widget_data_contract(
         # Internal compatibility aliases follow the default deterministic family.
         dq_enabled = dq_family_controls["completeness"]["enabled"]
         dq_block = dq_family_controls["completeness"]["block"]
-        sensitive_ai = widgets.HTML()
-        accept_sensitive = widgets.Button(description="Apply", disabled=not editable, button_style="info")
-        rerun_sensitive = widgets.Button(description="Re-run", disabled=not editable)
-        state["_ai_buttons"].extend([accept_sensitive, rerun_sensitive])
-        sensitive_ai_actions = shared.action_row(
-            widgets, [accept_sensitive, rerun_sensitive]
+        sensitivity_output = widgets.HTML()
+        sensitivity_scope = widgets.Dropdown(
+            options=[("Selected column", "column"), ("All columns", "table")],
+            description="Scope", disabled=not editable,
         )
+        sensitivity_target = widgets.Dropdown(
+            options=[("No target", ""), *((label, label) for label in classification_levels)],
+            description="Target", disabled=not editable,
+        )
+        assessment_policy = getattr(governance_config, "sensitivity_assessment", {}) or {}
+        sensitivity_category = widgets.Dropdown(
+            options=[("Unspecified", ""), *((name.replace("_", " ").capitalize(), name)
+                     for name in assessment_policy.get("categories", {}))],
+            description="Category", disabled=not editable,
+        )
+        sensitivity_linkage = widgets.Dropdown(
+            options=[("Unknown", None), ("Sensitive information identifies people", True),
+                     ("Sensitive information cannot identify people", False)],
+            description="Linkage", disabled=True,
+        )
+        sensitivity_linkage.layout.display = "none"
+        sensitivity_assist = widgets.Checkbox(
+            value=False, description="Use AI assistance",
+            disabled=not editable or not ai_enrichment.get("enabled") or not assessment_policy.get("ai_endpoint_approved"),
+        )
+        run_assessment = widgets.Button(description="Assess sensitivity", disabled=not editable, button_style="primary")
+        apply_treatment = widgets.Button(description="Stage selected column treatment", disabled=True)
+        apply_treatment.layout.width = "auto"
+        assessment_state = {"result": None, "categories": {}}
+        for control in (sensitivity_scope, sensitivity_target, sensitivity_category, sensitivity_linkage):
+            control.layout.width = "100%"
         for control in (
             table_description, table_classification,
             column_description, column_classification, datatype_choice,
@@ -3840,7 +3862,7 @@ def widget_data_contract(
 
         def update_sensitive_fields(change: dict[str, Any] | None = None) -> None:
             treatment = str(sensitive_treatment.value or "")
-            enabled = bool(sensitive_enabled.value) and str(pii_type.value or "none") != "none"
+            enabled = bool(sensitive_enabled.value)
             mask_mode.layout.display = "" if enabled and treatment == "mask" else "none"
             for control in (mask_start, mask_end):
                 control.layout.display = "" if enabled and treatment == "mask" and mask_mode.value == "partial" else "none"
@@ -3891,7 +3913,7 @@ def widget_data_contract(
             _change: dict[str, Any] | None = None,
         ) -> None:
             pii_value = str(pii_type.value or "none")
-            if not sensitive_enabled.value or pii_value == "none":
+            if not sensitive_enabled.value:
                 treatment_help.value = ""
                 sensitive_rule_preview.value = ""
                 return
@@ -3935,8 +3957,8 @@ def widget_data_contract(
                 "<div style='background:#f6f8fa;border-left:3px solid var(--form-accent);"
                 "padding:9px 11px;margin-top:8px;font-size:12px;line-height:1.5;'>"
                 "<b>ⓘ Rule</b><br>"
-                f"This column is assessed as <b>{html.escape(pii_label)}</b>. "
-                f"Treatment: <b>{html.escape(treatment)}</b>.{detail}"
+                + (f"This column is assessed as <b>{html.escape(pii_label)}</b>. " if pii_value != "none" else "")
+                + f"Treatment: <b>{html.escape(treatment)}</b>.{detail}"
                 f"{classification_effect} {action}"
                 f"{reason_line}</div>"
             )
@@ -4008,10 +4030,6 @@ def widget_data_contract(
         update_sensitive_fields()
 
         def update_pii_fields(change: dict[str, Any] | None = None) -> None:
-            is_pii = str(pii_type.value or "none") != "none"
-            if not is_pii:
-                sensitive_enabled.value = False
-            sensitive_treatment.disabled = not editable or not is_pii
             update_sensitive_fields()
 
         pii_type.observe(update_pii_fields, names="value")
@@ -4054,22 +4072,7 @@ def widget_data_contract(
                     f"<p>{heading}<span style=\"color:#a4262c\">"
                     f"{html.escape(str(error))}</span></p>"
                 )
-            value = suggestion.get("value")
-            if label == "Sensitive Data":
-                value = (
-                    "<div style='font-weight:600;margin-bottom:6px;'>"
-                    f"{html.escape(str(suggestion.get('pii_label') or ''))}</div>"
-                    "<div style='margin-bottom:8px;'>"
-                    f"{html.escape(str(suggestion.get('reason') or ''))}</div>"
-                    "<div style='color:#475467;'>"
-                    f"Treatment: {html.escape(str(suggestion.get('treatment') or 'None'))} · "
-                    f"Action: {html.escape(str(suggestion.get('action') or 'None'))}</div>"
-                    "<div style='margin-top:8px;'><b>Suggested output classification:</b> "
-                    f"{html.escape(str(suggestion.get('output_classification') or 'Not applicable — column removed'))}<br>"
-                    f"{html.escape(str(suggestion.get('classification_reason') or ''))}</div>"
-                )
-            else:
-                value = html.escape(str(value or ""))
+            value = html.escape(str(suggestion.get("value") or ""))
             stale_text = (
                 "<div style='margin:6px 0;color:#8a6d1d;font-weight:600;'>Needs refresh</div>"
                 if stale else ""
@@ -4106,46 +4109,29 @@ def widget_data_contract(
             suggestions = ai_state["columns"].get(column_id, {})
             if state["_ai_unavailable"]:
                 column_description_ai.value = f"<p>{state['_ai_unavailable']}</p>"
-                sensitive_ai.value = f"<p>{state['_ai_unavailable']}</p>"
             elif not ai_enrichment.get("enabled"):
                 column_description_ai.value = "<p>Disabled in 00_env_config.</p>"
-                sensitive_ai.value = "<p><b>AI suggestion</b><br>Disabled in 00_env_config.</p>"
             elif not editable:
                 column_description_ai.value = "<p>Not run for review-only versions.</p>"
-                sensitive_ai.value = "<p><b>AI suggestion</b><br>Not run for review-only versions.</p>"
             else:
                 column_description_ai.value = _suggestion_html(
                     "Description", suggestions.get("description"), show_heading=False
                 )
-                sensitive_ai.value = _suggestion_html(
-                    "Sensitive Data", suggestions.get("sensitive_data")
-                )
-            available = (
-                editable and ai_available() and bool(column_id)
-            )
+            available = editable and ai_available() and bool(column_id)
             accept_column_description.disabled = not (
                 available and suggestions.get("description") and not suggestions["description"].get("error")
             )
-            accept_sensitive.disabled = not (
-                available and suggestions.get("sensitive_data") and not suggestions["sensitive_data"].get("error")
-            )
             rerun_column_description.disabled = not available
-            rerun_sensitive.disabled = not available
             rerun_column_description.description = "Re-run" if suggestions.get("description") else "Generate"
-            rerun_sensitive.description = "Re-run" if suggestions.get("sensitive_data") else "Generate"
 
-        def mark_sensitive_stale(column_id: str) -> None:
-            """Mark one column's dependent Sensitive Data advice stale."""
-            suggestion = ai_state["columns"].get(column_id, {}).get("sensitive_data")
-            if suggestion:
-                suggestion["stale"] = True
+        def invalidate_assessment(_change=None) -> None:
+            if assessment_state["result"] is not None:
+                sensitivity_output.value = "<p>Assessment inputs changed. Run the assessment again.</p>"
+            assessment_state["result"] = None
+            apply_treatment.disabled = True
 
         def mark_all_sensitive_stale() -> None:
-            """Mark all loaded column Sensitive Data suggestions stale."""
-            for column_suggestions in ai_state["columns"].values():
-                suggestion = column_suggestions.get("sensitive_data")
-                if suggestion:
-                    suggestion["stale"] = True
+            invalidate_assessment()
 
         @busy_action("Generating column description…", ai_request=True)
         def run_column_enrichment_ai(column_id: str, *, force: bool = False) -> None:
@@ -4182,7 +4168,7 @@ def widget_data_contract(
                 new_value = str(result["Description"])
                 suggestions["description"] = {"value": new_value, "stale": False}
                 if previous_value and new_value != previous_value:
-                    mark_sensitive_stale(column_id)
+                    invalidate_assessment(column_id)
                 refresh_ai_usage()
                 ai_errors.pop(error_key, None)
                 if retrying:
@@ -4201,146 +4187,159 @@ def widget_data_contract(
                 set_status(f"AI suggestions unavailable for this column: {message}", warning=True)
             render_column_ai(column_id)
 
-        @busy_action("Assessing sensitive data…", ai_request=True)
-        def run_sensitive_ai(
-            column_id: str, *, force: bool = False
-        ) -> None:
-            if not column_id:
-                render_column_ai("")
+        def selected_treatment():
+            assessment = assessment_state["result"] or {}
+            selected_id = str(column_select.value or "")
+            name = next((column["column_name"] for column in columns if column["column_id"] == selected_id), None)
+            return next((item for item in assessment.get("recommended_treatments", [])
+                         if item.get("column_name") == name and item.get("kind") == "guardrail"), None)
+
+        def change_assessment_column(change):
+            selected_id = str(change.get("new") or "")
+            sensitivity_category.value = assessment_state["categories"].get(selected_id, "")
+            apply_treatment.disabled = not editable or selected_treatment() is None
+
+        def change_assessment_category(change):
+            cid = str(column_select.value or "")
+            if cid and assessment_state["categories"].get(cid, "") != change["new"]:
+                assessment_state["categories"][cid] = change["new"]
+                invalidate_assessment()
+
+        @busy_action("Assessing data sensitivity…")
+        def assess_current(_button):
+            if not editable or run_assessment.disabled:
                 return
-            suggestions = ai_state["columns"].setdefault(column_id, {})
-            if not editable or not ai_available():
-                render_column_ai(column_id)
-                return
-            if not force and suggestions.get("sensitive_data"):
-                render_column_ai(column_id)
-                return
-            selected = next(
-                (column for column in columns if str(column.get("column_id") or "") == column_id), {}
-            )
-            description, classification = _column_editable_values(column_id)
-            error_key = (column_id, "sensitive_data")
-            retrying = error_key in ai_errors
+            run_assessment.disabled = True
+            invalidate_assessment()
             try:
-                profile_value = load_profile_context(column_id)
-                profile = dict(profile_value.get("profile") or {})
-                context_value = build_ai_sensitive_data_context({
-                    "table_id": state.get("dataset_id"),
-                    "table_name": table.get("table_name"),
-                    "schema_name": table.get("schema_name"),
-                    "layer": table.get("layer"),
-                    "contract_id": current.get("contract_id"),
-                    "contract_version": current.get("contract_version"),
-                    "table_description": str(table_description.value or ""),
-                    "table_classification": table_classification.value,
-                    "classification_levels": classification_definitions,
-                    "catalogue_profile_rows": [{
-                        **dict(selected), "description": description,
-                        "classification": classification,
-                        **{name: profile.get(name) for name in (
-                            "profile_scope", "profiling_max_rows",
-                            "row_count", "non_null_count", "null_count", "null_percent",
-                            "distinct_count", "distinct_percent", "min_value", "max_value",
-                            "mean_value", "stddev_value", "percentile_25_value", "median_value", "percentile_75_value",
-                        ) if profile.get(name) is not None},
-                        "frequency_evidence": [
-                            {name: item[name] for name in ("value", "count", "percent") if name in item}
-                            for item in profile_value.get("values", [])
-                        ],
-                    }],
-                })
-                result = suggest_sensitive_data(
-                    context_value, prompt=str(ai_enrichment.get("sensitive_data_prompt") or ""),
-                    ai_config=ai_enrichment, spark_session=spark, usage=state["ai_usage"],
-                    runtime_context=ai_runtime_context(column_id), operation="sensitive_data",
+                selected_id = str(column_select.value or "")
+                single = sensitivity_scope.value == "column"
+                selection = [column for column in columns
+                             if not single or column["column_id"] == selected_id]
+                definitions = {}
+                for column in selection:
+                    cid = column["column_id"]
+                    description_value, _ = _column_editable_values(cid)
+                    definition = {"description": description_value}
+                    if category := assessment_state["categories"].get(cid):
+                        definition["category"] = category
+                    definitions[column["column_name"]] = definition
+                source = state["manifest"].get("source") or {}
+                asset_type = "FILE" if str(state["dataset_id"]).startswith("file:") else "TABLE"
+                workspace = source.get("asset_workspace_id") if asset_type == "FILE" else active_workspace_id
+                reference = {"table_id": state["dataset_id"], "asset_workspace_id": workspace,
+                             "asset_type": asset_type, "reuse_latest": True}
+                if single and selection:
+                    reference["column_id"] = selected_id
+                    if asset_type == "FILE":
+                        from fabricops_kit.config.shared import build_column_id
+                        reference["column_id"] = build_column_id(state["dataset_id"], selection[0]["column_name"])
+                if single and not selection:
+                    raise ValueError("Select a column to assess.")
+                assessment = assess_data_sensitivity(
+                    {"assessment_reference": reference},
+                    description=next(iter(definitions.values()))["description"] if single else table_description.value,
+                    column_definitions=definitions, target_classification=sensitivity_target.value or None,
+                    use_ai=sensitivity_assist.value,
+                    sensitive_linkage=None if single else sensitivity_linkage.value,
+                    context={**ai_runtime_context(selected_id if single else None),
+                             "scope_workspace_id": resolved.get("scope_workspace_id") or routing_workspace_id,
+                             "metadata_workspace_id": routing_workspace_id, "_spark_session": spark,
+                             "_assessment_ai_settings": ai_enrichment, "_assessment_ai_usage": state["ai_usage"]},
                 )
-                if len(result) != 1:
-                    selected_name = str(selected.get("column_name") or column_id)
-                    raise ValueError(
-                        f"No Sensitive Data assessment matched {selected_name!r}."
-                    )
-                suggestions["sensitive_data"] = {**result[0], "stale": False}
-                refresh_ai_usage()
-                ai_errors.pop(error_key, None)
-                if retrying:
-                    ai_recovered(
-                        "Sensitive Data AI suggestion generated after retry.",
-                        operation=error_key,
-                        remaining_errors=bool(
-                            ai_errors or state["_validation_errors"].get("business_rule_ai")
-                        ),
-                    )
-            except (TypeError, ValueError, RuntimeError, ImportError) as exc:
-                refresh_ai_usage()
-                message = ai_failure_message(exc, error_key)
-                suggestions["sensitive_data"] = {"error": message, "stale": False}
-                ai_errors[error_key] = message
-                selected_name = str(selected.get("column_name") or column_id)
-                set_status(
-                    f"Sensitive Data AI suggestion skipped for {selected_name}: {message}",
-                    warning=True,
+                assessment_state["result"] = assessment
+                label = html.escape(str(assessment["classification"] or "Unresolved"))
+                floor = html.escape(str(assessment["minimum_handling_classification"] or "Unresolved"))
+                scope = html.escape(str(assessment["scope"]["kind"]).replace("_", " "))
+                approved = assessment.get("approved_classification")
+                approved_text = (
+                    f" · Approved {html.escape(approved)}"
+                    if approved and approved != assessment["classification"] else ""
                 )
-            render_column_ai(column_id)
+                rows = [
+                    f"<li><b>{html.escape(finding['column_name'])}</b> · "
+                    f"{html.escape(str(finding['classification'] or 'Unresolved'))} · "
+                    f"{html.escape(finding['assessment_method'].replace('_', ' '))}"
+                    + (" · Review required" if finding["human_review_required"] else "")
+                    + (f"<br>Minimum handling {html.escape(str(finding['minimum_handling_classification']))}"
+                       if finding.get("minimum_handling_classification") else "")
+                    + (f"<br>{html.escape(finding['rationale'])}" if finding.get("rationale") else "")
+                    + ("<br>" + html.escape(", ".join(finding["evidence"]).replace("_", " "))
+                       if finding.get("evidence") else "")
+                    + "</li>"
+                    for finding in assessment["columns"]
+                ]
+                details = [*assessment["limitations"], *assessment["residual_risks"]]
+                details.extend(item["code"] for item in assessment["dataset_findings"])
+                details.extend(f"{item['column_name']} · {item['parameters']['treatment']}"
+                               for item in assessment["recommended_treatments"] if item.get("column_name"))
+                if sensitivity_assist.value:
+                    details.append(f"AI {assessment['ai_status'].replace('_', ' ')}")
+                rows.extend(f"<li>{html.escape(str(item).replace('_', ' '))}</li>" for item in details)
+                review = " · Review required" if assessment["human_review_required"] else ""
+                sensitivity_output.value = (
+                    f"<p><b>{label}</b>{approved_text} · Minimum handling {floor} · {scope}{review}</p><ul>"
+                    + "".join(rows) + "</ul>"
+                )
+                apply_treatment.disabled = selected_treatment() is None
+                refresh_ai_usage()
+            except (ValueError, RuntimeError, TypeError) as exc:
+                sensitivity_output.value = f"<p>{html.escape(str(exc))}</p>"
+            finally:
+                run_assessment.disabled = not editable
 
         def accept_description_clicked(_button: Any) -> None:
             suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("description", {})
             if not suggestion.get("error"):
                 column_description.value = str(suggestion.get("value") or "")
 
-        def accept_sensitive_clicked(_button: Any) -> None:
-            suggestion = ai_state["columns"].get(str(column_select.value or ""), {}).get("sensitive_data", {})
-            if not suggestion or suggestion.get("error"):
+        def stage_assessed_treatment(_button):
+            recommendation = selected_treatment()
+            if not recommendation or not editable:
                 return
-            allowed = contracts.sensitive_data_treatments_for_type(str(datatype_choice.value or ""))
-            treatment = str(suggestion.get("treatment") or sensitive_treatment.value or allowed[0])
-            removing_output = suggestion["pii_type"] != "none" and treatment == "remove"
-            parameters = suggestion.get("parameters", {})
-            try:
-                if not removing_output and suggestion.get("output_classification") not in classification_definitions:
-                    raise ValueError("The AI output classification must match a configured classification label.")
-                if suggestion["pii_type"] != "none":
-                    if treatment not in allowed:
-                        raise ValueError("This treatment does not apply to the column datatype. Use Bucket for numeric values, Mask for text/categories, or Tokenize/Remove for supported scalar values.")
-                    parameters = contracts.validate_sensitive_data_parameters({"scope": "column", "treatment": treatment, **parameters})
-            except (TypeError, ValueError) as exc:
-                set_status(str(exc), error=True)
-                return
+            params = recommendation["parameters"]
+            treatment = params["treatment"]
             previous_treatment = sensitive_treatment.value
+            previous_enabled = sensitive_enabled.value
+            allowed = contracts.sensitive_data_treatments_for_type(str(datatype_choice.value or ""))
+            if treatment not in allowed:
+                set_status("The treatment is unavailable for the selected datatype.", error=True)
+                return
             hydrating["active"] = True
             try:
-                pii_type.value = str(suggestion["pii_type"])
-                pii_reason.value = str(suggestion["reason"])
-                sensitive_enabled.value = suggestion["pii_type"] != "none"
+                sensitive_enabled.value = True
                 sensitive_treatment.value = treatment
-                if not removing_output:
-                    column_classification.value = str(suggestion["output_classification"])
-                mask_start.value = str(parameters.get("preserve_start", 0))
-                mask_end.value = str(parameters.get("preserve_end", 0))
-                mask_character.value = str(parameters.get("mask_character", "*"))
-                mask_mode.value = "partial" if int(mask_start.value) or int(mask_end.value) else "full"
-                bucket_mode.value = "width" if "bin_width" in parameters else "ranges"
-                bucket_width.value = str(parameters.get("bin_width", 10))
-                bucket_origin.value = str(parameters.get("bin_origin", 0))
-                bucket_bins.value = ", ".join(map(str, parameters.get("bins", [])))
-                bucket_labels.value = ", ".join(map(str, parameters.get("labels", [])))
+                if treatment == "mask":
+                    mask_mode.value = "full"
+                    mask_start.value = str(params.get("preserve_start", 0))
+                    mask_end.value = str(params.get("preserve_end", 0))
+                    mask_character.value = str(params.get("mask_character", "*"))
             finally:
                 hydrating["active"] = False
             update_sensitive_fields({"owner": sensitive_treatment, "old": previous_treatment})
+            if removal_state["pending"]:
+                removal_state["previous_enabled"] = previous_enabled
             sync_sensitive()
-            if not removing_output:
-                sync_column_enrichment()
-            suggestion["stale"] = False
-            render_column_ai(str(column_select.value or ""))
             refresh_sensitive_rule_preview()
+            invalidate_assessment()
 
         accept_column_description.on_click(accept_description_clicked)
-        accept_sensitive.on_click(accept_sensitive_clicked)
         rerun_column_description.on_click(
             lambda _button: run_column_enrichment_ai(str(column_select.value or ""), force=True)
         )
-        rerun_sensitive.on_click(
-            lambda _button: run_sensitive_ai(str(column_select.value or ""), force=True)
-        )
+        run_assessment.on_click(assess_current)
+        apply_treatment.on_click(stage_assessed_treatment)
+        column_select.observe(change_assessment_column, names="value")
+        sensitivity_category.observe(change_assessment_category, names="value")
+        def change_assessment_scope(change):
+            table_scope = change["new"] == "table"
+            sensitivity_linkage.layout.display = "" if table_scope else "none"
+            sensitivity_linkage.disabled = not editable or not table_scope
+            invalidate_assessment()
+
+        sensitivity_scope.observe(change_assessment_scope, names="value")
+        for field in (sensitivity_target, sensitivity_assist, sensitivity_linkage):
+            field.observe(invalidate_assessment, names="value")
 
         def description_changed(change: dict[str, Any]) -> None:
             if hydrating["active"]:
@@ -4358,14 +4357,14 @@ def widget_data_contract(
                 return
             if description_suggestion:
                 description_suggestion["stale"] = True
-            mark_sensitive_stale(column_id)
+            invalidate_assessment()
             render_column_ai(column_id)
 
         def classification_changed(_change: dict[str, Any]) -> None:
             if hydrating["active"]:
                 return
             column_id = str(column_select.value or "")
-            mark_sensitive_stale(column_id)
+            invalidate_assessment()
             render_column_ai(column_id)
 
         def table_description_changed(change: dict[str, Any]) -> None:
@@ -4386,6 +4385,7 @@ def widget_data_contract(
                 render_column_ai(selected_id)
 
         def table_classification_changed(_change: dict[str, Any]) -> None:
+            refresh_table_classification()
             mark_all_sensitive_stale()
             selected_id = str(column_select.value or "")
             if selected_id:
@@ -4464,8 +4464,6 @@ def widget_data_contract(
                 and str(pii_type.value or "none") == "none"
             ):
                 return None
-            if str(pii_type.value or "none") == "none" and sensitive_enabled.value:
-                raise ValueError("Enable a Sensitive Data rule only for Direct or Indirect PII.")
             if sensitive_enabled.value and sensitive_treatment.value not in contracts.sensitive_data_treatments_for_type(str(datatype_choice.value or "")):
                 raise ValueError("Select a treatment supported by this datatype: Bucket for numeric values, Mask for text/categories, or Tokenize/Remove.")
             parameters: dict[str, Any] = {
@@ -4955,17 +4953,15 @@ def widget_data_contract(
             ],
             layout=widgets.Layout(width="100%", min_width="0", gap="8px"),
         )
-        sensitive_ai_panel = widgets.VBox(
-            [sensitive_ai, sensitive_ai_actions],
-            layout=widgets.Layout(
-                width="100%", min_width="0", gap="8px",
-                padding="0 0 0 16px",
-                border_left="1px solid #e1e6eb",
-            ),
+        sensitivity_panel = shared.form_section(
+            widgets, title="Data Sensitivity Assessment",
+            children=[sensitivity_scope, sensitivity_category, sensitivity_linkage, sensitivity_target, sensitivity_assist,
+                      run_assessment, sensitivity_output, apply_treatment],
         )
         column_right = (
             column_header,
             column_definition,
+            sensitivity_panel,
             shared.form_section(
                 widgets,
                 title="Profile evidence",
@@ -4978,8 +4974,7 @@ def widget_data_contract(
                     "Treatment runs before Data Quality and publication. Every treatment failure stops the write."
                 ),
                 description=(
-                    "Assess whether this column contains PII, choose how the pipeline should treat "
-                    "the sensitive value, and set the classification of the resulting output column."
+                    "Choose how the pipeline should treat the sensitive value and review the output classification."
                 ),
                 header_controls=[
                     sensitive_enabled,
@@ -4987,7 +4982,6 @@ def widget_data_contract(
                 primary_children=[
                     sensitive_primary,
                 ],
-                ai_children=list(sensitive_ai_panel.children),
             ),
         )
         view_content["Columns"] = (column_left, column_right)
@@ -7080,8 +7074,11 @@ def widget_data_contract(
             "accept_column_description": accept_column_description,
             "rerun_column_description": rerun_column_description,
             "pii_type": pii_type, "pii_reason": pii_reason,
-            "sensitive_ai": sensitive_ai, "accept_sensitive": accept_sensitive,
-            "rerun_sensitive": rerun_sensitive,
+            "sensitivity_output": sensitivity_output, "apply_treatment": apply_treatment,
+            "run_assessment": run_assessment, "sensitivity_scope": sensitivity_scope,
+            "sensitivity_category": sensitivity_category, "sensitivity_target": sensitivity_target,
+            "sensitivity_linkage": sensitivity_linkage,
+            "sensitivity_assist": sensitivity_assist,
             "mask_mode": mask_mode, "treatment_help": treatment_help,
             "bucket_mode": bucket_mode, "bucket_width": bucket_width, "bucket_origin": bucket_origin,
             "mask_start": mask_start,
@@ -7185,7 +7182,7 @@ def widget_data_contract(
         editor_roots.extend([*sidebar_content, table_context_accordion, *sidebar_actions.children])
         # Conditional fields may be unmounted, but their comms still need closing.
         editor_roots.extend([
-            sensitive_ai_panel, business_advanced, business_rule_controls,
+            sensitivity_panel, business_advanced, business_rule_controls,
             business_proposal_select, review_mode, review_values,
             review_minimum, review_maximum, review_minimum_inclusive, review_maximum_inclusive,
             review_pattern, review_condition_operator, review_condition_value,

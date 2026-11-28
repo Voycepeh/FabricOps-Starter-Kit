@@ -158,7 +158,7 @@ disables AI actions. AI Settings and usage reporting remain accessible from the 
 
 ![Sensitive Data governance from classification to deterministic treatment](assets/sensitive-data-governance.svg){ .fabricops-section-evidence }
 
-Governance can classify a column as Direct PII, Indirect PII or Not PII, choose **Mask**, **Bucket**, **Tokenize** or **Remove**, and record the post-treatment information classification. AI can suggest from governed schema and bounded profile evidence; a person reviews the decision. Runtime treatment is deterministic and does not call AI.
+Use **Data Sensitivity Assessment** in the Data Contract widget to review a column or dataset before recording its classification. The default policy uses Unclassified, Restricted and Confidential, with whole-dataset review for combinations that can expose sensitive information. Configure your organisation's rules in **00 Environment Config**. [Data Sensitivity and Classification](reference/data-sensitivity-assessment.md)
 
 ??? info "Under the Hood — sensitive-data authoring and enforcement"
 

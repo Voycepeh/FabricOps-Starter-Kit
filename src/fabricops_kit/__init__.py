@@ -19,6 +19,7 @@ from .config import (
     setup_notebook,
 )
 from .data_agent import create_data_agent
+from .data_contract import assess_data_sensitivity
 
 from .io import (
     read_lakehouse_csv,
@@ -58,7 +59,7 @@ CONFIG_EXPORTS = (
     "orchestrate_demo_reset",
 )
 
-DATA_CONTRACT_EXPORTS = ()
+DATA_CONTRACT_EXPORTS = ("assess_data_sensitivity",)
 
 DATA_AGENT_EXPORTS = (
     "create_data_agent",

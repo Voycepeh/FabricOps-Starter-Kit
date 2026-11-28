@@ -5797,10 +5797,10 @@ def main() -> None:
             "key": "governance",
             "title": "Governance Functions",
             "note": "Author and review governed context",
-            "description": "Initialize metadata tables, then use the public Governance widgets. Each function retains its own lifecycle status.",
+            "description": "Initialize metadata tables, then use the Governance widgets and assessment callable. Each function retains its own lifecycle status.",
             "functions": (
                 "setup_metadata_tables", "widget_data_steward", "widget_data_agreement",
-                "widget_data_contract", "widget_activate_data_contract", "widget_activate_pipeline",
+                "widget_data_contract", "assess_data_sensitivity", "widget_activate_data_contract", "widget_activate_pipeline",
             ),
             "open": False,
         },

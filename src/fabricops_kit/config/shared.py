@@ -424,10 +424,9 @@ class PathConfig:
 
 
 DEFAULT_CLASSIFICATION_LEVELS = {
-    "Public": "Approved for unrestricted external sharing.",
-    "Restricted": "For internal use; share only with authorized organizational users.",
-    "Confidential": "Sensitive personal or business information; restrict access to an approved business need.",
-    "Highly Sensitive": "Information requiring the strictest access controls because disclosure could cause severe harm.",
+    "Unclassified": "Approved for general or public release with minimal disclosure impact.",
+    "Restricted": "For authorised internal use, including information whose classification is still uncertain.",
+    "Confidential": "Sensitive or critical information, including personal or proprietary information and high-impact disclosures.",
 }
 
 
@@ -450,24 +449,9 @@ DEFAULT_AI_ENRICHMENT = {
         "and return only the proposed description."
     ),
     "sensitive_data_prompt": (
-        "Assess the selected active canonical column as Direct PII, Indirect PII, or Not PII using only "
-        "the supplied table context, column metadata, Enrichment, and profile evidence. Explain the "
-        "assessment briefly. For Direct or Indirect PII, suggest only tokenize, mask, bucket, or remove, "
-        "explicit parameters, and a Block action. Use Mask for text or categorical columns and Bucket for "
-        "numeric values using approved fixed boundaries. Tokenize can protect numeric or categorical "
-        "identifiers; Remove supports either. Prefer full masking when Mask applies. The manually selected information "
-        "classification is context only, not a PII decision. Suggest the final output_classification and "
-        "classification_reason using the configured classification_levels definitions and the residual risk "
-        "after the proposed treatment. Do not automatically lower classification because a treatment is enabled. "
-        "Where these labels are configured, you may recommend Confidential to Restricted after treatment "
-        "only when identifying information is sufficiently protected and the remaining output meets the "
-        "Restricted definition for authorized internal use. Explain the reduction, considering reversibility, "
-        "linkability, retained identifiers, and sensitive business information. Full masking may justify a "
-        "reduction; linkable tokenized records may still require Confidential. "
-        "For Remove, output_classification is null because the column has no written output. "
-        "For Not PII, still classify business sensitivity using the configured definitions. Profile summaries, min/max, and the top three "
-        "frequent values are approved input evidence. Never request full source rows or return raw values. Return "
-        "structured JSON only; final review belongs to Governance."
+        "Interpret uncertain data sensitivity using the configured classifications and supplied evidence. "
+        "Consider personal and non-personal sensitivity, indirect identification and combined disclosure risk. "
+        "Leave a finding inconclusive when the evidence is insufficient."
     ),
     "grain_prompt": (
         "Suggest the table row grain and the smallest defensible single or composite row-key candidate using "
@@ -525,6 +509,98 @@ def validate_ai_enrichment(settings: dict[str, Any] | None = None) -> dict[str, 
     return values
 
 
+def _validate_sensitivity_assessment(settings, levels, sensitivity_rules):
+    keys = {"categories", "detectors", "unresolved_handling", "suspected_handling",
+            "combinations", "small_group_minimum", "ai_endpoint_approved", "ai_allow_descriptions"}
+    if not isinstance(settings, Mapping) or set(settings) - keys:
+        raise ValueError("Invalid sensitivity_assessment settings.")
+    lowest = next(iter(levels))
+    highest = next(reversed(levels))
+    default_categories = {
+        "personal_identifier": ("Confidential", True, True),
+        "personal_contact": ("Confidential", True, True),
+        "business_contact": ("Restricted", True, True),
+        "payroll": ("Confidential", True, True),
+        "academic_record": ("Confidential", True, True),
+        "admissions_record": ("Confidential", True, True),
+        "alumni_personal_record": ("Confidential", True, True),
+        "employee_appraisal": ("Confidential", True, True),
+        "employee_bank_account": ("Confidential", True, True),
+        "individual_bank_account": ("Confidential", True, True),
+        "payment_card": ("Confidential", None, True),
+        "donation_record": ("Confidential", None, True),
+        "investment_under_confidentiality": ("Confidential", None, True),
+        "health_record": ("Confidential", True, True),
+        "examination_material": ("Confidential", False, True),
+        "significant_disclosure_impact": ("Confidential", None, True),
+        "internal_budget": ("Restricted", False, True),
+        "vendor_bank_account": ("Restricted", None, True),
+        "internal_financial_record": ("Restricted", None, True),
+        "internal_investment_record": ("Restricted", None, True),
+        "internal_programme_information": ("Restricted", False, True),
+        "internal_staff_communication": ("Restricted", False, True),
+        "routine_employment_record": ("Restricted", None, True),
+        "deidentified_employment_statistics": ("Restricted", False, True),
+        "institutional_identifier": ("Restricted", None, True),
+        "quasi_identifier": ("Restricted", None, True),
+        "authorised_public_release": (lowest, None, False),
+    }
+    categories = {name: {"classification": label, "personal": personal, "sensitive": sensitive}
+                  for name, (label, personal, sensitive) in default_categories.items() if label in levels}
+    custom = settings.get("categories", {})
+    if not isinstance(custom, Mapping):
+        raise ValueError("Sensitivity categories must be a mapping.")
+    categories.update({name: {**categories.get(name, {}), "classification": label}
+                       for name, label in sensitivity_rules.items() if isinstance(label, str) and label in levels})
+    categories.update(custom)
+    for name, rule in categories.items():
+        if (not isinstance(name, str) or not name or not isinstance(rule, Mapping)
+                or set(rule) - {"classification", "personal", "sensitive"}
+                or rule.get("classification") not in levels
+                or any(rule.get(key) is not None and type(rule[key]) is not bool for key in ("personal", "sensitive"))):
+            raise ValueError("A sensitivity category requires a configured classification and optional Boolean indicators.")
+    detectors = settings.get("detectors", ["email", "phone", "payment_card"])
+    if (not isinstance(detectors, (tuple, list)) or not all(isinstance(value, str) for value in detectors)
+            or len(set(detectors)) != len(detectors)
+            or set(detectors) - {"email", "phone", "payment_card", "nric_fin"}):
+        raise ValueError("Invalid sensitivity detector selection.")
+    unresolved = settings.get("unresolved_handling", "Restricted" if "Restricted" in levels else highest)
+    suspected = settings.get("suspected_handling", "Confidential" if "Confidential" in levels else highest)
+    if unresolved not in levels or suspected not in levels or list(levels).index(suspected) < list(levels).index(unresolved):
+        raise ValueError("Sensitivity handling floors must follow the configured classification order.")
+    default_combinations = [
+        {"categories": [identifier, context], "classification": "Confidential"}
+        for identifier in ("personal_identifier", "institutional_identifier", "quasi_identifier")
+        for context in ("payroll", "academic_record", "health_record")
+        if "Confidential" in levels and {identifier, context} <= categories.keys()
+    ] + [
+        {"categories": [identifier, "deidentified_employment_statistics"], "classification": "Confidential",
+         "requires_linkage": True}
+        for identifier in ("personal_identifier", "institutional_identifier", "business_contact")
+        if "Confidential" in levels and {identifier, "deidentified_employment_statistics"} <= categories.keys()
+    ]
+    combinations = settings.get("combinations", default_combinations)
+    if not isinstance(combinations, (list, tuple)):
+        raise ValueError("Sensitivity combinations must be a list.")
+    for rule in combinations:
+        if (not isinstance(rule, Mapping) or not {"categories", "classification"} <= rule.keys()
+                or rule.keys() - {"categories", "classification", "requires_linkage"}
+                or type(rule.get("requires_linkage", False)) is not bool
+                or rule["classification"] not in levels or not isinstance(rule["categories"], (list, tuple))
+                or len(set(rule["categories"])) < 2 or not set(rule["categories"]) <= categories.keys()):
+            raise ValueError("A sensitivity combination requires at least two configured categories and a classification.")
+    group_minimum = settings.get("small_group_minimum", 5)
+    if type(group_minimum) is not int or group_minimum < 2:
+        raise ValueError("small_group_minimum must be an integer greater than one.")
+    for key in ("ai_endpoint_approved", "ai_allow_descriptions"):
+        if type(settings.get(key, False)) is not bool:
+            raise ValueError(f"{key} must be a Boolean.")
+    return {"categories": deepcopy(categories), "detectors": list(detectors), "combinations": deepcopy(list(combinations)),
+            "unresolved_handling": unresolved, "suspected_handling": suspected, "small_group_minimum": group_minimum,
+            "ai_endpoint_approved": settings.get("ai_endpoint_approved", False),
+            "ai_allow_descriptions": settings.get("ai_allow_descriptions", False)}
+
+
 @dataclass(frozen=True)
 class GovernanceConfig:
     """Default governance-policy options for metadata/classification checks.
@@ -545,6 +621,8 @@ class GovernanceConfig:
         assistant and the prompt fields provide project instructions. Built-in models
         are ``gpt-5-mini`` (default) and ``gpt-5.1``; reasoning defaults to ``low``
         and verbosity to None (provider default).
+    sensitivity_assessment : dict[str, Any], optional
+        Data Sensitivity Assessment categories, detectors, handling floors, and AI input controls.
     sensitive_data_token_mapping : dict[str, Any], optional
         Engineering-managed token vault target with ``store``, ``schema`` and
         ``table_name``. Provision a restricted Delta table before use. The store
@@ -565,6 +643,7 @@ class GovernanceConfig:
     enrichment_classification_widget: dict[str, Any] = field(default_factory=lambda: {"custom_fields": []})
 
     sensitive_data_token_mapping: dict[str, Any] = field(default_factory=dict)
+    sensitivity_assessment: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Validate and normalize initialized values."""
@@ -592,6 +671,8 @@ class GovernanceConfig:
                 raise ValueError("classification_levels must contain unique ranked values.")
             levels[label.strip()] = explanation.strip()
         object.__setattr__(self, "classification_levels", levels)
+        object.__setattr__(self, "sensitivity_assessment",
+                           _validate_sensitivity_assessment(self.sensitivity_assessment, levels, self.sensitivity_rules))
         object.__setattr__(self, "ai_enrichment", validate_ai_enrichment(self.ai_enrichment))
         object.__setattr__(
             self,
