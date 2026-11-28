@@ -70,41 +70,61 @@
     container.append(table);
   }
 
-  function renderResults(result, container, policyLabel) {
-    const table = element("table");
-    table.className = "sensitivity-calculator__table";
-    const caption = table.createCaption();
-    caption.textContent = policyLabel;
-    const headings = table.createTHead().insertRow();
-    for (const title of ["Scope", "Suggested handling"]) {
-      const head = element("th", title);
-      head.scope = "col";
-      headings.append(head);
+  function renderHandling(assessment, destination) {
+    const { handling, assessed, personalData, review, reason } = assessmentSummary(assessment);
+    const verdict = element("div");
+    verdict.className = "sensitivity-calculator__verdict";
+    verdict.append(element("strong", handling ?? "Review"));
+    if (review && handling) {
+      const status = element("small", "Review");
+      status.className = "sensitivity-calculator__review";
+      verdict.append(status);
     }
-    const body = table.createTBody();
-    const rows = result.scope.column_only && result.columns.length === 1
-      ? [[result.columns[0].column_name, result]]
-      : [
-        [result.scope.column_only ? "Column" : "Dataset", result],
-        ...result.columns.map((column) => [column.column_name, column]),
-      ];
-    for (const [name, assessment] of rows) {
-      const row = body.insertRow();
-      const heading = element("th", name);
-      heading.scope = "row";
-      row.append(heading);
-      const { handling, assessed, personalData, review, reason } = assessmentSummary(assessment);
-      const cell = row.insertCell();
-      cell.append(element("strong", handling ?? "Review"));
-      if (review && handling) {
-        const status = element("small", "Review");
-        status.className = "sensitivity-calculator__review";
-        cell.append(status);
+    destination.append(verdict);
+    if (assessed && assessed !== handling) {
+      destination.append(element("small", `Assessed as ${assessed}.`));
+    }
+    destination.append(element("small", personalData));
+    if (reason) destination.append(element("small", reason));
+  }
+
+  function renderResults(result, summary, container, policyLabel) {
+    const title = result.scope.column_only ? "Suggested column handling" : "Suggested dataset handling";
+    summary.replaceChildren(element("h4", title));
+    renderHandling(result, summary);
+    const scope = result.scope.kind === "full_table" ? "Full input" : label(result.scope.kind);
+    const policy = element("p", `${policyLabel} · ${scope}`);
+    policy.className = "sensitivity-calculator__policy-note";
+    summary.append(policy);
+    summary.hidden = false;
+
+    container.replaceChildren();
+    if (!result.scope.column_only) {
+      const table = element("table");
+      table.className = "sensitivity-calculator__table";
+      const headings = table.createTHead().insertRow();
+      for (const title of ["Column", "Suggested handling"]) {
+        const head = element("th", title);
+        head.scope = "col";
+        headings.append(head);
       }
-      if (assessed && assessed !== handling) cell.append(element("small", `Assessed as ${assessed}.`));
-      cell.append(element("small", personalData));
-      if (reason) cell.append(element("small", reason));
+      const body = table.createTBody();
+      for (const column of result.columns) {
+        const row = body.insertRow();
+        const heading = element("th", column.column_name);
+        heading.scope = "row";
+        row.append(heading);
+        renderHandling(column, row.insertCell());
+      }
+      const tableRegion = element("div");
+      tableRegion.className = "sensitivity-calculator__results-table";
+      tableRegion.tabIndex = 0;
+      tableRegion.setAttribute("role", "region");
+      tableRegion.setAttribute("aria-label", "Column results");
+      tableRegion.append(table);
+      container.append(element("h4", "Column results"), tableRegion);
     }
+
     const reasons = [
       ...result.dataset_findings.map((finding) => {
         const categories = finding.categories?.map(label).join(" + ");
@@ -115,11 +135,13 @@
         (code) => `${column.column_name} — ${label(code)}`,
       )),
     ];
-    const findings = element("div");
     if (reasons.length) {
+      const findings = element("details");
+      findings.className = "sensitivity-calculator__findings";
       const list = element("ul");
       for (const reason of reasons) list.append(element("li", reason));
-      findings.append(element("h5", "Findings"), list);
+      findings.append(element("summary", "Assessment findings"), list);
+      container.append(findings);
     }
     if (result.recommended_treatments.length || result.residual_risks.length) {
       const list = element("ul");
@@ -127,16 +149,9 @@
         list.append(element("li", `${label(item.parameters.treatment)} ${item.column_name}. ${item.rationale}`));
       }
       for (const risk of result.residual_risks) list.append(element("li", risk));
-      findings.append(element("h5", "Treatment suggestions"), list);
+      container.append(element("h4", "Treatment suggestions"), list);
     }
-    const tableRegion = element("div");
-    tableRegion.className = "sensitivity-calculator__results-table";
-    tableRegion.tabIndex = 0;
-    tableRegion.setAttribute("role", "region");
-    tableRegion.setAttribute("aria-label", "Suggested handling");
-    tableRegion.append(table);
-    container.replaceChildren(element("h4", "Assessment results"), tableRegion, findings);
-    container.hidden = false;
+    container.hidden = !container.childElementCount;
   }
 
   function initialize() {
@@ -164,7 +179,10 @@
     const reset = root.querySelector("[data-reset]");
     const target = root.querySelector("[data-target]");
     const linkage = root.querySelector("[data-linkage]");
+    const summary = root.querySelector("[data-handling-summary]");
     const results = root.querySelector("[data-results]");
+    const refine = root.querySelector("[data-refine]");
+    const editor = root.querySelector("[data-editor]");
     const status = root.querySelector("[role=status]");
     let worker;
     let profile;
@@ -267,10 +285,16 @@
         action: "assess", profile, definitions, policy: activePolicyText, target: target.value || null,
         sensitiveLinkage: linkage.value ? linkage.value === "yes" : null,
       });
-      const policyLabel = usingDefaults ? "Using FabricOps defaults." : "Using your applied policy.";
-      renderResults(result, results, policyLabel);
+      const policyLabel = usingDefaults ? "FabricOps default policy" : "Applied policy";
+      renderResults(result, summary, results, policyLabel);
       const scope = label(result.scope.kind).toLowerCase();
       status.textContent = `Assessment complete for ${profileName.textContent}. Profile scope is ${scope}.`;
+      return true;
+    }
+
+    function showAssessment() {
+      inputs.focus({ preventScroll: true });
+      inputs.scrollIntoView({ block: "start" });
     }
 
     function restoreDefaultPolicy() {
@@ -295,6 +319,9 @@
         linkage.closest("label").hidden = data.columnOnly;
         linkage.value = scenario?.sensitiveLinkage == null ? "" : scenario.sensitiveLinkage ? "yes" : "no";
         inputs.hidden = false;
+        editor.hidden = true;
+        refine.setAttribute("aria-expanded", "false");
+        summary.hidden = true;
         results.hidden = true;
         profileName.textContent = upload ? upload.name : scenario.title;
         sampleData.hidden = !data.exampleRows;
@@ -309,15 +336,21 @@
           picker.value = "";
           loadScenario.disabled = true;
         }
-        await assess();
-        return true;
+        return assess();
       });
       file.value = "";
-      if (loaded) {
-        inputs.focus({ preventScroll: true });
-        inputs.scrollIntoView({ block: "start" });
-      }
+      if (loaded) showAssessment();
     }
+
+    refine.addEventListener("click", () => {
+      editor.hidden = !editor.hidden;
+      refine.setAttribute("aria-expanded", String(!editor.hidden));
+      if (!editor.hidden) {
+        const heading = editor.querySelector("h4");
+        heading.focus({ preventScroll: true });
+        editor.scrollIntoView({ block: "start" });
+      }
+    });
 
     let currentSlide = 0;
     const showcasePosition = showcase.querySelector("[data-showcase-position]");
@@ -399,7 +432,7 @@
     form.addEventListener("input", (event) => {
       if (event.target === policy) {
         status.textContent = "Select Apply policy and assess to use your edits.";
-      } else if (![picker, file, dictionary].includes(event.target) && !results.hidden) {
+      } else if (![picker, file, dictionary].includes(event.target) && !summary.hidden) {
         status.textContent = "Run another assessment to update the results.";
       }
     });
@@ -416,9 +449,9 @@
       updateOptions();
       await assess();
     }));
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      if (profile) perform("Assessing profile…", assess);
+      if (profile && await perform("Assessing profile…", assess)) showAssessment();
     });
   }
 

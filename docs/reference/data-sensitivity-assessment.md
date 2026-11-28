@@ -28,6 +28,61 @@ Upload a CSV dataset for a suggested classification and personal data (PII) asse
         <small id="sensitivity-scenario-help">53 column, dataset, and Spark scenarios.</small>
       </div>
     </div>
+    <section class="sensitivity-calculator__assessment" aria-labelledby="sensitivity-assessment-title" data-calculator-inputs tabindex="-1" hidden>
+      <header class="sensitivity-calculator__assessment-header">
+        <h3 id="sensitivity-assessment-title" data-profile-name></h3>
+        <button type="button" class="md-button" aria-expanded="false" aria-controls="sensitivity-editor" data-refine>Refine assessment</button>
+      </header>
+      <div data-handling-summary hidden></div>
+      <p class="sensitivity-calculator__spark-reference" data-spark-reference hidden></p>
+      <div class="sensitivity-calculator__workspace">
+        <section class="sensitivity-calculator__sample" aria-labelledby="sensitivity-sample-title" data-sample-data hidden>
+          <h4 id="sensitivity-sample-title">Example rows</h4>
+          <div class="sensitivity-calculator__sample-table" data-sample-rows></div>
+          <details>
+            <summary>View the example CSV</summary>
+            <pre><code></code></pre>
+          </details>
+        </section>
+        <div data-results hidden></div>
+      </div>
+      <section class="sensitivity-calculator__editor" id="sensitivity-editor" aria-labelledby="sensitivity-editor-title" data-editor hidden>
+        <h4 id="sensitivity-editor-title" tabindex="-1">Refine assessment</h4>
+        <p>Edit column descriptions and categories, or supply your own data dictionary.</p>
+        <label for="sensitivity-dictionary-file">Upload a data dictionary (optional)
+          <input id="sensitivity-dictionary-file" type="file" accept=".csv,.json" aria-describedby="sensitivity-dictionary-help" data-dictionary-file>
+        </label>
+        <small id="sensitivity-dictionary-help">Use CSV with <code>column_name</code> and <code>description</code> headers, or JSON mapping column names to descriptions.</small>
+        <div data-column-fields></div>
+        <label for="sensitivity-linkage">Can sensitive information in this dataset identify people or a sensitive group?
+          <select id="sensitivity-linkage" data-linkage>
+            <option value="">Unknown</option>
+            <option value="yes">Yes, linkage is confirmed</option>
+            <option value="no">No, the information cannot be linked</option>
+          </select>
+        </label>
+        <details>
+          <summary>Policy settings</summary>
+          <label for="sensitivity-policy">GovernanceConfig settings (JSON)
+            <textarea id="sensitivity-policy" data-policy spellcheck="false"></textarea>
+          </label>
+          <div class="sensitivity-calculator__actions">
+            <button type="button" class="md-button" data-apply>Apply policy and assess</button>
+            <button type="button" class="md-button" data-reset>Reset to defaults</button>
+          </div>
+          <small>Apply your edits to use that policy for the assessment. Reset to defaults to restore the FabricOps policy.</small>
+        </details>
+        <details>
+          <summary>Explore treatment suggestions</summary>
+          <label for="sensitivity-target">Target classification
+            <select id="sensitivity-target" data-target></select>
+          </label>
+        </details>
+        <div class="sensitivity-calculator__actions">
+          <button type="submit" class="md-button md-button--primary">Run assessment</button>
+        </div>
+      </section>
+    </section>
     <section class="sensitivity-calculator__showcase" aria-labelledby="sensitivity-showcase-title" aria-roledescription="carousel" data-scenario-showcase>
       <div class="sensitivity-calculator__showcase-header">
         <h3 id="sensitivity-showcase-title">Examples under the default policy</h3>
@@ -63,64 +118,13 @@ Upload a CSV dataset for a suggested classification and personal data (PII) asse
       </figure>
       <small>These examples use synthetic rows. Try one to assess the same CSV data.</small>
     </section>
-    <section class="sensitivity-calculator__assessment" aria-labelledby="sensitivity-assessment-title" data-calculator-inputs tabindex="-1" hidden>
-      <h3 id="sensitivity-assessment-title" data-profile-name></h3>
-      <p data-spark-reference hidden></p>
-      <div class="sensitivity-calculator__workspace">
-        <section class="sensitivity-calculator__sample" aria-labelledby="sensitivity-sample-title" data-sample-data hidden>
-          <h4 id="sensitivity-sample-title">Example rows</h4>
-          <div class="sensitivity-calculator__sample-table" data-sample-rows></div>
-          <details>
-            <summary>View the example CSV</summary>
-            <pre><code></code></pre>
-          </details>
-        </section>
-        <div data-results hidden></div>
-      </div>
-      <details class="sensitivity-calculator__editor">
-        <summary>Refine this assessment</summary>
-        <p>Edit column descriptions and categories, or supply your own data dictionary.</p>
-        <label for="sensitivity-dictionary-file">Upload a data dictionary (optional)
-          <input id="sensitivity-dictionary-file" type="file" accept=".csv,.json" aria-describedby="sensitivity-dictionary-help" data-dictionary-file>
-        </label>
-        <small id="sensitivity-dictionary-help">Use CSV with <code>column_name</code> and <code>description</code> headers, or JSON mapping column names to descriptions.</small>
-        <div data-column-fields></div>
-        <label for="sensitivity-linkage">Can sensitive information in this dataset identify people or a sensitive group?
-          <select id="sensitivity-linkage" data-linkage>
-            <option value="">Unknown</option>
-            <option value="yes">Yes, linkage is confirmed</option>
-            <option value="no">No, the information cannot be linked</option>
-          </select>
-        </label>
-        <details>
-          <summary>Policy settings</summary>
-          <label for="sensitivity-policy">GovernanceConfig settings (JSON)
-            <textarea id="sensitivity-policy" data-policy spellcheck="false"></textarea>
-          </label>
-          <div class="sensitivity-calculator__actions">
-            <button type="button" class="md-button" data-apply>Apply policy and assess</button>
-            <button type="button" class="md-button" data-reset>Reset to defaults</button>
-          </div>
-          <small>Apply your edits to use that policy for the assessment. Reset to defaults to restore the FabricOps policy.</small>
-        </details>
-        <details>
-          <summary>Explore treatment suggestions</summary>
-          <label for="sensitivity-target">Target classification
-            <select id="sensitivity-target" data-target></select>
-          </label>
-        </details>
-        <div class="sensitivity-calculator__actions">
-          <button type="submit" class="md-button md-button--primary">Run assessment</button>
-        </div>
-      </details>
-    </section>
   </form>
   <noscript>Enable JavaScript to run the calculator.</noscript>
 </div>
 
 The calculator profiles the entire uploaded CSV and scans each column using the FabricOps value detectors. It shows inferred types and counts of blank and distinct values. Exact header matches can suggest business categories, such as Payroll for `monthly_salary`. Review those suggestions against the actual business use. Pattern matches flag possible PII and can raise the suggested handling. A **Review** label asks you to confirm the evidence or business use before changing it. The table result applies to the rows in the uploaded file.
 
-A data dictionary can cover any subset of the columns. Use exact column names. CSV also accepts an optional `category` header. For JSON, a description can be a string or an object such as `{"description": "Monthly base salary", "category": "payroll"}`. A category must exist in the active policy. Open **Refine this assessment** to edit descriptions, choose business categories, or upload a dictionary. To use your own rules, edit **Policy settings** and select **Apply policy and assess**.
+A data dictionary can cover any subset of the columns. Use exact column names. CSV also accepts an optional `category` header. For JSON, a description can be a string or an object such as `{"description": "Monthly base salary", "category": "payroll"}`. A category must exist in the active policy. Choose **Refine assessment** to edit descriptions, choose business categories, or upload a dictionary. To use your own rules, edit **Policy settings** and select **Apply policy and assess**.
 
 The calculator runs deterministic Python in your browser. It loads the Python runtime on first use and keeps your CSV, dictionary, and policy edits in the tab. Use Fabric for approved Data Contracts, verified lineage, Spark group-size checks, and optional AI.
 
