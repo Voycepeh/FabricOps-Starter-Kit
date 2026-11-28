@@ -234,14 +234,6 @@ def handle_message(request_json):
         return json.dumps(_policy(config))
     profile = json.loads(request["profile"])
     definitions = request["definitions"]
-    default_categories = DEFAULT.sensitivity_assessment["categories"]
-    baseline = {
-        name: {**definition, "category": definition.get("category")
-               if definition.get("category") in default_categories else None}
-        for name, definition in definitions.items()
-    }
-    linkage = request.get("sensitiveLinkage")
-    return json.dumps({
-        "default": _assess(profile, baseline, DEFAULT, sensitive_linkage=linkage),
-        "current": _assess(profile, definitions, config, request.get("target"), sensitive_linkage=linkage),
-    })
+    return json.dumps(_assess(
+        profile, definitions, config, request.get("target"), sensitive_linkage=request.get("sensitiveLinkage"),
+    ))

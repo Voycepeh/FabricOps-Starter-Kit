@@ -18,21 +18,21 @@ def _message(**request):
     return json.loads(handle_message(json.dumps(request)))
 
 
-def test_example_compares_the_dataset_combination_without_changing_column_labels():
-    """Compare the combination rule at dataset and column level."""
+def test_applied_policy_replaces_the_default_assessment():
+    """Apply one policy at a time to the same profile and definitions."""
     scenario = next(case for case in SCENARIOS if case["id"] == "T04")
     loaded = _message(action="load", text=json.dumps(scenario["profile"]), csv=False)
+    request = {"action": "assess", "profile": loaded["profile"], "definitions": scenario["definitions"],
+               "sensitiveLinkage": scenario["sensitiveLinkage"]}
+    default = _message(**request, policy=json.dumps(loaded["defaultPolicy"]))
     edited = loaded["defaultPolicy"]
     edited["sensitivity_assessment"]["combinations"] = []
     edited["sensitivity_assessment"]["suspected_handling"] = "Restricted"
-    result = _message(action="assess", profile=loaded["profile"], definitions=scenario["definitions"],
-                      policy=json.dumps(edited), sensitiveLinkage=scenario["sensitiveLinkage"])
-    baseline = result["default"]
-    current = result["current"]
-    assert baseline["classification"] == "Confidential"
-    assert current["classification"] == "Restricted"
-    assert current["columns"] == baseline["columns"]
-    assert {column["classification"] for column in current["columns"]} == {"Restricted"}
+    applied = _message(**request, policy=json.dumps(edited))
+    assert default["classification"] == "Confidential"
+    assert applied["classification"] == "Restricted"
+    assert applied["columns"] == default["columns"]
+    assert {column["classification"] for column in applied["columns"]} == {"Restricted"}
 
 
 def test_json_snapshot_retains_engine_selected_frequency_and_scope():
@@ -51,7 +51,7 @@ def test_json_snapshot_retains_engine_selected_frequency_and_scope():
     result = _message(action="assess", profile=loaded["profile"], definitions=definitions,
                       policy=json.dumps(loaded["defaultPolicy"]))
     expected = assess_data_sensitivity(profile, column_definitions=definitions)
-    assert result["current"] == expected
+    assert result == expected
     assert expected["classification"] is None
     assert expected["minimum_handling_classification"] == "Confidential"
     assert expected["columns"][0]["evidence"] == ["pattern_match:email"]
@@ -73,7 +73,7 @@ def test_csv_profiles_rows_and_scans_values_beyond_the_first_five():
     assert definitions["remarks"]["category"] is None
     assert "header suggests payroll" in definitions["monthly_salary"]["description"]
     result = _message(action="assess", profile=loaded["profile"], definitions=definitions,
-                      policy=json.dumps(loaded["defaultPolicy"]))["current"]
+                      policy=json.dumps(loaded["defaultPolicy"]))
     assert result["classification"] == "Confidential"
     assert result["scope"]["kind"] == "full_table"
     assert result["columns"][0]["is_personal_data"] is True
@@ -113,7 +113,7 @@ def test_dictionary_applies_explicit_definitions_to_the_dataset(text, csv_input)
     definitions = _message(action="dictionary", text=text, csv=csv_input, columns=["email"],
                            categories=["business_contact"])["definitions"]
     result = _message(action="assess", profile=loaded["profile"], definitions=definitions,
-                      policy=json.dumps(loaded["defaultPolicy"]))["current"]
+                      policy=json.dumps(loaded["defaultPolicy"]))
     assert result["classification"] == "Restricted"
     assert result["columns"][0]["is_personal_data"] is True
 
@@ -152,12 +152,11 @@ def test_selectable_scenario_matches_browser_result(case):
     loaded = _message(action="load", text=json.dumps(case["profile"]), csv=False)
     result = _message(action="assess", profile=loaded["profile"], definitions=case["definitions"],
                       policy=json.dumps(loaded["defaultPolicy"]), sensitiveLinkage=case.get("sensitiveLinkage"))
-    assert result["current"] == result["default"]
-    assert result["default"]["classification"] == case["expected"]["classification"]
-    assert result["default"]["minimum_handling_classification"] == case["expected"]["handling"]
+    assert result["classification"] == case["expected"]["classification"]
+    assert result["minimum_handling_classification"] == case["expected"]["handling"]
     if "spark" in case:
-        assert result["default"]["human_review_required"]
-        assert result["default"]["dataset_findings"][0]["code"] == "joint_group_sizes_unverified"
+        assert result["human_review_required"]
+        assert result["dataset_findings"][0]["code"] == "joint_group_sizes_unverified"
 
 
 @pytest.mark.parametrize("case", [case for case in SCENARIOS if "spark" in case], ids=["S01", "S02"])

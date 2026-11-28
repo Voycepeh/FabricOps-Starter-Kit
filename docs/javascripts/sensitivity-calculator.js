@@ -51,52 +51,45 @@
     return { handling, assessed, personalData, review, reason };
   }
 
-  function renderResults(result, container) {
-    const { default: baseline, current } = result;
+  function renderResults(result, container, policyLabel) {
     const table = element("table");
     table.className = "sensitivity-calculator__table";
     const caption = table.createCaption();
-    caption.textContent = "Suggested handling for each column and dataset";
+    caption.textContent = policyLabel;
     const headings = table.createTHead().insertRow();
-    for (const title of ["Scope", "FabricOps defaults", "Edited policy"]) {
+    for (const title of ["Scope", "Suggested handling"]) {
       const head = element("th", title);
       head.scope = "col";
       headings.append(head);
     }
     const body = table.createTBody();
-    for (const [name, before, after] of [
-      [current.scope.column_only ? "Column" : "Dataset", baseline, current],
-      ...current.columns.map((column, index) => [column.column_name, baseline.columns[index], column]),
+    for (const [name, assessment] of [
+      [result.scope.column_only ? "Column" : "Dataset", result],
+      ...result.columns.map((column) => [column.column_name, column]),
     ]) {
       const row = body.insertRow();
       const heading = element("th", name);
       heading.scope = "row";
       row.append(heading);
-      const summaries = [before, after].map(assessmentSummary);
-      for (const { handling, assessed, personalData, review, reason } of summaries) {
-        const cell = row.insertCell();
-        cell.append(element("strong", handling ?? "Review"));
-        if (review && handling) {
-          const status = element("small", "Review");
-          status.className = "sensitivity-calculator__review";
-          cell.append(status);
-        }
-        if (assessed && assessed !== handling) cell.append(element("small", `Assessed as ${assessed}.`));
-        cell.append(element("small", personalData));
-        if (reason) cell.append(element("small", reason));
+      const { handling, assessed, personalData, review, reason } = assessmentSummary(assessment);
+      const cell = row.insertCell();
+      cell.append(element("strong", handling ?? "Review"));
+      if (review && handling) {
+        const status = element("small", "Review");
+        status.className = "sensitivity-calculator__review";
+        cell.append(status);
       }
-      if (JSON.stringify(summaries[0]) !== JSON.stringify(summaries[1])) {
-        row.lastElementChild.classList.add("sensitivity-calculator__changed");
-        row.lastElementChild.append(element("small", "Differs from defaults"));
-      }
+      if (assessed && assessed !== handling) cell.append(element("small", `Assessed as ${assessed}.`));
+      cell.append(element("small", personalData));
+      if (reason) cell.append(element("small", reason));
     }
     const reasons = [
-      ...current.dataset_findings.map((finding) => {
+      ...result.dataset_findings.map((finding) => {
         const categories = finding.categories?.map(label).join(" + ");
         return categories ? `${label(finding.code)} (${categories})` : label(finding.code);
       }),
-      ...current.limitations.map(label),
-      ...current.columns.flatMap((column) => column.evidence.map(
+      ...result.limitations.map(label),
+      ...result.columns.flatMap((column) => column.evidence.map(
         (code) => `${column.column_name} — ${label(code)}`,
       )),
     ];
@@ -104,23 +97,23 @@
     if (reasons.length) {
       const list = element("ul");
       for (const reason of reasons) list.append(element("li", reason));
-      findings.append(element("h4", "Findings under the edited policy"), list);
+      findings.append(element("h4", "Findings"), list);
     }
-    if (current.recommended_treatments.length || current.residual_risks.length) {
+    if (result.recommended_treatments.length || result.residual_risks.length) {
       const list = element("ul");
-      for (const item of current.recommended_treatments) {
+      for (const item of result.recommended_treatments) {
         list.append(element("li", `${label(item.parameters.treatment)} ${item.column_name}. ${item.rationale}`));
       }
-      for (const risk of current.residual_risks) list.append(element("li", risk));
+      for (const risk of result.residual_risks) list.append(element("li", risk));
       findings.append(element("h4", "Treatment suggestions"), list);
     }
-    const comparison = element("div");
-    comparison.className = "sensitivity-calculator__comparison";
-    comparison.tabIndex = 0;
-    comparison.setAttribute("role", "region");
-    comparison.setAttribute("aria-label", "Suggested handling comparison");
-    comparison.append(table);
-    container.replaceChildren(element("h3", "Assessment results"), comparison, findings);
+    const tableRegion = element("div");
+    tableRegion.className = "sensitivity-calculator__results-table";
+    tableRegion.tabIndex = 0;
+    tableRegion.setAttribute("role", "region");
+    tableRegion.setAttribute("aria-label", "Suggested handling");
+    tableRegion.append(table);
+    container.replaceChildren(element("h3", "Assessment results"), tableRegion, findings);
     container.hidden = false;
   }
 
@@ -152,6 +145,8 @@
     let profile;
     let defaultPolicy;
     let currentPolicy;
+    let activePolicyText;
+    let usingDefaults = true;
     let columns = [];
     const scenarios = new Map();
 
@@ -244,12 +239,20 @@
         name, { description: description.value, category: category.value || null },
       ]));
       const result = await send({
-        action: "assess", profile, definitions, policy: policy.value, target: target.value || null,
+        action: "assess", profile, definitions, policy: activePolicyText, target: target.value || null,
         sensitiveLinkage: linkage.value ? linkage.value === "yes" : null,
       });
-      renderResults(result, results);
-      const scope = label(result.current.scope.kind).toLowerCase();
+      const policyLabel = usingDefaults ? "Using FabricOps defaults." : "Using your applied policy.";
+      renderResults(result, results, policyLabel);
+      const scope = label(result.scope.kind).toLowerCase();
       status.textContent = `Assessment complete for ${profileName.textContent}. Profile scope is ${scope}.`;
+    }
+
+    function restoreDefaultPolicy() {
+      currentPolicy = defaultPolicy;
+      activePolicyText = JSON.stringify(defaultPolicy, null, 2);
+      policy.value = activePolicyText;
+      usingDefaults = true;
     }
 
     async function loadProfile({ upload, scenario }) {
@@ -261,10 +264,7 @@
         });
         profile = data.profile;
         defaultPolicy ??= data.defaultPolicy;
-        if (!currentPolicy) {
-          currentPolicy = defaultPolicy;
-          policy.value = JSON.stringify(defaultPolicy, null, 2);
-        }
+        if (!currentPolicy) restoreDefaultPolicy();
         addColumns(data.columns, scenario?.definitions ?? data.definitions, Boolean(upload));
         linkage.closest("label").hidden = data.columnOnly;
         linkage.value = scenario?.sensitiveLinkage == null ? "" : scenario.sensitiveLinkage ? "yes" : "no";
@@ -274,7 +274,7 @@
         sparkReference.hidden = !scenario?.spark;
         if (scenario?.spark) {
           const { classification, handling } = scenario.spark.expected;
-          sparkReference.textContent = `With the default policy and a Spark scan, this scenario assessed as ${classification}, with ${handling} handling. The browser compares policies using the profile evidence available here.`;
+          sparkReference.textContent = `With the default policy and a Spark scan, this scenario assessed as ${classification}, with ${handling} handling. The browser uses your active policy and the profile evidence available here.`;
         }
         if (upload) {
           picker.value = "";
@@ -363,18 +363,22 @@
       dictionary.value = "";
     });
     form.addEventListener("input", (event) => {
-      if (![picker, file, dictionary].includes(event.target) && !results.hidden) {
+      if (event.target === policy) {
+        status.textContent = "Select Apply policy and assess to use your edits.";
+      } else if (![picker, file, dictionary].includes(event.target) && !results.hidden) {
         status.textContent = "Run another assessment to update the results.";
       }
     });
     apply.addEventListener("click", () => perform("Checking policy…", async () => {
-      currentPolicy = await send({ action: "policy", policy: policy.value });
+      const draft = policy.value;
+      currentPolicy = await send({ action: "policy", policy: draft });
+      activePolicyText = draft;
+      usingDefaults = draft === JSON.stringify(defaultPolicy, null, 2);
       updateOptions();
       await assess();
     }));
     reset.addEventListener("click", () => perform("Restoring default policy…", async () => {
-      currentPolicy = defaultPolicy;
-      policy.value = JSON.stringify(defaultPolicy, null, 2);
+      restoreDefaultPolicy();
       updateOptions();
       await assess();
     }));

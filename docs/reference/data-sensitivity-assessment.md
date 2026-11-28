@@ -81,7 +81,7 @@ Upload a CSV dataset for a suggested classification and personal data (PII) asse
           <button type="button" class="md-button" data-apply>Apply policy and assess</button>
           <button type="button" class="md-button" data-reset>Reset to defaults</button>
         </div>
-        <small>Apply changes to refresh the business categories and treatment targets and see the comparison.</small>
+        <small>Apply your edits to use that policy for the assessment. Reset to defaults to restore the FabricOps policy.</small>
       </details>
       <details>
         <summary>Explore treatment suggestions</summary>
@@ -101,7 +101,7 @@ Upload a CSV dataset for a suggested classification and personal data (PII) asse
 
 The calculator profiles the entire uploaded CSV and scans each column using the FabricOps value detectors. It shows inferred types and counts of blank and distinct values. Exact header matches can suggest business categories, such as Payroll for `monthly_salary`. Review those suggestions against the actual business use. Pattern matches flag possible PII and can raise the suggested handling. A **Review** label asks you to confirm the evidence or business use before changing it. The table result applies to the rows in the uploaded file.
 
-A data dictionary can cover any subset of the columns. Use exact column names. CSV also accepts an optional `category` header. For JSON, a description can be a string or an object such as `{"description": "Monthly base salary", "category": "payroll"}`. A category must exist in the active policy. Edit the descriptions and categories or open **Policy settings** to compare a different rule, then run the assessment again.
+A data dictionary can cover any subset of the columns. Use exact column names. CSV also accepts an optional `category` header. For JSON, a description can be a string or an object such as `{"description": "Monthly base salary", "category": "payroll"}`. A category must exist in the active policy. Edit the descriptions and categories to refine the assessment. Open **Policy settings** and select **Apply policy and assess** to use your own rules.
 
 The calculator runs deterministic Python in your browser. It loads the Python runtime on first use and keeps your CSV, dictionary, and policy edits in the tab. Use Fabric for approved Data Contracts, verified lineage, Spark group-size checks, and optional AI.
 
