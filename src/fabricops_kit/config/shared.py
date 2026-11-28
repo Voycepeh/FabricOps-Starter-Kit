@@ -424,10 +424,9 @@ class PathConfig:
 
 
 DEFAULT_CLASSIFICATION_LEVELS = {
-    "Public": "Approved for unrestricted external sharing.",
-    "Restricted": "For internal use; share only with authorized organizational users.",
-    "Confidential": "Sensitive personal or business information; restrict access to an approved business need.",
-    "Highly Sensitive": "Information requiring the strictest access controls because disclosure could cause severe harm.",
+    "Unclassified": "Approved for general or public release with minimal disclosure impact.",
+    "Restricted": "For authorised internal use, including information whose classification is still uncertain.",
+    "Confidential": "Sensitive or critical information, including personal or proprietary information and high-impact disclosures.",
 }
 
 
@@ -523,8 +522,11 @@ def _validate_sensitivity_assessment(settings, levels, sensitivity_rules):
         "business_contact": ("Restricted", True, True),
         "payroll": ("Confidential", True, True),
         "academic_record": ("Confidential", True, True),
+        "health_record": ("Confidential", True, True),
         "examination_material": ("Confidential", False, True),
+        "significant_disclosure_impact": ("Confidential", None, True),
         "internal_budget": ("Restricted", False, True),
+        "deidentified_employment_statistics": ("Restricted", False, True),
         "institutional_identifier": ("Restricted", None, True),
         "quasi_identifier": ("Restricted", None, True),
         "authorised_public_release": (lowest, None, False),
@@ -555,8 +557,12 @@ def _validate_sensitivity_assessment(settings, levels, sensitivity_rules):
     default_combinations = [
         {"categories": [identifier, context], "classification": "Confidential"}
         for identifier in ("personal_identifier", "institutional_identifier", "quasi_identifier")
-        for context in ("payroll", "academic_record")
+        for context in ("payroll", "academic_record", "health_record")
         if "Confidential" in levels and {identifier, context} <= categories.keys()
+    ] + [
+        {"categories": [identifier, "deidentified_employment_statistics"], "classification": "Confidential"}
+        for identifier in ("personal_identifier", "institutional_identifier", "business_contact")
+        if "Confidential" in levels and {identifier, "deidentified_employment_statistics"} <= categories.keys()
     ]
     combinations = settings.get("combinations", default_combinations)
     if not isinstance(combinations, (list, tuple)):

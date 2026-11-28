@@ -120,7 +120,7 @@ modify data, Contracts or classifications.
 
 `fabricops_kit/data_contract/assess_data_sensitivity.py:113`
 
-<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/assess_data_sensitivity.py#L113-L437">View on GitHub</a>
+<a class="reference-source-link" href="https://github.com/Voycepeh/FabricOps-Starter-Kit/blob/main/src/fabricops_kit/data_contract/assess_data_sensitivity.py#L113-L439">View on GitHub</a>
 </div>
 
 

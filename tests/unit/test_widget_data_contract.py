@@ -1751,10 +1751,10 @@ def test_enabling_sensitive_treatment_does_not_automatically_lower_classificatio
     """Classification requires a reviewed policy decision instead of a one-rank downgrade."""
     controls = widget_runtime["open"]()["_controls"]
     controls["sensitive_enabled"].value = False
-    controls["column_classification"].value = "Highly Sensitive"
+    controls["column_classification"].value = "Confidential"
     controls["pii_type"].value = "direct"
     controls["sensitive_enabled"].value = True
-    assert controls["column_classification"].value == "Highly Sensitive"
+    assert controls["column_classification"].value == "Confidential"
 
 
 def test_accept_actions_modify_only_their_owned_controls(widget_runtime, monkeypatch):
@@ -1980,6 +1980,7 @@ def test_sensitive_pii_assessment_requires_reason_before_save(widget_runtime):
 
 def test_assessment_preserves_existing_unsaved_column_draft(widget_runtime, monkeypatch):
     """Assessment reads unsaved descriptions and previews treatment without changing classifications."""
+    widget_runtime["config"].governance_config.classification_levels["Highly Sensitive"] = "Custom top tier"
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["column_description"].value = "Unsaved description"
@@ -3067,6 +3068,7 @@ def test_layout_avoids_blank_spacers_and_collapsed_columns(widget_runtime):
 
 def test_table_classification_stays_in_the_authoring_control_without_context_duplication(widget_runtime):
     """Classification remains editable without repeating it in the context summary."""
+    widget_runtime["config"].governance_config.classification_levels["Highly Sensitive"] = "Custom top tier"
     state = widget_runtime["open"]()
     controls = state["_controls"]
     context = controls["table_context"].children[0]
@@ -3136,6 +3138,7 @@ def test_sensitive_data_output_classification_is_labeled(widget_runtime):
 
 def test_review_shows_changes_since_last_save(widget_runtime):
     """Review compares the working contract with the persisted draft baseline."""
+    widget_runtime["config"].governance_config.classification_levels["Highly Sensitive"] = "Custom top tier"
     state = widget_runtime["open"]()
     controls = state["_controls"]
     controls["table_classification"].value = "Highly Sensitive"
@@ -3160,7 +3163,7 @@ def test_stale_persisted_dropdown_values_do_not_block_widget_open(widget_runtime
 
 def test_stale_classification_value_falls_back_to_valid_dropdown_option():
     """A retired classification label is normalized before ipywidgets sees it."""
-    options = ("", "Public", "Restricted", "Confidential", "Highly Sensitive")
+    options = ("", "Unclassified", "Restricted", "Confidential")
 
     assert module._valid_dropdown_value(
         options, "Retired Classification", fallback=""

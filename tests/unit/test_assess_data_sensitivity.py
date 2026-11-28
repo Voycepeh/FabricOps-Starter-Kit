@@ -29,9 +29,8 @@ def test_no_contract_and_no_ai_defaults(monkeypatch):
     assert value["human_review_required"] and value["contains_personal_data"] is None
 
 
-@pytest.mark.parametrize("target, expected", [(None, False), ("Public", True),
-                                              ("Restricted", True), ("Confidential", False),
-                                              ("Highly Sensitive", False)])
+@pytest.mark.parametrize("target, expected", [(None, False), ("Unclassified", True),
+                                              ("Restricted", True), ("Confidential", False)])
 def test_conditional_treatments_for_nonpersonal_sensitive_information(target, expected):
     """Non-personal Confidential material can need treatment when lowering the target."""
     value = assess_data_sensitivity(
@@ -48,7 +47,7 @@ def test_conditional_treatments_for_nonpersonal_sensitive_information(target, ex
 def test_pattern_positive_is_precautionary_and_excluded_from_result():
     """Positive value evidence raises handling without guessing business context."""
     evidence = "employee@example.test"
-    value = assess_data_sensitivity(_profile("contact", MIN_VALUE=evidence), target_classification="Public")
+    value = assess_data_sensitivity(_profile("contact", MIN_VALUE=evidence), target_classification="Unclassified")
     assert value["classification"] is None
     assert value["minimum_handling_classification"] == "Confidential"
     assert "pattern_match:email" in value["columns"][0]["evidence"]
@@ -83,7 +82,7 @@ def test_ai_is_one_sanitised_validated_request(monkeypatch):
 
     def invoke(prompt, **_):
         calls.append(prompt)
-        return ('{"columns":[{"ref":"c0","classification":"Public","personal":null}],'
+        return ('{"columns":[{"ref":"c0","classification":"Unclassified","personal":null}],'
                 '"dataset_classification":null}')
 
     monkeypatch.setattr(shared, "invoke_fabric_ai", invoke)
@@ -324,7 +323,7 @@ def test_treatment_label_requires_evidence_from_exact_applied_contract(monkeypat
 
 
 @pytest.mark.parametrize("target, expected", [
-    ("Restricted", ["email"]), ("Confidential", []), ("Highly Sensitive", []),
+    ("Restricted", ["email"]), ("Confidential", []),
 ])
 def test_known_treatment_is_available_while_other_columns_need_review(target, expected):
     """Known findings can be treated while target feasibility remains provisional."""
@@ -406,3 +405,52 @@ def test_physical_profile_pins_the_delta_version(monkeypatch, spark_session):
     result = profile_table(table_id="target", context={**_context(), "_spark_session": spark_session}, verbose=False)
     assert result["delta_version"] == requests[0]["versionAsOf"] == 0
     assert result["assessment_reference"]["profile_subject"] == "physical_table"
+
+
+def test_default_levels_and_highest_class_for_mixed_dataset():
+    """The default uses three tiers and gives a compilation its highest label."""
+    assert tuple(GovernanceConfig().classification_levels) == ("Unclassified", "Restricted", "Confidential")
+    definitions = {"catalogue": {"category": "authorised_public_release"},
+                   "budget": {"category": "internal_budget"},
+                   "exams": {"category": "examination_material"}}
+    result = assess_data_sensitivity(_profile(*definitions), column_definitions=definitions)
+    assert [column["classification"] for column in result["columns"]] == [
+        "Unclassified", "Restricted", "Confidential",
+    ]
+    assert result["classification"] == result["minimum_handling_classification"] == "Confidential"
+
+
+def test_default_combination_escalates_two_restricted_columns():
+    """Linkable employment information escalates the dataset for Governance review."""
+    definitions = {"staff_number": {"category": "institutional_identifier"},
+                   "salary_band": {"category": "deidentified_employment_statistics"}}
+    result = assess_data_sensitivity(_profile(*definitions), column_definitions=definitions)
+    assert {column["classification"] for column in result["columns"]} == {"Restricted"}
+    assert result["classification"] == result["minimum_handling_classification"] == "Confidential"
+    assert result["human_review_required"]
+    assert result["dataset_findings"][0]["code"] == "sensitive_combination"
+
+
+def test_unresolved_column_prevents_unclassified_dataset():
+    """Authorised content cannot establish a release label for an unknown companion column."""
+    result = assess_data_sensitivity(_profile("catalogue", "unknown"), column_definitions={
+        "catalogue": {"category": "authorised_public_release"},
+    })
+    assert result["columns"][0]["classification"] == "Unclassified"
+    assert result["classification"] is None
+    assert result["minimum_handling_classification"] == "Restricted"
+    assert result["human_review_required"]
+
+
+def test_existing_custom_label_can_still_be_configured():
+    """Deployments can retain their established classification order."""
+    context = _context(classification_levels={
+        "Public": "External", "Restricted": "Internal",
+        "Confidential": "Sensitive", "Highly Sensitive": "Extra controls",
+    }, sensitivity_assessment={"categories": {
+        "critical_material": {"classification": "Highly Sensitive"},
+    }})
+    result = assess_data_sensitivity(_profile("record"), context=context, column_definitions={
+        "record": {"category": "critical_material"},
+    })
+    assert result["classification"] == "Highly Sensitive"

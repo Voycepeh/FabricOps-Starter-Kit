@@ -327,7 +327,7 @@ def assess_data_sensitivity(
     for rule in policy["combinations"] if not single else ():
         if set(rule["categories"]) <= present:
             findings.append({"code": "sensitive_combination", "categories": rule["categories"],
-                             "classification": rule["classification"]})
+                             "classification": rule["classification"], "human_review_required": True})
             dataset_rule = highest((dataset_rule, rule["classification"]))
     group_columns = [name for name, column in columns.items() if column["category"] == "quasi_identifier"]
     if not single and len(group_columns) >= 2:
@@ -376,6 +376,8 @@ def assess_data_sensitivity(
     assessed = highest([approved_table if not contract_has_treatment else None,
                         dataset_rule, ai_dataset, *(c["classification"] for c in values)])
     unresolved_current = not values or any(c["classification"] is None for c in values)
+    if unresolved_current and assessed in rank and rank[assessed] < rank[policy["unresolved_handling"]]:
+        assessed = None
     if not single and approved_table in rank and dataset_rule in rank and rank[dataset_rule] > rank[approved_table]:
         findings.append({"code": "contradictory_dataset_evidence", "human_review_required": True})
     floor = highest([
